@@ -18,3 +18,7 @@ sudo apt install libdeflate-dev
 cmake -B build -S.
 cmake --build build --config Debug --target all
 ```
+
+## Resources
+- [beta-wiki](https://github.com/mudkipdev/beta-wiki)
+- [wiki.vg (Now part of the Minecraft Wiki)](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Protocol?oldid=2769758)
