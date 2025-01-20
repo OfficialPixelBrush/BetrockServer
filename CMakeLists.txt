@@ -7,9 +7,6 @@ add_compile_options(
   "-ggdb"
 )
 
-find_package(CURL REQUIRED)
-include_directories(${CURL_INCLUDE_DIRS})
-
 # Configure the version header file
 configure_file(${CMAKE_SOURCE_DIR}/src/version.h.in ${CMAKE_SOURCE_DIR}/src/version.h)
 
@@ -29,7 +26,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(CMAKE_RANLIB i686-w64-mingw32-ranlib)
     target_link_libraries(
         BetrockServer
-        civetweb
     )
 else()
     # Apply AddressSanitizer to all build types
@@ -37,6 +33,5 @@ else()
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
     target_link_libraries(
         BetrockServer
-        civetweb
     )
 endif()

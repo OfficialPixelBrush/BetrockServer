@@ -15,7 +15,7 @@ void SendToClient(std::vector<uint8_t> &response, int client_fd) {
 	// Reply
 	if (response.size() > 0) {
 		std::cout << "Sending " << PacketIdToLabel(response[0]) << " to Client! (" << response.size() << " Bytes)" << std::endl;
-		/*
+		
 		for (uint i = 0; i < response.size(); i++) {
 			std::cout << std::hex << (int)response[i];
 			if (i < response.size()-1) {
@@ -23,14 +23,14 @@ void SendToClient(std::vector<uint8_t> &response, int client_fd) {
 			}
 		}
 		std::cout << std::dec << std::endl;
-		*/
+		
 		ssize_t bytes_sent = send(client_fd, response.data(), response.size(), 0);
 		if (bytes_sent == -1) {
 			perror("send");
 			return;
 		}
+		std::cout << std::endl;
 	}
-	std::cout << std::endl;
 }
 
 void Disconnect(std::vector<uint8_t> &response, int client_fd, std::string message) {
@@ -103,34 +103,42 @@ int main() {
     //pthread_t send_thread, receive_thread;
     //pthread_create(&send_thread, NULL, send_data, &client_fd);
 	bool respondingChunks = true;
+	Player *player = nullptr;
 
 	while (alive) {
 		std::vector<uint8_t> response;
-		char message[1024] = {0};
-		ssize_t bytes_received = read(client_fd, message, 1024);
+		char message[4096] = {0};
+		int32_t offset = 0;
+		ssize_t bytes_received = read(client_fd, message, 4096);
 		
 		if (bytes_received <= 0) {
 			perror("read");
 			break;
 		}
 
-		uint8_t packetType = message[0];
-		std::cout << "Received " << PacketIdToLabel(packetType) << " from Client! (" << bytes_received << " Bytes)" << std::endl;
-		for (uint i = 0; i < bytes_received; i+=2) {
-			std::cout << std::hex << (int)message[i];
-			if (i < bytes_received-2) {
-				std::cout << ", ";
+		uint8_t packetType = entryToByte(message,offset);
+		
+		if (packetType < 0x0A) {
+			std::cout << "Received " << PacketIdToLabel(packetType) << " from Client! (" << bytes_received << " Bytes)" << std::endl;
+			
+			for (uint i = 0; i < bytes_received; i++) {
+				std::cout << std::hex << (int)message[i];
+				if (i < bytes_received-2) {
+					std::cout << ", ";
+				}
 			}
+			std::cout << std::dec << std::endl;
 		}
-		std::cout << std::dec << std::endl;
+
 
 		// The Client tries to join the Server
 		switch(connectingStage) {
 			case 0:
 				if (packetType == 2) {
 					// Handshake: extract the username
-					std::string username(message + 1, bytes_received - 1);  // Skip the first byte (type)
+					std::string username = entryToString16(message, offset);
 					std::cout << username << " is trying to connect." << std::endl;
+					player = new Player(username,0,64,0);
 					RespondHandshake(response);
 					connectingStage++;
 				} else {
@@ -155,56 +163,81 @@ int main() {
 				}
 				break;
 			case 2:
+				// Send the Spawn point
+				RespondSpawnPoint(response,1,1,1);
+				connectingStage++;
+				break;
+			case 3:
+				// Send the Server Time
+				RespondTime(response,0);
+				connectingStage++;
+				break;
+			case 4:
+				// Send the Player Health
+				RespondUpdateHealth(response,10);
+				connectingStage++;
+				break;
+			case 5:
+				ResponsePlayerPositionLook(response,player);
+				connectingStage++;
+				break;
+			case 6:
 				switch(packetType) {
+					case 0x00:
+						RespondKeepAlive(response);
+						break;
+					case 0x03: {
+						std::string chatMessage = entryToString16(message, offset);
+						std::cout << chatMessage << std::endl;
+						//Disconnect(response,client_fd,"1984");
+						RespondChatMessage(response,chatMessage);
+						break;
+					}
+					case 0x0A:
+						if(message[1]) {
+							std::cout << "Player on ground!" << std::endl;
+							player->onGround = true;
+						} else {
+							std::cout << "Player flying!" << std::endl;
+							player->onGround = false;
+						}
+						break;
+					case 0x0B: // Player Position
+						player->x = entryToDouble(message,offset);
+						player->y = entryToDouble(message,offset);
+						player->stance = entryToDouble(message,offset);
+						player->z = entryToDouble(message,offset);
+						player->onGround = entryToByte(message, offset);
+						//ResponsePlayerPositionLook(response,player);
+						break;
+					case 0x0C: // Player Look
+						player->yaw = entryToFloat(message,offset);
+						player->pitch = entryToFloat(message,offset);
+						player->onGround = entryToByte(message, offset);
+						//ResponsePlayerPositionLook(response,player);
+						break;
+					case 0x0D: // Player Position Look
+						player->x = entryToDouble(message,offset);
+						player->y = entryToDouble(message,offset);
+						player->stance = entryToDouble(message,offset);
+						player->z = entryToDouble(message,offset);
+						player->yaw = entryToFloat(message,offset);
+						player->pitch = entryToFloat(message,offset);
+						player->onGround = entryToByte(message, offset);
+						break;
+					case 0xFF:
+						std::cout << player->username << " has disconnected." << std::endl;
+						player = nullptr;
+						alive = false;
+						connectingStage = 0;
+						client_fd = 0;
+						break;
 					default:
 						// Yell it back at the client?
 						if (bytes_received > 0) {
 							response.assign(message, message + bytes_received);
 						}
 						break;
-					case 0x00:
-						RespondKeepAlive(response);
-						break;
-					case 0x03: {
-						uint8_t stringLength = message[2];
-						for (uint8_t i = 4; i < stringLength*2+4; i+=2) {
-							std::cout << message[i];
-						}
-						std::cout << std::endl;
-						Disconnect(response,client_fd,"1984");
-						//RespondChatMessage(response,message);
-						break;
-						}
-					case 0xFF:
-						std::cout << "Client has disconnected." << std::endl;
-						return 1;
-				}
-				break;
-			case 3:
-				// Send the Spawn point
-				RespondSpawnPoint(response,1,1,1);
-				connectingStage++;
-				break;
-			case 4:
-				// Send the Server Time
-				RespondTime(response,0);
-				connectingStage++;
-				break;
-			case 5:
-				// Send the Player Health
-				RespondUpdateHealth(response,20);
-				connectingStage++;
-				break;
-			case 6:
-				if (respondingChunks) {
-					RespondChunk(response, chunkX, 0, chunkZ, 1, 127, 1);
-					if (chunkX > 64) {
-						chunkZ++;
-						chunkX = -64;
-					}
-					if (chunkZ > 64) {
-						respondingChunks = false;
-					}
 				}
 				break;
 			default:
@@ -214,6 +247,11 @@ int main() {
 				goto listenForNew;
 				break;
 		}
+		/*
+		if (player != nullptr) {
+			player->PrintStats();
+		}
+		*/
 		SendToClient(response, client_fd);
 	}
     //pthread_join(send_thread, NULL);

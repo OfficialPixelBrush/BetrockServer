@@ -13,3 +13,4 @@
 #include "helper.h"
 #include "version.h"
 #include "responses.h"
+#include "player.h"

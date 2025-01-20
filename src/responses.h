@@ -3,9 +3,18 @@
 #include <string>
 #include <cstdint>
 #include "helper.h"
+#include "player.h"
 
 void RespondKeepAlive(std::vector<uint8_t> &response) {
     response.push_back(0);
+}
+
+void RespondLogin(std::vector<uint8_t> &response, int32_t entityId, int64_t seed, int8_t dimension) {
+    response.push_back(1);
+    appendIntegerToVector(response, entityId);
+    appendString16ToVector(response, "");
+    appendLongToVector(response, seed);
+    response.push_back(dimension);
 }
 
 // Note: Right now this just sends a "-", to tell the client that online mode is disabled
@@ -17,12 +26,14 @@ void RespondHandshake(std::vector<uint8_t> &response) {
     response.push_back('-');
 }
 
-void RespondLogin(std::vector<uint8_t> &response, int32_t entityId, int64_t seed, int8_t dimension) {
-    response.push_back(1);
-    appendIntegerToVector(response, entityId);
-    appendString16ToVector(response, "");
-    appendLongToVector(response, seed);
-    response.push_back(dimension);
+void RespondChatMessage(std::vector<uint8_t> &response, std::string message) {
+    response.push_back(0x03);
+    appendString16ToVector(response,message);
+}
+
+void RespondTime(std::vector<uint8_t> &response, int64_t time) {
+    response.push_back(4);
+    appendLongToVector(response, time);
 }
 
 void RespondSpawnPoint(std::vector<uint8_t> &response, int32_t x, int32_t y, int32_t z) {
@@ -32,14 +43,20 @@ void RespondSpawnPoint(std::vector<uint8_t> &response, int32_t x, int32_t y, int
     appendIntegerToVector(response, z);
 }
 
-void RespondTime(std::vector<uint8_t> &response, int64_t time) {
-    response.push_back(4);
-    appendLongToVector(response, time);
-}
-
 void RespondUpdateHealth(std::vector<uint8_t> &response, int16_t health) {
     response.push_back(8);
     appendShortToVector(response, health);
+}
+
+void ResponsePlayerPositionLook(std::vector<uint8_t> &response, Player* player) {
+    response.push_back(0x0D);
+    appendDoubleToVector(response,player->x);
+    appendDoubleToVector(response,player->y);
+    appendDoubleToVector(response,player->stance);
+    appendDoubleToVector(response,player->z);
+    appendFloatToVector(response,player->yaw);
+    appendFloatToVector(response,player->pitch);
+    response.push_back(player->onGround);
 }
 
 void RespondChunk(std::vector<uint8_t> &response, int32_t x, int16_t y, int32_t z, uint8_t sizeX, uint8_t sizeY, uint8_t sizeZ) {
@@ -63,9 +80,4 @@ void RespondChunk(std::vector<uint8_t> &response, int32_t x, int16_t y, int32_t 
     response.push_back(0x0B);
     response.push_back(0x00);
     response.push_back(0x0B);
-}
-
-void RespondChatMessage(std::vector<uint8_t> &response, std::string message) {
-    response.push_back(0x03);
-    appendString16ToVector(response,message);
 }
