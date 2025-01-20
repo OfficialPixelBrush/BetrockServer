@@ -1,0 +1,1 @@
+int chunkRadius = 10;

@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <vector>
 #include <string>
+#include <bits/stdc++.h>
 
 #define PROTOCOL_VERSION 14
 
@@ -14,3 +15,7 @@
 #include "version.h"
 #include "responses.h"
 #include "player.h"
+#include "debug.h"
+#include "world.h"
+#include "command.h"
+#include "settings.h"

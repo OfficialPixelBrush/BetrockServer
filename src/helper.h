@@ -3,6 +3,31 @@
 #include <string>
 #include <cstdint>
 
+void blockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction) {
+	switch(direction) {
+		case 0:
+			y--;
+			break;
+		case 1:
+			y++;
+			break;
+		case 2:
+			z--;
+			break;
+		case 3:
+			z++;
+			break;
+		case 4:
+			x--;
+			break;
+		case 5:
+			x++;
+			break;
+		default:
+			break;		
+	}
+}
+
 int8_t entryToByte(char* message, int32_t& offset) {
 	int8_t result = message[offset];
 	offset++;
@@ -72,7 +97,7 @@ std::string entryToString16(char* message, int32_t& offset) {
 	for (int16_t i = 0; i < stringLength*2; i+=2) {
 		string16 += message[i+offset] << 8 | message[i+offset+1];
 	}
-	offset+=stringLength;
+	offset+=stringLength*2;
 	return string16;
 }
 
@@ -150,7 +175,7 @@ void appendDoubleToVector(std::vector<uint8_t> &vector, double value) {
 void appendString8ToVector(std::vector<uint8_t> &vector, std::string value) {
 	// Apparently strings support variable lengths, but in this case I'll always assume they're string16s
 	int8_t stringLength = value.size();
-	vector.push_back(stringLength 	   & 0xFF);
+	appendShortToVector(vector, stringLength);
 	for (int8_t i = 0; i < stringLength; i++) {
 		vector.push_back(value[i]);
 	}
@@ -159,9 +184,9 @@ void appendString8ToVector(std::vector<uint8_t> &vector, std::string value) {
 void appendString16ToVector(std::vector<uint8_t> &vector, std::string value) {
 	// Apparently strings support variable lengths, but in this case I'll always assume they're string16s
 	int16_t stringLength = value.size();
-	vector.push_back(stringLength >> 8 & 0xFF);
-	vector.push_back(stringLength 	   & 0xFF);
+	appendShortToVector(vector, stringLength);
 	for (int16_t i = 0; i < stringLength; i++) {
+		vector.push_back(0);
 		vector.push_back(value[i]);
 	}
 }
