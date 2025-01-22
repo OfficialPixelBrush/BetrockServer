@@ -1,0 +1,35 @@
+#pragma once
+#include <cstdint>
+#include <string>
+#include <vector>
+
+#include "helper.h"
+#include "player.h"
+
+class Player; // Forward declaration
+
+class Respond {
+    public:
+        static void KeepAlive(std::vector<uint8_t> &response);
+        static void Login(std::vector<uint8_t> &response, int32_t& entityId, int64_t seed, int8_t dimension);
+        static void Handshake(std::vector<uint8_t> &response);
+        static void ChatMessage(std::vector<uint8_t> &response, std::string message, bool toConsole = 1);
+        static void Time(std::vector<uint8_t> &response, int64_t time);
+        static void SpawnPoint(std::vector<uint8_t> &response, Int3 position);
+        static void UpdateHealth(std::vector<uint8_t> &response, int16_t health);
+        static void Respawn(std::vector<uint8_t> &response, int8_t dimension);
+        static void PlayerPosition(std::vector<uint8_t> &response, Player* player);
+        static void PlayerPositionLook(std::vector<uint8_t> &response, Player* player);
+        static void PlayerDigging(std::vector<uint8_t> &response, int8_t status, Int3 position, int8_t face);
+        static void PlayerBlockPlacement(std::vector<uint8_t> &response, Int3 position, int8_t direction, int16_t id, int8_t amount, int16_t damage);
+        static void Animation(std::vector<uint8_t> &response, int32_t entityId, uint8_t animation);
+        static void NamedEntitySpawn(std::vector<uint8_t> &response, int32_t& entityId, std::string username, Int3 position, int8_t yaw, int8_t pitch, int16_t currentItem);
+        static void MobSpawn(std::vector<uint8_t> &response, int32_t& entityId, int8_t type, Int3 position, int8_t yaw, int8_t pitch);
+        static void EntityStatus(std::vector<uint8_t> &response, int32_t& entityId, int8_t status);
+        static void PreChunk(std::vector<uint8_t> &response, int32_t x, int32_t z, bool mode);
+        static void Chunk(std::vector<uint8_t> &response, Int3 position, uint8_t sizeX, uint8_t sizeY, uint8_t sizeZ, size_t compressedSize, char* compressedData);
+        static void BlockChange(std::vector<uint8_t> &response, Int3 position, int8_t type, int8_t meta);
+        static void SetSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slot, int16_t itemId, int8_t itemCount, int16_t itemUses);
+        static void WindowItems(std::vector<uint8_t> &response, int8_t windowId, int16_t count);
+        static void Disconnect(std::vector<uint8_t> &response, Player* player, std::string message);
+};

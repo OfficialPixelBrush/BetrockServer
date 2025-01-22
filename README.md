@@ -3,10 +3,12 @@
 
 - [x] Handshake 
 - [x] Login
-- [ ] Generate a chunk
-- [ ] Compress the chunk with zlib
-- [ ] Send the chunk data
+- [x] Generate a chunk
+- [x] Compress the chunk with zlib
+- [x] Send the chunk data
 - [x] Have a player join
+- [ ] Fix Client-side crash
+- [ ] Show Players on other Clients
 
 ## Installing Dependencies
 ```bash
@@ -15,8 +17,8 @@ sudo apt install libdeflate-dev
 
 ## Building
 ```bash
-cmake -B build -S.
-cmake --build build --config Debug --target all
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
+cmake --build build
 ```
 
 ## Resources

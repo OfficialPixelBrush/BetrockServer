@@ -1,15 +1,11 @@
 #pragma once
 #include <iostream>
-#include <cstring>
 #include <cstdint>
-#include <netinet/in.h>
-#include <unistd.h>
 #include <signal.h>
 #include <vector>
 #include <string>
-#include <bits/stdc++.h>
-
-#define PROTOCOL_VERSION 14
+#include <mutex>
+#include <thread>
 
 #include "helper.h"
 #include "version.h"
@@ -18,4 +14,8 @@
 #include "debug.h"
 #include "world.h"
 #include "command.h"
-#include "settings.h"
+#include "items.h"
+#include "command.h"
+#include "server.h"
+#include "coms.h"
+#include "client.h"
