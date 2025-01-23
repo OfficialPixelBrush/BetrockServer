@@ -12,15 +12,16 @@ class Command {
     public:
         static void Parse(std::string &rawCommand, Player* player);
     private:
-        static void Time(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason);
-        static void Give(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason);
-        static void Health(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason, Player* player);
-        static void Kill(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason, Player* player);
-        static void Summon(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason, Player* player);
-        static void SummonPlayer(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason, Player* player);
-        static void Kick(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason, Player* player);
-        static void Spawn(std::vector<uint8_t> &response, std::string &failureReason, Player* player);
-        static void Creative(std::vector<uint8_t> &response, std::string &failureReason, Player* player);
-        static void Chunk(std::vector<uint8_t> &response, std::string &failureReason, Player* player);
-        static void Stop(std::vector<uint8_t> &response, std::string &failureReason);
+        static void Time();
+        static void Teleport(Player* player);
+        static void Give();
+        static void Health(Player* player);
+        static void Kill(Player* player);
+        static void Summon(Player* player);
+        static void SummonPlayer(Player* player);
+        static void Kick(Player* player);
+        static void Spawn(Player* player);
+        static void Creative(Player* player);
+        static void Chunk(Player* player);
+        static void Stop();
 };

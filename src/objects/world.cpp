@@ -1,5 +1,14 @@
 #include "world.h"
 
+void World::SetSeed(int64_t seed) {
+    this->seed = seed;
+    generator.seed = seed;
+}
+
+int64_t World::GetSeed() {
+    return this->seed;
+}
+
 int64_t World::GetChunkHash(int32_t x, int32_t z) {
     return ((int64_t)x << 32) | (z & 0xFFFFFFFF);
 }
@@ -22,29 +31,49 @@ void World::RemoveChunk(int32_t x, int32_t z) {
 
 void World::PlaceBlock(Int3 position, int16_t block) {
     // Get Block Position within Chunk
-    int8_t bX = position.x & 0xF;
-    int8_t bZ = position.z & 0xF;
-    int32_t cX = position.x >> 4;
-    int32_t cZ = position.z >> 4;
-    chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(XyzToInt3(bX,(int8_t)position.y,bZ))].type = block;
+    GetBlock(position)->type = block;
+    CalculateColumnLight(position.x,position.z);
 }
 
 void World::BreakBlock(Int3 position) {
-    // Get Block Position within Chunk
-    int8_t bX = position.x & 0xF;
-    int8_t bZ = position.z & 0xF;
-    int32_t cX = position.x >> 4;
-    int32_t cZ = position.z >> 4;
-    chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(XyzToInt3(bX,(int8_t)position.y,bZ))].type = 0;
+    // Break Block Position within Chunk
+    GetBlock(position)->type = 0;
+    CalculateColumnLight(position.x,position.z);
 }
 
-int16_t World::GetBlock(Int3 position) {
+Block* World::GetBlock(Int3 position) {
     // Get Block Position within Chunk
-    int8_t bX = position.x & 0xF;
-    int8_t bZ = position.z & 0xF;
     int32_t cX = position.x >> 4;
     int32_t cZ = position.z >> 4;
-    return (int16_t)chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(XyzToInt3(bX,(int8_t)position.y,bZ))].type;
+    int8_t bX = position.x & 0xF;
+    int8_t bZ = position.z & 0xF;
+    return &chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(XyzToInt3(bX,(int8_t)position.y,bZ))];
+}
+
+void World::CalculateColumnLight(int32_t x, int32_t z) {
+    bool skyVisible = true;
+    for (int8_t y = CHUNK_HEIGHT-1; y > 0; y--) {
+        Int3 position { x,y,z };
+        Block* b = GetBlock(position);
+        if (b->type > BLOCK_AIR && skyVisible) {
+            skyVisible = false;
+        }
+        if (skyVisible) {
+            b->lightSky = 0xF;
+        }
+    }
+}
+
+// Recalculates all the light in the chunk the block position is found in
+void World::CalculateChunkLight(int32_t cX, int32_t cZ) {
+    int32_t startX = cX*CHUNK_WIDTH_X;
+    int32_t startZ = cZ*CHUNK_WIDTH_Z;
+
+    for (int32_t x = startX; x < CHUNK_WIDTH_X+startX; x++) {
+        for (int32_t z = startZ; z < CHUNK_WIDTH_Z+startZ; z++) {
+            CalculateColumnLight(x,z);
+        }
+    }
 }
 
 std::vector<uint8_t> World::GetChunkData(Int3 position) {
@@ -98,28 +127,41 @@ std::vector<uint8_t> World::GetChunkData(Int3 position) {
     return bytes;
 }
 
-Chunk* World::GenerateChunk(int32_t x, int32_t z) {
-    Chunk* c = generator.GenerateChunk(x,z);
-    if (!c) {
-        return nullptr;
-    }
-    AddChunk(x,z,*c);
+Chunk World::GenerateChunk(int32_t x, int32_t z) {
+    Chunk c = generator.GenerateChunk(x,z);
+    AddChunk(x,z,c);
+    CalculateChunkLight(x,z);
     return c;
 }
 
 Int3 World::FindSpawnableBlock(Int3 position) {
     bool aboveBedrock = false;
+    bool skyVisible = true;
     for (int y = 0; y < CHUNK_HEIGHT; y++) {
         position.y = y;
-        int16_t type = GetBlock(position);
+        int16_t type = GetBlock(position)->type;
         if (type == BLOCK_BEDROCK) {
             aboveBedrock = true;
-            continue;
+            break;
         }
-        if (type == BLOCK_AIR && aboveBedrock) {
+    }
+    if (!aboveBedrock) {
+        std::cout << "Floor of spawn isn't Bedrock, defaulting.";
+        return position;
+    }
+
+    for (int y = CHUNK_HEIGHT-1; y >= 0; --y) {
+        position.y = y;
+        int16_t type = GetBlock(position)->type;
+        if (type != BLOCK_AIR) {
+            // The position above this block is air
+            position.y++;
             return position;
         }
     }
+
+
+        
     std::cout << "Found no suitable place to spawn, defaulting." << std::endl;
     return position;
 }

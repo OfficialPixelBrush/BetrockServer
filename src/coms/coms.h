@@ -11,9 +11,10 @@
 #include "responses.h"
 #include "world.h"
 #include "server.h"
+#include "packets.h"
 
 void SendToPlayer(std::vector<uint8_t> &response, Player* player);
-void BroadcastToPlayers(std::vector<uint8_t> &response);
-void Disconnect(Player* player, std::string message);
-void DisconnectAllPlayers(std::string message);
+void BroadcastToPlayers(std::vector<uint8_t> &response, Player* sender = nullptr);
+void Disconnect(Player* player, std::string message = "");
+void DisconnectAllPlayers(std::string message = "");
 size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player);

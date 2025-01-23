@@ -12,7 +12,7 @@ int chunkDistance = 5;
 
 World overworld;
 World nether;
-Int3 spawnPoint;
+Vec3 spawnPoint;
 int8_t spawnDimension = Overworld;
 
 World* GetDimension(int8_t dimension) {

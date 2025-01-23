@@ -1,7 +1,11 @@
 #include "command.h"
 
+std::vector<uint8_t> response;
+std::vector<std::string> command;
+std::string failureReason;
+
 // Get and Set the time
-void Command::Time(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason) {
+void Command::Time() {
 	// Set the time
 	if (command.size() > 1) {
 		serverTime = std::stol(command[1].c_str());
@@ -15,9 +19,21 @@ void Command::Time(std::vector<uint8_t> &response, std::vector<std::string> &com
 		failureReason = "";
 	}
 }
+void Command::Teleport(Player* player) {
+	// Set the time
+	if (command.size() > 3) {
+		int32_t x = std::stol(command[1].c_str());
+		int32_t y = std::stol(command[2].c_str());
+		int32_t z = std::stol(command[3].c_str());
+		Int3 tpGoal = {x,y,z};
+		player->Teleport(response,Int3ToVec3(tpGoal));
+		Respond::ChatMessage(response, "§7Teleported " + std::to_string(x) + ", "  + std::to_string(y) + ", " + std::to_string(z));
+		failureReason = "";
+	}
+}
 
 // Give any Item
-void Command::Give(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason) {
+void Command::Give() {
 	if (command.size() > 1) {
 		int itemId = std::stoi(command[1].c_str());
 		if (
@@ -35,7 +51,7 @@ void Command::Give(std::vector<uint8_t> &response, std::vector<std::string> &com
 }
 
 // Set the players health
-void Command::Health(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason, Player* player) {
+void Command::Health(Player* player) {
 	if (command.size() > 1) {
 		int health = std::stoi(command[1].c_str());
 		player->SetHealth(response, health);
@@ -49,7 +65,7 @@ void Command::Health(std::vector<uint8_t> &response, std::vector<std::string> &c
 }
 
 // Kill the current player
-void Command::Kill(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason, Player* player) {
+void Command::Kill(Player* player) {
 	if (command.size() > 0) {
 		std::string username = player->username;
 		if (command.size() > 1) {
@@ -67,7 +83,7 @@ void Command::Kill(std::vector<uint8_t> &response, std::vector<std::string> &com
 	}
 }
 
-void Command::Summon(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason, Player* player) {
+void Command::Summon(Player* player) {
 	if (command.size() > 1) {
 		std::lock_guard<std::mutex> lock(entityIdMutex);
 		std::string username = command[1];
@@ -79,7 +95,7 @@ void Command::Summon(std::vector<uint8_t> &response, std::vector<std::string> &c
 	}
 }
 
-void Command::SummonPlayer(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason, Player* player) {
+void Command::SummonPlayer(Player* player) {
 	if (command.size() > 1) {
 		int mobId = std::stoi(command[1].c_str());
 		Respond::MobSpawn(response, latestEntityId, mobId,Vec3ToInt3(player->position),0,0);
@@ -88,7 +104,7 @@ void Command::SummonPlayer(std::vector<uint8_t> &response, std::vector<std::stri
 	}
 }
 
-void Command::Kick(std::vector<uint8_t> &response, std::vector<std::string> &command, std::string &failureReason, Player* player) {
+void Command::Kick(Player* player) {
 	if (command.size() > 0) {
 		std::string username = player->username;
 		if (command.size() > 1) {
@@ -106,25 +122,25 @@ void Command::Kick(std::vector<uint8_t> &response, std::vector<std::string> &com
 	}
 }
 
-void Command::Spawn(std::vector<uint8_t> &response, std::string &failureReason, Player* player) {
-	player->Teleport(response, Int3ToVec3(spawnPoint));
+void Command::Spawn(Player* player) {
+	player->Teleport(response, spawnPoint);
 	failureReason = "";
 }
 
-void Command::Creative(std::vector<uint8_t> &response, std::string &failureReason, Player* player) {
+void Command::Creative(Player* player) {
 	player->creativeMode = !player->creativeMode;
 	Respond::ChatMessage(response, "§7Set Creative to " + std::to_string(player->creativeMode));
 	failureReason = "";
 }
 
-void Command::Chunk(std::vector<uint8_t> &response, std::string &failureReason, Player* player) {
+void Command::Chunk(Player* player) {
 	size_t numberOfNewChunks = SendChunksAroundPlayer(response, player);
 	Respond::ChatMessage(response, "§7Generated " + std::to_string(numberOfNewChunks) + " Chunks around player");
 	failureReason = "";
 }
 
-void Command::Stop(std::vector<uint8_t> &response, std::string &failureReason) {
-	alive = !alive;
+void Command::Stop() {
+	alive = false;
 	Respond::ChatMessage(response, "§7Stopping Server",1);
 	failureReason = "";
 }
@@ -132,12 +148,14 @@ void Command::Stop(std::vector<uint8_t> &response, std::string &failureReason) {
 // Parses commands and executes them
 void Command::Parse(std::string &rawCommand, Player* player) {
 	World* world = GetDimension(player->dimension);
-	std::string failureReason = "Syntax";
-	std::vector<uint8_t> response;
+
+	// Set these up for command parsing
+	failureReason = "Syntax";
+    command.clear();
+	response.clear();
 
     std::string s;
     std::stringstream ss(rawCommand);
-    std::vector<std::string> command;
 
     while (getline(ss, s, ' ')) {
         // store token string in the vector
@@ -145,27 +163,29 @@ void Command::Parse(std::string &rawCommand, Player* player) {
     }
 
     if (command[0] == "time") {
-		Time(response, command, failureReason);
+		Time();
+    } else if (command[0] == "tp") {
+		Teleport(player);
     } else if (command[0] == "give") {
-		Give(response, command, failureReason);
+		Give();
 	} else if (command[0] == "health") {
-		Health(response, command, failureReason, player);
+		Health(player);
 	} else if (command[0] == "kill") {
-		Kill(response, command, failureReason, player);
+		Kill(player);
 	} else if (command[0] == "summon") {
-		Summon(response,	command, failureReason, player);
+		Summon(player);
 	} else if (command[0] == "summonplayer") {
-		SummonPlayer(response,	command, failureReason, player);
+		SummonPlayer(player);
 	} else if (command[0] == "kick") {
-		Kick(response, command, failureReason, player);
+		Kick(player);
 	} else if (command[0] == "spawn") {
-		Spawn(response, failureReason, player);
+		Spawn(player);
 	} else if (command[0] == "creative") {
-		Creative(response, failureReason, player);
+		Creative(player);
 	} else if (command[0] == "chunk") {
-		Chunk(response, failureReason, player);
+		Chunk(player);
 	} else if (command[0] == "stop") {
-		Stop(response, failureReason);
+		Stop();
 	} else {
 		failureReason = "Command does not exist";
 	}

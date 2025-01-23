@@ -7,6 +7,7 @@
 #include "helper.h"
 #include "items.h"
 #include "generator.h"
+#include "worleyPeakGenerator.h"
 
 class World {
     private:
@@ -17,10 +18,15 @@ class World {
         void AddChunk(int32_t x, int32_t z, Chunk c);
         void RemoveChunk(int32_t x, int32_t z);
     public:
+        int64_t seed;
         std::vector<uint8_t> GetChunkData(Int3 position);
-        Chunk* GenerateChunk(int32_t x, int32_t z);
+        Chunk GenerateChunk(int32_t x, int32_t z);
         void PlaceBlock(Int3 position, int16_t block);
         void BreakBlock(Int3 position);
-        int16_t GetBlock(Int3 position);
+        Block* GetBlock(Int3 position);
         Int3 FindSpawnableBlock(Int3 position);
+        void CalculateColumnLight(int32_t x, int32_t z);
+        void CalculateChunkLight(int32_t cX, int32_t cZ);
+        void SetSeed(int64_t seed);
+        int64_t GetSeed();
 };

@@ -1,42 +1,59 @@
 #include "main.h"
 
 void HandleSignal(int sig) {
-	std::cout << "Shutting down server..." << std::endl;
-	if (server_fd >= 0) close(server_fd);
+	alive = false;
+    shutdown(server_fd, SHUT_RDWR); // Interrupt accept
 	exit(0);
 }
 
-void *ServerJoin(void *arg) {
-    struct sockaddr_in address = *(sockaddr_in *)arg;
+void ServerJoin(struct sockaddr_in address) {
+	std::vector<std::thread> playerThreadPool;
 	int addrlen = sizeof(address);
 	int client_fd;
+	
 	while (alive) {
 		// Accept connections
-		if ((client_fd = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen)) < 0) {
+		client_fd = accept(server_fd, (struct sockaddr*)&address, (socklen_t*)&addrlen);
+		if (client_fd < 0) {
 			perror("Accept failed");
-			return nullptr;
+			continue;
 		}
 
 		// Create new player
 		std::lock_guard<std::mutex> lockEntityId(entityIdMutex);
-		Player* player = new Player(client_fd, latestEntityId, Int3ToVec3(spawnPoint), spawnDimension, Int3ToVec3(spawnPoint), spawnDimension);
-		player->connectionStatus = Handshake;
+		Player* player = new Player(client_fd, latestEntityId, spawnPoint, spawnDimension, spawnPoint, spawnDimension);
+		player->connectionStatus = ConnectionStatus::Handshake;
 
 		// Add this new player to the list of connected Players
 		std::lock_guard<std::mutex> lockConnectedPlayers(connectedPlayersMutex);
 		connectedPlayers.push_back(player);
 		
 		// Let each player have their own thread
-		std::thread playerThread(HandleClient, player);
-		playerThread.detach();
+		// TODO: Make this non-cancerous, and close player threads upon disconnect
+		playerThreadPool.emplace_back(HandleClient, player);
 	}
-	return nullptr;
+
+    for (auto& thread : playerThreadPool) {
+        if (thread.joinable()) {
+            thread.join();
+        }
+    }
+}
+
+void LoadConfig() {
+	// TODO: Read server.properties etc.
+	// TODO: Read level.dat
+	overworld.seed = 200;
+	nether.seed = 200;
 }
 
 int main() {
-	std::cout << "Starting " << PROJECT_NAME << " version " << PROJECT_VERSION_STRING << std::endl;
 	signal(SIGINT, HandleSignal);  // Handle Ctrl+C
 	signal(SIGTERM, HandleSignal); // Handle termination signals
+
+	std::cout << "Starting " << PROJECT_NAME << " version " << PROJECT_VERSION_STRING << std::endl;
+
+	LoadConfig();
 
 	const int port = 25565;
 	int client_fd;
@@ -73,9 +90,7 @@ int main() {
 
 	std::cout << "Starting " << PROJECT_NAME " on *:" << port << std::endl;
     // Create threads for sending and receiving data
-    pthread_t join_thread;
-	// Begin ticking time
-	pthread_create(&join_thread, NULL, ServerJoin, &address);
+	std::thread join_thread(ServerJoin, address);
 
 	// Generate a basic world
     std::cout << "Generating..." << std::endl;
@@ -87,7 +102,9 @@ int main() {
 		}
 	}
     std::cout << "Generated " << newChunks << " Overworld Chunks" << std::endl;
-	spawnPoint = overworld.FindSpawnableBlock(Int3 {0,64,0});
+	Int3 spawnBlock = overworld.FindSpawnableBlock(Int3 {0,64,0});
+	spawnPoint = Int3ToVec3(spawnBlock);
+	spawnPoint.y+=STANCE_OFFSET;
 
 	while (alive) {
 		// Server is alive
@@ -98,7 +115,9 @@ int main() {
         sleep(1); // Send data every second
 	}
 	DisconnectAllPlayers("Server closed!");
-	pthread_join(join_thread, NULL);
+	join_thread.join();
 	close(server_fd);
+
+		std::cout << "STILL HERE!!" << std::endl;
 	return 0;
 }

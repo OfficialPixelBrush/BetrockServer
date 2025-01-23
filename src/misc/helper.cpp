@@ -27,6 +27,35 @@ Int3 XyzToInt3(int32_t x, int32_t y, int32_t z) {
 	return i;
 }
 
+double GetDistance(Vec3 a, Vec3 b) {
+	double x = (b.x-a.x)*(b.x-a.x);
+	double y = (b.y-a.y)*(b.y-a.z);
+	double z = (b.z-a.z)*(b.z-a.z);
+	return abs(std::sqrt(x+y+z));
+}
+
+double GetDistance(Int3 a, Int3 b) {
+	int32_t x = (b.x-a.x)*(b.x-a.x);
+	int32_t y = (b.y-a.y)*(b.y-a.z);
+	int32_t z = (b.z-a.z)*(b.z-a.z);
+	return abs(std::sqrt(double(x+y+z)));
+}
+
+std::string GetInt3(Int3 position) {
+	return "( " + std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z) + ")";
+}
+std::string GetVec3(Vec3 position) {
+	return "( " + std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z) + ")";
+}
+
+Int3 LocalToGlobalPosition(Int3 chunkPos, Int3 blockPos) {
+	return Int3 {
+        chunkPos.x*CHUNK_WIDTH_X + blockPos.x,
+        blockPos.y,
+        chunkPos.z*CHUNK_WIDTH_Z + blockPos.z
+    };
+}
+
 void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction) {
 	switch(direction) {
 		case 0:
@@ -224,7 +253,34 @@ void AppendString16ToVector(std::vector<uint8_t> &vector, std::string value) {
 	}
 }
 
+int8_t ConvertFloatToPackedByte(float value) {
+	return static_cast<int8_t>((value/360.0)*255.0);
+}
 
+Vec3 SubtractVec3(Vec3 previousPosition, Vec3 currentPosition) {
+	Vec3 difference = previousPosition;
+	difference.x -= currentPosition.x;
+	difference.y -= currentPosition.y;
+	difference.z -= currentPosition.z;
+	return difference;
+}
+
+Int3 Vec3ToRelativeInt3(Vec3 previousPosition, Vec3 currentPosition) {
+	Vec3 difference = SubtractVec3(previousPosition, currentPosition);
+	return Int3 {
+		static_cast<int8_t>(difference.x*32.0),
+		static_cast<int8_t>(difference.y*32.0),
+		static_cast<int8_t>(difference.z*32.0)
+	};
+}
+
+Int3 Vec3ToCompressedInt3(Vec3 position) {
+	return Int3 {
+		static_cast<int32_t>(position.x*32.0),
+		static_cast<int32_t>(position.y*32.0),
+		static_cast<int32_t>(position.z*32.0)
+	};
+}
 
 std::vector<std::string> packetLabels {
 	"0x00 KeepAlive",
@@ -290,7 +346,8 @@ std::vector<std::string> packetLabels {
 	"0x3C Explosion"
 };
 
-std::string PacketIdToLabel(uint8_t id) {
+std::string PacketIdToLabel(Packet packet) {
+	uint8_t id = (uint8_t)packet;
 	if (id == 255) {
 		return "0xFF Disconnect";
 	}

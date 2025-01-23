@@ -4,8 +4,8 @@
 #include <vector>
 
 #include "helper.h"
-#include "player.h"
 
+class Entity; // Forward declaration
 class Player; // Forward declaration
 
 class Respond {
@@ -25,6 +25,10 @@ class Respond {
         static void Animation(std::vector<uint8_t> &response, int32_t entityId, uint8_t animation);
         static void NamedEntitySpawn(std::vector<uint8_t> &response, int32_t& entityId, std::string username, Int3 position, int8_t yaw, int8_t pitch, int16_t currentItem);
         static void MobSpawn(std::vector<uint8_t> &response, int32_t& entityId, int8_t type, Int3 position, int8_t yaw, int8_t pitch);
+        static void EntityRelativeMove(std::vector<uint8_t> &response, int32_t& entityId, Int3 relativeMovement);
+        static void EntityLook(std::vector<uint8_t> &response, int32_t& entityId, int8_t yaw, int8_t pitch);
+        static void EntityLookRelativeMove(std::vector<uint8_t> &response, int32_t& entityId, Int3 relativeMovement, int8_t yaw, int8_t pitch);
+        static void EntityTeleport(std::vector<uint8_t> &response, int32_t& entityId, Int3 position, int8_t yaw, int8_t pitch);
         static void EntityStatus(std::vector<uint8_t> &response, int32_t& entityId, int8_t status);
         static void PreChunk(std::vector<uint8_t> &response, int32_t x, int32_t z, bool mode);
         static void Chunk(std::vector<uint8_t> &response, Int3 position, uint8_t sizeX, uint8_t sizeY, uint8_t sizeZ, size_t compressedSize, char* compressedData);

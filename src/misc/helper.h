@@ -6,6 +6,9 @@
 #include <string>
 #include <cstdint>
 #include <cstring>
+#include <cmath>
+
+#include "packets.h"
 
 #define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH_X 16
@@ -40,6 +43,13 @@ Vec3 Int3ToVec3(Int3 i);
 Int3 Vec3ToInt3(Vec3 v);
 Int3 XyzToInt3(int32_t x, int32_t y, int32_t z);
 
+double GetDistance(Vec3 a, Vec3 b);
+double GetDistance(Int3 a, Int3 b);
+
+std::string GetInt3(Int3 position);
+std::string GetVec3(Vec3 position);
+
+Int3 LocalToGlobalPosition(Int3 chunkPos, Int3 blockPos);
 void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction);
 
 // Converting a network response into a native type
@@ -61,8 +71,13 @@ void AppendDoubleToVector(std::vector<uint8_t> &vector, double value);
 void AppendString8ToVector(std::vector<uint8_t> &vector, std::string value);
 void AppendString16ToVector(std::vector<uint8_t> &vector, std::string value);
 
+int8_t ConvertFloatToPackedByte(float value);
+Vec3 SubtractVec3(Vec3 previousPosition, Vec3 currentPosition);
+Int3 Vec3ToRelativeInt3(Vec3 previousPosition, Vec3 currentPosition);
+Int3 Vec3ToCompressedInt3(Vec3 position);
+
 // Packet Id Labels
-std::string PacketIdToLabel(uint8_t id);
+std::string PacketIdToLabel(Packet packet);
 
 // Handling of Chunk and Block Data
 int16_t GetBlockIndex(Int3 position);

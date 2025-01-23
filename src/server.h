@@ -21,7 +21,7 @@ extern int chunkDistance;
 
 extern World overworld;
 extern World nether;
-extern Int3 spawnPoint;
+extern Vec3 spawnPoint;
 extern int8_t spawnDimension;
 
 enum Dimension {

@@ -11,5 +11,47 @@
 #include "items.h"
 #include "version.h"
 #include "command.h"
+#include "packets.h"
+
+#define PACKET_MAX 4096
+
+class Client {
+    public:
+        Client(Player* player);
+        Player* player;
+        int32_t previousOffset = 0;
+        int32_t offset = 0;
+        char message[PACKET_MAX] = {0};
+
+        std::vector<uint8_t> response;
+        std::vector<uint8_t> broadcastResponse;
+        std::vector<uint8_t> broadcastOthersResponse;
+        
+        ssize_t Setup();
+        void PrintReceived(Packet packetType, ssize_t bytes_received);
+        void PrintRead(Packet packetType);
+
+        bool KeepAlive();
+        bool Handshake();
+        bool LoginRequest();
+        bool ChatMessage();
+        bool Respawn();
+        bool PlayerGrounded();
+        bool PlayerPosition();
+        bool PlayerLook();
+        bool PlayerPositionLook();
+        bool HoldingChange();
+        bool Animation();
+        bool EntityAction();
+        bool PlayerDigging(World* world);
+        bool PlayerBlockPlacement(World* world);
+        bool WindowClick();
+        bool DisconnectClient();
+
+        void Respond(ssize_t bytes_received);
+
+    private:
+        bool CheckPosition(Player* player, Vec3 &newPosition, double &newStance); 
+};
 
 void HandleClient(Player* player);
