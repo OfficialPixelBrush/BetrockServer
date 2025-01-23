@@ -3,6 +3,8 @@
 #include <vector>
 #include <unordered_map>
 #include <mutex>
+#include <fstream>
+#include <filesystem>
 
 #include "helper.h"
 #include "items.h"
@@ -11,14 +13,18 @@
 
 class World {
     private:
-        Generator generator;
+        WorleyPeakGenerator generator;
         std::unordered_map<int64_t, Chunk> chunks;
         int64_t GetChunkHash(int32_t x, int32_t z);
+        Int3 DecodeChunkHash(int64_t hash);
         Chunk* GetChunk(int32_t x, int32_t z);
         void AddChunk(int32_t x, int32_t z, Chunk c);
         void RemoveChunk(int32_t x, int32_t z);
     public:
         int64_t seed;
+        void Load();
+        void Save();
+        int GetNumberOfChunks();
         std::vector<uint8_t> GetChunkData(Int3 position);
         Chunk GenerateChunk(int32_t x, int32_t z);
         void PlaceBlock(Int3 position, int16_t block);

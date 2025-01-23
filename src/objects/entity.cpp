@@ -20,5 +20,5 @@ void Entity::Kill(std::vector<uint8_t> &response) {
 }
 
 void Entity::PrintStats() {
-    std::cout << entityId << ": " << GetVec3(position) << "; " << yaw << ", " << pitch << std::endl;
+    std::cout << entityId << ": " << position << "; " << yaw << ", " << pitch << std::endl;
 }

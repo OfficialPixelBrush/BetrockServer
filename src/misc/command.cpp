@@ -95,15 +95,6 @@ void Command::Summon(Player* player) {
 	}
 }
 
-void Command::SummonPlayer(Player* player) {
-	if (command.size() > 1) {
-		int mobId = std::stoi(command[1].c_str());
-		Respond::MobSpawn(response, latestEntityId, mobId,Vec3ToInt3(player->position),0,0);
-		Respond::ChatMessage(response, "§7Spawned " + std::to_string(mobId));
-		failureReason = "";
-	}
-}
-
 void Command::Kick(Player* player) {
 	if (command.size() > 0) {
 		std::string username = player->username;
@@ -174,8 +165,6 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 		Kill(player);
 	} else if (command[0] == "summon") {
 		Summon(player);
-	} else if (command[0] == "summonplayer") {
-		SummonPlayer(player);
 	} else if (command[0] == "kick") {
 		Kick(player);
 	} else if (command[0] == "spawn") {

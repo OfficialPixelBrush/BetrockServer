@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 20)
-project(BetrockServer VERSION 0.1.3)
+project(BetrockServer VERSION 0.1.4)
 
 add_compile_options(
   "-ggdb"
@@ -22,17 +22,20 @@ include_directories(
 add_executable(
     BetrockServer
 
-    src/misc/command.cpp
-    src/misc/helper.cpp
+    src/coms/coms.cpp
+    src/coms/responses.cpp
+
+    src/enums/items.cpp
+    
     src/misc/generators/generator.cpp
     src/misc/generators/worleyPeakGenerator.cpp
+
+    src/misc/command.cpp
+    src/misc/helper.cpp
 
     src/objects/world.cpp
     src/objects/entity.cpp
     src/objects/player.cpp
-
-    src/coms/coms.cpp
-    src/coms/responses.cpp
 
     src/main.cpp
     src/debug.cpp

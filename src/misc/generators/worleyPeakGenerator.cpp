@@ -15,7 +15,7 @@ int64_t WorleyPeakGenerator::Mix(int64_t a , int64_t b) {
 	return ((a ^ b) * PRIME1) & 0xFFFFFFFFFFFFFFFF;
 }
 
-int32_t WorleyPeakGenerator::SpatialPrng(Int3 position, int64_t seed) {
+int32_t WorleyPeakGenerator::SpatialPrng(Int3 position) {
 	int32_t x = position.x;
 	int8_t y = position.y;
 	int32_t z = position.z;
@@ -44,91 +44,112 @@ int32_t WorleyPeakGenerator::SpatialPrng(Int3 position, int64_t seed) {
 	return h & 0x7FFFFFFF; //Ensure positive number
 }
 
-Int3 WorleyPeakGenerator::GetPointPositionInChunk(Int3 position) {
-	int32_t spaceX = SpatialPrng(position, seed);
-	int32_t spaceY = SpatialPrng(position, seed);
-	int32_t spaceZ = SpatialPrng(position, seed);
-	
-	// Ensure positive modulo results
-	int32_t x = ((spaceX ^ position.x) % CHUNK_WIDTH_X + CHUNK_WIDTH_X) % CHUNK_WIDTH_X;
-	int32_t y = ((spaceY ^ position.y) % CHUNK_HEIGHT  + CHUNK_HEIGHT ) % CHUNK_HEIGHT;
-	int32_t z = ((spaceZ ^ position.z) % CHUNK_WIDTH_Z + CHUNK_WIDTH_Z) % CHUNK_WIDTH_Z;
-	
-	return Int3 {x, y, z};
+Int3 WorleyPeakGenerator::GetPointPositionInChunk(Int3 position, float verticalScale) {
+    // Use different seeds for x, y, z to ensure unique coordinates
+    int32_t randomized = SpatialPrng(position);
+
+    int32_t x = ((randomized ^ position.x) % CHUNK_WIDTH_X + CHUNK_WIDTH_X) % CHUNK_WIDTH_X;
+    int32_t y = ((randomized ^ position.y) % CHUNK_HEIGHT  + CHUNK_HEIGHT ) % CHUNK_HEIGHT;
+    y = y*verticalScale;
+    int32_t z = ((randomized ^ position.z) % CHUNK_WIDTH_Z + CHUNK_WIDTH_Z) % CHUNK_WIDTH_Z;
+    
+    return Int3{x, y, z};
 }
 
-double WorleyPeakGenerator::FindDistanceToPoint(Int3 position) {
+double WorleyPeakGenerator::FindDistanceToPoint(Int3 position, float verticalScale) {
     Int3 chunkPos = {
-        position.x>>4,
+        position.x >> 4,
         0,
-        position.z>>4,
+        position.z >> 4
     };
-    Int3 blockPos = {
-        position.x&0xF,
-        position.y&0xF,
-        position.z&0xF,
-    };
-    Block b;
-    double smallestDistance = 10000.0f;
-
+    
+    double smallestDistance = std::numeric_limits<double>::max();
+    
+    // Check neighboring chunks horizontally
     for (int cX = -1; cX < 2; cX++) {
         for (int cZ = -1; cZ < 2; cZ++) {
             Int3 goalChunkPos = chunkPos;
             goalChunkPos.x += cX;
-            goalChunkPos.y += 0;
             goalChunkPos.z += cZ;
-
-            Int3 goalBlockPos = GetPointPositionInChunk(goalChunkPos);
-
+            
+            Int3 goalBlockPos = GetPointPositionInChunk(goalChunkPos, verticalScale);
             Int3 goalGlobalPos = LocalToGlobalPosition(goalChunkPos, goalBlockPos);
-            double distance = GetDistance(position,goalGlobalPos);
-
-            if (distance < smallestDistance) {
-                smallestDistance = distance;
-            } 
+            
+            double distance = GetDistance(position, goalGlobalPos);
+            smallestDistance = std::min(smallestDistance, distance);
         }
     }
+    
     return smallestDistance;
 }
 
-bool WorleyPeakGenerator::GetNoise(Int3 position) {
-    double distance = FindDistanceToPoint(position);
-    if (position.y < distance) {
-        return true;
-    }
-    return false;
+double smoothstep(double edge0, double edge1, double x) {
+    // Clamp x between 0 and 1
+    double t = std::max(0.0, std::min(1.0, (x - edge0) / (edge1 - edge0)));
+    // Cubic interpolation for smoother transition
+    return t * t * (3.0 - 2.0 * t);
+}
+
+double WorleyPeakGenerator::GetNoise(Int3 position, double threshold, float verticalScale) {
+    double distance = FindDistanceToPoint(position, verticalScale);
+    
+    // Use smoothstep for more natural falloff
+    return 1.0 - smoothstep(0.0, threshold, distance);
 }
 
 Block WorleyPeakGenerator::GenerateBlock(Int3 position, int8_t blocksSinceSkyVisible) {
     Block b;
+    bool solid = true;
     if (position.y == 0) {
         b.type = BLOCK_BEDROCK;
     } else if (position.y > 0) {
-        Int3 movedPos {
-            position.x,
-            position.y - 55,
-            position.z
-        };
-        if (GetNoise(movedPos)) {
-            if (blocksSinceSkyVisible == 0) {
-                if (position.y > 66) {
-                    b.type = BLOCK_GRASS;
-                } else {
-                    b.type = BLOCK_SAND;
-                }
-            } else if (blocksSinceSkyVisible > 0 && blocksSinceSkyVisible < 3) {
-                if (position.y > 66) {
-                    b.type = BLOCK_DIRT;
-                } else {
-                    b.type = BLOCK_SAND;
-                }
-            } else {
-                b.type = BLOCK_STONE;
-            }
+        if (Between(position.y,0,3) && SpatialPrng(position)%2) {
+            b.type = BLOCK_BEDROCK;
+            return b;
+        }
+        if (GetNoise(Int3(position.x, CHUNK_HEIGHT - position.y - 13, position.z), 60.0) > 0.2) {
+            //std::cout << position << ": " << GetNoise(Int3{position.x,0,position.z}, 1) << std::endl;
+            solid = false;
         } else {
             if (position.y < 64) {
                 b.type = BLOCK_WATER_STILL;
             }
+        }
+    }
+
+    if (solid) {
+        if (blocksSinceSkyVisible == 0) {
+            if (position.y > (64 + (SpatialPrng(position)%2))) {
+                b.type = BLOCK_GRASS;
+            } else {
+                b.type = BLOCK_SAND;
+            }
+        } else if (blocksSinceSkyVisible > 0 && blocksSinceSkyVisible < 3+(SpatialPrng(position)%2)) {
+            if (position.y > (64 + (SpatialPrng(position)%2))) {
+                b.type = BLOCK_DIRT;
+            } else {
+                b.type = BLOCK_SAND;
+            }
+        } else {
+            if (Between(position.y,5,52) && SpatialPrng(position)%CHANCE_COAL==0) {
+                b.type = BLOCK_ORE_COAL;
+            } else if (Between(position.y,13,17) && SpatialPrng(position)%CHANCE_LAPIS_LAZULI==0) {
+                b.type = BLOCK_ORE_LAPIS_LAZULI;
+            } else if (Between(position.y,5,54) && SpatialPrng(position)%CHANCE_IRON==0) {
+                b.type = BLOCK_ORE_IRON;
+            } else if (Between(position.y,5,29) && SpatialPrng(position)%CHANCE_GOLD==0) {
+                b.type = BLOCK_ORE_GOLD;
+            } else if (Between(position.y,5,12) && SpatialPrng(position)%CHANCE_DIAMOND==0) {
+                b.type = BLOCK_ORE_DIAMOND;
+            } else if (Between(position.y,5,12) && SpatialPrng(position)%CHANCE_REDSTONE==0) {
+                b.type = BLOCK_ORE_REDSTONE;
+            } else {
+                b.type = BLOCK_STONE;
+            }
+        }
+    } else {
+        if (position.y < 64) {
+            b.type = BLOCK_WATER_STILL;
         }
     }
     return b;

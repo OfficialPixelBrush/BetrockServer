@@ -27,16 +27,29 @@ Int3 XyzToInt3(int32_t x, int32_t y, int32_t z) {
 	return i;
 }
 
+bool Between(int value, int a, int b) {
+	if (a < b) {
+		if (value > a && value < b) {
+			return true;
+		}
+	} else {
+		if (value > b && value < a) {
+			return true;
+		}
+	}
+	return false;
+}
+
 double GetDistance(Vec3 a, Vec3 b) {
 	double x = (b.x-a.x)*(b.x-a.x);
-	double y = (b.y-a.y)*(b.y-a.z);
+	double y = (b.y-a.y)*(b.y-a.y);
 	double z = (b.z-a.z)*(b.z-a.z);
 	return abs(std::sqrt(x+y+z));
 }
 
 double GetDistance(Int3 a, Int3 b) {
 	int32_t x = (b.x-a.x)*(b.x-a.x);
-	int32_t y = (b.y-a.y)*(b.y-a.z);
+	int32_t y = (b.y-a.y)*(b.y-a.y);
 	int32_t z = (b.z-a.z)*(b.z-a.z);
 	return abs(std::sqrt(double(x+y+z)));
 }
@@ -54,6 +67,18 @@ Int3 LocalToGlobalPosition(Int3 chunkPos, Int3 blockPos) {
         blockPos.y,
         chunkPos.z*CHUNK_WIDTH_Z + blockPos.z
     };
+}
+
+Int3 BlockToChunkPosition(Int3 position) {
+	position.x = position.x >> 4;
+	position.y = 0;
+	position.z = position.z >> 4;
+	return position;
+}
+
+Int3 BlockToChunkPosition(Vec3 position) {
+	Int3 intPos = Vec3ToInt3(position);
+	return BlockToChunkPosition(intPos);
 }
 
 void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction) {
@@ -387,4 +412,8 @@ char* CompressChunk(std::vector<uint8_t> chunk, size_t &compressed_size) {
     libdeflate_free_compressor(compressor);
 
     return compressed_data;
+}
+
+// TODO: Implement decompression
+Chunk DecompressChunk() {
 }

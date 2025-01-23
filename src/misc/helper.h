@@ -29,10 +29,24 @@ struct Chunk {
 // Custom Types
 struct Vec3 {
 	double x,y,z;
+    bool operator==(const Vec3& other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
+    friend std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
+        os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
+        return os;
+    }
 };
 
 struct Int3 {
 	int32_t x,y,z;
+    bool operator==(const Int3& other) const {
+        return x == other.x && y == other.y && z == other.z;
+    }
+    friend std::ostream& operator<<(std::ostream& os, const Int3& i) {
+        os << "(" << i.x << ", " << i.y << ", " << i.z << ")";
+        return os;
+    }
 };
 
 typedef struct Vec3 Vec3;
@@ -42,14 +56,14 @@ typedef struct Int3 Int3;
 Vec3 Int3ToVec3(Int3 i);
 Int3 Vec3ToInt3(Vec3 v);
 Int3 XyzToInt3(int32_t x, int32_t y, int32_t z);
+bool Between(int value, int a, int b);
 
 double GetDistance(Vec3 a, Vec3 b);
 double GetDistance(Int3 a, Int3 b);
 
-std::string GetInt3(Int3 position);
-std::string GetVec3(Vec3 position);
-
 Int3 LocalToGlobalPosition(Int3 chunkPos, Int3 blockPos);
+Int3 BlockToChunkPosition(Vec3 position);
+Int3 BlockToChunkPosition(Int3 position);
 void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction);
 
 // Converting a network response into a native type
@@ -82,3 +96,4 @@ std::string PacketIdToLabel(Packet packet);
 // Handling of Chunk and Block Data
 int16_t GetBlockIndex(Int3 position);
 char* CompressChunk(std::vector<uint8_t> chunk, size_t &compressed_size);
+Chunk DecompressChunk();

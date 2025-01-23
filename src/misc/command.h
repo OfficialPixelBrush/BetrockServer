@@ -18,7 +18,6 @@ class Command {
         static void Health(Player* player);
         static void Kill(Player* player);
         static void Summon(Player* player);
-        static void SummonPlayer(Player* player);
         static void Kick(Player* player);
         static void Spawn(Player* player);
         static void Creative(Player* player);

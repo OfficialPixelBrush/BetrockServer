@@ -8,7 +8,7 @@ std::mutex entityIdMutex;
 
 int32_t latestEntityId;
 uint64_t serverTime = 0;
-int chunkDistance = 5;
+int chunkDistance = 4;
 
 World overworld;
 World nether;

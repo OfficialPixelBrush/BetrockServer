@@ -7,21 +7,6 @@ Client::Client(Player* player) {
 bool Client::CheckPosition(Player* player, Vec3 &newPosition, double &newStance) {
 	player->previousPosition = player->position;
 
-	// TODO: Fix this
-	/*
-	if (
-		(newStance - newPosition.y < 0.1) ||
-		(newStance - newPosition.y > 1.65)
-	) {
-		Disconnect(player, "Illegal Stance");
-		return false;
-	}
-	if (GetDistance(player->position, newPosition) > 100) {
-		//std::cout << GetVec3(player->position) << " VS " << GetVec3(newPosition) << std::endl;
-		Disconnect(player, "You moved too quickly :( (Hacking?)");
-		return false;
-	}
-	*/
 	player->position = newPosition;
 	player->stance = newStance + 1.62;
 	return true;
@@ -64,6 +49,82 @@ void Client::PrintRead(Packet packetType) {
 	}
 	std::cout << std::dec << std::endl;
 	previousOffset = offset;
+}
+
+bool ChunkBorderCrossed(Player* player) {
+	if (BlockToChunkPosition(player->previousPosition) == BlockToChunkPosition(player->position)) {
+		return false;
+	}
+	return true;
+}
+
+size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
+	size_t numberOfNewChunks = 0;
+	
+	// Determine the center chunk from which to start from
+	Int3 centerPos = Vec3ToInt3(player->position);
+	Int3 playerChunkPos = BlockToChunkPosition(centerPos);
+	int32_t pX = centerPos.x >> 4;
+	int32_t pZ = centerPos.z >> 4;
+
+	// Use an iterator to safely erase while iterating
+	for (auto it = player->visibleChunks.begin(); it != player->visibleChunks.end(); ) {
+		double distance = GetDistance(playerChunkPos, *it);
+		if (distance > chunkDistance) {
+			Respond::PreChunk(response, it->x, it->z, 0);
+			it = player->visibleChunks.erase(it);
+		} else {
+			++it;
+		}
+	}
+
+	// Go over all chunk coordinates around the center position
+	for (int x = pX + chunkDistance*-1; x < pX + chunkDistance; x++) {
+		for (int z = pZ + chunkDistance*-1; z < pZ + chunkDistance; z++) {
+			World* world = GetDimension(player->dimension);
+			Int3 position = XyzToInt3(x,0,z);
+
+			// Acquire existing chunk data
+			std::vector<uint8_t> chunkData = world->GetChunkData(position);
+			if (chunkData.empty()) {
+				// If none exists, generate new chunks
+				world->GenerateChunk(x,z);
+				numberOfNewChunks++;
+				chunkData = world->GetChunkData(position);
+			}
+			// Add it to the list of chunks to be compressed and sent
+			if (chunkData.empty()) {
+				std::cout << "Failed to generated Chunk (" << (int)x << ", " << (int)z << ")" << std::endl;
+				continue;
+			}
+			
+			Respond::PreChunk(response, x, z, 1);
+
+			size_t compressedSize = 0;
+			char* chunk = CompressChunk(chunkData, compressedSize);
+			
+			if (chunk) {				
+				// Track newly visible chunks
+				player->visibleChunks.push_back(position);
+
+				// Send compressed chunk data
+				Respond::Chunk(
+					response, 
+					Int3{position.x << 4, 0, position.z << 4}, 
+					CHUNK_WIDTH_X - 1, 
+					CHUNK_HEIGHT - 1, 
+					CHUNK_WIDTH_Z - 1, 
+					compressedSize, 
+					chunk
+				);
+			}
+			delete [] chunk;
+		}
+	}
+	SendToPlayer(response, player);
+	response.clear();
+
+	return numberOfNewChunks;
 }
 
 void Client::Respond(ssize_t bytes_received) {
@@ -178,7 +239,6 @@ void HandleClient(Player* player) {
 	// Assign player
 	Client client = Client(player);
 
-
 	// While the player is connected, read packets from them
 	while (player->connectionStatus > ConnectionStatus::Disconnected) {
 		HandlePacket(client);
@@ -248,9 +308,6 @@ bool Client::LoginRequest() {
 	Respond::Time(response,serverTime);
 	Respond::UpdateHealth(response,player->health);
 
-	// TODO: Lazy-load chunks
-	SendChunksAroundPlayer(response,player);
-
 	// Fill the players inventory
 	Respond::SetSlot(response,0,36,ITEM_PICKAXE_DIAMOND	, 1,0);
 	Respond::SetSlot(response,0,37,ITEM_AXE_DIAMOND		, 1,0);
@@ -259,16 +316,20 @@ bool Client::LoginRequest() {
 	Respond::SetSlot(response,0,40,BLOCK_COBBLESTONE	,64,0);
 	Respond::SetSlot(response,0,41,BLOCK_PLANKS			,64,0);
 
-	// This is when the player starts to see the world!
+	// Place the player at spawn
+	// Note: Teleporting automatically loads surrounding chunks,
+	// so no further loading is necessary
 	player->Teleport(response,spawnPoint);
+
+	// Create the player for other players
 	Respond::NamedEntitySpawn(broadcastOthersResponse, player->entityId, player->username, Vec3ToInt3(player->position), player->yaw, player->pitch, BLOCK_PLANKS);
 
     for (Player* others : connectedPlayers) {
 		if (others == player) { continue; }
 		Respond::NamedEntitySpawn(response, others->entityId, others->username, Vec3ToInt3(others->position), others->yaw, others->pitch, BLOCK_PLANKS);
     }
-	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION), 0);
 	player->connectionStatus = ConnectionStatus::Connected;
+	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION), 0);
 	return true;
 }
 
@@ -313,6 +374,10 @@ bool Client::PlayerPosition() {
 		ConvertFloatToPackedByte(player->pitch)
 	);
 
+	if (ChunkBorderCrossed(player)) {
+		SendChunksAroundPlayer(response,player);
+	}
+
 	// TODO: Figure this out!!
 	/*
 	if (GetDistance(player->previousPosition,player->position) < 4.0) {
@@ -351,6 +416,9 @@ bool Client::PlayerPositionLook() {
 	player->pitch = EntryToFloat(message,offset);
 	player->onGround = EntryToByte(message, offset);
 	CheckPosition(player,newPosition,newStance);
+	if (ChunkBorderCrossed(player)) {
+		SendChunksAroundPlayer(response,player);
+	}
 	return true;
 }
 

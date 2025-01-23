@@ -1,7 +1,15 @@
 #include "main.h"
 
-void HandleSignal(int sig) {
+void PrepareForShutdown() {
 	alive = false;
+	overworld.Save();
+	nether.Save();
+	DisconnectAllPlayers("Server closed!");
+	close(server_fd);
+}
+
+void HandleSignal(int sig) {
+	PrepareForShutdown();
     shutdown(server_fd, SHUT_RDWR); // Interrupt accept
 	exit(0);
 }
@@ -43,8 +51,10 @@ void ServerJoin(struct sockaddr_in address) {
 void LoadConfig() {
 	// TODO: Read server.properties etc.
 	// TODO: Read level.dat
-	overworld.seed = 200;
-	nether.seed = 200;
+	overworld.Load();
+	//nether.Load("DIM-1");
+	overworld.SetSeed(1);
+	//nether.SetSeed(1);
 }
 
 int main() {
@@ -92,16 +102,18 @@ int main() {
     // Create threads for sending and receiving data
 	std::thread join_thread(ServerJoin, address);
 
-	// Generate a basic world
-    std::cout << "Generating..." << std::endl;
-	uint newChunks = 0;
-	for (int x = chunkDistance*-1; x < chunkDistance; x++) {
-		for (int z = chunkDistance*-1; z < chunkDistance; z++) {
-			overworld.GenerateChunk(x,z);
-			newChunks++;
+	// Generate spawn area
+	if (overworld.GetNumberOfChunks() == 0) {
+		std::cout << "Generating..." << std::endl;
+		uint newChunks = 0;
+		for (int x = -1; x < 2; x++) {
+			for (int z = -1; z < 2; z++) {
+				overworld.GenerateChunk(x,z);
+				newChunks++;
+			}
 		}
+		std::cout << "Generated " << newChunks << " Overworld Chunks" << std::endl;
 	}
-    std::cout << "Generated " << newChunks << " Overworld Chunks" << std::endl;
 	Int3 spawnBlock = overworld.FindSpawnableBlock(Int3 {0,64,0});
 	spawnPoint = Int3ToVec3(spawnBlock);
 	spawnPoint.y+=STANCE_OFFSET;
@@ -114,10 +126,7 @@ int main() {
 		BroadcastToPlayers(response);
         sleep(1); // Send data every second
 	}
-	DisconnectAllPlayers("Server closed!");
+	PrepareForShutdown();
 	join_thread.join();
-	close(server_fd);
-
-		std::cout << "STILL HERE!!" << std::endl;
 	return 0;
 }

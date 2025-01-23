@@ -3,6 +3,8 @@
 #include "helper.h"
 #include "responses.h"
 #include "entity.h"
+#include "coms.h"
+#include "client.h"
 
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62
@@ -29,6 +31,7 @@ class Player : public Entity {
         // Gameplay Stats
         bool creativeMode = false;
         int8_t health = HEALTH_MAX;
+        std::vector<Int3> visibleChunks;
 
         // Connection Stats
         int64_t lastPacketTime = 0;
