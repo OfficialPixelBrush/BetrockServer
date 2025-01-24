@@ -33,15 +33,28 @@ void Command::Teleport(Player* player) {
 }
 
 // Give any Item
-void Command::Give() {
+void Command::Give(Player* player) {
 	if (command.size() > 1) {
-		int itemId = std::stoi(command[1].c_str());
+		int8_t amount = -1;
+		int8_t metadata = 0;
+		if (command.size() > 2) {
+			metadata = std::stoi(command[2].c_str());
+		}
+		if (command.size() > 3) {
+			metadata = std::stoi(command[2].c_str());
+			amount = std::stoi(command[3].c_str());
+		}
+		int16_t itemId = std::stoi(command[1].c_str());
 		if (
 			(itemId > BLOCK_AIR && itemId < BLOCK_MAX) ||
 			(itemId >= ITEM_SHOVEL_IRON && itemId < ITEM_MAX)
 		) {
 			// TODO: Find first empty slot in inventory!!
-			Respond::SetSlot(response,0,36,itemId,64,0);
+			bool result = player->Give(response,itemId,amount,metadata);
+			if (!result) {
+				failureReason = "Unable to give " + std::to_string(itemId);
+				return;
+			}
 			Respond::ChatMessage(response, "§7Gave " + std::to_string(itemId));
 			failureReason = "";
 		} else {
@@ -158,7 +171,7 @@ void Command::Parse(std::string &rawCommand, Player* player) {
     } else if (command[0] == "tp") {
 		Teleport(player);
     } else if (command[0] == "give") {
-		Give();
+		Give(player);
 	} else if (command[0] == "health") {
 		Health(player);
 	} else if (command[0] == "kill") {

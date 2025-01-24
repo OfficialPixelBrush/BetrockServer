@@ -51,11 +51,11 @@ void Client::PrintRead(Packet packetType) {
 	previousOffset = offset;
 }
 
-bool ChunkBorderCrossed(Player* player) {
-	if (BlockToChunkPosition(player->previousPosition) == BlockToChunkPosition(player->position)) {
-		return false;
+bool CheckIfNewChunksRequired(Player* player) {
+	if (GetDistance(player->lastChunkUpdatePosition,player->position) > (chunkDistance/2)*CHUNK_WIDTH_X) {
+		return true;
 	}
-	return true;
+	return false;
 }
 
 size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
@@ -85,15 +85,15 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 			Int3 position = XyzToInt3(x,0,z);
 
 			// Acquire existing chunk data
-			std::vector<uint8_t> chunkData = world->GetChunkData(position);
-			if (chunkData.empty()) {
+			auto chunkData = world->GetChunkData(position);
+			if (!chunkData) {
 				// If none exists, generate new chunks
 				world->GenerateChunk(x,z);
 				numberOfNewChunks++;
 				chunkData = world->GetChunkData(position);
 			}
 			// Add it to the list of chunks to be compressed and sent
-			if (chunkData.empty()) {
+			if (!chunkData) {
 				std::cout << "Failed to generated Chunk (" << (int)x << ", " << (int)z << ")" << std::endl;
 				continue;
 			}
@@ -101,7 +101,7 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 			Respond::PreChunk(response, x, z, 1);
 
 			size_t compressedSize = 0;
-			char* chunk = CompressChunk(chunkData, compressedSize);
+			char* chunk = CompressChunk(chunkData.get(), compressedSize);
 			
 			if (chunk) {				
 				// Track newly visible chunks
@@ -112,7 +112,7 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 					response, 
 					Int3{position.x << 4, 0, position.z << 4}, 
 					CHUNK_WIDTH_X - 1, 
-					CHUNK_HEIGHT - 1, 
+					CHUNK_HEIGHT  - 1, 
 					CHUNK_WIDTH_Z - 1, 
 					compressedSize, 
 					chunk
@@ -123,7 +123,8 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 	}
 	SendToPlayer(response, player);
 	response.clear();
-
+	// Update last chunk position
+	player->lastChunkUpdatePosition = player->position;
 	return numberOfNewChunks;
 }
 
@@ -309,12 +310,12 @@ bool Client::LoginRequest() {
 	Respond::UpdateHealth(response,player->health);
 
 	// Fill the players inventory
-	Respond::SetSlot(response,0,36,ITEM_PICKAXE_DIAMOND	, 1,0);
-	Respond::SetSlot(response,0,37,ITEM_AXE_DIAMOND		, 1,0);
-	Respond::SetSlot(response,0,38,ITEM_SHOVEL_DIAMOND	, 1,0);
-	Respond::SetSlot(response,0,39,BLOCK_STONE			,64,0);
-	Respond::SetSlot(response,0,40,BLOCK_COBBLESTONE	,64,0);
-	Respond::SetSlot(response,0,41,BLOCK_PLANKS			,64,0);
+	player->Give(response,ITEM_PICKAXE_DIAMOND);
+	player->Give(response,ITEM_AXE_DIAMOND);
+	player->Give(response,ITEM_SHOVEL_DIAMOND);
+	player->Give(response,BLOCK_STONE);
+	player->Give(response,BLOCK_COBBLESTONE);
+	player->Give(response,BLOCK_PLANKS);
 
 	// Place the player at spawn
 	// Note: Teleporting automatically loads surrounding chunks,
@@ -374,7 +375,7 @@ bool Client::PlayerPosition() {
 		ConvertFloatToPackedByte(player->pitch)
 	);
 
-	if (ChunkBorderCrossed(player)) {
+	if (CheckIfNewChunksRequired(player)) {
 		SendChunksAroundPlayer(response,player);
 	}
 
@@ -416,7 +417,7 @@ bool Client::PlayerPositionLook() {
 	player->pitch = EntryToFloat(message,offset);
 	player->onGround = EntryToByte(message, offset);
 	CheckPosition(player,newPosition,newStance);
-	if (ChunkBorderCrossed(player)) {
+	if (CheckIfNewChunksRequired(player)) {
 		SendChunksAroundPlayer(response,player);
 	}
 	return true;
@@ -431,7 +432,7 @@ bool Client::Animation() {
 	int32_t entityId = EntryToInteger(message, offset);
 	int8_t animation = EntryToByte(message, offset);
 	// TODO: Only send this to other clients
-	//Respond::Animation(broadcastResponse, entityId, animation);
+	Respond::Animation(broadcastOthersResponse, entityId, animation);
 	return true;
 }
 
@@ -441,9 +442,11 @@ bool Client::EntityAction() {
 	switch(action) {
 		case 1:
 			player->crouching = true;
+			Respond::Animation(broadcastOthersResponse, entityId, 104);
 			break;
 		case 2:
 			player->crouching = false;
+			Respond::Animation(broadcastOthersResponse, entityId, 105);
 			break;
 		default:
 			break;
@@ -463,7 +466,8 @@ bool Client::PlayerDigging(World* world) {
 	// Maybe because I don't parse multi-packets?
 	if (status == 2 || player->creativeMode) {
 		Respond::BlockChange(broadcastResponse,pos,0,0);
-		world->BreakBlock(pos);
+		Block b = world->BreakBlock(pos);
+		Respond::PickupSpawn(broadcastResponse,latestEntityId,b.type,1,b.meta,pos,0,0,0);
 	}
 	return true;
 }
@@ -474,9 +478,11 @@ bool Client::PlayerBlockPlacement(World* world) {
 	int32_t z = EntryToInteger(message, offset);
 	int8_t direction = EntryToByte(message, offset);
 	int16_t id = EntryToShort(message, offset);
+	int8_t amount = 0;
+	int16_t damage = 0;
 	if (id >= 0) {
-		int8_t amount = EntryToByte(message, offset);
-		int16_t damage = EntryToShort(message, offset);
+		amount = EntryToByte(message, offset);
+		damage = EntryToShort(message, offset);
 	}
 	
 	// If you don't catch this, the Server will try to
@@ -484,8 +490,8 @@ bool Client::PlayerBlockPlacement(World* world) {
 	if (id > BLOCK_AIR && id < BLOCK_MAX) {
 		BlockToFace(x,y,z,direction);
 		Int3 pos = XyzToInt3(x,y,z);
-		Respond::BlockChange(broadcastResponse,pos,(int8_t)(id&0xFF),0);
-		world->PlaceBlock(pos,id);
+		Respond::BlockChange(broadcastResponse,pos,(int8_t)id,(int8_t)damage);
+		world->PlaceBlock(pos,(int8_t)id,(int8_t)damage);
 	}
 	return true;
 }
@@ -505,6 +511,7 @@ bool Client::WindowClick() {
 }
 
 bool Client::DisconnectClient() {
+	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
 	Disconnect(player);
 	Respond::ChatMessage(broadcastResponse, "§e" + player->username + " left the game.");
 	return true;

@@ -96,6 +96,12 @@ void Respond::Animation(std::vector<uint8_t> &response, int32_t entityId, uint8_
     response.push_back(animation);
 }
 
+void Respond::EntityAction(std::vector<uint8_t> &response, int32_t entityId, uint8_t action) {
+    response.push_back((uint8_t)Packet::EntityAction);
+    AppendIntegerToVector(response, entityId);
+    response.push_back(action);
+}
+
 void Respond::NamedEntitySpawn(std::vector<uint8_t> &response, int32_t& entityId, std::string username, Int3 position, int8_t yaw, int8_t pitch, int16_t currentItem) {
     response.push_back((uint8_t)Packet::NamedEntitySpawn);
     AppendIntegerToVector(response, entityId);
@@ -106,6 +112,20 @@ void Respond::NamedEntitySpawn(std::vector<uint8_t> &response, int32_t& entityId
     response.push_back(yaw);
     response.push_back(pitch);
     AppendShortToVector(response, currentItem);
+}
+
+void Respond::PickupSpawn(std::vector<uint8_t> &response, int32_t& entityId, int16_t id, int8_t count, int16_t damage, Int3 position, int8_t yaw, int8_t pitch, int8_t roll) {
+    response.push_back((uint8_t)Packet::PickupSpawn);
+    AppendIntegerToVector(response, entityId++);
+    AppendShortToVector(response, id);
+    response.push_back(count);
+    AppendShortToVector(response, damage);
+    AppendIntegerToVector(response, position.x);
+    AppendIntegerToVector(response, position.y);
+    AppendIntegerToVector(response, position.z);
+    response.push_back(yaw);
+    response.push_back(pitch);
+    response.push_back(roll);
 }
 
 void Respond::MobSpawn(std::vector<uint8_t> &response, int32_t& entityId, int8_t type, Int3 position, int8_t yaw, int8_t pitch) {
@@ -126,6 +146,11 @@ void Respond::MobSpawn(std::vector<uint8_t> &response, int32_t& entityId, int8_t
         data = metadata[i];
     }
     */
+}
+
+void Respond::DestroyEntity(std::vector<uint8_t> &response, int32_t& entityId) {
+    response.push_back((uint8_t)Packet::DestroyEntity);
+    AppendIntegerToVector(response, entityId);
 }
 
 void Respond::EntityRelativeMove(std::vector<uint8_t> &response, int32_t& entityId, Int3 relativeMovement) {

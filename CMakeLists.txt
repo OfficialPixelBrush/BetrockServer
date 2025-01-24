@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 20)
-project(BetrockServer VERSION 0.1.4)
+project(BetrockServer VERSION 0.1.5)
 
 add_compile_options(
   "-ggdb"
@@ -64,3 +64,17 @@ else()
         deflate
     )
 endif()
+
+
+include(CPack)
+
+# Set up CPack for AppImage
+set(CPACK_PACKAGE_NAME "BetrockServer")
+set(CPACK_PACKAGE_VERSION ${PROJECT_VERSION})
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "BetrockServer - Minecraft Beta 1.7.3 Server-Engine")
+set(CPACK_PACKAGE_VENDOR "Torben J. Virtmann")
+set(CPACK_PACKAGE_CONTACT "letsplaytvirtmann@gmail.com")
+set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
+
+# Install the Betrock executable
+install(TARGETS BetrockServer DESTINATION bin)

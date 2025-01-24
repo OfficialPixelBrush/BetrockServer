@@ -14,6 +14,8 @@
 #define CHUNK_WIDTH_X 16
 #define CHUNK_WIDTH_Z 16
 
+#define CHUNK_DATA_SIZE static_cast<size_t>(CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z * 2.5)
+
 // Building blocks
 struct Block {
     uint8_t type = 0;
@@ -95,5 +97,5 @@ std::string PacketIdToLabel(Packet packet);
 
 // Handling of Chunk and Block Data
 int16_t GetBlockIndex(Int3 position);
-char* CompressChunk(std::vector<uint8_t> chunk, size_t &compressed_size);
-Chunk DecompressChunk();
+char* CompressChunk(char* chunk, size_t &compressed_size);
+char* DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size);

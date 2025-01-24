@@ -25,10 +25,10 @@ class World {
         void Load();
         void Save();
         int GetNumberOfChunks();
-        std::vector<uint8_t> GetChunkData(Int3 position);
+        std::unique_ptr<char[]> GetChunkData(Int3 position);
         Chunk GenerateChunk(int32_t x, int32_t z);
-        void PlaceBlock(Int3 position, int16_t block);
-        void BreakBlock(Int3 position);
+        void PlaceBlock(Int3 position, int8_t type, int8_t meta);
+        Block BreakBlock(Int3 position);
         Block* GetBlock(Int3 position);
         Int3 FindSpawnableBlock(Int3 position);
         void CalculateColumnLight(int32_t x, int32_t z);

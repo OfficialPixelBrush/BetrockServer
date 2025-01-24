@@ -3,7 +3,7 @@
 void PrepareForShutdown() {
 	alive = false;
 	overworld.Save();
-	nether.Save();
+	//nether.Save();
 	DisconnectAllPlayers("Server closed!");
 	close(server_fd);
 }

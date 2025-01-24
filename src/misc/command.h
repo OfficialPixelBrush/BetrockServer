@@ -14,7 +14,7 @@ class Command {
     private:
         static void Time();
         static void Teleport(Player* player);
-        static void Give();
+        static void Give(Player* player);
         static void Health(Player* player);
         static void Kill(Player* player);
         static void Summon(Player* player);

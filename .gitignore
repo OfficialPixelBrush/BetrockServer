@@ -31,3 +31,6 @@
 *.out
 *.app
 /build
+/world
+/_CPack_Packages
+*.gz
