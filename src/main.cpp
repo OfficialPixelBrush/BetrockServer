@@ -49,12 +49,36 @@ void ServerJoin(struct sockaddr_in address) {
 }
 
 void LoadConfig() {
+	std::srand(static_cast<unsigned int>(std::time(0)));
+    const std::string filename = "server.properties";
+    const std::unordered_map<std::string, std::string> defaultValues = {
+		{"level-name","world"},
+		{"view-distance","5"},
+		// {"white-list","false"},
+        {"server-ip", ""},
+		//{"pvp","true"},
+		{"level-seed",std::to_string(std::rand())},
+		//{"spawn-animals",true}
+        {"server-port", "25565"}
+		//{"allow-nether",true},
+		//{"spawn-monsters","true"},
+		//{"max-players","20"},
+		//{"online-mode","false"},
+		//{"allow-flight","false"}
+    };
+    if (!std::filesystem::exists(filename)) {
+        CreateDefaultProperties(filename, defaultValues);
+    }
+	properties = ReadPropertiesFile(filename);
+	int64_t seed = std::stoll(properties["level-seed"]);
+	std::cout << "Level seed is " << seed << std::endl;
 	// TODO: Read server.properties etc.
 	// TODO: Read level.dat
+	overworld.SetSeed(seed);
+	//nether.SetSeed(seed);
 	overworld.Load();
 	//nether.Load("DIM-1");
-	overworld.SetSeed(1);
-	//nether.SetSeed(1);
+	WritePropertiesFile(filename,properties);
 }
 
 int main() {
@@ -65,7 +89,7 @@ int main() {
 
 	LoadConfig();
 
-	const int port = 25565;
+	const int port = std::stoi(properties["server-port"]);
 	int client_fd;
 	struct sockaddr_in address;
 	int addrlen = sizeof(address);
