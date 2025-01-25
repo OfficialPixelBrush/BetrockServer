@@ -19,3 +19,4 @@
 #include "server.h"
 #include "coms.h"
 #include "client.h"
+#include "config.h"

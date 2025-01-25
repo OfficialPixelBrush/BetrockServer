@@ -10,6 +10,7 @@
 #include "items.h"
 #include "generator.h"
 #include "worleyPeakGenerator.h"
+#include "config.h"
 
 class World {
     private:
@@ -22,8 +23,8 @@ class World {
         void RemoveChunk(int32_t x, int32_t z);
     public:
         int64_t seed;
-        void Load();
-        void Save();
+        void Load(std::string extra = "");
+        void Save(std::string extra = "");
         int GetNumberOfChunks();
         std::unique_ptr<char[]> GetChunkData(Int3 position);
         Chunk GenerateChunk(int32_t x, int32_t z);

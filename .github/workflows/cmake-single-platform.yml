@@ -5,9 +5,9 @@ name: CMake on a single platform
 
 on:
   push:
-    branches: [ "main", "latest" ]
+    branches: [ "latest" ]
   pull_request:
-    branches: [ "main", "latest" ]
+    branches: [ "main" ]
 
 permissions:
   contents: write
@@ -58,8 +58,8 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        tag_name: v${{ env.version }}-${{ github.run_number }}
-        release_name: v${{ env.version }} (${{ github.run_number }})
+        tag_name: v${{ env.version }}
+        release_name: v${{ env.version }}
         draft: false
         prerelease: false
 

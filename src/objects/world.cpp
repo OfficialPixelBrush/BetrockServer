@@ -4,8 +4,13 @@ int World::GetNumberOfChunks() {
     return chunks.size();
 }
 
-void World::Load() {
-    std::filesystem::path dirPath = "world";
+void World::Load(std::string extra) {
+    std::filesystem::path dirPath = properties["level-name"] + "/";
+    if (extra.empty()) {
+        dirPath += "region";
+    } else {
+        dirPath += extra + "/region";
+    }
 
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
@@ -87,10 +92,15 @@ void World::Load() {
     std::cout << "Loaded " << loadedChunks << " Chunks from Disk" << std::endl;
 }
 
-void World::Save() {
-    std::filesystem::path dirPath = "world";
+void World::Save(std::string extra) {
+    std::filesystem::path dirPath = properties["level-name"] + "/";
+    if (extra.empty()) {
+        dirPath += "region";
+    } else {
+        dirPath += extra + "/region";
+    }
 
-    if (std::filesystem::create_directory(dirPath)) {
+    if (std::filesystem::create_directories(dirPath)) {
         std::cout << "Directory created: " << dirPath << '\n';
     }
 
