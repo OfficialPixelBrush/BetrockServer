@@ -8,21 +8,32 @@ std::mutex entityIdMutex;
 
 int32_t latestEntityId;
 uint64_t serverTime = 0;
-int chunkDistance = 5;
+int chunkDistance = 10;
 
-World overworld;
-World nether;
+std::unordered_map<int8_t, std::unique_ptr<WorldManager>> worldManagers;
+std::unordered_map<int8_t, std::thread> worldManagerThreads;
 Vec3 spawnPoint;
-int8_t spawnDimension = Overworld;
+int8_t spawnWorld;
 
-World* GetDimension(int8_t dimension) {
-    switch(dimension) {
-        case Overworld:
-            return &overworld;
-        case Nether:
-            return &nether;
-    }
-    return nullptr;
+WorldManager* GetWorldManager(int8_t worldId) {
+    return worldManagers[worldId].get();
+}
+
+World* GetWorld(int8_t worldId) {
+    return &worldManagers[worldId]->world;
+}
+
+void AddWorldManager(int8_t worldId) {
+    // Create a WorldManager and move it into the map
+    auto worldManager = std::make_unique<WorldManager>();
+
+    // Start a thread for the WorldManager's processing loop
+    worldManagerThreads[worldId] = std::thread([wm = worldManager.get()]() {
+        wm->Run(); // Ensure WorldManager has a `Run` function for its main loop
+    });
+
+    // Store the WorldManager in the map
+    worldManagers[worldId] = std::move(worldManager);
 }
 
 Player* FindPlayerByUsername(std::string username) {

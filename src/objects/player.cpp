@@ -10,8 +10,8 @@ void Player::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
 }
 
 void Player::Respawn(std::vector<uint8_t> &response) {
-    this->dimension = respawnDimension;
-    Respond::Respawn(response, dimension);
+    this->worldId = respawnWorldId;
+    Respond::Respawn(response, worldId);
     Teleport(response, respawnPosition);
     // After respawning, the health is automatically set back to the maximum health
     // The Client should do this automatically

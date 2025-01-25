@@ -12,6 +12,7 @@
 #include "version.h"
 #include "command.h"
 #include "packets.h"
+#include "worldManager.h"
 
 #define PACKET_MAX 4096
 

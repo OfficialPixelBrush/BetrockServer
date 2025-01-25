@@ -151,7 +151,7 @@ void Command::Stop() {
 
 // Parses commands and executes them
 void Command::Parse(std::string &rawCommand, Player* player) {
-	World* world = GetDimension(player->dimension);
+	World* world = GetWorld(player->worldId);
 
 	// Set these up for command parsing
 	failureReason = "Syntax";

@@ -44,7 +44,7 @@ class Player : public Entity {
 
         // Spawn Stats
         Vec3 respawnPosition;
-        int8_t respawnDimension;
+        int8_t respawnWorldId;
 
         // Gameplay Stats
         bool creativeMode = false;
@@ -58,10 +58,10 @@ class Player : public Entity {
         ConnectionStatus connectionStatus = ConnectionStatus::Disconnected;
         Vec3 lastChunkUpdatePosition;
 
-        Player(int client_fd, int &entityId, Vec3 position, int8_t dimension, Vec3 respawnPosition, int8_t respawnDimension)
-            : Entity(entityId++, position, dimension),
+        Player(int client_fd, int &entityId, Vec3 position, int8_t worldId, Vec3 respawnPosition, int8_t respawnWorldId)
+            : Entity(entityId++, position, worldId),
             respawnPosition(respawnPosition),
-            respawnDimension(respawnDimension), 
+            respawnWorldId(respawnWorldId), 
             client_fd(client_fd),
             connectionStatus(ConnectionStatus::Disconnected)
         {

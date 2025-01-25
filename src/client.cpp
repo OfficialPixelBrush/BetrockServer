@@ -52,7 +52,7 @@ void Client::PrintRead(Packet packetType) {
 }
 
 bool CheckIfNewChunksRequired(Player* player) {
-	if (GetDistance(player->lastChunkUpdatePosition,player->position) > (chunkDistance/2)*CHUNK_WIDTH_X) {
+	if (GetDistance(player->lastChunkUpdatePosition,player->position) > (chunkDistance/3)*CHUNK_WIDTH_X) {
 		return true;
 	}
 	return false;
@@ -61,6 +61,9 @@ bool CheckIfNewChunksRequired(Player* player) {
 size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 	size_t numberOfNewChunks = 0;
 	
+	// TODO: Potentially look ahead, since it's likely that the player will
+	// continue heading in the direction he's already heading
+	// Something like direction between position and previous position to predict movement(?)
 	// Determine the center chunk from which to start from
 	Int3 centerPos = Vec3ToInt3(player->position);
 	Int3 playerChunkPos = BlockToChunkPosition(centerPos);
@@ -81,29 +84,23 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 	// Go over all chunk coordinates around the center position
 	for (int x = pX + chunkDistance*-1; x < pX + chunkDistance; x++) {
 		for (int z = pZ + chunkDistance*-1; z < pZ + chunkDistance; z++) {
-			World* world = GetDimension(player->dimension);
+			auto wm = GetWorldManager(player->worldId);
 			Int3 position = XyzToInt3(x,0,z);
 
 			// Acquire existing chunk data
-			auto chunkData = world->GetChunkData(position);
+			auto chunkData = wm->world.GetChunkData(position);
 			if (!chunkData) {
 				// If none exists, generate new chunks
-				world->GenerateChunk(x,z);
+				wm->AddChunkToQueue(x,z);
 				numberOfNewChunks++;
-				chunkData = world->GetChunkData(position);
-			}
-			// Add it to the list of chunks to be compressed and sent
-			if (!chunkData) {
-				std::cout << "Failed to generated Chunk (" << (int)x << ", " << (int)z << ")" << std::endl;
 				continue;
 			}
-			
-			Respond::PreChunk(response, x, z, 1);
 
 			size_t compressedSize = 0;
 			char* chunk = CompressChunk(chunkData.get(), compressedSize);
 			
-			if (chunk) {				
+			if (chunk) {
+				Respond::PreChunk(response, x, z, 1);
 				// Track newly visible chunks
 				player->visibleChunks.push_back(position);
 
@@ -164,7 +161,7 @@ void HandlePacket(Client &client) {
 		}
 
 		// Get the current Dimension
-		World* world = GetDimension(client.player->dimension);
+		World* world = GetWorld(client.player->worldId);
 		
 		// The Client tries to join the Server
 		switch(packetType) {

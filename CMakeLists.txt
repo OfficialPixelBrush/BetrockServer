@@ -1,11 +1,16 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 20)
-project(BetrockServer VERSION 0.1.6)
+project(BetrockServer VERSION 0.1.7)
 
 add_compile_options(
   "-ggdb"
 )
+
+find_package(Lua REQUIRED)
+
+file(COPY "${CMAKE_SOURCE_DIR}/src/scripts/"
+DESTINATION "${CMAKE_BINARY_DIR}/scripts")
 
 # Configure the version header file
 configure_file(${CMAKE_SOURCE_DIR}/src/misc/version.h.in ${CMAKE_SOURCE_DIR}/src/misc/version.h)
@@ -15,8 +20,9 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/src/enums"
     "${PROJECT_SOURCE_DIR}/src/objects"
     "${PROJECT_SOURCE_DIR}/src/misc"
-    "${PROJECT_SOURCE_DIR}/src/misc/generators"
+    "${PROJECT_SOURCE_DIR}/src/generators"
     "${PROJECT_SOURCE_DIR}/src/"
+    ${LUA_INCLUDE_DIR}
 )
 
 add_executable(
@@ -27,15 +33,17 @@ add_executable(
 
     src/enums/items.cpp
     
-    src/misc/generators/generator.cpp
-    src/misc/generators/worleyPeakGenerator.cpp
+    src/generators/generator.cpp
 
     src/misc/command.cpp
     src/misc/helper.cpp
+    src/misc/lighting.cpp
+    src/misc/luahelper.cpp
 
-    src/objects/world.cpp
     src/objects/entity.cpp
     src/objects/player.cpp
+    src/objects/world.cpp
+    src/objects/worldManager.cpp
 
     src/client.cpp
     src/config.cpp
@@ -55,6 +63,7 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     target_link_libraries(
         BetrockServer
         deflate
+        ${LUA_LIBRARIES}
     )
 else()
     # Apply AddressSanitizer to all build types
@@ -63,6 +72,7 @@ else()
     target_link_libraries(
         BetrockServer
         deflate
+        ${LUA_LIBRARIES}
     )
 endif()
 
