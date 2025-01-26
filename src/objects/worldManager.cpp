@@ -47,6 +47,10 @@ void WorldManager::GenerateQueuedChunks() {
     }
 }
 
+bool WorldManager::QueueIsEmpty() {
+    return chunkQueue.empty();
+}
+
 void WorldManager::SetSeed(int64_t seed) {
     this->seed = seed;
     world.seed = seed;

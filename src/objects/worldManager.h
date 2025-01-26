@@ -34,6 +34,7 @@ class WorldManager {
         void CalculateChunkLight(int32_t cX, int32_t cZ);
         void SetName(std::string name);
         std::string GetName();
+        bool QueueIsEmpty();
 };
 
 std::string ConvertIndexIntoExtra(int8_t worldId);
