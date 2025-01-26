@@ -38,21 +38,11 @@ local function perlin(x, y)
     )
 end
 
-function naturalGrass(bs)
-    local type = 2
-    if bs > 0 and bs < 3 then
-        type = 3
-    elseif bs >= 3 then
-        type = 1
-    end
-    return type
-end
-
 function GenerateBlock(x,y,z,blocksSinceSkyVisible)
     local type = 0
     local solid = 0
     if y < 40+((perlin(x/64, z/64)+1)*25) then
-        type = naturalGrass(blocksSinceSkyVisible)
+        type = getNaturalGrass(x,y,z,blocksSinceSkyVisible)
     end
     -- Check if non-solid, generate water
     if (y < 64 and type == 0) then
