@@ -81,6 +81,7 @@ void LoadConfig() {
 	// TODO: Add file to configure custom worlds
 	AddWorldManager(0);
     for (auto& [key, wm] : worldManagers) {
+		wm->SetSeed(seed);
         wm->world.Load(ConvertIndexIntoExtra(key));
     }
 	

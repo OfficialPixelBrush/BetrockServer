@@ -54,7 +54,7 @@ bool WorldManager::QueueIsEmpty() {
 void WorldManager::SetSeed(int64_t seed) {
     this->seed = seed;
     world.seed = seed;
-    generator.seed = seed;
+    generator.PrepareGenerator(seed);
 }
 
 int64_t WorldManager::GetSeed() {

@@ -53,6 +53,7 @@ class Client {
 
     private:
         bool CheckPosition(Player* player, Vec3 &newPosition, double &newStance); 
+        bool BlockTooCloseToPosition(Int3 position);
 };
 
 void HandleClient(Player* player);

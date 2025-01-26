@@ -14,8 +14,6 @@
 class World {
     private:
         std::unordered_map<int64_t, Chunk> chunks;
-        int64_t GetChunkHash(int32_t x, int32_t z);
-        Int3 DecodeChunkHash(int64_t hash);
         Chunk* GetChunk(int32_t x, int32_t z);
         void RemoveChunk(int32_t x, int32_t z);
     public:

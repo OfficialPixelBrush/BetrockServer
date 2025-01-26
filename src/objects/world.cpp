@@ -144,18 +144,6 @@ void World::Save(std::string extra) {
     std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;
 }
 
-int64_t World::GetChunkHash(int32_t x, int32_t z) {
-    return ((int64_t)x << 32) | (z & 0xFFFFFFFF);
-}
-
-Int3 World::DecodeChunkHash(int64_t hash) {
-    return Int3 {
-        (int32_t)(hash >> 32),
-        0,
-        (int32_t)(hash & 0xFFFFFFFF)
-    };
-}
-
 Chunk* World::GetChunk(int32_t x, int32_t z) {
     auto it = chunks.find(GetChunkHash(x, z));
     if (it != chunks.end()) {

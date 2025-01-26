@@ -1,17 +1,18 @@
 #include "generator.h"
 
-Generator::Generator() {
+void Generator::PrepareGenerator(int64_t seed) {
+    this->seed = seed;
     L = luaL_newstate();
     luaL_openlibs(L);
 
-    // Expose the seed variable to Lua
-    lua_pushnumber(L, seed); // Assuming seed is a numeric value
-    lua_setglobal(L, "seed"); // This sets the global 'seed' variable in Lua
+    lua_pushnumber(L, seed);
+    lua_setglobal(L, "seed");
 
     // Add helper functions
     lua_register(L,"between", lua_Between);
     lua_register(L,"spatialPrng", lua_SpatialPRNG);
     lua_register(L,"getNoiseWorley", lua_GetNoiseWorley);
+    lua_register(L,"getNaturalGrass", lua_GetNaturalGrass);
     
     // Execute a Lua script
     if (luaL_dofile(L, ("scripts/" + properties["generator"]).c_str())) {
@@ -157,12 +158,24 @@ double GetNoiseWorley(int64_t seed, Int3 position, double threshold, float verti
     return 1.0 - SmoothStep(0.0, threshold, distance);
 }
 
+Block GetNaturalGrass(int64_t seed, Int3 position, int32_t blocksSinceSkyVisible) {
+    Block b;
+    if (blocksSinceSkyVisible == 0) {
+        b.type = BLOCK_GRASS;
+    } else if (Between(blocksSinceSkyVisible,0,3 + (SpatialPrng(seed,position)%2))) {
+        b.type = BLOCK_DIRT;
+    } else {
+        b.type = BLOCK_STONE;
+    }
+    return b;
+}
+
+
 // --- Lua Bindings Functions ---
 int lua_Between(lua_State *L) {
     // Check if all arguments are numbers
-    if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3)) {
-        luaL_error(L, "Expected three numeric arguments");
-        return 0; // Return 0 since we raised an error
+    if (!CheckInt3(L)) {
+        return 0;
     }
 
     int i = (int)lua_tonumber(L, 1);
@@ -184,8 +197,7 @@ int lua_SpatialPRNG(lua_State *L) {
     }
     int64_t seed = (int64_t)lua_tonumber(L, 1);
 
-    if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3)) {
-        luaL_error(L, "Expected three numeric arguments");
+    if (!CheckInt3(L)) {
         return 0;
     }
 
@@ -199,36 +211,76 @@ int lua_SpatialPRNG(lua_State *L) {
 }
 
 int lua_GetNoiseWorley(lua_State *L) {
-    lua_getglobal(L, "seed"); // This sets the global 'seed' variable in Lua
+    // Check for global 'seed'
+    lua_getglobal(L, "seed");
+    if (!lua_isnumber(L, -1)) {
+        luaL_error(L, "Global 'seed' must be a number");
+        return 0;
+    }
+    int64_t seed = (int64_t)lua_tonumber(L, -1);
+    lua_pop(L, 1); // Pop 'seed'
+
+    // Validate number of arguments
+    if (lua_gettop(L) != 5) {
+        luaL_error(L, "Expected exactly 5 arguments (x, y, z, threshold, verticalScale)");
+        return 0;
+    }
+
+    // Validate and extract x, y, z
+    if (!CheckInt3(L)) {
+        return 0;
+    }
+    int x = (int)lua_tonumber(L, 1);
+    int y = (int)lua_tonumber(L, 2);
+    int z = (int)lua_tonumber(L, 3);
+    Int3 position = Int3{x, y, z};
+
+    // Validate and extract threshold
+    if (!lua_isnumber(L, 4)) {
+        luaL_error(L, "Threshold must be a numeric value");
+        return 0;
+    }
+    double threshold = (double)lua_tonumber(L, 4);
+
+    // Validate and extract verticalScale
+    if (!lua_isnumber(L, 5)) {
+        luaL_error(L, "Vertical scale must be a numeric value");
+        return 0;
+    }
+    float verticalScale = (float)lua_tonumber(L, 5);
+
+    // Call GetNoiseWorley and push result
+    double result = GetNoiseWorley(seed, position, threshold, verticalScale);
+    lua_pushnumber(L, result);
+    return 1;
+}
+
+int lua_GetNaturalGrass(lua_State *L) {
+    // Get the seed
+    lua_getglobal(L, "seed");
     if (!lua_isnumber(L,1)) {
         std::cerr << "Invalid seed value!" << std::endl;
         return 0;
     }
     int64_t seed = (int64_t)lua_tonumber(L, 1);
 
-    if (!lua_isnumber(L, 1) || !lua_isnumber(L, 2) || !lua_isnumber(L, 3)) {
-        luaL_error(L, "Expected three numeric arguments");
+    if (!CheckInt3(L)) {
         return 0;
     }
-
     int x = (int)lua_tonumber(L, 1);
     int y = (int)lua_tonumber(L, 2);
     int z = (int)lua_tonumber(L, 3);
-    Int3 position = Int3{x,y,z};
+    Int3 position = Int3{x, y, z};
 
-    if (!lua_isnumber(L,1)) {
-        std::cerr << "Invalid threshold value!" << std::endl;
+    // Validate and extract threshold
+    if (!lua_isnumber(L, 4)) {
+        luaL_error(L, "Blocks since the Sky was visible must be a numeric value");
         return 0;
     }
-    double threshold = (double)lua_tonumber(L, 1);
+    int bs = (int)lua_tonumber(L, 4);
 
-    if (!lua_isnumber(L,1)) {
-        std::cerr << "Invalid threshold value!" << std::endl;
-        return 0;
-    }
-    float verticalScale = (float)lua_tonumber(L, 1);
-    
-    double result = GetNoiseWorley(seed,position,threshold,verticalScale);
-    lua_pushnumber(L, result);
+    // Call the function
+    Block result = GetNaturalGrass(seed, position, bs);
+    lua_pushnumber(L, result.type);
     return 1;
 }

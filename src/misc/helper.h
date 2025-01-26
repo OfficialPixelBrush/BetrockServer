@@ -99,3 +99,6 @@ std::string PacketIdToLabel(Packet packet);
 int16_t GetBlockIndex(Int3 position);
 char* CompressChunk(char* chunk, size_t &compressed_size);
 char* DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size);
+
+int64_t GetChunkHash(int32_t x, int32_t z);
+Int3 DecodeChunkHash(int64_t hash);
