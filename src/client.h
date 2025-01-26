@@ -12,6 +12,7 @@
 #include "version.h"
 #include "command.h"
 #include "packets.h"
+#include "worldManager.h"
 
 #define PACKET_MAX 4096
 
@@ -52,6 +53,7 @@ class Client {
 
     private:
         bool CheckPosition(Player* player, Vec3 &newPosition, double &newStance); 
+        bool BlockTooCloseToPosition(Int3 position);
 };
 
 void HandleClient(Player* player);

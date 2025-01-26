@@ -144,27 +144,6 @@ void World::Save(std::string extra) {
     std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;
 }
 
-void World::SetSeed(int64_t seed) {
-    this->seed = seed;
-    generator.seed = seed;
-}
-
-int64_t World::GetSeed() {
-    return this->seed;
-}
-
-int64_t World::GetChunkHash(int32_t x, int32_t z) {
-    return ((int64_t)x << 32) | (z & 0xFFFFFFFF);
-}
-
-Int3 World::DecodeChunkHash(int64_t hash) {
-    return Int3 {
-        (int32_t)(hash >> 32),
-        0,
-        (int32_t)(hash & 0xFFFFFFFF)
-    };
-}
-
 Chunk* World::GetChunk(int32_t x, int32_t z) {
     auto it = chunks.find(GetChunkHash(x, z));
     if (it != chunks.end()) {
@@ -188,14 +167,14 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
     b->meta = meta;
     b->lightBlock = 0x0;
     b->lightSky = 0x0;
-    CalculateColumnLight(position.x,position.z);
+    //CalculateColumnLight(position.x,position.z);
 }
 
 Block World::BreakBlock(Int3 position) {
     // Break Block Position within Chunk
     Block b = *GetBlock(position);
     GetBlock(position)->type = 0;
-    CalculateColumnLight(position.x,position.z);
+    //CalculateColumnLight(position.x,position.z);
     return b;
 }
 
@@ -206,33 +185,6 @@ Block* World::GetBlock(Int3 position) {
     int8_t bX = position.x & 0xF;
     int8_t bZ = position.z & 0xF;
     return &chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(XyzToInt3(bX,(int8_t)position.y,bZ))];
-}
-
-void World::CalculateColumnLight(int32_t x, int32_t z) {
-    uint8_t skyVisible = 0xF;
-    for (int8_t y = CHUNK_HEIGHT-1; y > 0; y--) {
-        Int3 position { x,y,z };
-        Block* b = GetBlock(position);
-        GetTranslucency(b->type, skyVisible);
-        if (!(IsTransparent(b->type) || IsTranslucent(b->type))) {
-            b->lightBlock = 0x0;
-            skyVisible = 0x0;
-        }
-        b->lightBlock = GetEmissiveness(b->type);
-        b->lightSky = skyVisible;
-    }
-}
-
-// Recalculates all the light in the chunk the block position is found in
-void World::CalculateChunkLight(int32_t cX, int32_t cZ) {
-    int32_t startX = cX*CHUNK_WIDTH_X;
-    int32_t startZ = cZ*CHUNK_WIDTH_Z;
-
-    for (int32_t x = startX; x < CHUNK_WIDTH_X+startX; x++) {
-        for (int32_t z = startZ; z < CHUNK_WIDTH_Z+startZ; z++) {
-            CalculateColumnLight(x,z);
-        }
-    }
 }
 
 std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
@@ -289,13 +241,6 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
         }
     }
     return bytes;
-}
-
-Chunk World::GenerateChunk(int32_t x, int32_t z) {
-    Chunk c = generator.GenerateChunk(x,z);
-    AddChunk(x,z,c);
-    CalculateChunkLight(x,z);
-    return c;
 }
 
 Int3 World::FindSpawnableBlock(Int3 position) {
