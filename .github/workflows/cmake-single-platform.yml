@@ -4,8 +4,8 @@
 name: CMake on a single platform
 
 on:
-  push:
-    branches: [ "latest" ]
+  #push:
+  #  branches: [ "latest" ]
   pull_request:
     branches: [ "main" ]
 

@@ -441,3 +441,16 @@ char* DecompressChunk(const char* compressed_data, size_t compressed_size, size_
     libdeflate_free_decompressor(decompressor);
     return decompressed_data;
 }
+
+
+int64_t GetChunkHash(int32_t x, int32_t z) {
+    return ((int64_t)x << 32) | (z & 0xFFFFFFFF);
+}
+
+Int3 DecodeChunkHash(int64_t hash) {
+    return Int3 {
+        (int32_t)(hash >> 32),
+        0,
+        (int32_t)(hash & 0xFFFFFFFF)
+    };
+}

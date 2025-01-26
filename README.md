@@ -24,16 +24,16 @@ Check the releases page for the latest binary of BetrockServer. Then simply run 
 ### Cloning
 ```bash
 git clone https://github.com/OfficialPixelBrush/BetrockServer.git
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 ```
 
 ### Installing Dependencies
 ```bash
-sudo apt install libdeflate-dev
+sudo apt install libdeflate-dev liblua5.4-dev
 ```
 
 ### Building
 ```bash
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 

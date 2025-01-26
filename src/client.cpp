@@ -52,80 +52,83 @@ void Client::PrintRead(Packet packetType) {
 }
 
 bool CheckIfNewChunksRequired(Player* player) {
-	if (GetDistance(player->lastChunkUpdatePosition,player->position) > (chunkDistance/2)*CHUNK_WIDTH_X) {
+	Vec3 lastPos = player->lastChunkUpdatePosition;
+	Vec3 newPos = player->position;
+	// Remove vertical component
+	lastPos.y = 0;
+	newPos.y = 0;
+	if (GetDistance(lastPos,newPos) > 16) {
 		return true;
 	}
 	return false;
 }
-
 size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
-	size_t numberOfNewChunks = 0;
-	
-	// Determine the center chunk from which to start from
-	Int3 centerPos = Vec3ToInt3(player->position);
-	Int3 playerChunkPos = BlockToChunkPosition(centerPos);
-	int32_t pX = centerPos.x >> 4;
-	int32_t pZ = centerPos.z >> 4;
+    size_t numberOfNewChunks = 0;
 
-	// Use an iterator to safely erase while iterating
-	for (auto it = player->visibleChunks.begin(); it != player->visibleChunks.end(); ) {
-		double distance = GetDistance(playerChunkPos, *it);
-		if (distance > chunkDistance) {
-			Respond::PreChunk(response, it->x, it->z, 0);
-			it = player->visibleChunks.erase(it);
-		} else {
-			++it;
-		}
-	}
+    Int3 centerPos = Vec3ToInt3(player->position);
+    Int3 playerChunkPos = BlockToChunkPosition(centerPos);
+    int32_t pX = playerChunkPos.x;
+    int32_t pZ = playerChunkPos.z;
 
-	// Go over all chunk coordinates around the center position
-	for (int x = pX + chunkDistance*-1; x < pX + chunkDistance; x++) {
-		for (int z = pZ + chunkDistance*-1; z < pZ + chunkDistance; z++) {
-			World* world = GetDimension(player->dimension);
-			Int3 position = XyzToInt3(x,0,z);
+    // Remove chunks that are out of range
+    for (auto it = player->visibleChunks.begin(); it != player->visibleChunks.end(); ) {
+        int distance = abs(pX - it->x) + abs(pZ - it->z); // Manhattan distance
+        if (distance > chunkDistance) {
+            Respond::PreChunk(response, it->x, it->z, 0); // Tell client chunk is no longer visible
+            it = player->visibleChunks.erase(it);
+        } else {
+            ++it;
+        }
+    }
+    SendToPlayer(response, player);
+    response.clear();
 
-			// Acquire existing chunk data
-			auto chunkData = world->GetChunkData(position);
-			if (!chunkData) {
-				// If none exists, generate new chunks
-				world->GenerateChunk(x,z);
-				numberOfNewChunks++;
-				chunkData = world->GetChunkData(position);
-			}
-			// Add it to the list of chunks to be compressed and sent
-			if (!chunkData) {
-				std::cout << "Failed to generated Chunk (" << (int)x << ", " << (int)z << ")" << std::endl;
-				continue;
-			}
-			
-			Respond::PreChunk(response, x, z, 1);
+    auto wm = GetWorldManager(player->worldId);
 
-			size_t compressedSize = 0;
-			char* chunk = CompressChunk(chunkData.get(), compressedSize);
-			
-			if (chunk) {				
-				// Track newly visible chunks
-				player->visibleChunks.push_back(position);
+    // Iterate over all chunks within the Manhattan range
+    for (int x = pX - chunkDistance; x <= pX + chunkDistance; x++) {
+        for (int z = pZ - chunkDistance; z <= pZ + chunkDistance; z++) {
+            // Check if the chunk is within Manhattan distance
+            int distance = abs(pX - x) + abs(pZ - z);
+            if (distance > chunkDistance) continue; // Skip if out of range
 
-				// Send compressed chunk data
-				Respond::Chunk(
-					response, 
-					Int3{position.x << 4, 0, position.z << 4}, 
-					CHUNK_WIDTH_X - 1, 
-					CHUNK_HEIGHT  - 1, 
-					CHUNK_WIDTH_Z - 1, 
-					compressedSize, 
-					chunk
-				);
-			}
-			delete [] chunk;
-		}
-	}
-	SendToPlayer(response, player);
-	response.clear();
-	// Update last chunk position
-	player->lastChunkUpdatePosition = player->position;
-	return numberOfNewChunks;
+            Int3 position = XyzToInt3(x, 0, z);
+
+            // Get existing chunk data
+            auto chunkData = wm->world.GetChunkData(position);
+            if (!chunkData) {
+                // Queue chunk generation if missing
+                wm->AddChunkToQueue(x, z);
+            	Respond::PreChunk(response, x, z, 0); // Tell client chunk is not yet visibles
+                numberOfNewChunks++;
+                continue;
+            }
+
+            // Send chunk to player
+            size_t compressedSize = 0;
+            char* chunk = CompressChunk(chunkData.get(), compressedSize);
+
+            if (chunk) {
+                Respond::PreChunk(response, x, z, 1);
+                player->visibleChunks.push_back(position);
+
+                Respond::Chunk(
+                    response, 
+                    Int3{position.x << 4, 0, position.z << 4}, 
+                    CHUNK_WIDTH_X - 1, 
+                    CHUNK_HEIGHT - 1, 
+                    CHUNK_WIDTH_Z - 1, 
+                    compressedSize, 
+                    chunk
+                );
+            }
+            delete[] chunk;
+        }
+    }
+	//SendToPlayer(response, player);
+
+    player->lastChunkUpdatePosition = player->position;
+    return numberOfNewChunks;
 }
 
 void Client::Respond(ssize_t bytes_received) {
@@ -164,7 +167,7 @@ void HandlePacket(Client &client) {
 		}
 
 		// Get the current Dimension
-		World* world = GetDimension(client.player->dimension);
+		World* world = GetWorld(client.player->worldId);
 		
 		// The Client tries to join the Server
 		switch(packetType) {
@@ -219,14 +222,17 @@ void HandlePacket(Client &client) {
 			default:
 				break;
 		}
-		if (client.player != nullptr) {
+		if (client.player != nullptr && client.player->connectionStatus == ConnectionStatus::Connected) {
 			if (debugPlayerStatus) {
 				client.player->PrintStats();
 			}
-			// Kill player if the goes below 0,0
+			// TODO: Fix this from killing the player during lag
+			// Kill player if he goes below 0,0
+			/*
 			if (client.player->position.y < 0) {
 				Respond::UpdateHealth(client.response,0);
 			}
+			*/
 		}
 		if (debugReceivedRead) {
 			client.PrintRead(packetType);
@@ -472,6 +478,39 @@ bool Client::PlayerDigging(World* world) {
 	return true;
 }
 
+bool Client::BlockTooCloseToPosition(Int3 position) {
+    // Player's bounding box
+    double playerMinX = player->position.x - 0.3f;
+    double playerMaxX = player->position.x + 0.3f;
+
+    double playerMinY = player->position.y;
+	double playerMaxY = player->position.y + 1.8f;
+	if (player->crouching) {
+    	double playerMaxY = player->position.y + 1.5f;
+	}
+
+    double playerMinZ = player->position.z - 0.25f;
+    double playerMaxZ = player->position.z + 0.25f;
+
+    // Block's bounding box (aligned to integer grid)
+    double blockMinX = static_cast<double>(position.x);
+    double blockMaxX = blockMinX + 1.0f;
+
+    double blockMinY = static_cast<double>(position.y);
+    double blockMaxY = blockMinY + 1.0f;
+
+    double blockMinZ = static_cast<double>(position.z);
+    double blockMaxZ = blockMinZ + 1.0f;
+
+    // Check for overlap on all three axes
+    bool overlapX = playerMinX < blockMaxX && playerMaxX > blockMinX;
+    bool overlapY = playerMinY < blockMaxY && playerMaxY > blockMinY;
+    bool overlapZ = playerMinZ < blockMaxZ && playerMaxZ > blockMinZ;
+
+    // If all axes overlap, the bounding boxes intersect
+    return overlapX && overlapY && overlapZ;
+}
+
 bool Client::PlayerBlockPlacement(World* world) {
 	int32_t x = EntryToInteger(message, offset);
 	int8_t y = EntryToByte(message, offset);
@@ -484,12 +523,13 @@ bool Client::PlayerBlockPlacement(World* world) {
 		amount = EntryToByte(message, offset);
 		damage = EntryToShort(message, offset);
 	}
+
+	BlockToFace(x,y,z,direction);
+	Int3 pos = XyzToInt3(x,y,z);
 	
 	// If you don't catch this, the Server will try to
 	// place a block with the Id of an empty slot, aka -1
-	if (id > BLOCK_AIR && id < BLOCK_MAX) {
-		BlockToFace(x,y,z,direction);
-		Int3 pos = XyzToInt3(x,y,z);
+	if (id > BLOCK_AIR && id < BLOCK_MAX && !BlockTooCloseToPosition(pos)) {
 		Respond::BlockChange(broadcastResponse,pos,(int8_t)id,(int8_t)damage);
 		world->PlaceBlock(pos,(int8_t)id,(int8_t)damage);
 	}

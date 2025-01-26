@@ -16,7 +16,6 @@ void CreateDefaultProperties(const std::string& filename, const std::unordered_m
     std::cout << "Default properties file created.\n";
 }
 
-
 std::unordered_map<std::string, std::string> ReadPropertiesFile(const std::string& filename) {
     std::unordered_map<std::string, std::string> properties;
     std::ifstream file(filename);
