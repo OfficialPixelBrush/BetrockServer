@@ -1,5 +1,6 @@
 #pragma once
-#include <queue>
+#include <unordered_map>
+#include <vector>
 #include <mutex>
 
 #include "world.h"
@@ -9,18 +10,17 @@
 class QueueChunk {
     public:
         Int3 position;
-        Player* requestPlayer;
-        QueueChunk(Int3 position, Player* requestPlayer = nullptr) :
-            position(position),
-            requestPlayer(requestPlayer)
-            {}
+        std::vector<Player*> requestedPlayers;
+        QueueChunk() : position(Int3()), requestedPlayers() {}
+        QueueChunk(Int3 position, Player* requestPlayer = nullptr);
+        void AddPlayer(Player* requestPlayer);
 };
 
 class WorldManager {
     private:
         std::string name;
         std::mutex queueMutex;
-        std::queue<QueueChunk> chunkQueue;
+        std::unordered_map<int64_t, QueueChunk> chunkQueue;
         uint64_t seed;
     public:
         World world;

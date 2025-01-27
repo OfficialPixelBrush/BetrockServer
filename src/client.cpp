@@ -72,8 +72,9 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 
     // Remove chunks that are out of range
     for (auto it = player->visibleChunks.begin(); it != player->visibleChunks.end(); ) {
-        int distance = abs(pX - it->x) + abs(pZ - it->z); // Manhattan distance
-        if (distance > chunkDistance) {
+        int distanceX = abs(pX - it->x);
+        int distanceZ = abs(pZ - it->z);
+        if (distanceX > chunkDistance || distanceZ > chunkDistance) {
             Respond::PreChunk(response, it->x, it->z, 0); // Tell client chunk is no longer visible
             it = player->visibleChunks.erase(it);
         } else {
@@ -85,13 +86,9 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 
     auto wm = GetWorldManager(player->worldId);
 
-    // Iterate over all chunks within the Manhattan range
+    // Iterate over all chunks within a bounding box defined by chunkDistance
     for (int x = pX - chunkDistance; x <= pX + chunkDistance; x++) {
         for (int z = pZ - chunkDistance; z <= pZ + chunkDistance; z++) {
-            // Check if the chunk is within Manhattan distance
-            int distance = abs(pX - x) + abs(pZ - z);
-            if (distance > chunkDistance) continue; // Skip if out of range
-
             Int3 position = XyzToInt3(x, 0, z);
 
             // Get existing chunk data
@@ -99,7 +96,7 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
             if (!chunkData) {
                 // Queue chunk generation if missing
                 wm->AddChunkToQueue(x, z);
-            	Respond::PreChunk(response, x, z, 0); // Tell client chunk is not yet visibles
+                Respond::PreChunk(response, x, z, 0); // Tell client chunk is not yet visible
                 numberOfNewChunks++;
                 continue;
             }
@@ -125,7 +122,8 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
             delete[] chunk;
         }
     }
-	//SendToPlayer(response, player);
+    SendToPlayer(response, player);
+    response.clear();
 
     player->lastChunkUpdatePosition = player->position;
     return numberOfNewChunks;
