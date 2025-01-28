@@ -81,8 +81,6 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
             ++it;
         }
     }
-    SendToPlayer(response, player);
-    response.clear();
 
     auto wm = GetWorldManager(player->worldId);
 
@@ -100,33 +98,47 @@ size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
                 numberOfNewChunks++;
                 continue;
             }
-
-            // Send chunk to player
-            size_t compressedSize = 0;
-            char* chunk = CompressChunk(chunkData.get(), compressedSize);
-
-            if (chunk) {
-                Respond::PreChunk(response, x, z, 1);
-                player->visibleChunks.push_back(position);
-
-                Respond::Chunk(
-                    response, 
-                    Int3{position.x << 4, 0, position.z << 4}, 
-                    CHUNK_WIDTH_X - 1, 
-                    CHUNK_HEIGHT - 1, 
-                    CHUNK_WIDTH_Z - 1, 
-                    compressedSize, 
-                    chunk
-                );
-            }
-            delete[] chunk;
+			
+            player->newChunks.push_back(position);
         }
     }
-    SendToPlayer(response, player);
-    response.clear();
 
     player->lastChunkUpdatePosition = player->position;
     return numberOfNewChunks;
+}
+
+void SendNewChunks(std::vector<uint8_t> &response, Player* player) {
+    auto wm = GetWorldManager(player->worldId);
+	while(!player->newChunks.empty()) {
+		auto nc = player->newChunks.end()-1;
+		auto chunkData = wm->world.GetChunkData(*nc);
+		if (!chunkData) {
+			Respond::PreChunk(response, nc->x, nc->z, 0); // Tell client chunk is not visible
+			return;
+		}
+		//std::cout << "New Chunk: " << *nc << ": " << player->newChunks.size() << std::endl;
+
+		// Send chunk to player
+		size_t compressedSize = 0;
+		char* chunk = CompressChunk(chunkData.get(), compressedSize);
+
+		if (chunk) {
+			Respond::PreChunk(response, nc->x, nc->z, 1);
+			player->visibleChunks.push_back(Int3{nc->x,0,nc->z});
+
+			Respond::Chunk(
+				response, 
+				Int3{nc->x<<4,0,nc->z<<4}, 
+				CHUNK_WIDTH_X - 1, 
+				CHUNK_HEIGHT - 1, 
+				CHUNK_WIDTH_Z - 1, 
+				compressedSize, 
+				chunk
+			);
+		}
+		delete[] chunk;
+		player->newChunks.erase(nc);
+	}
 }
 
 void Client::Respond(ssize_t bytes_received) {
@@ -236,6 +248,7 @@ void HandlePacket(Client &client) {
 			client.PrintRead(packetType);
 		}
 	}
+	SendNewChunks(client.response,client.player);
 	client.Respond(bytes_received);
 }
 
@@ -325,6 +338,7 @@ bool Client::LoginRequest() {
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
 	player->Teleport(response,spawnPoint);
+	SendNewChunks(response,player);
 
 	// Create the player for other players
 	Respond::NamedEntitySpawn(broadcastOthersResponse, player->entityId, player->username, Vec3ToInt3(player->position), player->yaw, player->pitch, BLOCK_PLANKS);
@@ -382,23 +396,6 @@ bool Client::PlayerPosition() {
 	if (CheckIfNewChunksRequired(player)) {
 		SendChunksAroundPlayer(response,player);
 	}
-
-	// TODO: Figure this out!!
-	/*
-	if (GetDistance(player->previousPosition,player->position) < 4.0) {
-		// If the movement was less than 4 blocks, just move
-		Int3 difference = Vec3ToRelativeInt3(player->position, player->previousPosition);
-		Respond::EntityRelativeMove(broadcastOthersResponse, player->entityId, difference);
-	} else {
-		// Otherwise, teleport the entity
-		Respond::EntityTeleport(
-			broadcastOthersResponse,
-			player->entityId,
-			Vec3ToInt3(player->position),
-			ConvertFloatToPackedByte(player->yaw),
-			ConvertFloatToPackedByte(player->pitch)
-		);
-	}*/
 	return true;
 }
 

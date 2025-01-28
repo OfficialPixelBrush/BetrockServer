@@ -135,6 +135,7 @@ int main() {
 	World* overworld = GetWorld(0);
 
 	// Generate spawn area
+	/*
 	if (overworld->GetNumberOfChunks() == 0) {
 		std::cout << "Generating..." << std::endl;
 		for (int x = -1; x < 2; x++) {
@@ -146,7 +147,7 @@ int main() {
 	}
 	while(!wm->QueueIsEmpty()) {
 		// Wait for chunks to finish loading
-	}
+	}*/
 	// TODO: Wait for queue to finish
 	Int3 spawnBlock = overworld->FindSpawnableBlock(Int3 {0,64,0});
 	spawnPoint = Int3ToVec3(spawnBlock);

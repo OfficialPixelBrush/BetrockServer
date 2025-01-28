@@ -58,3 +58,4 @@ class Client {
 
 void HandleClient(Player* player);
 size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player);
+void SendNewChunks(std::vector<uint8_t> &response, Player* player);
