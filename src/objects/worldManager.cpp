@@ -10,43 +10,18 @@ void QueueChunk::AddPlayer(Player* requestPlayer) {
 }
 
 void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Player* requestPlayer) {
-    std::lock_guard<std::mutex> lock(queueMutex);  // Lock the mutex to ensure thread-safety
+    std::lock_guard<std::mutex> lock(queueMutex);  // Ensure thread safety
 
-    auto hash = GetChunkHash(x, z);  // Compute the hash for the chunk
-    auto it = chunkQueue.find(hash); // Check if the key exists in the map
+    auto hash = GetChunkHash(x, z);  // Compute hash
 
-    if (it != chunkQueue.end()) {
-        // The key exists, so add the player to the existing chunk
-        it->second.AddPlayer(requestPlayer);
-    } else {
-        // The key doesn't exist, so create a new QueueChunk and insert it
-        chunkQueue[hash] = QueueChunk(Int3{x, 0, z}, requestPlayer);
+    if (chunkPositions.find(hash) != chunkPositions.end()) {
+        // Chunk is already in the queue, no need to add it again
+        return;
     }
-}
 
-void WorldManager::GenerateQueuedChunks() {
-    std::lock_guard<std::mutex> lock(queueMutex);
-    if (!chunkQueue.empty()) {
-        // Only process the first chunk in the queue
-        auto it = chunkQueue.begin();
-
-        int64_t key = it->first;
-        QueueChunk cq = it->second;
-        Int3 pos = cq.position;
-
-        Chunk c = generator.GenerateChunk(pos.x, pos.z);
-        world.AddChunk(pos.x, pos.z, c);
-
-        // Send it to all players that want it
-        for (Player* p : cq.requestedPlayers) {
-            if (p) {
-                p->newChunks.push_back(pos);
-            }
-        }
-
-        // Track newly visible chunks
-        chunkQueue.erase(it); // Remove the processed chunk from the queue
-    }
+    // Add to queue and track position
+    chunkQueue.emplace(Int3{x, 0, z}, requestPlayer);
+    chunkPositions.insert(hash);
 }
 
 bool WorldManager::QueueIsEmpty() {
@@ -56,7 +31,6 @@ bool WorldManager::QueueIsEmpty() {
 void WorldManager::SetSeed(int64_t seed) {
     this->seed = seed;
     world.seed = seed;
-    generator.PrepareGenerator(seed);
 }
 
 int64_t WorldManager::GetSeed() {
@@ -64,11 +38,62 @@ int64_t WorldManager::GetSeed() {
 }
 
 void WorldManager::Run() {
-    while(alive) {
-        GenerateQueuedChunks();
-        std::this_thread::sleep_for(std::chrono::milliseconds(50));
+    // Start worker threads
+    for (int i = 0; i < workerCount; ++i) {
+        workers.emplace_back(&WorldManager::WorkerThread, this);
     }
-    // make this function sleep for 1/2 second to prevent it from running too often.
+
+    while (alive) {
+        GenerateQueuedChunks();
+        std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Sleep for half a second
+    }
+
+    // Stop workers
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        alive = false;
+    }
+    queueCV.notify_all();
+
+    for (auto& worker : workers) {
+        if (worker.joinable()) worker.join();
+    }
+}
+
+void WorldManager::GenerateQueuedChunks() {
+    std::lock_guard<std::mutex> lock(queueMutex);
+    queueCV.notify_one();  // Wake up a worker thread if it's sleeping
+}
+
+void WorldManager::WorkerThread() {
+    Generator generator;
+    generator.PrepareGenerator(seed);
+
+    while (true) {
+        QueueChunk cq;
+        {
+            std::unique_lock<std::mutex> lock(queueMutex);
+            queueCV.wait(lock, [this] { return !chunkQueue.empty() || !alive; });
+
+            if (!alive && chunkQueue.empty()) return; // Exit thread when stopping
+
+            cq = chunkQueue.front();
+            chunkQueue.pop();
+        }
+
+        int64_t key = GetChunkHash(cq.position.x, cq.position.z);
+        chunkPositions.erase(key);  // Remove from tracking set
+
+        Chunk c = generator.GenerateChunk(cq.position.x, cq.position.z);
+        world.AddChunk(cq.position.x, cq.position.z, c);
+
+        std::lock_guard<std::mutex> lock(connectedPlayersMutex);
+        for (Player* p : cq.requestedPlayers) {
+            if (p) {
+                p->newChunks.push_back(cq.position);
+            }
+        }
+    }
 }
 
 void WorldManager::SetName(std::string name) {

@@ -5,8 +5,8 @@ void Player::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
     this->yaw = yaw;
     this->pitch = pitch;
     this->stance = position.y + STANCE_OFFSET;
-    Respond::PlayerPositionLook(response, this);
     SendChunksAroundPlayer(response,this);
+    Respond::PlayerPositionLook(response, this);
 }
 
 void Player::Respawn(std::vector<uint8_t> &response) {

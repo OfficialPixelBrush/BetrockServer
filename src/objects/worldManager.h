@@ -1,7 +1,9 @@
 #pragma once
-#include <unordered_map>
+#include <queue>
+#include <unordered_set>
 #include <vector>
 #include <mutex>
+#include <condition_variable>
 
 #include "world.h"
 #include "generator.h"
@@ -20,11 +22,15 @@ class WorldManager {
     private:
         std::string name;
         std::mutex queueMutex;
-        std::unordered_map<int64_t, QueueChunk> chunkQueue;
+        std::queue<QueueChunk> chunkQueue;
+        std::unordered_set<int64_t> chunkPositions;  // Set to track chunk hashes
         uint64_t seed;
+        std::condition_variable queueCV;
+        std::vector<std::thread> workers;
+        const int workerCount = std::thread::hardware_concurrency();  // Use number of CPU cores
+        void WorkerThread();
     public:
         World world;
-        Generator generator;
         void AddChunkToQueue(int32_t x, int32_t z, Player* requestPlayer = nullptr);
         void GenerateQueuedChunks();
         void SetSeed(int64_t seed);

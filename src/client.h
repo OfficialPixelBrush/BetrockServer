@@ -50,6 +50,7 @@ class Client {
         bool DisconnectClient();
 
         void Respond(ssize_t bytes_received);
+        void SendNewChunks();
 
     private:
         bool CheckPosition(Player* player, Vec3 &newPosition, double &newStance); 
@@ -57,5 +58,5 @@ class Client {
 };
 
 void HandleClient(Player* player);
-size_t SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player);
-void SendNewChunks(std::vector<uint8_t> &response, Player* player);
+void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldManager* wm, Player* player);
+void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player);
