@@ -50,6 +50,7 @@ class Player : public Entity {
         bool creativeMode = false;
         int8_t health = HEALTH_MAX;
         std::vector<Int3> visibleChunks;
+        std::vector<Int3> newChunks;
         Int3 inventory[INVENTORY_MAX_SLOTS];
 
         // Connection Stats

@@ -7,7 +7,7 @@
 #include <cstdint>
 #include <cstring>
 #include <cmath>
-
+#include <memory>
 #include "packets.h"
 
 #define CHUNK_HEIGHT 128
@@ -34,6 +34,15 @@ struct Vec3 {
     bool operator==(const Vec3& other) const {
         return x == other.x && y == other.y && z == other.z;
     }
+
+    Vec3 operator+(const Vec3& other) const {
+        return Vec3{x + other.x, y + other.y, z + other.z};
+    }
+
+    Vec3 operator-(const Vec3& other) const {
+        return Vec3{x - other.x, y - other.y, z - other.z};
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
         os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
         return os;
@@ -45,6 +54,15 @@ struct Int3 {
     bool operator==(const Int3& other) const {
         return x == other.x && y == other.y && z == other.z;
     }
+
+    Int3 operator+(const Int3& other) const {
+        return Int3{x + other.x, y + other.y, z + other.z};
+    }
+
+    Int3 operator-(const Int3& other) const {
+        return Int3{x - other.x, y - other.y, z - other.z};
+    }
+    
     friend std::ostream& operator<<(std::ostream& os, const Int3& i) {
         os << "(" << i.x << ", " << i.y << ", " << i.z << ")";
         return os;
@@ -97,8 +115,8 @@ std::string PacketIdToLabel(Packet packet);
 
 // Handling of Chunk and Block Data
 int16_t GetBlockIndex(Int3 position);
-char* CompressChunk(char* chunk, size_t &compressed_size);
-char* DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size);
+std::unique_ptr<char[]> CompressChunk(char* chunk, size_t &compressed_size);
+std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size);
 
 int64_t GetChunkHash(int32_t x, int32_t z);
 Int3 DecodeChunkHash(int64_t hash);

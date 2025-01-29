@@ -1,50 +1,27 @@
 #include "worldManager.h"
 
-void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Player* requestPlayer) {
-    std::lock_guard<std::mutex> lock(queueMutex);  // Lock the mutex to ensure thread-safety
-    chunkQueue.push(QueueChunk(Int3{x,0,z},requestPlayer));
+QueueChunk::QueueChunk(Int3 position, Player* requestPlayer) {
+    this->position = position;
+    AddPlayer(requestPlayer);
 }
 
-void WorldManager::GenerateQueuedChunks() {
-    std::lock_guard<std::mutex> lock(queueMutex);
-    while(!chunkQueue.empty()) {
-        //std::cout << "Generating Chunks: " << chunkQueue.size() << std::endl;
-        QueueChunk qc = chunkQueue.front();
-        Chunk c = generator.GenerateChunk(qc.position.x,qc.position.z);
-        world.AddChunk(qc.position.x,qc.position.z,c);
+void QueueChunk::AddPlayer(Player* requestPlayer) {
+    requestedPlayers.push_back(requestPlayer);
+}
 
-        // Send the new chunk data out
-        if (qc.requestPlayer != nullptr) {
-            std::vector<uint8_t> response;
-            auto chunkData = world.GetChunkData(qc.position);
-			if (!chunkData) {
-				continue;
-			}
-			size_t compressedSize = 0;
-			char* chunk = CompressChunk(chunkData.get(), compressedSize);
-			
-			if (chunk) {
-				Respond::PreChunk(response, qc.position.x, qc.position.z, 1);
+void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Player* requestPlayer) {
+    std::lock_guard<std::mutex> lock(queueMutex);  // Ensure thread safety
 
-				// Track newly visible chunks
-				qc.requestPlayer->visibleChunks.push_back(qc.position);
+    auto hash = GetChunkHash(x, z);  // Compute hash
 
-				// Send compressed chunk data
-				Respond::Chunk(
-					response, 
-					Int3{qc.position.x << 4, 0, qc.position.z << 4}, 
-					CHUNK_WIDTH_X - 1, 
-					CHUNK_HEIGHT  - 1, 
-					CHUNK_WIDTH_Z - 1, 
-					compressedSize, 
-					chunk
-				);
-			}
-			delete [] chunk;
-            SendToPlayer(response,qc.requestPlayer);
-        }
-        chunkQueue.pop();
+    if (chunkPositions.find(hash) != chunkPositions.end()) {
+        // Chunk is already in the queue, no need to add it again
+        return;
     }
+
+    // Add to queue and track position
+    chunkQueue.emplace(Int3{x, 0, z}, requestPlayer);
+    chunkPositions.insert(hash);
 }
 
 bool WorldManager::QueueIsEmpty() {
@@ -54,7 +31,6 @@ bool WorldManager::QueueIsEmpty() {
 void WorldManager::SetSeed(int64_t seed) {
     this->seed = seed;
     world.seed = seed;
-    generator.PrepareGenerator(seed);
 }
 
 int64_t WorldManager::GetSeed() {
@@ -62,8 +38,61 @@ int64_t WorldManager::GetSeed() {
 }
 
 void WorldManager::Run() {
-    while(alive) {
+    // Start worker threads
+    for (int i = 0; i < workerCount; ++i) {
+        workers.emplace_back(&WorldManager::WorkerThread, this);
+    }
+
+    while (alive) {
         GenerateQueuedChunks();
+        std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Sleep for half a second
+    }
+
+    // Stop workers
+    {
+        std::lock_guard<std::mutex> lock(queueMutex);
+        alive = false;
+    }
+    queueCV.notify_all();
+
+    for (auto& worker : workers) {
+        if (worker.joinable()) worker.join();
+    }
+}
+
+void WorldManager::GenerateQueuedChunks() {
+    std::lock_guard<std::mutex> lock(queueMutex);
+    queueCV.notify_one();  // Wake up a worker thread if it's sleeping
+}
+
+void WorldManager::WorkerThread() {
+    Generator generator;
+    generator.PrepareGenerator(seed);
+
+    while (true) {
+        QueueChunk cq;
+        {
+            std::unique_lock<std::mutex> lock(queueMutex);
+            queueCV.wait(lock, [this] { return !chunkQueue.empty() || !alive; });
+
+            if (!alive && chunkQueue.empty()) return; // Exit thread when stopping
+
+            cq = chunkQueue.front();
+            chunkQueue.pop();
+        }
+
+        int64_t key = GetChunkHash(cq.position.x, cq.position.z);
+        chunkPositions.erase(key);  // Remove from tracking set
+
+        Chunk c = generator.GenerateChunk(cq.position.x, cq.position.z);
+        world.AddChunk(cq.position.x, cq.position.z, c);
+
+        std::lock_guard<std::mutex> lock(connectedPlayersMutex);
+        for (Player* p : cq.requestedPlayers) {
+            if (p) {
+                p->newChunks.push_back(cq.position);
+            }
+        }
     }
 }
 

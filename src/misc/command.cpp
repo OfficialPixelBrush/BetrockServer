@@ -138,8 +138,8 @@ void Command::Creative(Player* player) {
 }
 
 void Command::Chunk(Player* player) {
-	size_t numberOfNewChunks = SendChunksAroundPlayer(response, player);
-	Respond::ChatMessage(response, "§7Generated " + std::to_string(numberOfNewChunks) + " Chunks around player");
+	SendChunksAroundPlayer(response, player);
+	//Respond::ChatMessage(response, "§7Generated " + std::to_string(numberOfNewChunks) + " Chunks around player");
 	failureReason = "";
 }
 
