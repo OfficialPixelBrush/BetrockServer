@@ -1,6 +1,34 @@
 # BetrockServer
- A Server-Engine written in C++, made to work with Minecraft Beta 1.7.3
+A Server-Engine written in C++, made to work with Minecraft Beta 1.7.3. The goal being to have a semi-modern Server Engine that people can muck about with however they like, and to not have to deal with plugins that're over a decade old.
 
+## Getting Started
+How do you run your own BetrockServer instance?
+
+## Option 1 - Download
+Check the releases page for the latest binary of BetrockServer. Then simply run the executable.
+
+## Option 2 - Compiling
+### Install Dependencies
+```bash
+sudo apt install libdeflate-dev liblua5.4-dev
+```
+
+### Clone
+```bash
+git clone https://github.com/OfficialPixelBrush/BetrockServer.git
+cmake -S . -B build
+```
+
+### Build
+```bash
+cmake --build build
+```
+
+### Packing (Optional)
+```bash
+cpack --config build/CPackConfig.cmake -G TGZ
+```
+## Progress
 - [x] Handshake 
 - [x] Login
 - [x] Generate a chunk
@@ -10,37 +38,10 @@
 - [x] Fix Client-side crash
 - [x] Show Players on other Clients
 - [x] Saving and Loading
+- [x] Lua World Generation
 - [ ] Show other players crouching
-- [ ] Add McRegion
+- [ ] Add McRegion Support
 - [ ] Properly handle inventory
-
-## Getting Started
-How do you run your own BetrockServer instance?
-
-## Option 1 - Download
-Check the releases page for the latest binary of BetrockServer. Then simply run the executable.
-
-## Option 2 - Builing
-### Cloning
-```bash
-git clone https://github.com/OfficialPixelBrush/BetrockServer.git
-cmake -S . -B build -DCMAKE_BUILD_TYPE=Release
-```
-
-### Installing Dependencies
-```bash
-sudo apt install libdeflate-dev liblua5.4-dev
-```
-
-### Building
-```bash
-cmake --build build
-```
-
-### Packing (Optional)
-```bash
-cpack --config build/CPackConfig.cmake -G TGZ
-```
 
 ## Resources
 - [beta-wiki](https://github.com/mudkipdev/beta-wiki)
