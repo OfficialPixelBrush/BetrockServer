@@ -6,7 +6,7 @@ void PrepareForShutdown() {
     for (auto& [key, wm] : worldManagers) {
         wm->world.Save(ConvertIndexIntoExtra(key));
     }
-    DisconnectAllPlayers("Server closed!");
+	DisconnectAllPlayers("Server closed!");
     close(server_fd);
 }
 

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 20)
-project(BetrockServer VERSION 0.1.7)
+project(BetrockServer VERSION 0.1.8)
 
 add_compile_options(
   "-ggdb"

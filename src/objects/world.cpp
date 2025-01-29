@@ -50,7 +50,7 @@ void World::Load(std::string extra) {
             size_t compressedSize = size;
             size_t decompressedSize = 0;
 
-            char* chunkData = DecompressChunk(compressedChunk,compressedSize,decompressedSize);
+            auto chunkData = DecompressChunk(compressedChunk,compressedSize,decompressedSize);
 
             Chunk c;
             size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;
@@ -85,8 +85,6 @@ void World::Load(std::string extra) {
             AddChunk(x,z,c);
             chunkFile.close();
             loadedChunks++;
-
-            delete [] chunkData;
         }
     }
     std::cout << "Loaded " << loadedChunks << " Chunks from Disk" << std::endl;
@@ -128,18 +126,16 @@ void World::Save(std::string extra) {
         }
 
         size_t compressedSize = 0;
-        char* chunkBinary = CompressChunk(chunkData.get(), compressedSize);
+        auto chunkBinary = CompressChunk(chunkData.get(), compressedSize);
         
         if (!chunkBinary || compressedSize == 0) {		
             std::cout << "Failed to compress Chunk " << pos << std::endl;
             continue;
         }
 
-        chunkFile.write(chunkBinary, compressedSize);
+        chunkFile.write(chunkBinary.get(), compressedSize);
         chunkFile.close();
         savedChunks++;
-
-        delete [] chunkBinary;
     }
     std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;
 }

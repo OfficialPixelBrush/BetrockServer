@@ -386,7 +386,7 @@ int16_t GetBlockIndex(Int3 position) {
     return (int32_t)((int8_t)position.y + position.z*CHUNK_HEIGHT + (position.x*CHUNK_HEIGHT*CHUNK_WIDTH_Z));
 }
 
-char* CompressChunk(char* chunk, size_t &compressed_size) {
+std::unique_ptr<char[]> CompressChunk(char* chunk, size_t &compressed_size) {
 
     // Create a compression context
     struct libdeflate_compressor *compressor = libdeflate_alloc_compressor(9);
@@ -397,11 +397,11 @@ char* CompressChunk(char* chunk, size_t &compressed_size) {
 
     // Allocate space for compressed data
     size_t max_compressed_size = libdeflate_zlib_compress_bound(compressor, CHUNK_DATA_SIZE);
-    char *compressed_data = new char[max_compressed_size];
+    auto compressed_data = std::make_unique<char[]>(max_compressed_size);
 
     // Compress the data
     compressed_size = libdeflate_zlib_compress(compressor, chunk, CHUNK_DATA_SIZE,
-                                                      compressed_data, max_compressed_size);
+                                                      compressed_data.get(), max_compressed_size);
 
     if (compressed_size == 0) {
         std::cerr << "Compression failed\n";
@@ -413,7 +413,7 @@ char* CompressChunk(char* chunk, size_t &compressed_size) {
     return compressed_data;
 }
 
-char* DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size) {
+std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size) {
     // Create a decompression context
     struct libdeflate_decompressor* decompressor = libdeflate_alloc_decompressor();
     if (!decompressor) {
@@ -423,16 +423,15 @@ char* DecompressChunk(const char* compressed_data, size_t compressed_size, size_
 
     // Estimate the maximum size of the decompressed data
     decompressed_size = CHUNK_DATA_SIZE; // This is an estimate, adjust as needed.
-    char* decompressed_data = new char[decompressed_size];
+    auto decompressed_data = std::make_unique<char[]>(decompressed_size);
 
     // Decompress the data
     int result = libdeflate_zlib_decompress(decompressor, compressed_data, compressed_size,
-                                             decompressed_data, decompressed_size, &decompressed_size);
+                                             decompressed_data.get(), decompressed_size, &decompressed_size);
 
     // Check if decompression succeeded
     if (result != LIBDEFLATE_SUCCESS) {
         std::cerr << "Decompression failed with error code " << result << std::endl;
-        delete[] decompressed_data;
         libdeflate_free_decompressor(decompressor);
         return nullptr;
     }
