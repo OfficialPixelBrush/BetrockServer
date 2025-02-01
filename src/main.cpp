@@ -3,9 +3,11 @@
 void PrepareForShutdown() {
     alive = false;
 	// Save all active worlds
-    for (auto& [key, wm] : worldManagers) {
-        wm->world.Save(ConvertIndexIntoExtra(key));
-    }
+	if (!debugDisableSaveLoad) {
+		for (auto& [key, wm] : worldManagers) {
+			wm->world.Save(ConvertIndexIntoExtra(key));
+		}
+	}
 	DisconnectAllPlayers("Server closed!");
     close(server_fd);
 }
@@ -82,7 +84,9 @@ void LoadConfig() {
 	AddWorldManager(0);
     for (auto& [key, wm] : worldManagers) {
 		wm->SetSeed(seed);
-        wm->world.Load(ConvertIndexIntoExtra(key));
+		if (!debugDisableSaveLoad) {
+        	wm->world.Load(ConvertIndexIntoExtra(key));
+		}
     }
 	
 	WritePropertiesFile(filename,properties);
@@ -154,14 +158,17 @@ int main() {
 
     // Create threads for sending and receiving data
 	std::thread join_thread(ServerJoin, address);
+	std::vector<uint8_t> response;
 
 	while (alive) {
+		response.clear();
 		// Server is alive
-		std::vector<uint8_t> response;
-		serverTime += 20;
+		if (doDaylightCycle) {
+			serverTime += 20;
+		}
 		Respond::Time(response,serverTime);
 		BroadcastToPlayers(response);
-        sleep(1); // Send data every second
+		sleep(1); // Send data every second
 	}
 	join_thread.join();
 	PrepareForShutdown();

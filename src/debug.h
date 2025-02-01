@@ -9,3 +9,5 @@ extern bool debugSentPacketType;
 
 extern bool debugNumberOfPacketBytes;
 extern bool debugPlayerStatus;
+
+extern bool debugDisableSaveLoad;

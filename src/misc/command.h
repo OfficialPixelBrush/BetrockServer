@@ -7,6 +7,7 @@
 #include "world.h"
 #include "coms.h"
 #include "server.h"
+#include "gamerules.h"
 
 class Command {
     public:
@@ -18,6 +19,7 @@ class Command {
         static void Health(Player* player);
         static void Kill(Player* player);
         static void Summon(Player* player);
+        static void Gamerule(Player* player);
         static void Kick(Player* player);
         static void Spawn(Player* player);
         static void Creative(Player* player);

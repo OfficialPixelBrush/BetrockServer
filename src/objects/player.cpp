@@ -34,16 +34,31 @@ void Player::Kill(std::vector<uint8_t> &response) {
     SetHealth(response,0);
 }
 
-int8_t Player::FindEmptySlot(int16_t item, int16_t damage, int8_t amount) {
+int8_t Player::FindEmptySlot(int16_t id, int8_t amount, int16_t damage) {
+    // Then we check the entire inventory if we already have an item of this type
+    // TODO: This code should work, but since we don't update the entire inventory, it may be inaccurate
+    /*
+    for (int8_t i = INVENTORY_ROW_1; i <= INVENTORY_HOTBAR_LAST; i++) {
+        if (inventory[i].id == id && inventory[i].damage == damage) {
+            if (inventory[i].amount + amount > 64) {
+                amount -= inventory[i].amount;
+                inventory[i].amount = 64;
+            } else {
+                inventory[i].amount += amount;
+            }
+        }
+    }
+    */
+
     // First we check the hotbar
-    for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST+1; i++) {
-        if (inventory[i].x == -1) {
+    for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST; i++) {
+        if (inventory[i].id == -1) {
             return i;
         }
     }
     // Then we check the inventory
     for (int8_t i = INVENTORY_ROW_1; i <= INVENTORY_ROW_LAST; i++) {
-        if (inventory[i].x == -1) {
+        if (inventory[i].id == -1) {
             return i;
         }
     }
@@ -61,13 +76,52 @@ bool Player::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, i
         }
     }
     // Look for empty slot
-    int8_t slotId = FindEmptySlot(item,damage,amount);
+    int8_t slotId = FindEmptySlot(item,amount,damage);
     if (slotId == -1) {
         return false;
     }
 	Respond::SetSlot(response,0,slotId,item,amount,damage);
-    inventory[slotId] = Int3 { item,damage,amount };
+    inventory[slotId] = Item { item,amount,damage };
     return true;
+}
+
+// TODO: Implement Shift-clicking
+void Player::ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage) {
+    // If we've clicked outside, throw the items to the ground and clear the slot.
+    if (slotId == CLICK_OUTSIDE) {
+        hoveringItem = Item {-1,0,0};
+        return;
+    }
+
+    // If something is being held
+    if (hoveringItem.id < BLOCK_STONE) {
+        Item temp = hoveringItem;
+        hoveringItem = inventory[slotId];
+        inventory[slotId] = temp;
+    } else {
+        Item temp = inventory[slotId];
+        inventory[slotId] = hoveringItem;
+        hoveringItem = temp;
+    }
+    lastClickedSlot = slotId;
+}
+
+bool Player::CanDecrementHotbar() {
+    Item i = inventory[INVENTORY_HOTBAR + currentHotbarSlot];
+    if (i.id > BLOCK_AIR && i.amount > 0) {
+        return true;
+    }
+    return false;
+}
+
+void Player::DecrementHotbar() {
+    Item* i = &inventory[INVENTORY_HOTBAR + currentHotbarSlot];
+    i->amount--;
+    if (i->amount <= 0) {
+        i->id = -1;
+        i->amount = 0;
+        i->damage = 0;
+    }
 }
 
 void Player::PrintStats() {

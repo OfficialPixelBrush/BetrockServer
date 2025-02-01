@@ -16,6 +16,13 @@
 
 #define CHUNK_DATA_SIZE static_cast<size_t>(CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z * 2.5)
 
+// Item
+struct Item {
+    int16_t id = 0;
+    int8_t  amount = 0;
+    int16_t damage = 0;
+};
+
 // Building blocks
 struct Block {
     uint8_t type = 0;

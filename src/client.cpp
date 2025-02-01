@@ -439,6 +439,7 @@ bool Client::PlayerPositionLook() {
 
 bool Client::HoldingChange() {
 	int16_t slotId = EntryToShort(message, offset);
+	player->currentHotbarSlot = (int8_t)slotId;
 	return true;
 }
 
@@ -480,7 +481,10 @@ bool Client::PlayerDigging(World* world) {
 	if (status == 2 || player->creativeMode) {
 		Respond::BlockChange(broadcastResponse,pos,0,0);
 		Block b = world->BreakBlock(pos);
-		Respond::PickupSpawn(broadcastResponse,latestEntityId,b.type,1,b.meta,pos,0,0,0);
+		if (doTileDrops) {
+			//Respond::PickupSpawn(broadcastResponse,latestEntityId,b.type,1,b.meta,pos,0,0,0);
+			player->Give(response,b.type,1,b.meta);
+		}
 	}
 	return true;
 }
@@ -493,7 +497,7 @@ bool Client::BlockTooCloseToPosition(Int3 position) {
     double playerMinY = player->position.y;
 	double playerMaxY = player->position.y + 1.8f;
 	if (player->crouching) {
-    	double playerMaxY = player->position.y + 1.5f;
+		playerMaxY = player->position.y + 1.5f;  // Correct: modifies the existing variable
 	}
 
     double playerMinZ = player->position.z - 0.25f;
@@ -533,12 +537,21 @@ bool Client::PlayerBlockPlacement(World* world) {
 
 	BlockToFace(x,y,z,direction);
 	Int3 pos = XyzToInt3(x,y,z);
-	
-	// If you don't catch this, the Server will try to
-	// place a block with the Id of an empty slot, aka -1
-	if (id > BLOCK_AIR && id < BLOCK_MAX && !BlockTooCloseToPosition(pos)) {
-		Respond::BlockChange(broadcastResponse,pos,(int8_t)id,(int8_t)damage);
-		world->PlaceBlock(pos,(int8_t)id,(int8_t)damage);
+	// This packet has a special case where X, Y, Z, and Direction are all -1.
+	// This special packet indicates that the currently held item for the player should have
+	// its state updated such as eating food, shooting bows, using buckets, etc.
+
+	// Apparently this also handles the player standing inside the block its trying to place in
+	if (x == -1 && y == -1 && z == -1 && direction == -1) {
+		return true;
+	}
+	// Place a block if we can
+	if (id > BLOCK_AIR && id < BLOCK_MAX && !BlockTooCloseToPosition(pos) && player->CanDecrementHotbar()) {
+		//std::cout << BlockTooCloseToPosition(pos) << ": " << pos << " - " << player->position << std::endl;
+		Item i = player->inventory[INVENTORY_HOTBAR+player->currentHotbarSlot];
+		Respond::BlockChange(broadcastResponse,pos,(int8_t)i.id,(int8_t)i.damage);
+		world->PlaceBlock(pos,(int8_t)i.id,(int8_t)i.damage);
+		player->DecrementHotbar();
 	}
 	return true;
 }
@@ -550,10 +563,13 @@ bool Client::WindowClick() {
 	int16_t actionNumber= EntryToShort(message,offset);
 	int8_t shift 		= EntryToByte(message, offset);
 	int16_t itemId		= EntryToShort(message,offset);
+	int8_t itemCount	= 1;
+	int16_t itemUses	= 0;
 	if (itemId > 0) {
-		int8_t itemCount	= EntryToByte(message, offset);
-		int16_t itemUses	= EntryToShort(message,offset);
+		itemCount		= EntryToByte(message, offset);
+		itemUses		= EntryToShort(message,offset);
 	}
+	player->ClickedSlot(response,windowId,slotId,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
 	return true;
 }
 

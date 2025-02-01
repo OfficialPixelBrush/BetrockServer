@@ -25,7 +25,14 @@
 #define INVENTORY_ROW_3 27
 #define INVENTORY_ROW_LAST 35
 
-#define INVENTORY_MAX_SLOTS 44
+#define INVENTORY_MAX_SLOTS 45
+
+#define INVENTORY_CHEST 0
+#define INVENTORY_WORKBENCH 1
+#define INVENTORY_FURNACE 2
+#define INVENTORY_DISPENSER 3
+
+#define CLICK_OUTSIDE -999
 
 enum class ConnectionStatus {
     Disconnected,
@@ -51,7 +58,12 @@ class Player : public Entity {
         int8_t health = HEALTH_MAX;
         std::vector<Int3> visibleChunks;
         std::vector<Int3> newChunks;
-        Int3 inventory[INVENTORY_MAX_SLOTS];
+
+        // Server-side inventory
+        int16_t lastClickedSlot = 0;
+        Item inventory[INVENTORY_MAX_SLOTS];
+        Item hoveringItem = Item {-1,0,0};
+        int8_t currentHotbarSlot = 0;
 
         // Connection Stats
         int64_t lastPacketTime = 0;
@@ -67,8 +79,8 @@ class Player : public Entity {
             connectionStatus(ConnectionStatus::Disconnected)
         {
             // Fill inventory with empty slots
-            for (int i = 0; i < 44; ++i) {
-                inventory[i] = Int3{-1, 0, 0};
+            for (int i = 0; i < INVENTORY_MAX_SLOTS; ++i) {
+                inventory[i] = Item{-1, 0, 0};
             }
         }
 
@@ -77,7 +89,10 @@ class Player : public Entity {
         void SetHealth(std::vector<uint8_t> &response, int8_t health);
         void Hurt(std::vector<uint8_t> &response, int8_t damage);
         void Kill(std::vector<uint8_t> &response);
-        int8_t FindEmptySlot(int16_t item, int16_t damage, int8_t amount);
+        int8_t FindEmptySlot(int16_t item, int8_t amount, int16_t damage);
+        void ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage);
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
+        bool CanDecrementHotbar();
+        void DecrementHotbar();
         void PrintStats();
 };

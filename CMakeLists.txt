@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 set (CMAKE_CXX_STANDARD 20)
-project(BetrockServer VERSION 0.1.8)
+project(BetrockServer VERSION 0.1.9)
 
 add_compile_options(
   "-ggdb"
@@ -36,6 +36,7 @@ add_executable(
     src/generators/generator.cpp
 
     src/misc/command.cpp
+    src/misc/gamerules.cpp
     src/misc/helper.cpp
     src/misc/lighting.cpp
     src/misc/luahelper.cpp
