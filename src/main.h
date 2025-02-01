@@ -20,3 +20,4 @@
 #include "coms.h"
 #include "client.h"
 #include "config.h"
+#include "gamerules.h"

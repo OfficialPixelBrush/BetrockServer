@@ -1,7 +1,9 @@
 #pragma once
 #include <cstdint>
+#include <array>
+#include <string>
 
-#define SLOT_EMPTY -1;
+#define SLOT_EMPTY -1
 
 bool IsTranslucent(int16_t id);
 uint8_t GetTranslucency(int16_t id, uint8_t &skylight);
@@ -47,7 +49,7 @@ enum Blocks {
     BLOCK_WOOL          = 35,
     // There is no block 36
     BLOCK_DANDELION     = 37,
-    BLOCK_POPPY         = 38,
+    BLOCK_ROSE          = 38,
     BLOCK_MUSHROOM_BROWN= 39,
     BLOCK_MUSHROOM_RED  = 40,
     BLOCK_GOLD          = 41,
@@ -92,7 +94,7 @@ enum Blocks {
     BLOCK_SNOW          = 80,
     BLOCK_CACTUS        = 81,
     BLOCK_CLAY          = 82,
-    BLOCK_REEDS         = 83,
+    BLOCK_SUGARCANE     = 83,
     BLOCK_JUKEBOX       = 84,
     BLOCK_FENCE         = 85,
     BLOCK_PUMPKIN       = 86,
@@ -120,6 +122,7 @@ enum Blocks {
 };
 
 enum Items {
+    ITEM_MINIMUM = 255,
     ITEM_SHOVEL_IRON = 256,
     ITEM_PICKAXE_IRON,
     ITEM_AXE_IRON,
@@ -203,7 +206,7 @@ enum Items {
     ITEM_BUCKET_MILK,
     ITEM_BRICK,
     ITEM_CLAY,
-    ITEM_REEDS,
+    ITEM_SUGARCANE,
     ITEM_PAPER,
     ITEM_BOOK,
     ITEM_SLIME,
@@ -224,11 +227,10 @@ enum Items {
     ITEM_COOKIE,
     ITEM_MAP,
     ITEM_SHEARS,
-    ITEM_MELON,
-    ITEM_SEEDS_PUMPKIN,
-    ITEM_SEEDS_MELON,
-    ITEM_BEEF,
-    ITEM_BEEF_COOKED,
-    ITEM_ROTTEN_FLESH = 367,
     ITEM_MAX,
 };
+
+extern std::array<std::string, BLOCK_MAX> blockLabels;
+extern std::array<std::string, ITEM_MAX-ITEM_MINIMUM> itemLabels;
+
+std::string GetLabel(int16_t id);

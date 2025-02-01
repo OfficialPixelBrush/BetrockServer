@@ -52,10 +52,10 @@ void Command::Give(Player* player) {
 			// TODO: Find first empty slot in inventory!!
 			bool result = player->Give(response,itemId,amount,metadata);
 			if (!result) {
-				failureReason = "Unable to give " + std::to_string(itemId);
+				failureReason = "Unable to give " + GetLabel(itemId);
 				return;
 			}
-			Respond::ChatMessage(response, "§7Gave " + std::to_string(itemId));
+			Respond::ChatMessage(response, "§7Gave " + GetLabel(itemId));
 			failureReason = "";
 		} else {
 			failureReason = std::to_string(itemId) + " is not a valid Item Id!";
@@ -104,6 +104,24 @@ void Command::Summon(Player* player) {
 		Respond::NamedEntitySpawn(broadcastResponse, latestEntityId, username, Vec3ToInt3(player->position), 0,0, 5);
 		BroadcastToPlayers(broadcastResponse);
 		Respond::ChatMessage(response, "§7Summoned " + username);
+		failureReason = "";
+	}
+}
+
+
+// Set gamerules
+void Command::Gamerule(Player* player) {
+	if (command.size() > 1) {
+		if (command[1] == "doDaylightCycle") {
+			doDaylightCycle = !doDaylightCycle;
+			Respond::ChatMessage(response, "§7Set doDaylightCycle to " + std::to_string(doDaylightCycle));
+		} else if (command[1] == "doTileDrops") {
+			doTileDrops = !doTileDrops;
+			Respond::ChatMessage(response, "§7Set doTileDrops to " + std::to_string(doTileDrops));
+		} else {
+			failureReason = "Gamerule does not exist!";
+			return;
+		}
 		failureReason = "";
 	}
 }
@@ -178,6 +196,8 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 		Kill(player);
 	} else if (command[0] == "summon") {
 		Summon(player);
+	} else if (command[0] == "gamerule") {
+		Gamerule(player);
 	} else if (command[0] == "kick") {
 		Kick(player);
 	} else if (command[0] == "spawn") {
