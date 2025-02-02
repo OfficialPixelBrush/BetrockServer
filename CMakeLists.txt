@@ -1,11 +1,13 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
-set (CMAKE_CXX_STANDARD 20)
+
 project(BetrockServer VERSION 0.1.9)
 
-add_compile_options(
-  "-ggdb"
-)
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 find_package(Lua REQUIRED)
 
@@ -53,6 +55,10 @@ add_executable(
     src/server.cpp
 )
 
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    target_compile_definitions(BetrockServer "-ggdb")
+endif ()
+
 set(CMAKE_SYSTEM_NAME Linux)
 
 # TODO: Get Windows Target working
@@ -61,21 +67,17 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(CMAKE_CXX_COMPILER i686-w64-mingw32-g++)
     set(CMAKE_RC_COMPILER i686-w64-mingw32-windres)
     set(CMAKE_RANLIB i686-w64-mingw32-ranlib)
-    target_link_libraries(
-        BetrockServer
-        deflate
-        ${LUA_LIBRARIES}
-    )
 else()
     # Apply AddressSanitizer to all build types
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
-    target_link_libraries(
-        BetrockServer
-        deflate
-        ${LUA_LIBRARIES}
-    )
 endif()
+
+target_link_libraries(
+    BetrockServer
+    deflate
+    ${LUA_LIBRARIES}
+)
 
 
 include(CPack)
