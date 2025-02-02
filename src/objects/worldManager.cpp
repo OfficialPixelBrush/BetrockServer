@@ -1,5 +1,7 @@
 #include "worldManager.h"
 
+#include "server.h"
+
 QueueChunk::QueueChunk(Int3 position, Player* requestPlayer) {
     this->position = position;
     AddPlayer(requestPlayer);
@@ -43,7 +45,7 @@ void WorldManager::Run() {
         workers.emplace_back(&WorldManager::WorkerThread, this);
     }
 
-    while (alive) {
+    while (Betrock::Server::Instance().IsAlive()) {
         GenerateQueuedChunks();
         std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Sleep for half a second
     }
@@ -51,7 +53,7 @@ void WorldManager::Run() {
     // Stop workers
     {
         std::lock_guard<std::mutex> lock(queueMutex);
-        alive = false;
+        Betrock::Server::Instance().Stop();
     }
     queueCV.notify_all();
 
@@ -73,9 +75,9 @@ void WorldManager::WorkerThread() {
         QueueChunk cq;
         {
             std::unique_lock<std::mutex> lock(queueMutex);
-            queueCV.wait(lock, [this] { return !chunkQueue.empty() || !alive; });
+            queueCV.wait(lock, [this] { return !chunkQueue.empty() || !Betrock::Server::Instance().IsAlive(); });
 
-            if (!alive && chunkQueue.empty()) return; // Exit thread when stopping
+            if (!Betrock::Server::Instance().IsAlive() && chunkQueue.empty()) return; // Exit thread when stopping
 
             cq = chunkQueue.front();
             chunkQueue.pop();
@@ -87,7 +89,7 @@ void WorldManager::WorkerThread() {
         Chunk c = generator.GenerateChunk(cq.position.x, cq.position.z);
         world.AddChunk(cq.position.x, cq.position.z, c);
 
-        std::lock_guard<std::mutex> lock(connectedPlayersMutex);
+        std::scoped_lock lock(Betrock::Server::Instance().GetConnectedPlayerMutex());
         for (Player* p : cq.requestedPlayers) {
             if (p) {
                 p->newChunks.push_back(cq.position);

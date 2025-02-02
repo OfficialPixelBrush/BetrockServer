@@ -5,7 +5,6 @@
 #include "responses.h"
 #include "entity.h"
 #include "coms.h"
-#include "client.h"
 
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62

@@ -1,48 +1,167 @@
 #include "server.h"
-bool alive = true;
-int server_fd;
 
-std::vector<Player*> connectedPlayers;
-std::mutex connectedPlayersMutex;
-std::mutex entityIdMutex;
+#include <ranges>
 
-int32_t latestEntityId;
-uint64_t serverTime = 0;
-int chunkDistance = 10;
+namespace Betrock {
 
-std::unordered_map<int8_t, std::unique_ptr<WorldManager>> worldManagers;
-std::unordered_map<int8_t, std::thread> worldManagerThreads;
-Vec3 spawnPoint;
-int8_t spawnWorld;
+void Server::Stop() noexcept { this->alive = false; }
 
-WorldManager* GetWorldManager(int8_t worldId) {
-    return worldManagers[worldId].get();
+bool Server::IsAlive() const noexcept { return this->alive; }
+
+int8_t Server::GetSpawnWorld() const noexcept { return this->spawnWorld; }
+
+int Server::GetServerFd() const noexcept { return this->serverFd; }
+
+std::vector<Player *> &Server::GetConnectedPlayers() noexcept { return this->connectedPlayers; }
+
+int32_t &Server::GetLatestEntityId() noexcept { return this->latestEntityId; }
+
+int Server::GetChunkDistance() const noexcept { return this->chunkDistance; }
+
+uint64_t Server::GetServerTime() const noexcept { return this->serverTime; }
+
+WorldManagerMap &Server::GetWorldManagers() noexcept { return this->worldManagers; }
+
+WorldManager *Server::GetWorldManager(int8_t worldId) const {
+	if (worldManagers.contains(worldId) == false) {
+		return nullptr;
+	}
+
+	return this->worldManagers.at(worldId).get();
 }
 
-World* GetWorld(int8_t worldId) {
-    return &worldManagers[worldId]->world;
+World *Server::GetWorld(int8_t worldId) const {
+	if (worldManagers.contains(worldId) == false) {
+		return nullptr;
+	}
+
+	return &this->worldManagers.at(worldId)->world;
 }
 
-void AddWorldManager(int8_t worldId) {
-    // Create a WorldManager and move it into the map
-    auto worldManager = std::make_unique<WorldManager>();
+const Vec3 &Server::GetSpawnPoint() const noexcept { return this->spawnPoint; }
 
-    // Start a thread for the WorldManager's processing loop
-    worldManagerThreads[worldId] = std::thread([wm = worldManager.get()]() {
-        wm->Run(); // Ensure WorldManager has a `Run` function for its main loop
-    });
+std::mutex &Server::GetConnectedPlayerMutex() noexcept { return this->connectedPlayersMutex; }
 
-    // Store the WorldManager in the map
-    worldManagers[worldId] = std::move(worldManager);
+std::mutex &Server::GetEntityIdMutex() noexcept { return this->entityIdMutex; }
+
+void Server::SetServerTime(uint64_t serverTime) { this->serverTime = serverTime; }
+
+Player *Server::FindPlayerByUsername(std::string_view username) const {
+	auto player = std::ranges::find_if(std::ranges::views::all(this->connectedPlayers),
+									   [&username](const auto &p) { return p->username == username; });
+
+	if (player == this->connectedPlayers.end()) {
+		return nullptr;
+	}
+
+	return std::to_address(*player);
 }
 
-Player* FindPlayerByUsername(std::string username) {
-    auto player = std::find_if(connectedPlayers.begin(), connectedPlayers.end(),
-        [&username](const auto& player) {
-            return player->username == username;
-        });
-    if (player != connectedPlayers.end()) {
-        return *player;
-    }
-    return nullptr;
+void Server::AddWorldManager(int8_t worldId) {
+	const auto &[wmEntry, wmWorked] = this->worldManagers.try_emplace(worldId, std::make_unique<WorldManager>());
+
+	if (wmWorked == false) {
+		// TODO: better error handling + logger macros
+		std::println(std::cerr, "world_manager emplace failed");
+		return;
+	}
+
+	// wm_entry is the key:value pair, so second is a reference to the unique
+	// pointer.
+	auto *world_manager = wmEntry->second.get();
+
+	const auto [threadEntry, threadWorked] =
+		this->worldManagerThreads.try_emplace(worldId, &WorldManager::Run, world_manager);
+	if (threadWorked == false) {
+		// TODO: better error handling + logger macros
+		std::println(std::cerr, "thread emplace failed");
+		return;
+	}
 }
+
+void Server::PrepareForShutdown() {
+	alive = false;
+	// Save all active worlds
+	if (!debugDisableSaveLoad) {
+		for (const auto &[key, wm] : worldManagers) {
+			wm->world.Save(ConvertIndexIntoExtra(key));
+		}
+	}
+	DisconnectAllPlayers("Server closed!");
+	close(serverFd);
+}
+
+void Server::LoadConfig() {
+	std::srand(static_cast<unsigned int>(std::time(0)));
+	const std::string filename = "server.properties";
+	const std::unordered_map<std::string, std::string> defaultValues = {{"level-name", "world"},
+																		{"view-distance", "5"},
+																		// {"white-list","false"},
+																		{"server-ip", ""},
+																		//{"pvp","true"},
+																		{"level-seed", std::to_string(std::rand())},
+																		//{"spawn-animals",true}
+																		{"server-port", "25565"},
+																		//{"allow-nether",true},
+																		//{"spawn-monsters","true"},
+																		//{"max-players","20"},
+																		//{"online-mode","false"},
+																		//{"allow-flight","false"}
+																		{"generator", "terrain/perlin.lua"}};
+	if (!std::filesystem::exists(filename)) {
+		CreateDefaultProperties(filename, defaultValues);
+	}
+	properties = ReadPropertiesFile(filename);
+	chunkDistance = std::stoll(properties["view-distance"]);
+	int64_t seed = std::stoll(properties["level-seed"]);
+	std::cout << "Level seed is " << seed << std::endl;
+
+	// Load all defined worlds
+	// TODO: Add file to configure custom worlds
+	AddWorldManager(0);
+	for (const auto &[key, wm] : worldManagers) {
+		wm->SetSeed(seed);
+		if (!debugDisableSaveLoad) {
+			wm->world.Load(ConvertIndexIntoExtra(key));
+		}
+	}
+
+	WritePropertiesFile(filename, properties);
+}
+
+bool Server::SocketBootstrap(uint16_t port) {
+	// TODO: remove perror in future with cooler betrock custom error stuff
+	struct sockaddr_in address;
+
+	// Create socket
+	serverFd = socket(AF_INET, SOCK_STREAM, 0);
+	if (serverFd < 0) {
+		perror("Socket creation failed");
+		return false;
+	}
+
+	if (int opt = 1; setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+		perror("setsockopt failed");
+		return false;
+	}
+
+	// Bind socket to port 25565
+	address.sin_family = AF_INET;
+	address.sin_addr.s_addr = INADDR_ANY;
+	address.sin_port = htons(port);
+
+	if (bind(serverFd, (struct sockaddr *)&address, sizeof(address)) < 0) {
+		perror("Bind failed");
+		return false;
+	}
+
+	// Listen for connections
+	if (listen(serverFd, 3) < 0) {
+		perror("Listen failed");
+		return false;
+	}
+
+	return true;
+}
+
+} // namespace Betrock

@@ -1,5 +1,9 @@
 #include "client.h"
 
+#include "server.h"
+
+#include <ranges>
+
 Client::Client(Player* player) {
 	this->player = player;	
 }
@@ -77,12 +81,15 @@ void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldMan
 }
 
 void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
+    auto &server = Betrock::Server::Instance();
     Vec3 delta = player->position - player->lastChunkUpdatePosition;
 
     Int3 centerPos = Vec3ToInt3(player->position+delta);
     Int3 playerChunkPos = BlockToChunkPosition(centerPos);
     int32_t pX = playerChunkPos.x;
     int32_t pZ = playerChunkPos.z;
+
+    auto chunkDistance = server.GetChunkDistance();
 
     // Remove chunks that are out of range
     for (auto it = player->visibleChunks.begin(); it != player->visibleChunks.end(); ) {
@@ -96,7 +103,7 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
         }
     }
 
-    auto wm = GetWorldManager(player->worldId);
+    auto wm = server.GetWorldManager(player->worldId);
 
 	// Iterate over all chunks within a bounding box defined by chunkDistance
 	for (int r = 0; r < chunkDistance; r++) {
@@ -120,7 +127,7 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 }
 
 void Client::SendNewChunks() {
-    auto wm = GetWorldManager(player->worldId);
+  auto wm = Betrock::Server::Instance().GetWorldManager(player->worldId);
 	while(!player->newChunks.empty()) {
 		auto nc = player->newChunks.begin();
 		auto chunkData = wm->world.GetChunkData(*nc);
@@ -163,6 +170,7 @@ void Client::Respond(ssize_t bytes_received) {
 }
 
 void HandlePacket(Client &client) {
+  auto serverTime = Betrock::Server::Instance().GetServerTime();
 	int64_t lastPacketTime = serverTime;
 	// Prep for next packet
 	ssize_t bytes_received = client.Setup();
@@ -189,7 +197,7 @@ void HandlePacket(Client &client) {
 		}
 
 		// Get the current Dimension
-		World* world = GetWorld(client.player->worldId);
+		World* world = Betrock::Server::Instance().GetWorld(client.player->worldId);
 		
 		// The Client tries to join the Server
 		switch(packetType) {
@@ -266,6 +274,7 @@ void HandlePacket(Client &client) {
 
 // Give each Player their own thread
 void HandleClient(Player* player) {
+  auto &server = Betrock::Server::Instance();
 	// Assign player
 	Client client = Client(player);
 
@@ -273,13 +282,15 @@ void HandleClient(Player* player) {
 	while (player->connectionStatus > ConnectionStatus::Disconnected) {
 		HandlePacket(client);
 	}
-	std::lock_guard<std::mutex> lock(connectedPlayersMutex);
+	std::lock_guard<std::mutex> lock(server.GetConnectedPlayerMutex());
 	int clientFdToDisconnect = player->client_fd;
-    auto it = std::find(connectedPlayers.begin(), connectedPlayers.end(), player);
+  auto &connectedPlayers = server.GetConnectedPlayers();
+    auto it = std::ranges::find(std::ranges::views::all(connectedPlayers), player);
     if (it != connectedPlayers.end()) {
         connectedPlayers.erase(it);
     }
 
+  // TODO: >:c (translation: smart pointer)
 	delete player;
 	player = nullptr;
 
@@ -306,6 +317,7 @@ bool Client::Handshake() {
 }
 
 bool Client::LoginRequest() {
+  auto &server = Betrock::Server::Instance();
 	if (player->connectionStatus != ConnectionStatus::LoggingIn) {
 		Disconnect(player,"Expected Login.");
 		return false;
@@ -333,9 +345,11 @@ bool Client::LoginRequest() {
 
 	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.", 0);
 
+  const auto &spawnPoint = server.GetSpawnPoint();
+
 	// Set the Respawn Point, Time and Player Health
 	Respond::SpawnPoint(response,Vec3ToInt3(spawnPoint));
-	Respond::Time(response,serverTime);
+	Respond::Time(response,server.GetServerTime());
 	Respond::UpdateHealth(response,player->health);
 
 	// Fill the players inventory
@@ -356,12 +370,12 @@ bool Client::LoginRequest() {
 	// Create the player for other players
 	Respond::NamedEntitySpawn(broadcastOthersResponse, player->entityId, player->username, Vec3ToInt3(player->position), player->yaw, player->pitch, BLOCK_PLANKS);
 
-    for (Player* others : connectedPlayers) {
+    for (Player* others : Betrock::Server::Instance().GetConnectedPlayers()) {
 		if (others == player) { continue; }
 		Respond::NamedEntitySpawn(response, others->entityId, others->username, Vec3ToInt3(others->position), others->yaw, others->pitch, BLOCK_PLANKS);
     }
 	player->connectionStatus = ConnectionStatus::Connected;
-	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION), 0);
+	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION), false);
 	return true;
 }
 

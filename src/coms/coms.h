@@ -10,7 +10,6 @@
 #include "debug.h"
 #include "responses.h"
 #include "world.h"
-#include "server.h"
 #include "packets.h"
 
 void SendToPlayer(std::vector<uint8_t> &response, Player* player);

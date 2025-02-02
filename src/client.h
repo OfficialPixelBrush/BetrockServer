@@ -6,7 +6,6 @@
 #include <unistd.h>
 
 #include "player.h"
-#include "server.h"
 #include "coms.h"
 #include "items.h"
 #include "version.h"
