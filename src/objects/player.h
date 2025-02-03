@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 #include <iostream>
 #include "helper.h"
 #include "responses.h"
@@ -31,6 +32,12 @@
 #define INVENTORY_WORKBENCH 1
 #define INVENTORY_FURNACE 2
 #define INVENTORY_DISPENSER 3
+
+#define EQUIPMENT_SLOT_HELD 0
+#define EQUIPMENT_SLOT_HELMET 1
+#define EQUIPMENT_SLOT_CHESTPLATE 2
+#define EQUIPMENT_SLOT_LEGGINGS 3
+#define EQUIPMENT_SLOT_BOOTS 4
 
 #define CLICK_OUTSIDE -999
 
@@ -92,6 +99,8 @@ class Player : public Entity {
         int8_t FindEmptySlot(int16_t item, int8_t amount, int16_t damage);
         void ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage);
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
+        void ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId);
+        Item GetHeldItem();
         bool CanDecrementHotbar();
         void DecrementHotbar();
         void PrintStats();

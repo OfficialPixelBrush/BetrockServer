@@ -1,4 +1,5 @@
 #include "player.h"
+#include <cstdint>
 
 void Player::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, float pitch) {
     this->position = position;
@@ -85,6 +86,16 @@ bool Player::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, i
     return true;
 }
 
+void Player::ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId) {
+	currentHotbarSlot = (int8_t)slotId;
+    Item i = GetHeldItem();
+    Respond::EntityEquipment(response, entityId, EQUIPMENT_SLOT_HELD, i.id, i.damage);
+}
+
+Item Player::GetHeldItem() {
+    return inventory[INVENTORY_HOTBAR + currentHotbarSlot];
+}
+
 // TODO: Implement Shift-clicking
 void Player::ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage) {
     // If we've clicked outside, throw the items to the ground and clear the slot.
@@ -107,7 +118,7 @@ void Player::ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_
 }
 
 bool Player::CanDecrementHotbar() {
-    Item i = inventory[INVENTORY_HOTBAR + currentHotbarSlot];
+    Item i = GetHeldItem();
     if (i.id > BLOCK_AIR && i.amount > 0) {
         return true;
     }

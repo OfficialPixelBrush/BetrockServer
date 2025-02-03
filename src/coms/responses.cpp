@@ -1,6 +1,7 @@
 #include "responses.h"
 #include "player.h"
 #include "entity.h"
+#include <cstdint>
 
 void Respond::KeepAlive(std::vector<uint8_t> &response) {
     response.push_back((uint8_t)Packet::KeepAlive);
@@ -31,6 +32,14 @@ void Respond::ChatMessage(std::vector<uint8_t> &response, std::string message, b
 void Respond::Time(std::vector<uint8_t> &response, int64_t time) {
     response.push_back((uint8_t)Packet::TimeUpdate);
     AppendLongToVector(response, time);
+}
+
+void Respond::EntityEquipment(std::vector<uint8_t> &response, int32_t entityId, int16_t slotId, int16_t itemId, int16_t damage) {
+    response.push_back((uint8_t)Packet::EntityEquipment);
+    AppendIntegerToVector(response, entityId);
+    AppendShortToVector(response, slotId);
+    AppendShortToVector(response, itemId);
+    AppendShortToVector(response, damage);
 }
 
 void Respond::SpawnPoint(std::vector<uint8_t> &response, Int3 position) {

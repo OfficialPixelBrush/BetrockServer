@@ -439,7 +439,7 @@ bool Client::PlayerPositionLook() {
 
 bool Client::HoldingChange() {
 	int16_t slotId = EntryToShort(message, offset);
-	player->currentHotbarSlot = (int8_t)slotId;
+	player->ChangeHeldItem(broadcastOthersResponse,slotId);
 	return true;
 }
 

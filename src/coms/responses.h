@@ -15,6 +15,7 @@ class Respond {
         static void Handshake(std::vector<uint8_t> &response);
         static void ChatMessage(std::vector<uint8_t> &response, std::string message, bool toConsole = 1);
         static void Time(std::vector<uint8_t> &response, int64_t time);
+        static void EntityEquipment(std::vector<uint8_t> &response, int32_t entityId, int16_t slotId, int16_t itemId, int16_t damage);
         static void SpawnPoint(std::vector<uint8_t> &response, Int3 position);
         static void UpdateHealth(std::vector<uint8_t> &response, int16_t health);
         static void Respawn(std::vector<uint8_t> &response, int8_t dimension);
