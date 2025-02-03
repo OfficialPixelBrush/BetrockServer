@@ -11,7 +11,6 @@ assignees: ''
 
 
 **To Reproduce**
-Steps to reproduce the behavior:
 1. 
 
 **Expected behavior**
@@ -20,9 +19,6 @@ Steps to reproduce the behavior:
 **Screenshots**
 
 **System Info:**
- - OS (Server): [e.g. Debian 12, Ubuntu Server 24.04.1 LTS]
- - OS (Client): [e.g. Windows 10, Linux Mint 22.1]
- - Version [e.g. v0.1.9]
-
-**Additional context**
-Add any other context about the problem here.
+- OS (Server): [e.g. Debian 12, Ubuntu Server 24.04.1 LTS]
+- OS (Client): [e.g. Windows 10, Linux Mint 22.1]
+- Version: [e.g. v0.1.9]
