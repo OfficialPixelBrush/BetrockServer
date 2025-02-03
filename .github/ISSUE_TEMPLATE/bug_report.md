@@ -8,24 +8,21 @@ assignees: ''
 ---
 
 **Describe the bug**
-A clear and concise description of what the bug is.
+
 
 **To Reproduce**
 Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
+1. 
 
 **Expected behavior**
-A clear and concise description of what you expected to happen.
+
 
 **Screenshots**
-If applicable, add screenshots to help explain your problem.
 
-**System (please complete the following information):**
- - OS: [e.g. Windows 10, iOS, Linux Mint 22.1]
- - Version [e.g. v0.1.8]
+**System Info:**
+ - OS (Server): [e.g. Debian 12, Ubuntu Server 24.04.1 LTS]
+ - OS (Client): [e.g. Windows 10, Linux Mint 22.1]
+ - Version [e.g. v0.1.9]
 
 **Additional context**
 Add any other context about the problem here.
