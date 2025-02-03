@@ -61,6 +61,8 @@ class Server {
 
 	void SetServerTime(uint64_t serverTime);
 
+	void SetSpawnPoint(const Vec3 &spawnPoint) noexcept;
+
 	Player *FindPlayerByUsername(std::string_view username) const;
 
 	// add a new world manager (and also a new world)

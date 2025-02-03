@@ -45,6 +45,7 @@ int main() {
 	Int3 spawnBlock = overworld->FindSpawnableBlock(Int3{0, 64, 0});
 	auto spawnPoint = Int3ToVec3(spawnBlock);
 	spawnPoint.y += STANCE_OFFSET;
+	server.SetSpawnPoint(spawnPoint);
 
 	// Create threads for sending and receiving data
 	std::jthread join_thread(&Betrock::Server::ServerJoin);

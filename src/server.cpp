@@ -46,6 +46,8 @@ std::mutex &Server::GetEntityIdMutex() noexcept { return this->entityIdMutex; }
 
 void Server::SetServerTime(uint64_t serverTime) { this->serverTime = serverTime; }
 
+void Server::SetSpawnPoint(const Vec3 &spawnPoint) noexcept { this->spawnPoint = spawnPoint; }
+
 Player *Server::FindPlayerByUsername(std::string_view username) const {
 	auto player = std::ranges::find_if(std::ranges::views::all(this->connectedPlayers),
 									   [&username](const auto &p) { return p->username == username; });
