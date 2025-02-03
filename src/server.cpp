@@ -64,7 +64,7 @@ void Server::AddWorldManager(int8_t worldId) {
 
 	if (wmWorked == false) {
 		// TODO: better error handling + logger macros
-		std::println(std::cerr, "world_manager emplace failed");
+		std::cerr << "world_manager emplace failed\n";
 		return;
 	}
 
@@ -76,7 +76,7 @@ void Server::AddWorldManager(int8_t worldId) {
 		this->worldManagerThreads.try_emplace(worldId, &WorldManager::Run, world_manager);
 	if (threadWorked == false) {
 		// TODO: better error handling + logger macros
-		std::println(std::cerr, "thread emplace failed");
+		std::cerr << "thread emplace failed\n";
 		return;
 	}
 }
