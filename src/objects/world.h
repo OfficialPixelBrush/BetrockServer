@@ -18,8 +18,8 @@ class World {
         void RemoveChunk(int32_t x, int32_t z);
     public:
         int64_t seed;
-        void Load(std::string extra = "");
-        void Save(std::string extra = "");
+        void Load(const std::string &extra = "");
+        void Save(const std::string &extra = "");
         int GetNumberOfChunks();
         std::unique_ptr<char[]> GetChunkData(Int3 position);
         //void GenerateChunk(int32_t x, int32_t z);

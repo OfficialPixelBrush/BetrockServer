@@ -1,5 +1,6 @@
-#include "main.h"
+#include <signal.h>
 
+#include "config.h"
 #include "server.h"
 
 void __attribute__((noreturn)) HandleSignal(int) {
@@ -18,7 +19,7 @@ int main() {
 
 	server.LoadConfig();
 
-	auto port = static_cast<uint16_t>(std::stoi(properties["server-port"]));
+	auto port = Betrock::GlobalConfig::Instance().GetAsNumber<uint16_t>("server-port");
 	std::cout << "Starting " << PROJECT_NAME " on *:" << port << std::endl;
 
 	if (!server.SocketBootstrap(port)) {

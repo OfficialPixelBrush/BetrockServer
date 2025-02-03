@@ -1,5 +1,6 @@
 #include "server.h"
 
+#include <random>
 #include <ranges>
 
 namespace Betrock {
@@ -94,28 +95,31 @@ void Server::PrepareForShutdown() {
 }
 
 void Server::LoadConfig() {
-	std::srand(static_cast<unsigned int>(std::time(0)));
-	const std::string filename = "server.properties";
-	const std::unordered_map<std::string, std::string> defaultValues = {{"level-name", "world"},
-																		{"view-distance", "5"},
-																		// {"white-list","false"},
-																		{"server-ip", ""},
-																		//{"pvp","true"},
-																		{"level-seed", std::to_string(std::rand())},
-																		//{"spawn-animals",true}
-																		{"server-port", "25565"},
-																		//{"allow-nether",true},
-																		//{"spawn-monsters","true"},
-																		//{"max-players","20"},
-																		//{"online-mode","false"},
-																		//{"allow-flight","false"}
-																		{"generator", "terrain/perlin.lua"}};
-	if (!std::filesystem::exists(filename)) {
-		CreateDefaultProperties(filename, defaultValues);
+	int64_t seed = 0;
+
+	if (!std::filesystem::exists(GlobalConfig::Instance().GetPath())) {
+		GlobalConfig::Instance().Overwrite({{"level-name", "world"},
+											{"view-distance", "5"},
+											// {"white-list","false"},
+											{"server-ip", ""},
+											//{"pvp","true"},
+											// use a random device to seed another prng that gives us our seed
+											{"level-seed", std::to_string(std::mt19937(std::random_device()())())},
+											//{"spawn-animals",true}
+											{"server-port", "25565"},
+											//{"allow-nether",true},
+											//{"spawn-monsters","true"},
+											//{"max-players","20"},
+											//{"online-mode","false"},
+											//{"allow-flight","false"}
+											{"generator", "terrain/perlin.lua"}});
+		GlobalConfig::Instance().SaveToDisk();
+	} else {
+		GlobalConfig::Instance().LoadFromDisk();
+		chunkDistance = GlobalConfig::Instance().GetAsNumber<int>("view-distance");
+		seed = GlobalConfig::Instance().GetAsNumber<int>("level-seed");
 	}
-	properties = ReadPropertiesFile(filename);
-	chunkDistance = std::stoll(properties["view-distance"]);
-	int64_t seed = std::stoll(properties["level-seed"]);
+
 	std::cout << "Level seed is " << seed << std::endl;
 
 	// Load all defined worlds
@@ -128,7 +132,7 @@ void Server::LoadConfig() {
 		}
 	}
 
-	WritePropertiesFile(filename, properties);
+	GlobalConfig::Instance().SaveToDisk();
 }
 
 bool Server::SocketBootstrap(uint16_t port) {

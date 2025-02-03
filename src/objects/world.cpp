@@ -4,12 +4,12 @@ int World::GetNumberOfChunks() {
     return chunks.size();
 }
 
-void World::Load(std::string extra) {
-    std::filesystem::path dirPath = properties["level-name"] + "/";
+void World::Load(const std::string& extra) {
+    std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
-        dirPath += "region";
+        dirPath += "/region";
     } else {
-        dirPath += extra + "/region";
+        dirPath += "/" + extra + "/region";
     }
 
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
@@ -90,12 +90,12 @@ void World::Load(std::string extra) {
     std::cout << "Loaded " << loadedChunks << " Chunks from Disk" << std::endl;
 }
 
-void World::Save(std::string extra) {
-    std::filesystem::path dirPath = properties["level-name"] + "/";
+void World::Save(const std::string &extra) {
+    std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
-        dirPath += "region";
+        dirPath += "/region";
     } else {
-        dirPath += extra + "/region";
+        dirPath += "/" + extra + "/region";
     }
 
     if (std::filesystem::create_directories(dirPath)) {

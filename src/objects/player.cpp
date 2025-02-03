@@ -1,4 +1,5 @@
 #include "player.h"
+#include "client.h"
 #include <cstdint>
 
 void Player::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, float pitch) {
