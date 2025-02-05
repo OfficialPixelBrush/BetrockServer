@@ -16,6 +16,9 @@ sudo apt install libdeflate-dev liblua5.4-dev
 ### Clone
 ```bash
 git clone https://github.com/OfficialPixelBrush/BetrockServer.git
+cd BetrockServer
+```
+```bash
 cmake -S . -B build
 ```
 
