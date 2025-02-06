@@ -59,7 +59,7 @@ add_executable(
 target_compile_definitions(BetrockServer PRIVATE -D_LIBCPP_ENABLE_EXPERIMENTAL=1)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    target_compile_definitions(BetrockServer "-ggdb")
+    target_compile_options(BetrockServer PRIVATE -ggdb)
 endif ()
 
 set(CMAKE_SYSTEM_NAME Linux)

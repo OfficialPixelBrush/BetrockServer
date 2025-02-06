@@ -213,6 +213,9 @@ void HandlePacket(Client &client) {
 			case Packet::ChatMessage:
 				client.ChatMessage();
 				break;
+			case Packet::UseEntity:
+				client.UseEntity();
+				break;
 			case Packet::Respawn:
 				client.Respawn();
 				break;
@@ -388,6 +391,13 @@ bool Client::ChatMessage() {
 		std::string sentChatMessage = "<" + player->username + "> " + chatMessage;
 		Respond::ChatMessage(broadcastResponse,sentChatMessage);
 	}
+	return true;
+}
+
+bool Client::UseEntity() {
+	int32_t originEntityId = EntryToInteger(message, offset);
+	int32_t recipientEntityId = EntryToInteger(message, offset);
+	bool leftClick = EntryToByte(message, offset);
 	return true;
 }
 
