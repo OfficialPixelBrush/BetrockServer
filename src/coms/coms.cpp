@@ -1,5 +1,7 @@
 #include "coms.h"
 
+#include "server.h"
+
 // Send the contents of response to the specified Player
 void SendToPlayer(std::vector<uint8_t> &response, Player* player) {
 	if (response.empty() || !player || player->connectionStatus <= ConnectionStatus::Disconnected) {
@@ -32,8 +34,11 @@ void BroadcastToPlayers(std::vector<uint8_t> &response, Player* sender) {
 	if (response.empty()) {
 		return;
 	}
-	std::lock_guard<std::mutex> lock(connectedPlayersMutex);
-    for (Player *player : connectedPlayers) {
+
+	auto &server = Betrock::Server::Instance();
+
+	std::scoped_lock lock(server.GetConnectedPlayerMutex());
+    for (Player *player : server.GetConnectedPlayers()) {
 		if (player == sender) { continue; }
 		if (player->connectionStatus == ConnectionStatus::Connected) {
         	SendToPlayer(response,player);
@@ -52,9 +57,11 @@ void Disconnect(Player* player, std::string message) {
 
 // Disconnects all currently connected Players
 void DisconnectAllPlayers(std::string message) {
+	auto &server = Betrock::Server::Instance();
+
 	std::vector<uint8_t> disconnectResponse;
-	std::lock_guard<std::mutex> lock(connectedPlayersMutex);
-    for (Player* player : connectedPlayers) {
+	std::scoped_lock lock(server.GetConnectedPlayerMutex());
+    for (Player* player : server.GetConnectedPlayers()) {
         Disconnect(player, message);
     }
 }

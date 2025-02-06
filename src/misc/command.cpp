@@ -1,15 +1,22 @@
 #include "command.h"
 
+#include "client.h"
+#include "server.h"
+
 std::vector<uint8_t> response;
 std::vector<std::string> command;
 std::string failureReason;
 
 // Get and Set the time
 void Command::Time() {
+	auto &server = Betrock::Server::Instance();
+	auto serverTime = server.GetServerTime();
+	
 	// Set the time
 	if (command.size() > 1) {
-		serverTime = std::stol(command[1].c_str());
-		Respond::Time(response,serverTime);
+		server.SetServerTime(std::stol(command[1]));
+
+		Respond::Time(response, serverTime);
 		Respond::ChatMessage(response, "§7Set time to " + std::to_string(serverTime));
 		failureReason = "";
 	}
@@ -84,7 +91,7 @@ void Command::Kill(Player* player) {
 		if (command.size() > 1) {
 			// Search for the player by username
 			username = command[1];
-			player = FindPlayerByUsername(username);
+			player = Betrock::Server::Instance().FindPlayerByUsername(username);
 		}
 		if (player) {
 			player->Kill(response);
@@ -97,11 +104,13 @@ void Command::Kill(Player* player) {
 }
 
 void Command::Summon(Player* player) {
+	auto &server = Betrock::Server::Instance();
+
 	if (command.size() > 1) {
-		std::lock_guard<std::mutex> lock(entityIdMutex);
+		std::scoped_lock lock(server.GetEntityIdMutex());
 		std::string username = command[1];
 		std::vector<uint8_t> broadcastResponse;
-		Respond::NamedEntitySpawn(broadcastResponse, latestEntityId, username, Vec3ToInt3(player->position), 0,0, 5);
+		Respond::NamedEntitySpawn(broadcastResponse, server.GetLatestEntityId(), username, Vec3ToInt3(player->position), 0,0, 5);
 		BroadcastToPlayers(broadcastResponse);
 		Respond::ChatMessage(response, "§7Summoned " + username);
 		failureReason = "";
@@ -132,7 +141,7 @@ void Command::Kick(Player* player) {
 		if (command.size() > 1) {
 			// Search for the player by username
 			username = command[1];
-			player = FindPlayerByUsername(username);
+			player = Betrock::Server::Instance().FindPlayerByUsername(username);
 		}
 		if (player) {
 			Disconnect(player, "Kicked by " + player->username);
@@ -145,7 +154,7 @@ void Command::Kick(Player* player) {
 }
 
 void Command::Spawn(Player* player) {
-	player->Teleport(response, spawnPoint);
+	player->Teleport(response, Betrock::Server::Instance().GetSpawnPoint());
 	failureReason = "";
 }
 
@@ -162,15 +171,13 @@ void Command::Chunk(Player* player) {
 }
 
 void Command::Stop() {
-	alive = false;
+	Betrock::Server::Instance().Stop();
 	Respond::ChatMessage(response, "§7Stopping Server",1);
 	failureReason = "";
 }
 
 // Parses commands and executes them
 void Command::Parse(std::string &rawCommand, Player* player) {
-	World* world = GetWorld(player->worldId);
-
 	// Set these up for command parsing
 	failureReason = "Syntax";
     command.clear();

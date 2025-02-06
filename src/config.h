@@ -1,11 +1,72 @@
-#include <iostream>
-#include <fstream>
+#pragma once
+
+#include <shared_mutex>
+
 #include <string>
 #include <unordered_map>
-#include <filesystem>
 
-extern std::unordered_map<std::string, std::string> properties;
+namespace Betrock {
 
-void CreateDefaultProperties(const std::string& filename, const std::unordered_map<std::string, std::string>& defaultValues);
-std::unordered_map<std::string, std::string> ReadPropertiesFile(const std::string& filename);
-void WritePropertiesFile(const std::string& filename, const std::unordered_map<std::string, std::string>& properties);
+class GlobalConfig {
+  private:
+	struct TransparentHasher {
+		using is_transparent = void;
+		size_t operator()(std::string_view sv) const {
+			std::hash<std::string_view> hasher;
+			return hasher(sv);
+		}
+	};
+
+	using ConfType = std::unordered_map<std::string, std::string, TransparentHasher, std::equal_to<>>;
+
+  public:
+	static GlobalConfig &Instance() {
+		static GlobalConfig g;
+		return g;
+	}
+
+	// get the value at key or a the default mapped_type if key doesn't exist
+	std::string_view Get(const std::string &key) noexcept;
+
+	// get the value at key as number
+	template <std::integral num_type> num_type GetAsNumber(const std::string &key) {
+		return std::stoll(std::string(this->Get(key)));
+	}
+
+	// set value at key.
+	// will create key if it doesn't exist.
+	void Set(const std::string &key, std::string_view value) noexcept;
+
+	// overwrite the properties in memory
+	void Overwrite(const ConfType &config) noexcept;
+
+	// read a properties file from disk into memory.
+	// returns false on error.
+	bool LoadFromDisk() noexcept;
+
+	// save the properties in memory to disk.
+	// returns false on error.
+	bool SaveToDisk() const noexcept;
+
+	// set a new path to the properties file
+	void SetPath(std::string_view path) noexcept;
+
+	// get the current properties path
+	std::string_view GetPath() const noexcept;
+
+  private:
+	GlobalConfig() = default;
+	~GlobalConfig() = default;
+
+	GlobalConfig(const GlobalConfig &) = delete;
+	GlobalConfig(const GlobalConfig &&) = delete;
+
+	GlobalConfig &operator=(const GlobalConfig &) = delete;
+	GlobalConfig &operator=(const GlobalConfig &&) = delete;
+
+	std::shared_mutex properties_mutex;
+
+	std::string path = "server.properties";
+	ConfType properties;
+};
+} // namespace Betrock

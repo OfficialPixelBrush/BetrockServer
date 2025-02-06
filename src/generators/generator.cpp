@@ -1,5 +1,7 @@
 #include "generator.h"
 
+#include <string>
+
 void Generator::PrepareGenerator(int64_t seed) {
     this->seed = seed;
     L = luaL_newstate();
@@ -15,7 +17,9 @@ void Generator::PrepareGenerator(int64_t seed) {
     lua_register(L,"getNaturalGrass", lua_GetNaturalGrass);
     
     // Execute a Lua script
-    if (luaL_dofile(L, ("scripts/" + properties["generator"]).c_str())) {
+    auto &cfg = Betrock::GlobalConfig::Instance();
+    auto gen = cfg.Get("generator");
+    if (luaL_dofile(L, (std::string("scripts/").append(gen)).c_str())) {
         std::cerr << "Error: " << lua_tostring(L, -1) << std::endl;
         lua_close(L);
     }

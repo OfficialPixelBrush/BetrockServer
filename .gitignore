@@ -36,3 +36,6 @@
 *.gz
 *.properties
 *.cnk
+
+# Language Server
+.cache

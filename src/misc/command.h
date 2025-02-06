@@ -6,7 +6,6 @@
 #include "responses.h"
 #include "world.h"
 #include "coms.h"
-#include "server.h"
 #include "gamerules.h"
 
 class Command {
