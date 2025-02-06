@@ -35,6 +35,7 @@ class Client {
         bool Handshake();
         bool LoginRequest();
         bool ChatMessage();
+        bool UseEntity();
         bool Respawn();
         bool PlayerGrounded();
         bool PlayerPosition();
