@@ -1,5 +1,6 @@
 # BetrockServer
 A Server-Engine written in C++, made to work with Minecraft Beta 1.7.3. The goal being to have a semi-modern Server Engine that people can muck about with however they like, and to not have to deal with plugins that're over a decade old.
+![BetrockServer Logo](media/betrock_server_logo.png)
 
 ## Getting Started
 How do you run your own BetrockServer instance?
@@ -49,3 +50,6 @@ cpack --config build/CPackConfig.cmake -G TGZ
 ## Resources
 - [beta-wiki by mudkipdev](https://github.com/mudkipdev/beta-wiki)
 - [wiki.vg (Now part of the Minecraft Wiki)](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Protocol?oldid=2769758)
+
+**Used for the Logo**
+- [Help:Isometric Renders (Minecraft Wiki)](https://minecraft.wiki/w/Help:Isometric_renders)
