@@ -47,5 +47,5 @@ cpack --config build/CPackConfig.cmake -G TGZ
 - [ ] Properly handle inventory
 
 ## Resources
-- [beta-wiki](https://github.com/mudkipdev/beta-wiki)
+- [beta-wiki by mudkipdev](https://github.com/mudkipdev/beta-wiki)
 - [wiki.vg (Now part of the Minecraft Wiki)](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Protocol?oldid=2769758)
