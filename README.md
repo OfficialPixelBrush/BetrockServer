@@ -11,7 +11,7 @@ Check the releases page for the latest binary of BetrockServer. Then simply run 
 ## Option 2 - Compiling
 ### Install Dependencies
 ```bash
-sudo apt install libdeflate-dev liblua5.4-dev
+sudo apt install build-essential git libdeflate-dev liblua5.4-dev
 ```
 
 ### Clone
