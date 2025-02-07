@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.1.10)
+project(BetrockServer VERSION 0.1.11)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -33,7 +33,8 @@ add_executable(
     src/coms/coms.cpp
     src/coms/responses.cpp
 
-    src/enums/items.cpp
+    src/enums/blocks.cpp
+    src/enums/labels.cpp
     
     src/generators/generator.cpp
 

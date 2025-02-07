@@ -33,6 +33,7 @@ class WorldManager {
         World world;
         void AddChunkToQueue(int32_t x, int32_t z, Player* requestPlayer = nullptr);
         void GenerateQueuedChunks();
+        void ForceGenerateChunk(int32_t x, int32_t z);
         void SetSeed(int64_t seed);
         int64_t GetSeed();
         void Run();

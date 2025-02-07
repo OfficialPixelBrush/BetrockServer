@@ -5,40 +5,10 @@
 #include "responses.h"
 #include "entity.h"
 #include "coms.h"
+#include "inventory.h"
 
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62
-
-#define INVENTORY_CRAFTING_RESULT = 0
-#define INVENTORY_CRAFTING = 1
-
-#define INVENTORY_HOTBAR 36
-#define INVENTORY_HOTBAR_LAST 44
-
-#define INVENTORY_HELMET 5
-#define INVENTORY_CHESTPLATE 6
-#define INVENTORY_LEGGINGS 7
-#define INVENTORY_BOOTS 8
-
-#define INVENTORY_ROW_1 9
-#define INVENTORY_ROW_2 18
-#define INVENTORY_ROW_3 27
-#define INVENTORY_ROW_LAST 35
-
-#define INVENTORY_MAX_SLOTS 45
-
-#define INVENTORY_CHEST 0
-#define INVENTORY_WORKBENCH 1
-#define INVENTORY_FURNACE 2
-#define INVENTORY_DISPENSER 3
-
-#define EQUIPMENT_SLOT_HELD 0
-#define EQUIPMENT_SLOT_HELMET 1
-#define EQUIPMENT_SLOT_CHESTPLATE 2
-#define EQUIPMENT_SLOT_LEGGINGS 3
-#define EQUIPMENT_SLOT_BOOTS 4
-
-#define CLICK_OUTSIDE -999
 
 enum class ConnectionStatus {
     Disconnected,
@@ -98,6 +68,7 @@ class Player : public Entity {
         int8_t FindEmptySlot(int16_t item, int8_t amount, int16_t damage);
         void ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage);
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
+        bool UpdateInventory(std::vector<uint8_t> &response);
         void ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId);
         Item GetHeldItem();
         bool CanDecrementHotbar();

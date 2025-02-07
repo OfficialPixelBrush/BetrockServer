@@ -4,6 +4,8 @@
 #include <vector>
 
 #include "helper.h"
+#include "inventory.h"
+#include "items.h"
 
 class Entity; // Forward declaration
 class Player; // Forward declaration
@@ -38,6 +40,6 @@ class Respond {
         static void Chunk(std::vector<uint8_t> &response, Int3 position, uint8_t sizeX, uint8_t sizeY, uint8_t sizeZ, size_t compressedSize, char* compressedData);
         static void BlockChange(std::vector<uint8_t> &response, Int3 position, int8_t type, int8_t meta);
         static void SetSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slot, int16_t itemId, int8_t itemCount, int16_t itemUses);
-        static void WindowItems(std::vector<uint8_t> &response, int8_t windowId, int16_t count);
+        static void WindowItems(std::vector<uint8_t> &response, int8_t windowId, std::vector<Item> payload);
         static void Disconnect(std::vector<uint8_t> &response, Player* player, std::string message);
 };

@@ -34,16 +34,11 @@ int main() {
 		std::cout << "Generating..." << std::endl;
 		for (int x = -1; x < 2; x++) {
 			for (int z = -1; z < 2; z++) {
-				wm->AddChunkToQueue(x, z);
+				wm->ForceGenerateChunk(x, z);
 			}
 		}
-		// std::cout << "Generated " << newChunks << " Chunks" << std::endl;
 	}
-	while (!wm->QueueIsEmpty()) {
-		// Wait for chunks to finish loading
-	}
-	// TODO: Wait for queue to finish
-	Int3 spawnBlock = overworld->FindSpawnableBlock(Int3{0, 64, 0});
+	Int3 spawnBlock = overworld->FindSpawnableBlock(Int3{0, 128, 0});
 	auto spawnPoint = Int3ToVec3(spawnBlock);
 	spawnPoint.y += STANCE_OFFSET;
 	server.SetSpawnPoint(spawnPoint);

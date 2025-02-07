@@ -87,6 +87,12 @@ bool Player::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, i
     return true;
 }
 
+bool Player::UpdateInventory(std::vector<uint8_t> &response) {
+    std::vector<Item> v(std::begin(inventory), std::end(inventory));
+    Respond::WindowItems(response, 0, v);
+    return true;
+}
+
 void Player::ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId) {
 	currentHotbarSlot = (int8_t)slotId;
     Item i = GetHeldItem();
