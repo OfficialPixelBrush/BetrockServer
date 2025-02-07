@@ -362,6 +362,7 @@ bool Client::LoginRequest() {
 	player->Give(response,BLOCK_STONE);
 	player->Give(response,BLOCK_COBBLESTONE);
 	player->Give(response,BLOCK_PLANKS);
+	//player->UpdateInventory();
 
 	// Place the player at spawn
 	// Note: Teleporting automatically loads surrounding chunks,

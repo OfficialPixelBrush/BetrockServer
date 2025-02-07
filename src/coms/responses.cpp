@@ -236,12 +236,17 @@ void Respond::SetSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t s
     AppendShortToVector(response,itemUses);
 }
 
-void Respond::WindowItems(std::vector<uint8_t> &response, int8_t windowId, int16_t count) {
-    response.push_back(0x68);
+void Respond::WindowItems(std::vector<uint8_t> &response, int8_t windowId, std::vector<Item> payload) {
+    response.push_back((uint8_t)Packet::WindowItems);
     response.push_back(windowId); // Player Inventory
-    AppendShortToVector(response, count);
-    for (int i = 0; i < 35; i++) {
-        AppendShortToVector(response, 277);
+    AppendShortToVector(response, payload.size());
+    for (int16_t slot = 0; slot < payload.size(); slot++) {
+        Item i = payload[slot];
+        AppendShortToVector(response,i.id);
+        if (i.id > SLOT_EMPTY) {
+            response.push_back(i.amount); // Player Inventory
+            AppendShortToVector(response,i.damage);
+        }
     }
 }
 

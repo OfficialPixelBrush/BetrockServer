@@ -2,7 +2,7 @@
 #include <lua.hpp>
 
 #include "helper.h"
-#include "items.h"
+#include "blocks.h"
 #include "config.h"
 #include "lighting.h"
 #include "luahelper.h"

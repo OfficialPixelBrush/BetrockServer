@@ -240,28 +240,15 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
 }
 
 Int3 World::FindSpawnableBlock(Int3 position) {
-    bool aboveBedrock = false;
     bool skyVisible = true;
-    for (int y = 0; y < CHUNK_HEIGHT; y++) {
-        position.y = y;
-        int16_t type = GetBlock(position)->type;
-        if (type == BLOCK_BEDROCK) {
-            aboveBedrock = true;
-            break;
-        }
-    }
-    if (!aboveBedrock) {
-        std::cout << "Floor of spawn isn't Bedrock, defaulting." << std::endl;
-        return position;
-    }
+    Int3 spawn = position;
 
     for (int y = CHUNK_HEIGHT-1; y >= 0; --y) {
-        position.y = y;
-        int16_t type = GetBlock(position)->type;
+        spawn.y = y;
+        int16_t type = GetBlock(spawn)->type;
         if (type != BLOCK_AIR) {
             // The position above this block is air
-            position.y++;
-            return position;
+            return spawn;
         }
     }
 

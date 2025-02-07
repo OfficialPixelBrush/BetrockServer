@@ -67,6 +67,13 @@ void WorldManager::GenerateQueuedChunks() {
     queueCV.notify_one();  // Wake up a worker thread if it's sleeping
 }
 
+void WorldManager::ForceGenerateChunk(int32_t x, int32_t z) {
+    Generator generator;
+    generator.PrepareGenerator(seed);
+    Chunk c = generator.GenerateChunk(x, z);
+    world.AddChunk(x, z, c);
+}
+
 void WorldManager::WorkerThread() {
     Generator generator;
     generator.PrepareGenerator(seed);

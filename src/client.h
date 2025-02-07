@@ -7,7 +7,7 @@
 
 #include "player.h"
 #include "coms.h"
-#include "items.h"
+#include "blocks.h"
 #include "version.h"
 #include "command.h"
 #include "packets.h"

@@ -7,6 +7,7 @@
 #include "world.h"
 #include "coms.h"
 #include "gamerules.h"
+#include "labels.h"
 
 class Command {
     public:
