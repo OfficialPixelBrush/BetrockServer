@@ -36,10 +36,9 @@ void Player::Kill(std::vector<uint8_t> &response) {
     SetHealth(response,0);
 }
 
-int8_t Player::FindEmptySlot(int16_t id, int8_t amount, int16_t damage) {
+int8_t Player::SpreadToSlots(int16_t id, int8_t amount, int16_t damage) {
     // Then we check the entire inventory if we already have an item of this type
-    // TODO: This code should work, but since we don't update the entire inventory, it may be inaccurate
-    /*
+    // TODO: This doesn't work, fix it
     for (int8_t i = INVENTORY_ROW_1; i <= INVENTORY_HOTBAR_LAST; i++) {
         if (inventory[i].id == id && inventory[i].damage == damage) {
             if (inventory[i].amount + amount > 64) {
@@ -50,7 +49,6 @@ int8_t Player::FindEmptySlot(int16_t id, int8_t amount, int16_t damage) {
             }
         }
     }
-    */
 
     // First we check the hotbar
     for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST; i++) {
@@ -78,12 +76,14 @@ bool Player::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, i
         }
     }
     // Look for empty slot
-    int8_t slotId = FindEmptySlot(item,amount,damage);
+    int8_t slotId = SpreadToSlots(item,amount,damage);
     if (slotId == -1) {
         return false;
     }
-	Respond::SetSlot(response,0,slotId,item,amount,damage);
     inventory[slotId] = Item { item,amount,damage };
+    // TODO: This is a horrible solution, please find something better,
+    // like checking if the inventory was changed, and only then sending out an UpdateInventory
+    UpdateInventory(response);
     return true;
 }
 
