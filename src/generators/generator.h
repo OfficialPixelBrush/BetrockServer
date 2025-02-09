@@ -20,10 +20,10 @@ class Generator {
 // --- Helper Functions ---
 int64_t Mix(int64_t a , int64_t b);
 int32_t SpatialPrng(int64_t seed, Int3 position);
-Int3 GetPointPositionInChunk(int64_t seed, Int3 position, float verticalScale);
-double FindDistanceToPoint(int64_t seed, Int3 position, float verticalScale);
+Int3 GetPointPositionInChunk(int64_t seed, Int3 position, Vec3 scale);
+double FindDistanceToPoint(int64_t seed, Int3 position, Vec3 scale);
 double SmoothStep(double edge0, double edge1, double x);
-double GetNoiseWorley(Int3 position, double threshold, float verticalScale);
+double GetNoiseWorley(Int3 position, double threshold, Vec3 scale);
 Block GetNaturalGrass(int64_t seed, Int3 position, int32_t blocksSinceSkyVisible);
 // --- Lua Bindings Functions ---
 int lua_Between(lua_State *L);

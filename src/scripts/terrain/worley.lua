@@ -12,7 +12,8 @@ function GenerateBlock(x,y,z,blocksSinceSkyVisible)
             type = 7
             return type
         end
-        if (getNoiseWorley(x,128-y-13,z,60,0.1) > 0.2) then
+        roughNoise = getNoiseWorley(x,128-y-10,z, 80, 1, 0.15, 1);
+        if (roughNoise > 0.5) then
             solid = false
         end
 

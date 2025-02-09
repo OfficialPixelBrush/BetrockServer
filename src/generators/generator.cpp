@@ -109,19 +109,21 @@ int32_t SpatialPrng(int64_t seed, Int3 position) {
 	return h & 0x7FFFFFFF; //Ensure positive number
 }
 
-Int3 GetPointPositionInChunk(int64_t seed, Int3 position, float verticalScale) {
+Int3 GetPointPositionInChunk(int64_t seed, Int3 position, Vec3 scale) {
     // Use different seeds for x, y, z to ensure unique coordinates
     int32_t randomized = SpatialPrng(seed, position);
 
     int32_t x = ((randomized ^ position.x) % CHUNK_WIDTH_X + CHUNK_WIDTH_X) % CHUNK_WIDTH_X;
     int32_t y = ((randomized ^ position.y) % CHUNK_HEIGHT  + CHUNK_HEIGHT ) % CHUNK_HEIGHT;
-    y = y*verticalScale;
     int32_t z = ((randomized ^ position.z) % CHUNK_WIDTH_Z + CHUNK_WIDTH_Z) % CHUNK_WIDTH_Z;
+    x = x*scale.x;
+    y = y*scale.y;
+    z = x*scale.z;
     
     return Int3{x, y, z};
 }
 
-double FindDistanceToPoint(int64_t seed, Int3 position, float verticalScale) {
+double FindDistanceToPoint(int64_t seed, Int3 position, Vec3 scale) {
     Int3 chunkPos = {
         position.x >> 4,
         0,
@@ -137,7 +139,7 @@ double FindDistanceToPoint(int64_t seed, Int3 position, float verticalScale) {
             goalChunkPos.x += cX;
             goalChunkPos.z += cZ;
             
-            Int3 goalBlockPos = GetPointPositionInChunk(seed, goalChunkPos, verticalScale);
+            Int3 goalBlockPos = GetPointPositionInChunk(seed, goalChunkPos, scale);
             Int3 goalGlobalPos = LocalToGlobalPosition(goalChunkPos, goalBlockPos);
             
             double distance = GetDistance(position, goalGlobalPos);
@@ -155,8 +157,8 @@ double SmoothStep(double edge0, double edge1, double x) {
     return t * t * (3.0 - 2.0 * t);
 }
 
-double GetNoiseWorley(int64_t seed, Int3 position, double threshold, float verticalScale) {
-    double distance = FindDistanceToPoint(seed, position, verticalScale);
+double GetNoiseWorley(int64_t seed, Int3 position, double threshold, Vec3 scale) {
+    double distance = FindDistanceToPoint(seed, position, scale);
     
     // Use smoothstep for more natural falloff
     return 1.0 - SmoothStep(0.0, threshold, distance);
@@ -178,7 +180,7 @@ Block GetNaturalGrass(int64_t seed, Int3 position, int32_t blocksSinceSkyVisible
 // --- Lua Bindings Functions ---
 int lua_Between(lua_State *L) {
     // Check if all arguments are numbers
-    if (!CheckInt3(L)) {
+    if (!CheckNum3(L)) {
         return 0;
     }
 
@@ -201,7 +203,7 @@ int lua_SpatialPRNG(lua_State *L) {
     }
     int64_t seed = (int64_t)lua_tonumber(L, 1);
 
-    if (!CheckInt3(L)) {
+    if (!CheckNum3(L)) {
         return 0;
     }
 
@@ -225,13 +227,13 @@ int lua_GetNoiseWorley(lua_State *L) {
     lua_pop(L, 1); // Pop 'seed'
 
     // Validate number of arguments
-    if (lua_gettop(L) != 5) {
-        luaL_error(L, "Expected exactly 5 arguments (x, y, z, threshold, verticalScale)");
+    if (lua_gettop(L) != 7) {
+        luaL_error(L, "Expected exactly 5 arguments (x, y, z, threshold, scaleX, scaleY, scaleZ)");
         return 0;
     }
 
     // Validate and extract x, y, z
-    if (!CheckInt3(L)) {
+    if (!CheckNum3(L)) {
         return 0;
     }
     int x = (int)lua_tonumber(L, 1);
@@ -247,14 +249,17 @@ int lua_GetNoiseWorley(lua_State *L) {
     double threshold = (double)lua_tonumber(L, 4);
 
     // Validate and extract verticalScale
-    if (!lua_isnumber(L, 5)) {
-        luaL_error(L, "Vertical scale must be a numeric value");
+    if (!CheckNum3(L,5)) {
+        luaL_error(L, "Scale must be a numeric values");
         return 0;
     }
-    float verticalScale = (float)lua_tonumber(L, 5);
+    double scaleX = (float)lua_tonumber(L, 5);
+    double scaleY = (float)lua_tonumber(L, 6);
+    double scaleZ = (float)lua_tonumber(L, 7);
+    Vec3 scale = {scaleX,scaleY,scaleZ};
 
     // Call GetNoiseWorley and push result
-    double result = GetNoiseWorley(seed, position, threshold, verticalScale);
+    double result = GetNoiseWorley(seed, position, threshold, scale);
     lua_pushnumber(L, result);
     return 1;
 }
@@ -268,7 +273,7 @@ int lua_GetNaturalGrass(lua_State *L) {
     }
     int64_t seed = (int64_t)lua_tonumber(L, 1);
 
-    if (!CheckInt3(L)) {
+    if (!CheckNum3(L)) {
         return 0;
     }
     int x = (int)lua_tonumber(L, 1);
