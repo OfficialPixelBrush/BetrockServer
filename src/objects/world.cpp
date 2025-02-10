@@ -90,6 +90,13 @@ void World::Load(const std::string& extra) {
     std::cout << "Loaded " << loadedChunks << " Chunks from Disk" << std::endl;
 }
 
+Int3 World::ChunkToRegionPosition(Int3 position) {
+    position.x = position.x >> 5;
+    position.y = 0;
+    position.z = position.z >> 5;
+    return position;
+}
+
 void World::Save(const std::string &extra) {
     std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
@@ -107,15 +114,24 @@ void World::Save(const std::string &extra) {
         const int64_t& hash = pair.first;
         const Chunk& chunk = pair.second;
         Int3 pos = DecodeChunkHash(hash);
-        //std::cout << "Chunk at " << pos << std::endl;
+        Int3 regionPos = ChunkToRegionPosition(pos);
 
-        std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".cnk");
+        std::filesystem::path filePath = dirPath / ("r." + std::to_string(regionPos.x) + "." + std::to_string(regionPos.z) + ".mcr");
 
+        // Open file for writing
         std::ofstream chunkFile (filePath);
         if (!chunkFile) {
-            std::cerr << "Failed to save chunk at " << pos.x << ", " << pos.z << '\n';
+            std::cerr << "Failed to save region at " << regionPos.x << ", " << regionPos.z << '\n';
             continue;
         }
+
+        // Figure out where the chunk pointer goes
+        size_t chunkLocationPointer = 4 * ((pos.x & 31) + (pos.z & 31) * 32);
+
+        chunkFile.seekp(chunkLocationPointer, std::ios::beg);
+
+        int32_t offset = 0 & 0x0FFF // 3-Byte Offset
+        int8_t  sectorCount = 0     // 1-Byte Sector Count
 
         // Acquire existing chunk data
         auto chunkData = GetChunkData(pos);
@@ -254,4 +270,58 @@ Int3 World::FindSpawnableBlock(Int3 position) {
 
     std::cout << "Found no suitable place to spawn, defaulting." << std::endl;
     return position;
+}
+
+// -- LEGACY --
+// Kept around for backwards compatibility
+
+// Pre-0.1.12 per-chunk save system
+void World::SaveOld(const std::string &extra) {
+    std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
+    if (extra.empty()) {
+        dirPath += "/region";
+    } else {
+        dirPath += "/" + extra + "/region";
+    }
+
+    if (std::filesystem::create_directories(dirPath)) {
+        std::cout << "Directory created: " << dirPath << '\n';
+    }
+
+    uint savedChunks = 0;
+    for (const auto& pair : chunks) {
+        const int64_t& hash = pair.first;
+        const Chunk& chunk = pair.second;
+        Int3 pos = DecodeChunkHash(hash);
+        //std::cout << "Chunk at " << pos << std::endl;
+
+        std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".cnk");
+
+        std::ofstream chunkFile (filePath);
+        if (!chunkFile) {
+            std::cerr << "Failed to save chunk at " << pos.x << ", " << pos.z << '\n';
+            continue;
+        }
+
+        // Acquire existing chunk data
+        auto chunkData = GetChunkData(pos);
+        // Add it to the list of chunks to be compressed and sent
+        if (!chunkData) {
+            std::cout << "Failed to get Chunk " << pos << std::endl;
+            continue;
+        }
+
+        size_t compressedSize = 0;
+        auto chunkBinary = CompressChunk(chunkData.get(), compressedSize);
+        
+        if (!chunkBinary || compressedSize == 0) {		
+            std::cout << "Failed to compress Chunk " << pos << std::endl;
+            continue;
+        }
+
+        chunkFile.write(chunkBinary.get(), compressedSize);
+        chunkFile.close();
+        savedChunks++;
+    }
+    std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;
 }
