@@ -18,6 +18,7 @@ DESTINATION "${CMAKE_BINARY_DIR}/scripts")
 configure_file(${CMAKE_SOURCE_DIR}/src/misc/version.h.in ${CMAKE_SOURCE_DIR}/src/misc/version.h)
 
 include_directories(
+    "${PROJECT_SOURCE_DIR}/src/plugins"
     "${PROJECT_SOURCE_DIR}/src/coms"
     "${PROJECT_SOURCE_DIR}/src/enums"
     "${PROJECT_SOURCE_DIR}/src/objects"
@@ -48,6 +49,8 @@ add_executable(
     src/objects/player.cpp
     src/objects/world.cpp
     src/objects/worldManager.cpp
+
+    src/plugins/plugins.cpp
 
     src/client.cpp
     src/config.cpp
