@@ -576,6 +576,7 @@ bool Client::PlayerBlockPlacement(World* world) {
 		Item i = player->inventory[INVENTORY_HOTBAR+player->currentHotbarSlot];
 		Respond::BlockChange(broadcastResponse,pos,(int8_t)i.id,(int8_t)i.damage);
 		world->PlaceBlock(pos,(int8_t)i.id,(int8_t)i.damage);
+		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,i.id);
 		// Immediately give back item if we're in creative mode
 		if (player->creativeMode) {
 			Item i = player->GetHeldItem();
