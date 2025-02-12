@@ -261,7 +261,6 @@ void Respond::WindowItems(std::vector<uint8_t> &response, int8_t windowId, std::
 
 void Respond::Disconnect(std::vector<uint8_t> &response, Player* player, std::string message) {
 	std::vector<uint8_t> disconnectResponse;
-	std::cout << player->username << " has disconnected. (" << message << ")" << std::endl;
-	disconnectResponse.push_back(0xFF);
+	disconnectResponse.push_back((uint8_t)Packet::Disconnect);
 	AppendString16ToVector(disconnectResponse,message);
 }

@@ -610,8 +610,9 @@ bool Client::WindowClick() {
 
 // TODO: This completely ignores the disconnect message sent by the player
 bool Client::DisconnectClient() {
+	std::string disconnectMessage = EntryToString16(message, offset);
 	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
-	Disconnect(player);
+	Disconnect(player,disconnectMessage);
 	Respond::ChatMessage(broadcastResponse, "§e" + player->username + " left the game.");
 	return true;
 }
