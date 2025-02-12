@@ -1,9 +1,5 @@
 #include "world.h"
 
-int World::GetNumberOfChunks() {
-    return chunks.size();
-}
-
 void World::Load(const std::string& extra) {
     std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
@@ -90,13 +86,6 @@ void World::Load(const std::string& extra) {
     std::cout << "Loaded " << loadedChunks << " Chunks from Disk" << std::endl;
 }
 
-Int3 World::ChunkToRegionPosition(Int3 position) {
-    position.x = position.x >> 5;
-    position.y = 0;
-    position.z = position.z >> 5;
-    return position;
-}
-
 void World::Save(const std::string &extra) {
     std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
@@ -110,50 +99,38 @@ void World::Save(const std::string &extra) {
     }
 
     uint savedChunks = 0;
+
+    std::unordered_map<int64_t, Region> regions;
+
     for (const auto& pair : chunks) {
         const int64_t& hash = pair.first;
         const Chunk& chunk = pair.second;
         Int3 pos = DecodeChunkHash(hash);
         Int3 regionPos = ChunkToRegionPosition(pos);
 
-        std::filesystem::path filePath = dirPath / ("r." + std::to_string(regionPos.x) + "." + std::to_string(regionPos.z) + ".mcr");
-
-        // Open file for writing
-        std::ofstream chunkFile (filePath);
-        if (!chunkFile) {
-            std::cerr << "Failed to save region at " << regionPos.x << ", " << regionPos.z << '\n';
-            continue;
+        // Find region with matching region pos
+        Region* r;
+        if (regions.contains(GetChunkHash(regionPos.x, regionPos.z))) {
+            r = &regions[GetChunkHash(regionPos.x, regionPos.z)];
+        } else {
+            regions[GetChunkHash(regionPos.x, regionPos.z)] = Region();
+            r = &regions[GetChunkHash(regionPos.x, regionPos.z)];
         }
-
-        // Figure out where the chunk pointer goes
-        size_t chunkLocationPointer = 4 * ((pos.x & 31) + (pos.z & 31) * 32);
-
-        chunkFile.seekp(chunkLocationPointer, std::ios::beg);
-
-        int32_t offset = 0 & 0x0FFF // 3-Byte Offset
-        int8_t  sectorCount = 0     // 1-Byte Sector Count
-
-        // Acquire existing chunk data
-        auto chunkData = GetChunkData(pos);
-        // Add it to the list of chunks to be compressed and sent
-        if (!chunkData) {
-            std::cout << "Failed to get Chunk " << pos << std::endl;
-            continue;
-        }
-
-        size_t compressedSize = 0;
-        auto chunkBinary = CompressChunk(chunkData.get(), compressedSize);
         
-        if (!chunkBinary || compressedSize == 0) {		
-            std::cout << "Failed to compress Chunk " << pos << std::endl;
-            continue;
-        }
-
-        chunkFile.write(chunkBinary.get(), compressedSize);
-        chunkFile.close();
+        r->AddChunk(hash,chunk);
         savedChunks++;
     }
+
+    for (auto& pair : regions) {
+        Region& region = pair.second;
+        region.Save(dirPath);
+    }
+    regions.clear();
     std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;
+}
+
+int World::GetNumberOfChunks() {
+    return chunks.size();
 }
 
 Chunk* World::GetChunk(int32_t x, int32_t z) {
@@ -275,8 +252,8 @@ Int3 World::FindSpawnableBlock(Int3 position) {
 // -- LEGACY --
 // Kept around for backwards compatibility
 
-// Pre-0.1.12 per-chunk save system
-void World::SaveOld(const std::string &extra) {
+// Pre-0.1.12 per-chunk load system, to allow for upgrading worlds
+void World::LoadOld(const std::string& extra) {
     std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
         dirPath += "/region";
@@ -284,44 +261,80 @@ void World::SaveOld(const std::string &extra) {
         dirPath += "/" + extra + "/region";
     }
 
-    if (std::filesystem::create_directories(dirPath)) {
-        std::cout << "Directory created: " << dirPath << '\n';
+    if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
+        std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
+        return;
     }
 
-    uint savedChunks = 0;
-    for (const auto& pair : chunks) {
-        const int64_t& hash = pair.first;
-        const Chunk& chunk = pair.second;
-        Int3 pos = DecodeChunkHash(hash);
-        //std::cout << "Chunk at " << pos << std::endl;
+    uint loadedChunks = 0;
 
-        std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".cnk");
+    for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
+        // Check if the entry is a regular file and has a .cnk extension
+        if (entry.is_regular_file() && entry.path().extension() == ".cnk") {
+            std::string s;
+            std::stringstream ss(entry.path().stem().string());  // Get the file name without extension
 
-        std::ofstream chunkFile (filePath);
-        if (!chunkFile) {
-            std::cerr << "Failed to save chunk at " << pos.x << ", " << pos.z << '\n';
-            continue;
+            // Read the chunk coordinates
+            int x, z;
+            char comma;  // To capture the comma delimiter
+
+            // Extract two integers (x, z) from the string using stringstream
+            ss >> x >> comma >> z;
+
+            std::ifstream chunkFile (entry.path());
+            if (!chunkFile.is_open()) {
+                std::cerr << "Failed to load chunk " << entry.path() << std::endl;
+                continue;
+            }      
+
+            // Get the length of the file
+            chunkFile.seekg(0, std::ios::end);
+            std::streamsize size = chunkFile.tellg();
+            chunkFile.seekg(0, std::ios::beg);
+
+            std::vector<char> buffer(size);
+            chunkFile.read(buffer.data(), size);
+            char* compressedChunk = buffer.data();
+
+            size_t compressedSize = size;
+            size_t decompressedSize = 0;
+
+            auto chunkData = DecompressChunk(compressedChunk,compressedSize,decompressedSize);
+
+            Chunk c;
+            size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;
+            size_t nibbleDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*(CHUNK_HEIGHT/2);
+            for (size_t i = 0; i < decompressedSize; i++) {
+                if (i < blockDataSize) {
+                    // Block Data
+                    c.blocks[i].type = chunkData[i];
+                } else if (
+                    // Metadata
+                    i >= blockDataSize &&
+                    i <  blockDataSize+nibbleDataSize)
+                {
+                    c.blocks[(i%nibbleDataSize)*2  ].meta = (chunkData[i]     )&0xF;
+                    c.blocks[(i%nibbleDataSize)*2+1].meta = (chunkData[i] >> 4)&0xF;
+                } else if (
+                    // Block Light
+                    i >= blockDataSize+nibbleDataSize &&
+                    i <  blockDataSize+(nibbleDataSize*2))
+                {
+                    c.blocks[(i%nibbleDataSize)*2  ].lightBlock = (chunkData[i]     )&0xF;
+                    c.blocks[(i%nibbleDataSize)*2+1].lightBlock = (chunkData[i] >> 4)&0xF;
+                } else if (
+                    // Sky Light
+                    i >= blockDataSize+(nibbleDataSize*2) &&
+                    i <  blockDataSize+(nibbleDataSize*3))
+                {
+                    c.blocks[(i%nibbleDataSize)*2  ].lightSky = (chunkData[i]     )&0xF;
+                    c.blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
+                }
+            }
+            AddChunk(x,z,c);
+            chunkFile.close();
+            loadedChunks++;
         }
-
-        // Acquire existing chunk data
-        auto chunkData = GetChunkData(pos);
-        // Add it to the list of chunks to be compressed and sent
-        if (!chunkData) {
-            std::cout << "Failed to get Chunk " << pos << std::endl;
-            continue;
-        }
-
-        size_t compressedSize = 0;
-        auto chunkBinary = CompressChunk(chunkData.get(), compressedSize);
-        
-        if (!chunkBinary || compressedSize == 0) {		
-            std::cout << "Failed to compress Chunk " << pos << std::endl;
-            continue;
-        }
-
-        chunkFile.write(chunkBinary.get(), compressedSize);
-        chunkFile.close();
-        savedChunks++;
     }
-    std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;
+    std::cout << "Loaded " << loadedChunks << " Chunks from Disk" << std::endl;
 }

@@ -47,6 +47,7 @@ add_executable(
 
     src/objects/entity.cpp
     src/objects/player.cpp
+    src/objects/region.cpp
     src/objects/world.cpp
     src/objects/worldManager.cpp
 

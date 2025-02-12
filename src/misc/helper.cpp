@@ -453,3 +453,10 @@ Int3 DecodeChunkHash(int64_t hash) {
         (int32_t)(hash & 0xFFFFFFFF)
     };
 }
+
+Int3 ChunkToRegionPosition(Int3 position) {
+    position.x = position.x >> 5;
+    position.y = 0;
+    position.z = position.z >> 5;
+    return position;
+}

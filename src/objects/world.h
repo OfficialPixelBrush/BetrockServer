@@ -10,13 +10,13 @@
 #include "blocks.h"
 #include "generator.h"
 #include "config.h"
+#include "region.h"
 
 class World {
     private:
         std::unordered_map<int64_t, Chunk> chunks;
         Chunk* GetChunk(int32_t x, int32_t z);
         void RemoveChunk(int32_t x, int32_t z);
-        Int3 ChunkToRegionPosition(Int3 position);
     public:
         int64_t seed;
         void Load(const std::string &extra = "");
@@ -30,5 +30,5 @@ class World {
         Int3 FindSpawnableBlock(Int3 position);
         void AddChunk(int32_t x, int32_t z, Chunk c);
         // Legacy
-        void SaveOld(const std::string &extra);
+        void LoadOld(const std::string &extra);
 };
