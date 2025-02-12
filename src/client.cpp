@@ -128,14 +128,15 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 
 void Client::SendNewChunks() {
   auto wm = Betrock::Server::Instance().GetWorldManager(player->worldId);
+  	std::lock_guard<std::mutex> lock(player->newChunksMutex);
 	while(!player->newChunks.empty()) {
 		auto nc = player->newChunks.begin();
 		auto chunkData = wm->world.GetChunkData(*nc);
 		if (!chunkData) {
-			Respond::PreChunk(response, nc->x, nc->z, 0); // Tell client chunk is not visible
-			return;
+			// Tell client chunk is not loaded
+			Respond::PreChunk(response, nc->x, nc->z, 0);
+			continue;
 		}
-		//std::cout << "New Chunk: " << *nc << ": " << player->newChunks.size() << std::endl;
 
 		// Send chunk to player
 		size_t compressedSize = 0;
@@ -156,6 +157,8 @@ void Client::SendNewChunks() {
 				chunk.get()
 			);
 		}
+		// Better to remove the entry either way if compression fails,
+		// otherwise we may get an infinite build-up of failing chunks
 		player->newChunks.erase(nc);
 	}
 }

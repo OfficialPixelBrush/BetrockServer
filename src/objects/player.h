@@ -34,6 +34,8 @@ class Player : public Entity {
         int8_t health = HEALTH_MAX;
         std::vector<Int3> visibleChunks;
         std::vector<Int3> newChunks;
+        //std::mutex visibleChunksMutex;
+        std::mutex newChunksMutex;
 
         // Server-side inventory
         int16_t lastClickedSlot = 0;

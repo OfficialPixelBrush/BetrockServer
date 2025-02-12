@@ -112,7 +112,7 @@ void Server::LoadConfig() {
 											//{"max-players","20"},
 											//{"online-mode","false"},
 											//{"allow-flight","false"}
-											{"generator", "terrain/perlin.lua"}});
+											{"generator", "terrain/worley.lua"}});
 		GlobalConfig::Instance().SaveToDisk();
 	} else {
 		GlobalConfig::Instance().LoadFromDisk();

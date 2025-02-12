@@ -99,6 +99,7 @@ void WorldManager::WorkerThread() {
         std::scoped_lock lock(Betrock::Server::Instance().GetConnectedPlayerMutex());
         for (Player* p : cq.requestedPlayers) {
             if (p) {
+                std::lock_guard<std::mutex> lock(p->newChunksMutex);
                 p->newChunks.push_back(cq.position);
             }
         }
