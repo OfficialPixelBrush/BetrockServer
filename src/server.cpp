@@ -135,6 +135,16 @@ void Server::LoadConfig() {
 	GlobalConfig::Instance().SaveToDisk();
 }
 
+void Server::InitPlugins() {
+    // Go through /scripts/plugins folder
+    // Load plugin file and let it sit in it's own lua VM
+    // Start Plugin script
+    for (const auto & entry : std::filesystem::directory_iterator("scripts/plugins/")) {
+        Plugin p = Plugin(entry.path());
+        plugins.push_back(p);
+    }
+}
+
 bool Server::SocketBootstrap(uint16_t port) {
 	// TODO: remove perror in future with cooler betrock custom error stuff
 	struct sockaddr_in address;

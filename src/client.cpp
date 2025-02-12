@@ -608,6 +608,7 @@ bool Client::WindowClick() {
 	return true;
 }
 
+// TODO: This completely ignores the disconnect message sent by the player
 bool Client::DisconnectClient() {
 	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
 	Disconnect(player);

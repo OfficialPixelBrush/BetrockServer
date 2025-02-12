@@ -10,6 +10,7 @@
 #include "player.h"
 #include "world.h"
 #include "worldManager.h"
+#include "plugins.h"
 
 #define PROTOCOL_VERSION 14
 
@@ -74,6 +75,9 @@ class Server {
 
 	bool SocketBootstrap(uint16_t port);
 
+	// Plugin handling
+	void InitPlugins();
+
 	static void ServerJoin() {
 		auto &server = Server::Instance();
 		// TODO: add sockets to epoll
@@ -137,6 +141,7 @@ class Server {
 	atomic_uint64_t serverTime = 0;
 	WorldManagerMap worldManagers;
 	std::unordered_map<int8_t, std::jthread> worldManagerThreads;
+	std::vector<Plugin> plugins;
 	Vec3 spawnPoint;
 
 	std::mutex connectedPlayersMutex;

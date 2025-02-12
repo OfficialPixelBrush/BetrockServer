@@ -1,5 +1,7 @@
+-- Test plugin
 PluginName = "Test Plugin"
+PluginApiVersion = 1
 
-function OnStart()
-    print("Started "..PluginName.."!")
+function Init()
+    print("Started "..PluginName.."! (using API Version "..PluginApiVersion..")")
 end
