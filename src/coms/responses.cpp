@@ -219,7 +219,7 @@ void Respond::Chunk(std::vector<uint8_t> &response, Int3 position, uint8_t sizeX
 }
 
 void Respond::BlockChange(std::vector<uint8_t> &response, Int3 position, int8_t type, int8_t meta) {
-    response.push_back(0x35);
+    response.push_back((uint8_t)Packet::BlockChange);
     AppendIntegerToVector(response,position.x);
     response.push_back((int8_t)position.y);
     AppendIntegerToVector(response,position.z);
@@ -227,12 +227,21 @@ void Respond::BlockChange(std::vector<uint8_t> &response, Int3 position, int8_t 
     response.push_back(meta);
 }
 
+void Respond::Soundeffect(std::vector<uint8_t> &response, int32_t sound, Int3 position, int32_t extra) {
+    response.push_back((uint8_t)Packet::Soundeffect);
+    AppendIntegerToVector(response,sound);
+    AppendIntegerToVector(response,position.x);
+    response.push_back((int8_t)position.y);
+    AppendIntegerToVector(response,position.z);
+    AppendIntegerToVector(response,extra);
+}
+
 void Respond::SetSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slot, int16_t itemId, int8_t itemCount, int16_t itemUses) {
     response.push_back(0x67);
-    response.push_back(windowId); // Player Inventory
+    response.push_back(windowId);
     AppendShortToVector(response,slot);
     AppendShortToVector(response,itemId);
-    response.push_back(itemCount); // Player Inventory
+    response.push_back(itemCount);
     AppendShortToVector(response,itemUses);
 }
 
@@ -252,7 +261,6 @@ void Respond::WindowItems(std::vector<uint8_t> &response, int8_t windowId, std::
 
 void Respond::Disconnect(std::vector<uint8_t> &response, Player* player, std::string message) {
 	std::vector<uint8_t> disconnectResponse;
-	std::cout << player->username << " has disconnected. (" << message << ")" << std::endl;
-	disconnectResponse.push_back(0xFF);
+	disconnectResponse.push_back((uint8_t)Packet::Disconnect);
 	AppendString16ToVector(disconnectResponse,message);
 }

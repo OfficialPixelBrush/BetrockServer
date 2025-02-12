@@ -128,14 +128,15 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 
 void Client::SendNewChunks() {
   auto wm = Betrock::Server::Instance().GetWorldManager(player->worldId);
+  	std::lock_guard<std::mutex> lock(player->newChunksMutex);
 	while(!player->newChunks.empty()) {
 		auto nc = player->newChunks.begin();
 		auto chunkData = wm->world.GetChunkData(*nc);
 		if (!chunkData) {
-			Respond::PreChunk(response, nc->x, nc->z, 0); // Tell client chunk is not visible
-			return;
+			// Tell client chunk is not loaded
+			Respond::PreChunk(response, nc->x, nc->z, 0);
+			continue;
 		}
-		//std::cout << "New Chunk: " << *nc << ": " << player->newChunks.size() << std::endl;
 
 		// Send chunk to player
 		size_t compressedSize = 0;
@@ -156,6 +157,8 @@ void Client::SendNewChunks() {
 				chunk.get()
 			);
 		}
+		// Better to remove the entry either way if compression fails,
+		// otherwise we may get an infinite build-up of failing chunks
 		player->newChunks.erase(nc);
 	}
 }
@@ -506,7 +509,7 @@ bool Client::PlayerDigging(World* world) {
 	if (status == 2 || player->creativeMode) {
 		Respond::BlockChange(broadcastResponse,pos,0,0);
 		Block b = world->BreakBlock(pos);
-		if (doTileDrops) {
+		if (doTileDrops && !player->creativeMode) {
 			//Respond::PickupSpawn(broadcastResponse,latestEntityId,b.type,1,b.meta,pos,0,0,0);
 			player->Give(response,b.type,1,b.meta);
 		}
@@ -576,7 +579,17 @@ bool Client::PlayerBlockPlacement(World* world) {
 		Item i = player->inventory[INVENTORY_HOTBAR+player->currentHotbarSlot];
 		Respond::BlockChange(broadcastResponse,pos,(int8_t)i.id,(int8_t)i.damage);
 		world->PlaceBlock(pos,(int8_t)i.id,(int8_t)i.damage);
-		player->DecrementHotbar();
+		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,i.id);
+		// Immediately give back item if we're in creative mode
+		if (player->creativeMode) {
+			Item i = player->GetHeldItem();
+			id = i.id;
+			amount = i.amount;
+			damage = i.damage;
+			Respond::SetSlot(response, 0, INVENTORY_HOTBAR + player->currentHotbarSlot, id, amount, damage);
+		} else {
+			player->DecrementHotbar();
+		}
 	}
 	return true;
 }
@@ -598,9 +611,11 @@ bool Client::WindowClick() {
 	return true;
 }
 
+// TODO: This completely ignores the disconnect message sent by the player
 bool Client::DisconnectClient() {
+	std::string disconnectMessage = EntryToString16(message, offset);
 	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
-	Disconnect(player);
+	Disconnect(player,disconnectMessage);
 	Respond::ChatMessage(broadcastResponse, "§e" + player->username + " left the game.");
 	return true;
 }

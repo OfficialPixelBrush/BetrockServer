@@ -25,6 +25,9 @@ int main() {
 	if (!server.SocketBootstrap(port)) {
 		return EXIT_FAILURE;
 	}
+	
+	// Init the plugins
+	server.InitPlugins();
 
 	WorldManager *wm = server.GetWorldManager(0);
 	World *overworld = server.GetWorld(0);

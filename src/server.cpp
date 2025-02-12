@@ -112,7 +112,7 @@ void Server::LoadConfig() {
 											//{"max-players","20"},
 											//{"online-mode","false"},
 											//{"allow-flight","false"}
-											{"generator", "terrain/perlin.lua"}});
+											{"generator", "terrain/worley.lua"}});
 		GlobalConfig::Instance().SaveToDisk();
 	} else {
 		GlobalConfig::Instance().LoadFromDisk();
@@ -133,6 +133,16 @@ void Server::LoadConfig() {
 	}
 
 	GlobalConfig::Instance().SaveToDisk();
+}
+
+void Server::InitPlugins() {
+    // Go through /scripts/plugins folder
+    // Load plugin file and let it sit in it's own lua VM
+    // Start Plugin script
+    for (const auto & entry : std::filesystem::directory_iterator("scripts/plugins/")) {
+        Plugin p = Plugin(entry.path());
+        plugins.push_back(p);
+    }
 }
 
 bool Server::SocketBootstrap(uint16_t port) {
