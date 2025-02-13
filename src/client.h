@@ -5,14 +5,16 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include "player.h"
 #include "coms.h"
-#include "blocks.h"
-#include "version.h"
+#include "player.h"
 #include "command.h"
-#include "packets.h"
 #include "worldManager.h"
+#include "version.h"
+
+#include "blocks.h"
+#include "packets.h"
 #include "sounds.h"
+#include "animations.h"
 
 #define PACKET_MAX 4096
 

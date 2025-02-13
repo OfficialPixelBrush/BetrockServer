@@ -11,6 +11,7 @@
 #include "world.h"
 #include "worldManager.h"
 #include "plugins.h"
+#include "logger.h"
 
 #define PROTOCOL_VERSION 14
 
@@ -45,6 +46,8 @@ class Server {
 	uint64_t GetServerTime() const noexcept;
 
 	WorldManagerMap &GetWorldManagers() noexcept;
+
+	void Log(std::string message, int logLevel) noexcept;
 
 	// get the world manager for the world with the coresponding world_id.
 	// !! returns a valid pointer or a nullptr on failure !!
@@ -146,5 +149,6 @@ class Server {
 
 	std::mutex connectedPlayersMutex;
 	std::mutex entityIdMutex;
+	Logger logger;
 };
 } // namespace Betrock

@@ -73,7 +73,7 @@ void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldMan
     if (!chunkData) {
         // Queue chunk generation if missing
         wm->AddChunkToQueue(position.x, position.z, player);
-        Respond::PreChunk(response, position.x, position.z, 0); // Tell client chunk is not yet visible
+        Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
         return;
     }
     
@@ -192,7 +192,8 @@ void HandlePacket(Client &client) {
 		std::cout << "--- Start of Packet bundle ---" << std::endl;
 	}
 	while (client.offset < bytes_received && client.player->connectionStatus > ConnectionStatus::Disconnected) {
-		Packet packetType = (Packet)EntryToByte(client.message,client.offset);
+		int8_t packetIndex = EntryToByte(client.message,client.offset);
+		Packet packetType = (Packet)packetIndex;
 
 		// Provide debug info
 		if (debugReceivedBytes || debugReceivedPacketType) {
@@ -256,6 +257,7 @@ void HandlePacket(Client &client) {
 				client.DisconnectClient();
 				break;
 			default:
+				Betrock::Server::Instance().Log("Unhandled Server-bound packet: " + std::to_string(packetIndex), LOG_WARNING);
 				break;
 		}
 		if (client.player != nullptr && client.player->connectionStatus == ConnectionStatus::Connected) {
@@ -474,7 +476,7 @@ bool Client::HoldingChange() {
 bool Client::Animation() {
 	int32_t entityId = EntryToInteger(message, offset);
 	int8_t animation = EntryToByte(message, offset);
-	// TODO: Only send this to other clients
+	// Only send this to other clients
 	Respond::Animation(broadcastOthersResponse, entityId, animation);
 	return true;
 }
@@ -485,14 +487,15 @@ bool Client::EntityAction() {
 	switch(action) {
 		case 1:
 			player->crouching = true;
+			Respond::Animation(broadcastOthersResponse, entityId, ANIMATION_CROUCH);
 			break;
 		case 2:
 			player->crouching = false;
+			Respond::Animation(broadcastOthersResponse, entityId, ANIMATION_UNCROUCH);
 			break;
 		default:
 			break;
 	}
-	//Respond::EntityAction(broadcastOthersResponse, entityId, action);
 	return true;
 }
 
