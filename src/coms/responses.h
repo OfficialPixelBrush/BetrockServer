@@ -6,6 +6,7 @@
 #include "helper.h"
 #include "inventory.h"
 #include "items.h"
+#include "logger.h"
 
 class Entity; // Forward declaration
 class Player; // Forward declaration

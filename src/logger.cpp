@@ -11,13 +11,16 @@ Logger::Logger(std::string filename) {
 void Logger::Info(std::string message) {
     std::string header = "INFO";
     std::cout << "\x1b[1m"    << header << "\x1b[22m " << message << "\x1b[0m" << std::endl;
+    logFile << header << " " << message << std::endl;
 }
 void Logger::Warning(std::string message) {
     std::string header = "WARNING";
     std::cout << "\x1b[1;33m" << header << "\x1b[22m " << message << "\x1b[0m" << std::endl;
+    logFile << header << " " << message << std::endl;
 }
 void Logger::Danger(std::string message) {
     std::string header = "DANGER";
     std::cout << "\x1b[1;31m" << header << "\x1b[22m " << message << "\x1b[0m" << std::endl;
+    logFile << header << " " << message << std::endl;
 }
 }

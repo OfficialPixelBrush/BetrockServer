@@ -179,18 +179,4 @@ bool Server::SocketBootstrap(uint16_t port) {
 	return true;
 }
 
-void Server::Log(std::string message, int logLevel) noexcept {
-	switch(logLevel) {
-		case LOG_DANGER:
-			logger.Danger(message);
-			break;
-		case LOG_WARNING:
-			logger.Warning(message);
-			break;
-		default:
-			logger.Info(message);
-			break;
-	}
-}
-
 } // namespace Betrock

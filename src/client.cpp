@@ -349,8 +349,7 @@ bool Client::LoginRequest() {
 	}
 	// Accept the Login
 	Respond::Login(response,player->entityId,1,0);
-	std::cout << username << " logged in with entity id " << player->entityId << " at (" << player->position.x << ", " << player->position.y << ", " << player->position.z << ")" << std::endl;
-
+	Betrock::Server::Instance().Log(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" << std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")", LOG_INFO);
 	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.", 0);
 
   const auto &spawnPoint = server.GetSpawnPoint();
@@ -486,20 +485,22 @@ bool Client::EntityAction() {
 	int8_t action = EntryToByte(message, offset);
 	// some EntityMetadata info
 	// A BITMASK
-	// - 1 seems to be being on fire
-	// - 2 seems to be crouching
+	// - Bit 0 is for Crouching
+	// - Bit 1 is for On Fire
+	// - Bit 2 is for Sitting
+	// All other bits are irrelevant, it looks like
 	switch(action) {
 		case 1:
 			player->crouching = true;
-			Respond::EntityMetadata(broadcastOthersResponse, entityId, 2);
 			break;
 		case 2:
 			player->crouching = false;
-			Respond::EntityMetadata(broadcastOthersResponse, entityId, 0);
 			break;
 		default:
 			break;
 	}
+	int8_t responseByte = (player->sitting << 2 | player->crouching << 1 | player->onFire);
+	Respond::EntityMetadata(broadcastOthersResponse, entityId, responseByte);
 	return true;
 }
 

@@ -24,6 +24,8 @@ class Player : public Entity {
         // Movement Stats
         double stance = 64.0f;
         bool crouching = false;
+        bool onFire = false;
+        bool sitting = false;
 
         // Spawn Stats
         Vec3 respawnPosition;

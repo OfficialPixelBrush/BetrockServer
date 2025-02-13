@@ -43,7 +43,6 @@ add_executable(
     src/misc/gamerules.cpp
     src/misc/helper.cpp
     src/misc/lighting.cpp
-    src/misc/logger.cpp
     src/misc/luahelper.cpp
 
     src/objects/entity.cpp
@@ -55,6 +54,7 @@ add_executable(
 
     src/client.cpp
     src/config.cpp
+    src/logger.cpp
     src/debug.cpp
     src/main.cpp
     src/server.cpp
