@@ -40,4 +40,3 @@ Plugin::Plugin(std::string path) {
 
 std::string Plugin::GetName() { return this->name; }
 int32_t Plugin::GetApiVersion() { return this->apiVersion; }
-lua_State* Plugin::GetLuaState() { return this->L; }

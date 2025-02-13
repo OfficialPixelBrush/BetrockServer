@@ -140,8 +140,7 @@ void Server::InitPlugins() {
     // Load plugin file and let it sit in it's own lua VM
     // Start Plugin script
     for (const auto & entry : std::filesystem::directory_iterator("scripts/plugins/")) {
-        Plugin p = Plugin(entry.path());
-        plugins.push_back(p);
+        plugins.push_back(std::make_unique<Plugin>(entry.path()));
     }
 }
 

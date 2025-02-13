@@ -11,13 +11,17 @@
 #define LATEST_VERSION 1
 
 class Plugin {
-    public:
-        Plugin(std::string path);
-        std::string GetName();
-        int32_t GetApiVersion();
-        lua_State* GetLuaState();
     private:
         std::string name = DEFAULT_NAME;
         int32_t apiVersion = LATEST_VERSION;
         lua_State* L;
+    public:
+        Plugin(std::string path);
+        ~Plugin() {
+            if (L) {
+                lua_close(L);
+            }
+        }
+        std::string GetName();
+        int32_t GetApiVersion();
 };
