@@ -36,6 +36,7 @@ class Respond {
         static void EntityLookRelativeMove(std::vector<uint8_t> &response, int32_t& entityId, Int3 relativeMovement, int8_t yaw, int8_t pitch);
         static void EntityTeleport(std::vector<uint8_t> &response, int32_t& entityId, Int3 position, int8_t yaw, int8_t pitch);
         static void EntityStatus(std::vector<uint8_t> &response, int32_t& entityId, int8_t status);
+        static void EntityMetadata(std::vector<uint8_t> &response, int32_t& entityId, int8_t byte);
         static void PreChunk(std::vector<uint8_t> &response, int32_t x, int32_t z, bool mode);
         static void Chunk(std::vector<uint8_t> &response, Int3 position, uint8_t sizeX, uint8_t sizeY, uint8_t sizeZ, size_t compressedSize, char* compressedData);
         static void BlockChange(std::vector<uint8_t> &response, Int3 position, int8_t type, int8_t meta);

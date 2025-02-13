@@ -484,14 +484,18 @@ bool Client::Animation() {
 bool Client::EntityAction() {
 	int32_t entityId = EntryToInteger(message, offset);
 	int8_t action = EntryToByte(message, offset);
+	// some EntityMetadata info
+	// A BITMASK
+	// - 1 seems to be being on fire
+	// - 2 seems to be crouching
 	switch(action) {
 		case 1:
 			player->crouching = true;
-			Respond::Animation(broadcastOthersResponse, entityId, ANIMATION_CROUCH);
+			Respond::EntityMetadata(broadcastOthersResponse, entityId, 2);
 			break;
 		case 2:
 			player->crouching = false;
-			Respond::Animation(broadcastOthersResponse, entityId, ANIMATION_UNCROUCH);
+			Respond::EntityMetadata(broadcastOthersResponse, entityId, 0);
 			break;
 		default:
 			break;

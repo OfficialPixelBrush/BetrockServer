@@ -197,6 +197,14 @@ void Respond::EntityTeleport(std::vector<uint8_t> &response, int32_t& entityId, 
     response.push_back(pitch);
 }
 
+void Respond::EntityMetadata(std::vector<uint8_t> &response, int32_t& entityId, int8_t byte) {
+    response.push_back((uint8_t)Packet::EntityMetadata);
+    AppendIntegerToVector(response, entityId);
+    response.push_back(0);
+    response.push_back(byte);
+    response.push_back(127);
+}
+
 void Respond::PreChunk(std::vector<uint8_t> &response, int32_t x, int32_t z, bool mode) {
     // , int32_t compressedSize, std::vector<uint8_t> compressedData
     response.push_back((uint8_t)Packet::PreChunk);
