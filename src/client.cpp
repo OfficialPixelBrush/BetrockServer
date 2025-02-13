@@ -133,8 +133,8 @@ void Client::SendNewChunks() {
 		auto nc = player->newChunks.begin();
 		auto chunkData = wm->world.GetChunkData(*nc);
 		if (!chunkData) {
-			// Tell client chunk is not loaded
-			Respond::PreChunk(response, nc->x, nc->z, 0);
+			// We'll just drop this chunk
+			player->newChunks.erase(nc);
 			continue;
 		}
 

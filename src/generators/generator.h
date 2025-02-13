@@ -15,6 +15,9 @@ class Generator {
     public:
         virtual Chunk GenerateChunk(int32_t cX, int32_t cZ);
         void PrepareGenerator(int64_t seed);
+        ~Generator() {
+            lua_close(L);
+        }
 };
 
 // --- Helper Functions ---
