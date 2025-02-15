@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.1.12)
+project(BetrockServer VERSION 0.0.13)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -20,12 +20,12 @@ configure_file(${CMAKE_SOURCE_DIR}/src/misc/version.h.in ${CMAKE_SOURCE_DIR}/src
 include_directories(
     "${PROJECT_SOURCE_DIR}/src/coms"
     "${PROJECT_SOURCE_DIR}/src/enums"
-    "${PROJECT_SOURCE_DIR}/src/generators"
     "${PROJECT_SOURCE_DIR}/src/logger"
     "${PROJECT_SOURCE_DIR}/src/misc/helpers"
     "${PROJECT_SOURCE_DIR}/src/misc"
     "${PROJECT_SOURCE_DIR}/src/objects"
     "${PROJECT_SOURCE_DIR}/src/plugins"
+    "${PROJECT_SOURCE_DIR}/src/plugins/terrain"
     "${PROJECT_SOURCE_DIR}/src/"
     ${LUA_INCLUDE_DIR}
 )
@@ -38,8 +38,6 @@ add_executable(
 
     src/enums/blocks.cpp
     src/enums/labels.cpp
-    
-    src/generators/generator.cpp
 
     src/logger/logger.cpp
     src/logger/style.cpp
@@ -57,6 +55,7 @@ add_executable(
     src/objects/worldManager.cpp
 
     src/plugins/plugins.cpp
+    src/plugins/terrain/generator.cpp
 
     src/client.cpp
     src/config.cpp

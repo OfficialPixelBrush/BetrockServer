@@ -34,7 +34,7 @@ void World::Load(const std::string& extra) {
 
             std::ifstream chunkFile (entry.path());
             if (!chunkFile.is_open()) {
-                std::cerr << "Failed to load chunk " << entry.path() << std::endl;
+                Betrock::Logger::Instance().Warning("Failed to load chunk " + std::string(entry.path()));
                 continue;
             }      
 
@@ -51,6 +51,11 @@ void World::Load(const std::string& extra) {
             size_t decompressedSize = 0;
 
             auto chunkData = DecompressChunk(compressedChunk,compressedSize,decompressedSize);
+
+            if (!chunkData) {
+                Betrock::Logger::Instance().Warning("Failed to decompress " + std::string(entry.path()));
+                continue;
+            }
 
             Chunk c;
             size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;

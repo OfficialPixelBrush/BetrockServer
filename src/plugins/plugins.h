@@ -5,16 +5,13 @@
 #include <lua.hpp>
 #include <stdexcept>
 
+#include "logger.h"
 #include "luahelper.h"
 
-#define DEFAULT_NAME "Plugin"
-#define LATEST_VERSION 1
+#define PLUGIN_DEFAULT_NAME "Plugin"
+#define PLUGIN_LATEST_VERSION 1
 
 class Plugin {
-    private:
-        std::string name = DEFAULT_NAME;
-        int32_t apiVersion = LATEST_VERSION;
-        lua_State* L;
     public:
         Plugin(std::string path);
         ~Plugin() {
@@ -24,4 +21,13 @@ class Plugin {
         }
         std::string GetName();
         int32_t GetApiVersion();
+    private:
+        Betrock::Logger* logger;
+        std::string name = PLUGIN_DEFAULT_NAME;
+        int32_t apiVersion = PLUGIN_LATEST_VERSION;
+        lua_State* L;
+
+        // --- Lua Bindings Functions ---
+        int lua_GlobalChat(lua_State *L);
+        int lua_Chat(lua_State *L);
 };

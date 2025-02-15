@@ -5,6 +5,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <stdexcept>
 
 #include "client.h"
 #include "player.h"

@@ -36,11 +36,11 @@ class Logger {
             static Logger instance;
             return instance;
         }
-        void Log(std::string message, int level = 0);
+        void Log(std::string message, int level = LOG_MESSAGE);
         void Message(std::string message);
         void Info(std::string message);
         void Warning(std::string message);
-        void Danger(std::string message);
+        void Error(std::string message);
         void SetLogLevel(int8_t logLevel = LOG_ALL) { this->logLevel = logLevel; }
 };
 }

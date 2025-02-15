@@ -1,4 +1,6 @@
 -- Based on glitched terrain gen I got while remaking the worley generator in lua
+GenName = "Mica"
+GenApiVersion = 1
 
 function GenerateBlock(x,y,z,blocksSinceSkyVisible)
     local type = 0

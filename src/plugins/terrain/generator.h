@@ -7,8 +7,14 @@
 #include "lighting.h"
 #include "luahelper.h"
 
+#define GENERATOR_DEFAULT_NAME "Generator"
+#define GENERATOR_LATEST_VERSION 1
+
 class Generator {
     private:
+        Betrock::Logger* logger;
+        std::string name = GENERATOR_DEFAULT_NAME;
+        int32_t apiVersion = GENERATOR_LATEST_VERSION;
         lua_State* L;
         int64_t seed;
         virtual Block GenerateBlock(Int3 position, int8_t blocksSinceSkyVisible = 0);

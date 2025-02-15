@@ -46,6 +46,7 @@ class Player : public Entity {
         int8_t currentHotbarSlot = 0;
 
         // Connection Stats
+        // TODO: Some of this stuff should really be moved into the client!
         int64_t lastPacketTime = 0;
         int client_fd;
         ConnectionStatus connectionStatus = ConnectionStatus::Disconnected;
@@ -69,13 +70,14 @@ class Player : public Entity {
         void SetHealth(std::vector<uint8_t> &response, int8_t health);
         void Hurt(std::vector<uint8_t> &response, int8_t damage);
         void Kill(std::vector<uint8_t> &response);
-        int8_t SpreadToSlots(int16_t item, int8_t amount, int16_t damage);
+        bool TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &damage);
+        bool SpreadToSlots(int16_t item, int8_t amount, int16_t damage);
         void ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage);
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
         bool UpdateInventory(std::vector<uint8_t> &response);
         void ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId);
         Item GetHeldItem();
         bool CanDecrementHotbar();
-        void DecrementHotbar();
+        void DecrementHotbar(std::vector<uint8_t> &response);
         void PrintStats();
 };

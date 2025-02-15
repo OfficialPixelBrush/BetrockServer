@@ -1,4 +1,6 @@
 -- Generates some pretty cool cliffs towards the Left side of spawn!
+GenName = "Cliffs"
+GenApiVersion = 1
 
 function GenerateBlock(x,y,z,blocksSinceSkyVisible)
     local type = 0

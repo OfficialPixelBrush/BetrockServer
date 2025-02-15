@@ -250,6 +250,9 @@ void HandlePacket(Client &client) {
 			case Packet::PlayerBlockPlacement:
 				client.PlayerBlockPlacement(world);
 				break;
+			case Packet::CloseWindow:
+				client.CloseWindow();
+				break;
 			case Packet::WindowClick:
 				client.WindowClick();
 				break;
@@ -348,7 +351,7 @@ bool Client::LoginRequest() {
 	}
 	// Accept the Login
 	Respond::Login(response,player->entityId,1,0);
-	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
+	Betrock::Logger::Instance().Message(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
 	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.", 0);
 
   	const auto &spawnPoint = server.GetSpawnPoint();
@@ -474,8 +477,8 @@ bool Client::PlayerPositionLook() {
 }
 
 bool Client::HoldingChange() {
-	int16_t slotId = EntryToShort(message, offset);
-	player->ChangeHeldItem(broadcastOthersResponse,slotId);
+	int16_t slot = EntryToShort(message, offset);
+	player->ChangeHeldItem(broadcastOthersResponse,slot);
 	return true;
 }
 
@@ -601,17 +604,22 @@ bool Client::PlayerBlockPlacement(World* world) {
 			id = i.id;
 			amount = i.amount;
 			damage = i.damage;
-			Respond::SetSlot(response, 0, INVENTORY_HOTBAR + player->currentHotbarSlot, id, amount, damage);
 		} else {
-			player->DecrementHotbar();
+			player->DecrementHotbar(response);
 		}
 	}
 	return true;
 }
 
+bool Client::CloseWindow() {
+	int8_t window 	= EntryToByte(message, offset);
+	activeWindow = INVENTORY_NONE;
+	return true;
+}
+
 bool Client::WindowClick() {
-	int8_t windowId 	= EntryToByte(message, offset);
-	int16_t slotId 		= EntryToShort(message,offset);
+	int8_t window 		= EntryToByte(message, offset);
+	int16_t slot 		= EntryToShort(message,offset);
 	int8_t rightClick 	= EntryToByte(message, offset);
 	int16_t actionNumber= EntryToShort(message,offset);
 	int8_t shift 		= EntryToByte(message, offset);
@@ -622,7 +630,7 @@ bool Client::WindowClick() {
 		itemCount		= EntryToByte(message, offset);
 		itemUses		= EntryToShort(message,offset);
 	}
-	player->ClickedSlot(response,windowId,slotId,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
+	player->ClickedSlot(response,window,slot,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
 	return true;
 }
 

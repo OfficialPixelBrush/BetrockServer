@@ -11,6 +11,7 @@
 #include "worldManager.h"
 #include "version.h"
 
+#include "inventory.h"
 #include "blocks.h"
 #include "packets.h"
 #include "sounds.h"
@@ -25,6 +26,8 @@ class Client {
         int32_t previousOffset = 0;
         int32_t offset = 0;
         char message[PACKET_MAX] = {0};
+
+        int8_t activeWindow = INVENTORY_NONE;
 
         std::vector<uint8_t> response;
         std::vector<uint8_t> broadcastResponse;
@@ -49,6 +52,7 @@ class Client {
         bool EntityAction();
         bool PlayerDigging(World* world);
         bool PlayerBlockPlacement(World* world);
+        bool CloseWindow();
         bool WindowClick();
         bool DisconnectClient();
 
