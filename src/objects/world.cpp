@@ -166,17 +166,22 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
     Block* b = GetBlock(position);
     b->type = type;
     b->meta = meta;
-    b->lightBlock = 0x0;
-    b->lightSky = 0x0;
-    //CalculateColumnLight(position.x,position.z);
+    b->lightBlock = GetEmissiveness(b->type);
+    // This needs to be recalculated
+    b->lightSky = (IsTranslucent(b->type) || IsTransparent(b->type))*0xF;
+    //CalculateColumnLight(position.x,position.z,GetChunk(position.x>>5,position.z>>5));
 }
 
 Block World::BreakBlock(Int3 position) {
     // Break Block Position within Chunk
-    Block b = *GetBlock(position);
-    GetBlock(position)->type = 0;
-    //CalculateColumnLight(position.x,position.z);
-    return b;
+    Block* b = GetBlock(position);
+    b->type = 0;
+    b->meta = 0;
+    b->lightBlock = 0;
+    // This needs to be recalculated
+    b->lightSky = 0xF;
+    //CalculateColumnLight(position.x,position.z,GetChunk(position.x>>5,position.z>>5));
+    return *b;
 }
 
 Block* World::GetBlock(Int3 position) {

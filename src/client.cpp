@@ -68,6 +68,12 @@ bool CheckIfNewChunksRequired(Player* player) {
 }
 
 void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldManager* wm, Player* player) {
+	// TODO: This is awful to do for every chunk :(
+    // Skip processing if chunk is already visible
+    if (std::find(player->visibleChunks.begin(), player->visibleChunks.end(), position) != player->visibleChunks.end()) {
+        return;
+    }
+
     // Get existing chunk data
     auto chunkData = wm->world.GetChunkData(position);
     if (!chunkData) {
@@ -98,6 +104,7 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
         if (distanceX > chunkDistance || distanceZ > chunkDistance) {
             Respond::PreChunk(response, it->x, it->z, 0); // Tell client chunk is no longer visible
             it = player->visibleChunks.erase(it);
+			std::cout << "Deleted " << it->x << ", " << it->z << std::endl;
         } else {
             ++it;
         }
@@ -143,7 +150,7 @@ void Client::SendNewChunks() {
 		auto chunk = CompressChunk(chunkData.get(), compressedSize);
 
 		if (chunk) {
-			//std::cout << "Sent " << *nc << std::endl;
+			std::cout << "Sent " << nc->x << ", " << nc->z << std::endl;
 			Respond::PreChunk(response, nc->x, nc->z, 1);
 			player->visibleChunks.push_back(Int3{nc->x,0,nc->z});
 

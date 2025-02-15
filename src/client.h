@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm> // Add this at the top for std::find
 #include <iostream>
 #include <cstdint>
 #include <netinet/in.h>
