@@ -5,6 +5,7 @@
 #include <string>
 
 #include "loglevel.h"
+#include "style.h"
 
 namespace Betrock {
 class Logger {
@@ -37,6 +38,7 @@ class Logger {
             return instance;
         }
         void Log(std::string message, int level = LOG_MESSAGE);
+        void ChatMessage(std::string message);
         void Message(std::string message);
         void Info(std::string message);
         void Warning(std::string message);

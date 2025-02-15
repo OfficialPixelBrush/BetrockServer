@@ -3,33 +3,30 @@
 #include <string>
 #include <iostream>
 
-#define STYLE_START "\e["
-#define STYLE_END "m"
+#define STYLE_BOLD                "\e[1m"
+#define STYLE_ITALIC              "\e[3m"
+#define STYLE_UNDERLINE           "\e[4m"
+#define STYLE_STRIKETHROUGH       "\e[9m"
 
-#define STYLE_BOLD 1
-#define STYLE_ITALIC 3
-#define STYLE_UNDERLINE 4
-#define STYLE_STRIKETHROUGH 9
+#define STYLE_FOREGROUND_BLACK    "\e[30m"
+#define STYLE_FOREGROUND_RED      "\e[31m"
+#define STYLE_FOREGROUND_GREEN    "\e[32m"
+#define STYLE_FOREGROUND_YELLOW   "\e[33m"
+#define STYLE_FOREGROUND_BLUE     "\e[34m"
+#define STYLE_FOREGROUND_PURPLE   "\e[35m"
+#define STYLE_FOREGROUND_CYAN     "\e[36m"
+#define STYLE_FOREGROUND_WHITE    "\e[37m"
 
-#define STYLE_FOREGROUND_BLACK    30
-#define STYLE_FOREGROUND_RED      31
-#define STYLE_FOREGROUND_GREEN    32
-#define STYLE_FOREGROUND_YELLOW   33
-#define STYLE_FOREGROUND_BLUE     34
-#define STYLE_FOREGROUND_PURPLE   35
-#define STYLE_FOREGROUND_CYAN     36
-#define STYLE_FOREGROUND_WHITE    37
+#define STYLE_BACKGROUND_BLACK    "\e[40m"
+#define STYLE_BACKGROUND_RED      "\e[41m"
+#define STYLE_BACKGROUND_GREEN    "\e[42m"
+#define STYLE_BACKGROUND_YELLOW   "\e[43m"
+#define STYLE_BACKGROUND_BLUE     "\e[44m"
+#define STYLE_BACKGROUND_PURPLE   "\e[45m"
+#define STYLE_BACKGROUND_CYAN     "\e[46m"
+#define STYLE_BACKGROUND_WHITE    "\e[47m"
 
-#define STYLE_BACKGROUND_BLACK    40
-#define STYLE_BACKGROUND_RED      41
-#define STYLE_BACKGROUND_GREEN    42
-#define STYLE_BACKGROUND_YELLOW   43
-#define STYLE_BACKGROUND_BLUE     44
-#define STYLE_BACKGROUND_PURPLE   45
-#define STYLE_BACKGROUND_CYAN     46
-#define STYLE_BACKGROUND_WHITE    47
+#define STYLE_RESET               "\e[0m"
 
-#define STYLE_RESET "0"
-
-void SetStyle(int8_t fg = 0, int8_t bg = 0, int8_t styling = 0);
-void ResetStyle();
+std::string FormatToStyle(int8_t format);
+std::string HandleFormattingCodes(const std::string& input);

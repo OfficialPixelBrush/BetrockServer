@@ -7,6 +7,9 @@ namespace Betrock {
 
 void Logger::Log(std::string message, int level) {
     switch(level) {
+        case LOG_CHAT:
+            ChatMessage(message);
+            break;
         case LOG_INFO:
             Info(message);
             break;
@@ -19,6 +22,14 @@ void Logger::Log(std::string message, int level) {
         default:
             Message(message);
             break;
+    }
+}
+
+void Logger::ChatMessage(std::string message) {
+    if (logLevel & LOG_CHAT) 
+    {
+        std::cout << HandleFormattingCodes(message) << std::endl;
+        logFile << message << std::endl;
     }
 }
 
@@ -51,7 +62,7 @@ void Logger::Error(std::string message) {
     if (logLevel & LOG_ERROR) 
     {
         std::string header = "ERROR";
-        std::cerr << "\x1b[1;101m" << header << " " << message << "\x1b[0m " << std::endl;
+        std::cerr << "\x1b[1;101m" << header << " " << message << "\x1b[0m" << std::endl;
         logFile << header << " " << message << std::endl;
     }
 }
