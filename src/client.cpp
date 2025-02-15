@@ -86,11 +86,16 @@ void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldMan
     player->newChunks.push_back(position);
 }
 
-void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
+void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player, bool forcePlayerAsCenter) {
     auto &server = Betrock::Server::Instance();
-    Vec3 delta = player->position - player->lastChunkUpdatePosition;
 
-    Int3 centerPos = Vec3ToInt3(player->position+delta);
+    Int3 centerPos;
+	if (forcePlayerAsCenter) {
+		centerPos = Vec3ToInt3(player->position);
+	} else {
+    	Vec3 delta = player->position - player->lastChunkUpdatePosition;
+		centerPos = Vec3ToInt3(player->position+delta);
+	}
     Int3 playerChunkPos = BlockToChunkPosition(centerPos);
     int32_t pX = playerChunkPos.x;
     int32_t pZ = playerChunkPos.z;
@@ -104,7 +109,7 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
         if (distanceX > chunkDistance || distanceZ > chunkDistance) {
             Respond::PreChunk(response, it->x, it->z, 0); // Tell client chunk is no longer visible
             it = player->visibleChunks.erase(it);
-			std::cout << "Deleted " << it->x << ", " << it->z << std::endl;
+			//std::cout << "Deleted " << it->x << ", " << it->z << std::endl;
         } else {
             ++it;
         }
@@ -134,39 +139,44 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 }
 
 void Client::SendNewChunks() {
-  auto wm = Betrock::Server::Instance().GetWorldManager(player->worldId);
+	// Send chunks in batches of 5
+	int sentThisCycle = 5;
+	auto wm = Betrock::Server::Instance().GetWorldManager(player->worldId);
   	std::lock_guard<std::mutex> lock(player->newChunksMutex);
-	while(!player->newChunks.empty()) {
-		auto nc = player->newChunks.begin();
-		auto chunkData = wm->world.GetChunkData(*nc);
-		if (!chunkData) {
-			// We'll just drop this chunk
+	while(sentThisCycle > 0) {
+		if(!player->newChunks.empty()) {
+			auto nc = player->newChunks.begin();
+			auto chunkData = wm->world.GetChunkData(*nc);
+			if (!chunkData) {
+				// We'll just drop this chunk
+				player->newChunks.erase(nc);
+				return;
+			}
+
+			// Send chunk to player
+			size_t compressedSize = 0;
+			auto chunk = CompressChunk(chunkData.get(), compressedSize);
+
+			if (chunk) {
+				//std::cout << "Sent " << nc->x << ", " << nc->z << std::endl;
+				Respond::PreChunk(response, nc->x, nc->z, 1);
+				player->visibleChunks.push_back(Int3{nc->x,0,nc->z});
+
+				Respond::Chunk(
+					response, 
+					Int3{nc->x<<4,0,nc->z<<4}, 
+					CHUNK_WIDTH_X - 1, 
+					CHUNK_HEIGHT - 1, 
+					CHUNK_WIDTH_Z - 1, 
+					compressedSize, 
+					chunk.get()
+				);
+			}
+			// Better to remove the entry either way if compression fails,
+			// otherwise we may get an infinite build-up of failing chunks
 			player->newChunks.erase(nc);
-			continue;
 		}
-
-		// Send chunk to player
-		size_t compressedSize = 0;
-		auto chunk = CompressChunk(chunkData.get(), compressedSize);
-
-		if (chunk) {
-			std::cout << "Sent " << nc->x << ", " << nc->z << std::endl;
-			Respond::PreChunk(response, nc->x, nc->z, 1);
-			player->visibleChunks.push_back(Int3{nc->x,0,nc->z});
-
-			Respond::Chunk(
-				response, 
-				Int3{nc->x<<4,0,nc->z<<4}, 
-				CHUNK_WIDTH_X - 1, 
-				CHUNK_HEIGHT - 1, 
-				CHUNK_WIDTH_Z - 1, 
-				compressedSize, 
-				chunk.get()
-			);
-		}
-		// Better to remove the entry either way if compression fails,
-		// otherwise we may get an infinite build-up of failing chunks
-		player->newChunks.erase(nc);
+		sentThisCycle--;
 	}
 }
 
@@ -180,7 +190,7 @@ void Client::Respond(ssize_t bytes_received) {
 }
 
 void HandlePacket(Client &client) {
-  auto serverTime = Betrock::Server::Instance().GetServerTime();
+	auto serverTime = Betrock::Server::Instance().GetServerTime();
 	int64_t lastPacketTime = serverTime;
 	// Prep for next packet
 	ssize_t bytes_received = client.Setup();
@@ -299,16 +309,17 @@ void HandleClient(Player* player) {
 	// While the player is connected, read packets from them
 	while (player->connectionStatus > ConnectionStatus::Disconnected) {
 		HandlePacket(client);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
 	}
 	std::lock_guard<std::mutex> lock(server.GetConnectedPlayerMutex());
 	int clientFdToDisconnect = player->client_fd;
-  auto &connectedPlayers = server.GetConnectedPlayers();
+	auto &connectedPlayers = server.GetConnectedPlayers();
     auto it = std::ranges::find(std::ranges::views::all(connectedPlayers), player);
     if (it != connectedPlayers.end()) {
         connectedPlayers.erase(it);
     }
 
-  // TODO: >:c (translation: smart pointer)
+  	// TODO: >:c (translation: smart pointer)
 	delete player;
 	player = nullptr;
 
@@ -381,8 +392,8 @@ bool Client::LoginRequest() {
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
 	player->Teleport(response,spawnPoint);
-	SendChunksAroundPlayer(response,player);
-	SendNewChunks();
+	//SendChunksAroundPlayer(response,player);
+	//SendNewChunks();
 
 	// Create the player for other players
 	Respond::NamedEntitySpawn(

@@ -67,4 +67,4 @@ class Client {
 
 void HandleClient(Player* player);
 void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldManager* wm, Player* player);
-void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player);
+void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player, bool forcePlayerAsCenter = false);

@@ -14,6 +14,7 @@
 #include "plugins.h"
 
 #define PROTOCOL_VERSION 14
+#define TICK_SPEED 20
 
 namespace Betrock {
 
