@@ -1,6 +1,8 @@
 -- Up ahead is my own attempt at a world generator.
 -- Be warned, it may be terrible
 -- This is heavily baed on my Godot world generator
+GenName = "Worley"
+GenApiVersion = 1
 
 function GenerateBlock(x,y,z,blocksSinceSkyVisible)
     local type = 0

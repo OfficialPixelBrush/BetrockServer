@@ -3,6 +3,7 @@
 #include <string>
 
 void Generator::PrepareGenerator(int64_t seed) {
+	logger = &Betrock::Logger::Instance();
     this->seed = seed;
     L = luaL_newstate();
     luaL_openlibs(L);
@@ -20,8 +21,30 @@ void Generator::PrepareGenerator(int64_t seed) {
     auto &cfg = Betrock::GlobalConfig::Instance();
     auto gen = cfg.Get("generator");
     if (luaL_dofile(L, (std::string("scripts/").append(gen)).c_str())) {
-        std::cerr << "Error: " << lua_tostring(L, -1) << std::endl;
         lua_close(L);
+        throw std::runtime_error(lua_tostring(L, -1));
+    }
+
+    // Load the plugins name
+    lua_getglobal(L, "GenName");
+    if (!lua_isstring(L,-1)) {
+        logger->Warning("Invalid GenName!");
+    } else {
+        name = std::string(lua_tostring(L,-1));
+    }
+
+    // Load the plugins API version
+    lua_getglobal(L, "GenApiVersion");
+    if (!lua_isnumber(L,-1)) {
+        lua_close(L);
+        throw std::runtime_error("Invalid GenApiVersion!");
+    } else {
+        apiVersion = (int32_t)lua_tonumber(L,-1);
+    }
+
+    if (apiVersion > GENERATOR_LATEST_VERSION) {
+        lua_close(L);
+        throw std::runtime_error("\"" + name + "\" was made for a newer version of BetrockServer!");
     }
 }
 
@@ -32,8 +55,7 @@ Block Generator::GenerateBlock(Int3 position, int8_t blocksSinceSkyVisible) {
     }
     lua_getglobal(L, "GenerateBlock");
     if (!lua_isfunction(L,-1)) {
-        std::cerr << "GenerateBlock was not found!" << std::endl;
-        return b;
+        throw std::runtime_error("GenerateBlock was not found!");
     }
     lua_pushnumber(L,position.x);
     lua_pushnumber(L,position.y);

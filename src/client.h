@@ -1,18 +1,22 @@
 #pragma once
 
+#include <algorithm> // Add this at the top for std::find
 #include <iostream>
 #include <cstdint>
 #include <netinet/in.h>
 #include <unistd.h>
 
-#include "player.h"
 #include "coms.h"
-#include "blocks.h"
-#include "version.h"
+#include "player.h"
 #include "command.h"
-#include "packets.h"
 #include "worldManager.h"
+#include "version.h"
+
+#include "inventory.h"
+#include "blocks.h"
+#include "packets.h"
 #include "sounds.h"
+#include "animations.h"
 
 #define PACKET_MAX 4096
 
@@ -23,6 +27,8 @@ class Client {
         int32_t previousOffset = 0;
         int32_t offset = 0;
         char message[PACKET_MAX] = {0};
+
+        int8_t activeWindow = INVENTORY_NONE;
 
         std::vector<uint8_t> response;
         std::vector<uint8_t> broadcastResponse;
@@ -47,6 +53,7 @@ class Client {
         bool EntityAction();
         bool PlayerDigging(World* world);
         bool PlayerBlockPlacement(World* world);
+        bool CloseWindow();
         bool WindowClick();
         bool DisconnectClient();
 
@@ -60,4 +67,4 @@ class Client {
 
 void HandleClient(Player* player);
 void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldManager* wm, Player* player);
-void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player);
+void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player, bool forcePlayerAsCenter = false);

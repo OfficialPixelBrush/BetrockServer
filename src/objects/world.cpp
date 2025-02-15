@@ -34,7 +34,7 @@ void World::Load(const std::string& extra) {
 
             std::ifstream chunkFile (entry.path());
             if (!chunkFile.is_open()) {
-                std::cerr << "Failed to load chunk " << entry.path() << std::endl;
+                Betrock::Logger::Instance().Warning("Failed to load chunk " + std::string(entry.path()));
                 continue;
             }      
 
@@ -51,6 +51,11 @@ void World::Load(const std::string& extra) {
             size_t decompressedSize = 0;
 
             auto chunkData = DecompressChunk(compressedChunk,compressedSize,decompressedSize);
+
+            if (!chunkData) {
+                Betrock::Logger::Instance().Warning("Failed to decompress " + std::string(entry.path()));
+                continue;
+            }
 
             Chunk c;
             size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;
@@ -161,9 +166,10 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
     Block* b = GetBlock(position);
     b->type = type;
     b->meta = meta;
-    b->lightBlock = 0x0;
-    b->lightSky = 0x0;
-    //CalculateColumnLight(position.x,position.z);
+    b->lightBlock = GetEmissiveness(b->type);
+    // This needs to be recalculated
+    b->lightSky = (IsTranslucent(b->type) || IsTransparent(b->type))*0xF;
+    //CalculateColumnLight(position.x,position.z,GetChunk(position.x>>5,position.z>>5));
 }
 
 Block World::BreakBlock(Int3 position) {

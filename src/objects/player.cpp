@@ -7,8 +7,9 @@ void Player::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
     this->yaw = yaw;
     this->pitch = pitch;
     this->stance = position.y + STANCE_OFFSET;
-    SendChunksAroundPlayer(response,this);
+    this->newChunks.clear();
     Respond::PlayerPositionLook(response, this);
+    SendChunksAroundPlayer(response,this, true);
 }
 
 void Player::Respawn(std::vector<uint8_t> &response) {
@@ -36,51 +37,60 @@ void Player::Kill(std::vector<uint8_t> &response) {
     SetHealth(response,0);
 }
 
-int8_t Player::SpreadToSlots(int16_t id, int8_t amount, int16_t damage) {
-    // Then we check the entire inventory if we already have an item of this type
-    // TODO: This doesn't work, fix it
-    for (int8_t i = INVENTORY_ROW_1; i <= INVENTORY_HOTBAR_LAST; i++) {
-        if (inventory[i].id == id && inventory[i].damage == damage) {
-            if (inventory[i].amount + amount > 64) {
-                amount -= inventory[i].amount;
-                inventory[i].amount = 64;
-            } else {
-                inventory[i].amount += amount;
-            }
+bool Player::TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &damage) {
+    // First, try to stack into existing slots
+    if (inventory[slot].id == id && inventory[slot].damage == damage) {
+        // Skip the slot if its full
+        if (inventory[slot].amount >= MAX_STACK) {
+            return false;
+        }
+        // If we fill the slot, we're done
+        if (inventory[slot].amount + amount <= MAX_STACK) {
+            inventory[slot].amount += amount;
+            return true;
+        }
+        // If we fill it but items remain, keep going
+        amount -= (MAX_STACK - inventory[slot].amount);
+        inventory[slot].amount = MAX_STACK;
+        return false;
+    }
+    // Secondly, try to stack into empty slots
+    if (inventory[slot].id == SLOT_EMPTY) {
+        inventory[slot] = { id, amount, damage };
+        return true;
+    }
+    return false;
+}
+
+bool Player::SpreadToSlots(int16_t id, int8_t amount, int16_t damage) {
+    for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST; i++) {
+        if (TryToPutInSlot(i, id, amount, damage)) {
+            return true;
         }
     }
 
-    // First we check the hotbar
-    for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST; i++) {
-        if (inventory[i].id == -1) {
-            return i;
-        }
-    }
-    // Then we check the inventory
     for (int8_t i = INVENTORY_ROW_1; i <= INVENTORY_ROW_LAST; i++) {
-        if (inventory[i].id == -1) {
-            return i;
+        if (TryToPutInSlot(i, id, amount, damage)) {
+            return true;
         }
     }
-    // No empty slot found!
-    return -1;
+
+    // If there are still items left, inventory is full
+    return false;
 }
 
 bool Player::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, int16_t damage) {
     // Amount is not specified
     if (amount == -1) {
         if (item < BLOCK_MAX) {
-            amount = 64;
+            amount = MAX_STACK;
         } else {
             amount = 1;
         }
     }
     // Look for empty slot
-    int8_t slotId = SpreadToSlots(item,amount,damage);
-    if (slotId == -1) {
-        return false;
-    }
-    inventory[slotId] = Item { item,amount,damage };
+    SpreadToSlots(item,amount,damage);
+    //inventory[slotId] = Item { item,amount,damage };
     // TODO: This is a horrible solution, please find something better,
     // like checking if the inventory was changed, and only then sending out an UpdateInventory
     UpdateInventory(response);
@@ -132,7 +142,7 @@ bool Player::CanDecrementHotbar() {
     return false;
 }
 
-void Player::DecrementHotbar() {
+void Player::DecrementHotbar(std::vector<uint8_t> &response) {
     Item* i = &inventory[INVENTORY_HOTBAR + currentHotbarSlot];
     i->amount--;
     if (i->amount <= 0) {
@@ -140,6 +150,7 @@ void Player::DecrementHotbar() {
         i->amount = 0;
         i->damage = 0;
     }
+	Respond::SetSlot(response, 0, INVENTORY_HOTBAR + currentHotbarSlot, i->id, i->amount, i->damage);
 }
 
 void Player::PrintStats() {

@@ -13,6 +13,7 @@ class Command {
     public:
         static void Parse(std::string &rawCommand, Player* player);
     private:
+        static void Pose(Player* player);
         static void Time();
         static void Teleport(Player* player);
         static void Give(Player* player);

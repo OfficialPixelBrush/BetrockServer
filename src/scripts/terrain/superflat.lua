@@ -1,3 +1,6 @@
+GenName = "Superflat"
+GenApiVersion = 1
+
 function GenerateBlock(x,y,z,blocksSinceSkyVisible)
     type = 0
     if y == 0 then

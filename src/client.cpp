@@ -68,23 +68,34 @@ bool CheckIfNewChunksRequired(Player* player) {
 }
 
 void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldManager* wm, Player* player) {
+	// TODO: This is awful to do for every chunk :(
+    // Skip processing if chunk is already visible
+    if (std::find(player->visibleChunks.begin(), player->visibleChunks.end(), position) != player->visibleChunks.end()) {
+        return;
+    }
+
     // Get existing chunk data
     auto chunkData = wm->world.GetChunkData(position);
     if (!chunkData) {
         // Queue chunk generation if missing
         wm->AddChunkToQueue(position.x, position.z, player);
-        Respond::PreChunk(response, position.x, position.z, 0); // Tell client chunk is not yet visible
+        Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
         return;
     }
     
     player->newChunks.push_back(position);
 }
 
-void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
+void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player, bool forcePlayerAsCenter) {
     auto &server = Betrock::Server::Instance();
-    Vec3 delta = player->position - player->lastChunkUpdatePosition;
 
-    Int3 centerPos = Vec3ToInt3(player->position+delta);
+    Int3 centerPos;
+	if (forcePlayerAsCenter) {
+		centerPos = Vec3ToInt3(player->position);
+	} else {
+    	Vec3 delta = player->position - player->lastChunkUpdatePosition;
+		centerPos = Vec3ToInt3(player->position+delta);
+	}
     Int3 playerChunkPos = BlockToChunkPosition(centerPos);
     int32_t pX = playerChunkPos.x;
     int32_t pZ = playerChunkPos.z;
@@ -98,6 +109,7 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
         if (distanceX > chunkDistance || distanceZ > chunkDistance) {
             Respond::PreChunk(response, it->x, it->z, 0); // Tell client chunk is no longer visible
             it = player->visibleChunks.erase(it);
+			//std::cout << "Deleted " << it->x << ", " << it->z << std::endl;
         } else {
             ++it;
         }
@@ -127,39 +139,44 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player) {
 }
 
 void Client::SendNewChunks() {
-  auto wm = Betrock::Server::Instance().GetWorldManager(player->worldId);
+	// Send chunks in batches of 5
+	int sentThisCycle = 5;
+	auto wm = Betrock::Server::Instance().GetWorldManager(player->worldId);
   	std::lock_guard<std::mutex> lock(player->newChunksMutex);
-	while(!player->newChunks.empty()) {
-		auto nc = player->newChunks.begin();
-		auto chunkData = wm->world.GetChunkData(*nc);
-		if (!chunkData) {
-			// Tell client chunk is not loaded
-			Respond::PreChunk(response, nc->x, nc->z, 0);
-			continue;
+	while(sentThisCycle > 0) {
+		if(!player->newChunks.empty()) {
+			auto nc = player->newChunks.begin();
+			auto chunkData = wm->world.GetChunkData(*nc);
+			if (!chunkData) {
+				// We'll just drop this chunk
+				player->newChunks.erase(nc);
+				return;
+			}
+
+			// Send chunk to player
+			size_t compressedSize = 0;
+			auto chunk = CompressChunk(chunkData.get(), compressedSize);
+
+			if (chunk) {
+				//std::cout << "Sent " << nc->x << ", " << nc->z << std::endl;
+				Respond::PreChunk(response, nc->x, nc->z, 1);
+				player->visibleChunks.push_back(Int3{nc->x,0,nc->z});
+
+				Respond::Chunk(
+					response, 
+					Int3{nc->x<<4,0,nc->z<<4}, 
+					CHUNK_WIDTH_X - 1, 
+					CHUNK_HEIGHT - 1, 
+					CHUNK_WIDTH_Z - 1, 
+					compressedSize, 
+					chunk.get()
+				);
+			}
+			// Better to remove the entry either way if compression fails,
+			// otherwise we may get an infinite build-up of failing chunks
+			player->newChunks.erase(nc);
 		}
-
-		// Send chunk to player
-		size_t compressedSize = 0;
-		auto chunk = CompressChunk(chunkData.get(), compressedSize);
-
-		if (chunk) {
-			//std::cout << "Sent " << *nc << std::endl;
-			Respond::PreChunk(response, nc->x, nc->z, 1);
-			player->visibleChunks.push_back(Int3{nc->x,0,nc->z});
-
-			Respond::Chunk(
-				response, 
-				Int3{nc->x<<4,0,nc->z<<4}, 
-				CHUNK_WIDTH_X - 1, 
-				CHUNK_HEIGHT - 1, 
-				CHUNK_WIDTH_Z - 1, 
-				compressedSize, 
-				chunk.get()
-			);
-		}
-		// Better to remove the entry either way if compression fails,
-		// otherwise we may get an infinite build-up of failing chunks
-		player->newChunks.erase(nc);
+		sentThisCycle--;
 	}
 }
 
@@ -173,7 +190,7 @@ void Client::Respond(ssize_t bytes_received) {
 }
 
 void HandlePacket(Client &client) {
-  auto serverTime = Betrock::Server::Instance().GetServerTime();
+	auto serverTime = Betrock::Server::Instance().GetServerTime();
 	int64_t lastPacketTime = serverTime;
 	// Prep for next packet
 	ssize_t bytes_received = client.Setup();
@@ -192,7 +209,8 @@ void HandlePacket(Client &client) {
 		std::cout << "--- Start of Packet bundle ---" << std::endl;
 	}
 	while (client.offset < bytes_received && client.player->connectionStatus > ConnectionStatus::Disconnected) {
-		Packet packetType = (Packet)EntryToByte(client.message,client.offset);
+		int8_t packetIndex = EntryToByte(client.message,client.offset);
+		Packet packetType = (Packet)packetIndex;
 
 		// Provide debug info
 		if (debugReceivedBytes || debugReceivedPacketType) {
@@ -249,6 +267,9 @@ void HandlePacket(Client &client) {
 			case Packet::PlayerBlockPlacement:
 				client.PlayerBlockPlacement(world);
 				break;
+			case Packet::CloseWindow:
+				client.CloseWindow();
+				break;
 			case Packet::WindowClick:
 				client.WindowClick();
 				break;
@@ -256,6 +277,7 @@ void HandlePacket(Client &client) {
 				client.DisconnectClient();
 				break;
 			default:
+				Betrock::Logger::Instance().Log("Unhandled Server-bound packet: " + std::to_string(packetIndex), LOG_WARNING);
 				break;
 		}
 		if (client.player != nullptr && client.player->connectionStatus == ConnectionStatus::Connected) {
@@ -287,16 +309,17 @@ void HandleClient(Player* player) {
 	// While the player is connected, read packets from them
 	while (player->connectionStatus > ConnectionStatus::Disconnected) {
 		HandlePacket(client);
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
 	}
 	std::lock_guard<std::mutex> lock(server.GetConnectedPlayerMutex());
 	int clientFdToDisconnect = player->client_fd;
-  auto &connectedPlayers = server.GetConnectedPlayers();
+	auto &connectedPlayers = server.GetConnectedPlayers();
     auto it = std::ranges::find(std::ranges::views::all(connectedPlayers), player);
     if (it != connectedPlayers.end()) {
         connectedPlayers.erase(it);
     }
 
-  // TODO: >:c (translation: smart pointer)
+  	// TODO: >:c (translation: smart pointer)
 	delete player;
 	player = nullptr;
 
@@ -341,17 +364,15 @@ bool Client::LoginRequest() {
 
 	if (protocolVersion != PROTOCOL_VERSION) {
 		// If client has wrong protocol, close
-		std::cout << "Client has incorrect Protocol " << protocolVersion << "!" << std::endl;
 		Disconnect(player,"Wrong Protocol Version!");
 		return false;
 	}
 	// Accept the Login
 	Respond::Login(response,player->entityId,1,0);
-	std::cout << username << " logged in with entity id " << player->entityId << " at (" << player->position.x << ", " << player->position.y << ", " << player->position.z << ")" << std::endl;
-
+	Betrock::Logger::Instance().Message(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
 	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.", 0);
 
-  const auto &spawnPoint = server.GetSpawnPoint();
+  	const auto &spawnPoint = server.GetSpawnPoint();
 
 	// Set the Respawn Point, Time and Player Health
 	Respond::SpawnPoint(response,Vec3ToInt3(spawnPoint));
@@ -371,11 +392,19 @@ bool Client::LoginRequest() {
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
 	player->Teleport(response,spawnPoint);
-	SendChunksAroundPlayer(response,player);
-	SendNewChunks();
+	//SendChunksAroundPlayer(response,player);
+	//SendNewChunks();
 
 	// Create the player for other players
-	Respond::NamedEntitySpawn(broadcastOthersResponse, player->entityId, player->username, Vec3ToInt3(player->position), player->yaw, player->pitch, BLOCK_PLANKS);
+	Respond::NamedEntitySpawn(
+		broadcastOthersResponse,
+		player->entityId,
+		player->username,
+		Vec3ToInt3(player->position),
+		player->yaw,
+		player->pitch,
+		player->inventory[INVENTORY_HOTBAR].id
+	);
 
     for (Player* others : Betrock::Server::Instance().GetConnectedPlayers()) {
 		if (others == player) { continue; }
@@ -466,15 +495,15 @@ bool Client::PlayerPositionLook() {
 }
 
 bool Client::HoldingChange() {
-	int16_t slotId = EntryToShort(message, offset);
-	player->ChangeHeldItem(broadcastOthersResponse,slotId);
+	int16_t slot = EntryToShort(message, offset);
+	player->ChangeHeldItem(broadcastOthersResponse,slot);
 	return true;
 }
 
 bool Client::Animation() {
 	int32_t entityId = EntryToInteger(message, offset);
 	int8_t animation = EntryToByte(message, offset);
-	// TODO: Only send this to other clients
+	// Only send this to other clients
 	Respond::Animation(broadcastOthersResponse, entityId, animation);
 	return true;
 }
@@ -482,6 +511,12 @@ bool Client::Animation() {
 bool Client::EntityAction() {
 	int32_t entityId = EntryToInteger(message, offset);
 	int8_t action = EntryToByte(message, offset);
+	// some EntityMetadata info
+	// A BITMASK
+	// - Bit 0 is for Crouching
+	// - Bit 1 is for On Fire
+	// - Bit 2 is for Sitting
+	// All other bits are irrelevant, it looks like
 	switch(action) {
 		case 1:
 			player->crouching = true;
@@ -492,7 +527,8 @@ bool Client::EntityAction() {
 		default:
 			break;
 	}
-	//Respond::EntityAction(broadcastOthersResponse, entityId, action);
+	int8_t responseByte = (player->sitting << 2 | player->crouching << 1 | player->onFire);
+	Respond::EntityMetadata(broadcastOthersResponse, entityId, responseByte);
 	return true;
 }
 
@@ -586,17 +622,22 @@ bool Client::PlayerBlockPlacement(World* world) {
 			id = i.id;
 			amount = i.amount;
 			damage = i.damage;
-			Respond::SetSlot(response, 0, INVENTORY_HOTBAR + player->currentHotbarSlot, id, amount, damage);
 		} else {
-			player->DecrementHotbar();
+			player->DecrementHotbar(response);
 		}
 	}
 	return true;
 }
 
+bool Client::CloseWindow() {
+	int8_t window 	= EntryToByte(message, offset);
+	activeWindow = INVENTORY_NONE;
+	return true;
+}
+
 bool Client::WindowClick() {
-	int8_t windowId 	= EntryToByte(message, offset);
-	int16_t slotId 		= EntryToShort(message,offset);
+	int8_t window 		= EntryToByte(message, offset);
+	int16_t slot 		= EntryToShort(message,offset);
 	int8_t rightClick 	= EntryToByte(message, offset);
 	int16_t actionNumber= EntryToShort(message,offset);
 	int8_t shift 		= EntryToByte(message, offset);
@@ -607,7 +648,7 @@ bool Client::WindowClick() {
 		itemCount		= EntryToByte(message, offset);
 		itemUses		= EntryToShort(message,offset);
 	}
-	player->ClickedSlot(response,windowId,slotId,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
+	player->ClickedSlot(response,window,slot,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
 	return true;
 }
 

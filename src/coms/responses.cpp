@@ -25,7 +25,7 @@ void Respond::ChatMessage(std::vector<uint8_t> &response, std::string message, b
     response.push_back((uint8_t)Packet::ChatMessage);
     AppendString16ToVector(response,message);
     if (toConsole) {
-        std::cout << message << std::endl;
+        Betrock::Logger::Instance().ChatMessage(message);
     }
 }
 
@@ -195,6 +195,14 @@ void Respond::EntityTeleport(std::vector<uint8_t> &response, int32_t& entityId, 
     AppendIntegerToVector(response, position.z);
     response.push_back(yaw);
     response.push_back(pitch);
+}
+
+void Respond::EntityMetadata(std::vector<uint8_t> &response, int32_t& entityId, int8_t byte) {
+    response.push_back((uint8_t)Packet::EntityMetadata);
+    AppendIntegerToVector(response, entityId);
+    response.push_back(0);
+    response.push_back(byte);
+    response.push_back(127);
 }
 
 void Respond::PreChunk(std::vector<uint8_t> &response, int32_t x, int32_t z, bool mode) {

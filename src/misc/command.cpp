@@ -8,6 +8,30 @@ std::vector<std::string> command;
 std::string failureReason;
 
 // Get and Set the time
+void Command::Pose(Player* player) {	
+	// Set the time
+	if (command.size() > 1) {
+		if (command[1] == "crouch") {
+			player->crouching = !player->crouching;
+		} else if (command[1] == "fire") {
+			player->onFire = !player->onFire;
+		} else if (command[1] == "sit") {
+			player->sitting = !player->sitting;
+		} else {
+			failureReason = "Invalid pose";
+			return;
+		}
+		std::vector<uint8_t> broadcastResponse;
+		int8_t responseByte = (player->sitting << 2 | player->crouching << 1 | player->onFire);
+		Respond::ChatMessage(response, "§7Set Pose " + std::to_string((int)responseByte));
+		Respond::EntityMetadata(broadcastResponse, player->entityId, responseByte);
+		BroadcastToPlayers(broadcastResponse);
+		failureReason = "";
+		return;
+	}
+}
+
+// Get and Set the time
 void Command::Time() {
 	auto &server = Betrock::Server::Instance();
 	auto serverTime = server.GetServerTime();
@@ -26,6 +50,7 @@ void Command::Time() {
 		failureReason = "";
 	}
 }
+
 void Command::Teleport(Player* player) {
 	// Set the time
 	if (command.size() > 3) {
@@ -195,6 +220,8 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 		Time();
     } else if (command[0] == "tp") {
 		Teleport(player);
+	} else if (command[0] == "pose") {
+		Pose(player);
     } else if (command[0] == "give") {
 		Give(player);
 	} else if (command[0] == "health") {

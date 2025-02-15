@@ -5,6 +5,7 @@
 #include <thread>
 #include <unordered_map>
 #include <vector>
+#include <stdexcept>
 
 #include "client.h"
 #include "player.h"
@@ -13,6 +14,7 @@
 #include "plugins.h"
 
 #define PROTOCOL_VERSION 14
+#define TICK_SPEED 20
 
 namespace Betrock {
 
@@ -90,6 +92,7 @@ class Server {
 			// Accept connections
 			client_fd = accept(server.serverFd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
 			if (client_fd < 0) {
+				if (!server.alive) break;
 				perror("Accept failed");
 				continue;
 			}
@@ -141,7 +144,7 @@ class Server {
 	atomic_uint64_t serverTime = 0;
 	WorldManagerMap worldManagers;
 	std::unordered_map<int8_t, std::jthread> worldManagerThreads;
-	std::vector<Plugin> plugins;
+	std::vector<std::unique_ptr<Plugin>> plugins;
 	Vec3 spawnPoint;
 
 	std::mutex connectedPlayersMutex;
