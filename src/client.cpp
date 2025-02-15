@@ -257,7 +257,7 @@ void HandlePacket(Client &client) {
 				client.DisconnectClient();
 				break;
 			default:
-				Betrock::Server::Instance().Log("Unhandled Server-bound packet: " + std::to_string(packetIndex), LOG_WARNING);
+				Betrock::Logger::Instance().Log("Unhandled Server-bound packet: " + std::to_string(packetIndex), LOG_WARNING);
 				break;
 		}
 		if (client.player != nullptr && client.player->connectionStatus == ConnectionStatus::Connected) {
@@ -343,16 +343,15 @@ bool Client::LoginRequest() {
 
 	if (protocolVersion != PROTOCOL_VERSION) {
 		// If client has wrong protocol, close
-		std::cout << "Client has incorrect Protocol " << protocolVersion << "!" << std::endl;
 		Disconnect(player,"Wrong Protocol Version!");
 		return false;
 	}
 	// Accept the Login
 	Respond::Login(response,player->entityId,1,0);
-	Betrock::Server::Instance().Log(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" << std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")", LOG_INFO);
+	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
 	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.", 0);
 
-  const auto &spawnPoint = server.GetSpawnPoint();
+  	const auto &spawnPoint = server.GetSpawnPoint();
 
 	// Set the Respawn Point, Time and Player Health
 	Respond::SpawnPoint(response,Vec3ToInt3(spawnPoint));
@@ -376,7 +375,15 @@ bool Client::LoginRequest() {
 	SendNewChunks();
 
 	// Create the player for other players
-	Respond::NamedEntitySpawn(broadcastOthersResponse, player->entityId, player->username, Vec3ToInt3(player->position), player->yaw, player->pitch, BLOCK_PLANKS);
+	Respond::NamedEntitySpawn(
+		broadcastOthersResponse,
+		player->entityId,
+		player->username,
+		Vec3ToInt3(player->position),
+		player->yaw,
+		player->pitch,
+		player->inventory[INVENTORY_HOTBAR].id
+	);
 
     for (Player* others : Betrock::Server::Instance().GetConnectedPlayers()) {
 		if (others == player) { continue; }

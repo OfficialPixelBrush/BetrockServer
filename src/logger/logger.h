@@ -9,24 +9,26 @@
 namespace Betrock {
 class Logger {
     private:
-        Logger() = default;
-        ~Logger() = default;
+        std::ofstream logFile;
+        int8_t logLevel = LOG_ALL;
 
-        // =====================================================
-        // delete copy and move constructor and assignment operator to be sure no one
-        // can create a second Logger instance
-        // (deleting is basically making them unavailable)
+        Logger() {
+            logFile.open("logfile.log", std::ios::out | std::ios::app);
+            if (!logFile.is_open()) {
+                throw std::runtime_error("Failed to open log file");
+            }
+        }
+        
+        ~Logger() {
+            if (logFile.is_open()) {
+                logFile.close();
+            }
+        }
 
         Logger(const Logger &) = delete;
         Logger(const Logger &&) = delete;
-
         Logger &operator=(const Logger &) = delete;
         Logger &operator=(const Logger &&) = delete;
-
-	    // =====================================================
-
-        int8_t logLevel = LOG_ALL;
-        std::ofstream logFile;
     public:
         static Logger &Instance() {
             // this will create the server instance just once and just return a
@@ -34,9 +36,11 @@ class Logger {
             static Logger instance;
             return instance;
         }
-        Logger(std::string filename = "log.txt");
+        void Log(std::string message, int level = 0);
+        void Message(std::string message);
         void Info(std::string message);
         void Warning(std::string message);
         void Danger(std::string message);
+        void SetLogLevel(int8_t logLevel = LOG_ALL) { this->logLevel = logLevel; }
 };
 }

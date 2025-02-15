@@ -18,12 +18,14 @@ DESTINATION "${CMAKE_BINARY_DIR}/scripts")
 configure_file(${CMAKE_SOURCE_DIR}/src/misc/version.h.in ${CMAKE_SOURCE_DIR}/src/misc/version.h)
 
 include_directories(
-    "${PROJECT_SOURCE_DIR}/src/plugins"
     "${PROJECT_SOURCE_DIR}/src/coms"
     "${PROJECT_SOURCE_DIR}/src/enums"
-    "${PROJECT_SOURCE_DIR}/src/objects"
-    "${PROJECT_SOURCE_DIR}/src/misc"
     "${PROJECT_SOURCE_DIR}/src/generators"
+    "${PROJECT_SOURCE_DIR}/src/logger"
+    "${PROJECT_SOURCE_DIR}/src/misc/helpers"
+    "${PROJECT_SOURCE_DIR}/src/misc"
+    "${PROJECT_SOURCE_DIR}/src/objects"
+    "${PROJECT_SOURCE_DIR}/src/plugins"
     "${PROJECT_SOURCE_DIR}/src/"
     ${LUA_INCLUDE_DIR}
 )
@@ -39,11 +41,15 @@ add_executable(
     
     src/generators/generator.cpp
 
+    src/logger/logger.cpp
+    src/logger/style.cpp
+
+    src/misc/helpers/helper.cpp
+    src/misc/helpers/luahelper.cpp
+
     src/misc/command.cpp
     src/misc/gamerules.cpp
-    src/misc/helper.cpp
     src/misc/lighting.cpp
-    src/misc/luahelper.cpp
 
     src/objects/entity.cpp
     src/objects/player.cpp
@@ -54,7 +60,6 @@ add_executable(
 
     src/client.cpp
     src/config.cpp
-    src/logger.cpp
     src/debug.cpp
     src/main.cpp
     src/server.cpp

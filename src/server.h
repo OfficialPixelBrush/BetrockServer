@@ -147,6 +147,5 @@ class Server {
 
 	std::mutex connectedPlayersMutex;
 	std::mutex entityIdMutex;
-	Logger logger;
 };
 } // namespace Betrock

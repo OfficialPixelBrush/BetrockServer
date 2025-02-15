@@ -25,7 +25,7 @@ void Respond::ChatMessage(std::vector<uint8_t> &response, std::string message, b
     response.push_back((uint8_t)Packet::ChatMessage);
     AppendString16ToVector(response,message);
     if (toConsole) {
-        Betrock::Server::Instance().Log(message, LOG_INFO);
+        Betrock::Logger::Instance().Info(message);
     }
 }
 

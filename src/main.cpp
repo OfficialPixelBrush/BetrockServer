@@ -11,16 +11,17 @@ void __attribute__((noreturn)) HandleSignal(int) {
 
 int main() {
 	auto &server = Betrock::Server::Instance();
+	auto &logger = Betrock::Logger::Instance();
 
 	signal(SIGINT, HandleSignal);  // Handle Ctrl+C
 	signal(SIGTERM, HandleSignal); // Handle termination signals
 
-	std::cout << "Starting " << PROJECT_NAME << " version " << PROJECT_VERSION_STRING << std::endl;
+	logger.Log("Starting " + std::string(PROJECT_NAME) + " version " + std::string(PROJECT_VERSION_STRING));
 
 	server.LoadConfig();
 
 	auto port = Betrock::GlobalConfig::Instance().GetAsNumber<uint16_t>("server-port");
-	std::cout << "Starting " << PROJECT_NAME " on *:" << port << std::endl;
+	logger.Log("Starting " + std::string(PROJECT_NAME) + " on *:" + std::to_string(port));
 
 	if (!server.SocketBootstrap(port)) {
 		return EXIT_FAILURE;

@@ -52,7 +52,7 @@ void Disconnect(Player* player, std::string message) {
 	player->connectionStatus = ConnectionStatus::Disconnected;
 	Respond::Disconnect(disconnectResponse, player, message);
 	SendToPlayer(disconnectResponse, player);
-	Betrock::Server::Instance().Log(player->username + " has disconnected. (" + message + ")", LOG_INFO);
+	Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + message + ")");
 }
 
 // Disconnects all currently connected Players
