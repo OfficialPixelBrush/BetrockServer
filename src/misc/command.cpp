@@ -7,7 +7,7 @@ std::vector<uint8_t> response;
 std::vector<std::string> command;
 std::string failureReason;
 
-// Get and Set the time
+// Toggle the players pose bits
 void Command::Pose(Player* player) {	
 	// Set the time
 	if (command.size() > 1) {
@@ -25,6 +25,24 @@ void Command::Pose(Player* player) {
 		int8_t responseByte = (player->sitting << 2 | player->crouching << 1 | player->onFire);
 		Respond::ChatMessage(response, "§7Set Pose " + std::to_string((int)responseByte));
 		Respond::EntityMetadata(broadcastResponse, player->entityId, responseByte);
+		BroadcastToPlayers(broadcastResponse);
+		failureReason = "";
+		return;
+	}
+}
+
+// Play a sound at the players location
+void Command::Sound(Player* player) {	
+	// Set the time
+	if (command.size() > 1) {
+		int32_t sound = std::stoi(command[1]);
+		int32_t extraData = 0;
+		if (command.size() > 2) {
+			extraData = std::stoi(command[2]);
+		}
+		std::vector<uint8_t> broadcastResponse;
+		Respond::Soundeffect(broadcastResponse,sound,Vec3ToInt3(player->position),extraData);
+		Respond::ChatMessage(response, "§7Playing Sound " + std::to_string(sound));
 		BroadcastToPlayers(broadcastResponse);
 		failureReason = "";
 		return;
@@ -222,6 +240,8 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 		Teleport(player);
 	} else if (command[0] == "pose") {
 		Pose(player);
+	} else if (command[0] == "sound") {
+		Sound(player);
     } else if (command[0] == "give") {
 		Give(player);
 	} else if (command[0] == "health") {

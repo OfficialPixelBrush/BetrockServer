@@ -540,13 +540,25 @@ bool Client::PlayerDigging(World* world) {
 	int8_t face = EntryToByte(message, offset);
 
 	Int3 pos = XyzToInt3(x,y,z);
-	// TODO: Figure out why this lags and sometimes doesn't work?
-	// Maybe because I don't parse multi-packets?
 	if (status == 2 || player->creativeMode) {
 		Respond::BlockChange(broadcastResponse,pos,0,0);
 		Block b = world->BreakBlock(pos);
+		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,b.type);
 		if (doTileDrops && !player->creativeMode) {
-			//Respond::PickupSpawn(broadcastResponse,latestEntityId,b.type,1,b.meta,pos,0,0,0);
+			// TODO: This works now,
+			// but results in entities piling up
+			// We need server-side managed entities
+			/*
+			Respond::PickupSpawn(
+				broadcastResponse,
+				Betrock::Server::Instance().GetLatestEntityId(),
+				b.type,
+				1,
+				b.meta,
+				Int3ToEntityInt3(pos),
+				0,0,0
+			);
+			*/
 			player->Give(response,b.type,1,b.meta);
 		}
 	}
@@ -615,7 +627,6 @@ bool Client::PlayerBlockPlacement(World* world) {
 		Item i = player->inventory[INVENTORY_HOTBAR+player->currentHotbarSlot];
 		Respond::BlockChange(broadcastResponse,pos,(int8_t)i.id,(int8_t)i.damage);
 		world->PlaceBlock(pos,(int8_t)i.id,(int8_t)i.damage);
-		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,i.id);
 		// Immediately give back item if we're in creative mode
 		if (player->creativeMode) {
 			Item i = player->GetHeldItem();

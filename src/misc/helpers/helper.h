@@ -127,3 +127,7 @@ std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t comp
 
 int64_t GetChunkHash(int32_t x, int32_t z);
 Int3 DecodeChunkHash(int64_t hash);
+
+Int3 Int3ToEntityInt3(Int3 pos);
+Int3 Vec3ToEntityInt3(Vec3 pos);
+Vec3 EntityInt3ToVec3(Int3 pos);

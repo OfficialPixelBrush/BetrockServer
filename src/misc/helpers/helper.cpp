@@ -453,3 +453,27 @@ Int3 DecodeChunkHash(int64_t hash) {
         (int32_t)(hash & 0xFFFFFFFF)
     };
 }
+
+Int3 Int3ToEntityInt3(Int3 pos) {
+	return Int3 {
+		pos.x << 5 | 16,
+		pos.y << 5 | 16,
+		pos.z << 5 | 16
+	};
+}
+
+Int3 Vec3ToEntityInt3(Vec3 pos) {
+	return Int3 {
+		int32_t(pos.x*32),
+		int32_t(pos.y*32),
+		int32_t(pos.z*32)
+	};
+}
+
+Vec3 EntityInt3ToVec3(Int3 pos) {
+	return Vec3 {
+		double(pos.x)/32,
+		double(pos.y)/32,
+		double(pos.z)/32
+	};
+}
