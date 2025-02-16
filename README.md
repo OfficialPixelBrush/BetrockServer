@@ -2,6 +2,12 @@
 A Server-Engine written in C++, made to work with Minecraft Beta 1.7.3. The goal being to have a semi-modern Server Engine that people can muck about with however they like, and to not have to deal with plugins that're over a decade old.
 ![BetrockServer Logo](media/betrock_server_logo.png)
 
+## Features
+(as of 0.1.14)
+- Players can connect, chat, build and explore
+- Commands
+- Lua-driven World Generation
+
 ## Getting Started
 How do you run your own BetrockServer instance?
 
@@ -32,20 +38,6 @@ cmake --build build
 ```bash
 cpack --config build/CPackConfig.cmake -G TGZ
 ```
-## Progress
-- [x] Handshake 
-- [x] Login
-- [x] Generate a chunk
-- [x] Compress the chunk with zlib
-- [x] Send the chunk data
-- [x] Have a player join
-- [x] Fix Client-side crash
-- [x] Show Players on other Clients
-- [x] Saving and Loading
-- [x] Lua World Generation
-- [ ] Show other players crouching
-- [ ] Add McRegion Support
-- [ ] Properly handle inventory
 
 ## Resources
 - [beta-wiki by mudkipdev](https://github.com/mudkipdev/beta-wiki)
