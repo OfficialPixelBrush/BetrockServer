@@ -299,14 +299,6 @@ Int3 Vec3ToRelativeInt3(Vec3 previousPosition, Vec3 currentPosition) {
 	};
 }
 
-Int3 Vec3ToCompressedInt3(Vec3 position) {
-	return Int3 {
-		static_cast<int32_t>(position.x*32.0),
-		static_cast<int32_t>(position.y*32.0),
-		static_cast<int32_t>(position.z*32.0)
-	};
-}
-
 std::vector<std::string> packetLabels {
 	"0x00 KeepAlive",
 	"0x01 LoginRequest",

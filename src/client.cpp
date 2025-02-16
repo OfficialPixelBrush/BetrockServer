@@ -406,9 +406,28 @@ bool Client::LoginRequest() {
 		player->inventory[INVENTORY_HOTBAR].id
 	);
 
+	// Spawn the other players for the new client
     for (Player* others : Betrock::Server::Instance().GetConnectedPlayers()) {
 		if (others == player) { continue; }
-		Respond::NamedEntitySpawn(response, others->entityId, others->username, Vec3ToInt3(others->position), others->yaw, others->pitch, BLOCK_PLANKS);
+		Respond::NamedEntitySpawn(
+			response,
+			others->entityId,
+			others->username,
+			Vec3ToInt3(others->position),
+			others->yaw,
+			others->pitch,
+			others->inventory[INVENTORY_HOTBAR + others->currentHotbarSlot].id
+		);
+		
+		// Apparently needed to entities show up where they need to
+		Respond::EntityTeleport(
+			response,
+			others->entityId,
+			Vec3ToEntityInt3(others->position),
+			ConvertFloatToPackedByte(others->yaw),
+			ConvertFloatToPackedByte(others->pitch)
+		);
+
     }
 	player->connectionStatus = ConnectionStatus::Connected;
 	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION), false);
@@ -458,7 +477,7 @@ bool Client::PlayerPosition() {
 	Respond::EntityTeleport(
 		broadcastOthersResponse,
 		player->entityId,
-		Vec3ToCompressedInt3(player->position),
+		Vec3ToEntityInt3(player->position),
 		ConvertFloatToPackedByte(player->yaw),
 		ConvertFloatToPackedByte(player->pitch)
 	);
