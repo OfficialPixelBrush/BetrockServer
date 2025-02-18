@@ -17,7 +17,6 @@ class World {
         std::filesystem::path dirPath;
         Chunk* GetChunk(int32_t x, int32_t z);
         void RemoveChunk(int32_t x, int32_t z);
-        void SaveChunk(int32_t x, int32_t z, const Chunk* chunk);
     public:
         int64_t seed;
         void Load(const std::string &extra = "");
@@ -31,4 +30,6 @@ class World {
         Int3 FindSpawnableBlock(Int3 position);
         void AddChunk(int32_t x, int32_t z, Chunk c);
         void DumpUnloadedChunks();
+        void SaveChunk(int32_t x, int32_t z, const Chunk* chunk);
+        bool LoadChunk(int32_t x, int32_t z);
 };

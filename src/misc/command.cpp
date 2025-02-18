@@ -277,6 +277,8 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 			Stop();
 		} else if (command[0] == "free") {
 			Free();
+		} else if (command[0] == "loaded") {
+			failureReason = std::to_string(Betrock::Server::Instance().GetWorldManager(player->worldId)->world.GetNumberOfChunks());
 		} else {
 			failureReason = "Command does not exist!";
 		}

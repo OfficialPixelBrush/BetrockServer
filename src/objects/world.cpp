@@ -19,6 +19,7 @@ void World::Load(const std::string& extra) {
         return;
     }
 
+    /*
     uint loadedChunks = 0;
 
     for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
@@ -34,67 +35,12 @@ void World::Load(const std::string& extra) {
             // Extract two integers (x, z) from the string using stringstream
             ss >> x >> comma >> z;
 
-            std::ifstream chunkFile (entry.path());
-            if (!chunkFile.is_open()) {
-                Betrock::Logger::Instance().Warning("Failed to load chunk " + std::string(entry.path()));
-                continue;
-            }      
-
-            // Get the length of the file
-            chunkFile.seekg(0, std::ios::end);
-            std::streamsize size = chunkFile.tellg();
-            chunkFile.seekg(0, std::ios::beg);
-
-            std::vector<char> buffer(size);
-            chunkFile.read(buffer.data(), size);
-            char* compressedChunk = buffer.data();
-
-            size_t compressedSize = size;
-            size_t decompressedSize = 0;
-
-            auto chunkData = DecompressChunk(compressedChunk,compressedSize,decompressedSize);
-
-            if (!chunkData) {
-                Betrock::Logger::Instance().Warning("Failed to decompress " + std::string(entry.path()));
-                continue;
-            }
-
-            Chunk c;
-            size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;
-            size_t nibbleDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*(CHUNK_HEIGHT/2);
-            for (size_t i = 0; i < decompressedSize; i++) {
-                if (i < blockDataSize) {
-                    // Block Data
-                    c.blocks[i].type = chunkData[i];
-                } else if (
-                    // Metadata
-                    i >= blockDataSize &&
-                    i <  blockDataSize+nibbleDataSize)
-                {
-                    c.blocks[(i%nibbleDataSize)*2  ].meta = (chunkData[i]     )&0xF;
-                    c.blocks[(i%nibbleDataSize)*2+1].meta = (chunkData[i] >> 4)&0xF;
-                } else if (
-                    // Block Light
-                    i >= blockDataSize+nibbleDataSize &&
-                    i <  blockDataSize+(nibbleDataSize*2))
-                {
-                    c.blocks[(i%nibbleDataSize)*2  ].lightBlock = (chunkData[i]     )&0xF;
-                    c.blocks[(i%nibbleDataSize)*2+1].lightBlock = (chunkData[i] >> 4)&0xF;
-                } else if (
-                    // Sky Light
-                    i >= blockDataSize+(nibbleDataSize*2) &&
-                    i <  blockDataSize+(nibbleDataSize*3))
-                {
-                    c.blocks[(i%nibbleDataSize)*2  ].lightSky = (chunkData[i]     )&0xF;
-                    c.blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
-                }
-            }
-            AddChunk(x,z,c);
-            chunkFile.close();
+            LoadChunk(x,z);
             loadedChunks++;
         }
     }
     std::cout << "Loaded " << loadedChunks << " Chunks from Disk" << std::endl;
+    */
 }
 
 void World::Save(const std::string &extra) {
@@ -166,6 +112,88 @@ void World::DumpUnloadedChunks() {
         RemoveChunk(pos.x, pos.z);
     }
 }
+
+bool World::LoadChunk(int32_t x, int32_t z) {
+    if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
+        std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
+        return false;
+    }
+
+    // Create the chunk entry file path based on x and z coordinates
+    std::filesystem::path entryPath = dirPath / (std::to_string(x) + "_" + std::to_string(z) + ".cnk");
+
+    // Check if the entry file exists and has a .cnk extension
+    if (std::filesystem::exists(entryPath) && std::filesystem::is_regular_file(entryPath) && entryPath.extension() == ".cnk") {
+        std::string s;
+        std::stringstream ss(entryPath.stem().string());  // Get the file name without extension
+
+        // Read the chunk coordinates
+        int x, z;
+        char comma;  // To capture the comma delimiter
+
+        // Extract two integers (x, z) from the string using stringstream
+        ss >> x >> comma >> z;
+
+        std::ifstream chunkFile (entryPath);
+        if (!chunkFile.is_open()) {
+            Betrock::Logger::Instance().Warning("Failed to load chunk " + std::string(entryPath));
+            return false;
+        }      
+
+        // Get the length of the file
+        chunkFile.seekg(0, std::ios::end);
+        std::streamsize size = chunkFile.tellg();
+        chunkFile.seekg(0, std::ios::beg);
+
+        std::vector<char> buffer(size);
+        chunkFile.read(buffer.data(), size);
+        char* compressedChunk = buffer.data();
+
+        size_t compressedSize = size;
+        size_t decompressedSize = 0;
+
+        auto chunkData = DecompressChunk(compressedChunk,compressedSize,decompressedSize);
+
+        if (!chunkData) {
+            Betrock::Logger::Instance().Warning("Failed to decompress " + std::string(entryPath));
+            return false;
+        }
+
+        Chunk c;
+        size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;
+        size_t nibbleDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*(CHUNK_HEIGHT/2);
+        for (size_t i = 0; i < decompressedSize; i++) {
+            if (i < blockDataSize) {
+                // Block Data
+                c.blocks[i].type = chunkData[i];
+            } else if (
+                // Metadata
+                i >= blockDataSize &&
+                i <  blockDataSize+nibbleDataSize)
+            {
+                c.blocks[(i%nibbleDataSize)*2  ].meta = (chunkData[i]     )&0xF;
+                c.blocks[(i%nibbleDataSize)*2+1].meta = (chunkData[i] >> 4)&0xF;
+            } else if (
+                // Block Light
+                i >= blockDataSize+nibbleDataSize &&
+                i <  blockDataSize+(nibbleDataSize*2))
+            {
+                c.blocks[(i%nibbleDataSize)*2  ].lightBlock = (chunkData[i]     )&0xF;
+                c.blocks[(i%nibbleDataSize)*2+1].lightBlock = (chunkData[i] >> 4)&0xF;
+            } else if (
+                // Sky Light
+                i >= blockDataSize+(nibbleDataSize*2) &&
+                i <  blockDataSize+(nibbleDataSize*3))
+            {
+                c.blocks[(i%nibbleDataSize)*2  ].lightSky = (chunkData[i]     )&0xF;
+                c.blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
+            }
+        }
+        AddChunk(x,z,c);
+        chunkFile.close();
+    }
+    return true;
+} 
 
 void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
     Int3 pos = Int3{x,0,z};

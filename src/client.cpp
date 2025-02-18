@@ -77,9 +77,11 @@ void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldMan
     // Get existing chunk data
     auto chunkData = wm->world.GetChunkData(position);
     if (!chunkData) {
-        // Queue chunk generation if missing
-        wm->AddChunkToQueue(position.x, position.z, player);
-        Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
+		// Try to load chunk
+		wm->world.LoadChunk(position.x,position.z);
+		// Queue chunk generation if missing
+		wm->AddChunkToQueue(position.x, position.z, player);
+		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
         return;
     }
     
