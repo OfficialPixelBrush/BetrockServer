@@ -16,7 +16,7 @@ class Respond {
         static void KeepAlive(std::vector<uint8_t> &response);
         static void Login(std::vector<uint8_t> &response, int32_t& entityId, int64_t seed, int8_t dimension);
         static void Handshake(std::vector<uint8_t> &response);
-        static void ChatMessage(std::vector<uint8_t> &response, std::string message, bool toConsole = 1);
+        static void ChatMessage(std::vector<uint8_t> &response, std::string message);
         static void Time(std::vector<uint8_t> &response, int64_t time);
         static void EntityEquipment(std::vector<uint8_t> &response, int32_t entityId, int16_t slotId, int16_t itemId, int16_t damage);
         static void SpawnPoint(std::vector<uint8_t> &response, Int3 position);

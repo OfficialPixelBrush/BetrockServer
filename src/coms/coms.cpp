@@ -3,13 +3,13 @@
 #include "server.h"
 
 // Send the contents of response to the specified Player
-void SendToPlayer(std::vector<uint8_t> &response, Player* player) {
+void SendToPlayer(std::vector<uint8_t> &response, Player* player, bool autoclear) {
 	if (response.empty() || !player || player->connectionStatus <= ConnectionStatus::Disconnected) {
 		return;
 	}
 
 	if (debugSentPacketType) {
-		std::cout << "Sending " << PacketIdToLabel((Packet)response[0]) << " to " << player->username << "(" << player->entityId << ")" << "! (" << response.size() << " Bytes)" << std::endl;
+		Betrock::Logger::Instance().Debug("Sending " + PacketIdToLabel((Packet)response[0]) + " to " + player->username + "(" + std::to_string(player->entityId) + ") ! (" + std::to_string(response.size()) + " Bytes)");
 	}
 		
 	if (debugSentBytes) {
@@ -27,10 +27,13 @@ void SendToPlayer(std::vector<uint8_t> &response, Player* player) {
 		perror("send");
 		return;
 	}
+	if (autoclear) {
+		response.clear();
+	}
 }
 
 // Sent the specified message to all currently connected Players
-void BroadcastToPlayers(std::vector<uint8_t> &response, Player* sender) {
+void BroadcastToPlayers(std::vector<uint8_t> &response, Player* sender, bool autoclear) {
 	if (response.empty()) {
 		return;
 	}
@@ -41,9 +44,12 @@ void BroadcastToPlayers(std::vector<uint8_t> &response, Player* sender) {
     for (Player *player : server.GetConnectedPlayers()) {
 		if (player == sender) { continue; }
 		if (player->connectionStatus == ConnectionStatus::Connected) {
-        	SendToPlayer(response,player);
+        	SendToPlayer(response, player, false);
 		}
     }
+	if (autoclear) {
+		response.clear();
+	}
 }
 
 // Disconnects the specified client immediately

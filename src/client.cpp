@@ -30,7 +30,7 @@ ssize_t Client::Setup() {
 
 void Client::PrintReceived(Packet packetType, ssize_t bytes_received) {
 	if (debugReceivedPacketType) {
-		std::cout << "Received " << PacketIdToLabel(packetType) << " from " << player->username << "! (" << bytes_received << " Bytes)" << std::endl;
+		Betrock::Logger::Instance().Debug("Received " + PacketIdToLabel(packetType) + " from " + player->username + "! (" + std::to_string(bytes_received) + " Bytes)");
 	}
 	if (debugReceivedBytes) {
 		for (uint i = 0; i < bytes_received; i++) {
@@ -185,7 +185,7 @@ void Client::Respond(ssize_t bytes_received) {
 	BroadcastToPlayers(broadcastResponse);
 	BroadcastToPlayers(broadcastOthersResponse, player);
 	if (debugNumberOfPacketBytes) {
-		std::cout << "--- " << offset << "/" << bytes_received << " Bytes Read from Packet ---" << std::endl << std::endl; 
+		Betrock::Logger::Instance().Debug("--- " + std::to_string(offset) + "/" + std::to_string(bytes_received) + " Bytes Read from Packet ---"); 
 	}
 }
 
@@ -206,7 +206,7 @@ void HandlePacket(Client &client) {
 
 	// Read packet bundle until end
 	if (debugReceivedBundleDelimiter) {
-		std::cout << "--- Start of Packet bundle ---" << std::endl;
+		Betrock::Logger::Instance().Debug("--- Start of Packet bundle ---");
 	}
 	while (client.offset < bytes_received && client.player->connectionStatus > ConnectionStatus::Disconnected) {
 		int8_t packetIndex = EntryToByte(client.message,client.offset);
@@ -346,7 +346,7 @@ bool Client::Handshake() {
 }
 
 bool Client::LoginRequest() {
-  auto &server = Betrock::Server::Instance();
+	auto &server = Betrock::Server::Instance();
 	if (player->connectionStatus != ConnectionStatus::LoggingIn) {
 		Disconnect(player,"Expected Login.");
 		return false;
@@ -354,11 +354,7 @@ bool Client::LoginRequest() {
 
 	// Login response
 	int protocolVersion = EntryToInteger(message,offset);
-	std::string username = EntryToString16(message,offset); // Get username again
-	if (username != player->username) {
-		Disconnect(player,"Client has mismatched username.");
-		return false;
-	} 
+	std::string username = EntryToString16(message,offset);
 	EntryToLong(message,offset); // Get map seed
 	EntryToByte(message,offset); // Get dimension
 
@@ -367,16 +363,22 @@ bool Client::LoginRequest() {
 		Disconnect(player,"Wrong Protocol Version!");
 		return false;
 	}
+
+	if (username != player->username) {
+		Disconnect(player,"Client has mismatched username.");
+		return false;
+	} 
 	// Accept the Login
 	Respond::Login(response,player->entityId,1,0);
 	Betrock::Logger::Instance().Message(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
-	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.", 0);
+	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.");
 
   	const auto &spawnPoint = server.GetSpawnPoint();
 
 	// Set the Respawn Point, Time and Player Health
 	Respond::SpawnPoint(response,Vec3ToInt3(spawnPoint));
 	Respond::Time(response,server.GetServerTime());
+	// This is usually only done if the players health isn't full upon joining
 	Respond::UpdateHealth(response,player->health);
 
 	// Fill the players inventory
@@ -392,8 +394,6 @@ bool Client::LoginRequest() {
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
 	player->Teleport(response,spawnPoint);
-	//SendChunksAroundPlayer(response,player);
-	//SendNewChunks();
 
 	// Create the player for other players
 	Respond::NamedEntitySpawn(
@@ -429,8 +429,10 @@ bool Client::LoginRequest() {
 		);
 
     }
+	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION));
+	SendToPlayer(response,player);
+	// ONLY SET THIS AFTER LOGIN HAS FINISHED
 	player->connectionStatus = ConnectionStatus::Connected;
-	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION), false);
 	return true;
 }
 
@@ -441,6 +443,7 @@ bool Client::ChatMessage() {
 		Command::Parse(command, player);
 	} else {
 		std::string sentChatMessage = "<" + player->username + "> " + chatMessage;
+		Betrock::Logger::Instance().ChatMessage(sentChatMessage);
 		Respond::ChatMessage(broadcastResponse,sentChatMessage);
 	}
 	return true;

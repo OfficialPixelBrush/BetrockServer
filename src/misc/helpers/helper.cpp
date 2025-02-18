@@ -298,80 +298,74 @@ Int3 Vec3ToRelativeInt3(Vec3 previousPosition, Vec3 currentPosition) {
 		static_cast<int8_t>(difference.z*32.0)
 	};
 }
+#include <array>
+#include <string>
 
-std::vector<std::string> packetLabels {
-	"0x00 KeepAlive",
-	"0x01 LoginRequest",
-	"0x02 Handshake",
-	"0x03 ChatMessage",
-	"0x04 TimeUpdate",
-	"0x05 EntityEquipment",
-	"0x06 SpawnPosition",
-	"0x07 UseEntity",
-	"0x08 UpdateHealth",
-	"0x09 Respawn",
-	"0x0A Player",
-	"0x0B PlayerPosition",
-	"0x0C PlayerLook",
-	"0x0D PlayerPositionLook",
-	"0x0E PlayerDigging",
-	"0x0F PlayerBlockPlacement",
-	"0x10 HoldingChange",
-	"0x11 UseBed",
-	"0x12 Animation",
-	"0x13 EntityAction???",
-	"0x14 NamedEntitySpawn",
-	"0x15 PickupSpawn",
-	"0x16 CollectItem",
-	"0x17 AddObjectVehicle",
-	"0x18 MobSpawn",
-	"0x19 Painting",
-	"0x1A -undocumented-",
-	"0x1B ???",
-	"0x1C EntityVelocity?",
-	"0x1D DestroyEntity",
-	"0x1E Entity",
-	"0x1F EntityRelativeMove",
-	"0x20 EntityLook",
-	"0x21 EntityLookAndRelativeMove",
-	"0x22 EntityTeleport",
-	"0x23 -undocumented-",
-	"0x24 -undocumented-",
-	"0x25 -undocumented-",
-	"0x26 EntityStatus?",
-	"0x27 AttachEntity?",
-	"0x28 EntityMetadata",
-	"0x29 -undocumented-",
-	"0x2A -undocumented-",
-	"0x2B -undocumented-",
-	"0x2C -undocumented-",
-	"0x2D -undocumented-",
-	"0x2E -undocumented-",
-	"0x2F -undocumented-",
-	"0x30 -undocumented-",
-	"0x31 -undocumented-",
-	"0x32 PreChunk",
-	"0x33 Chunk",
-	"0x34 MultiBlockChange",
-	"0x35 BlockChange",
-	"0x36 PlayNoteBlock",
-	"0x37 -undocumented-",
-	"0x38 -undocumented-",
-	"0x39 -undocumented-",
-	"0x3A -undocumented-",
-	"0x3B -undocumented-",
-	"0x3C Explosion"
-};
+constexpr std::array<const char*, 256> packetLabels = [] {
+    std::array<const char*, 256> labels{};
+    labels.fill("Unknown Packet"); // Default value for unhandled IDs
+
+    labels[0x00] = "0x00 KeepAlive";
+    labels[0x01] = "0x01 LoginRequest";
+    labels[0x02] = "0x02 Handshake";
+    labels[0x03] = "0x03 ChatMessage";
+    labels[0x04] = "0x04 TimeUpdate";
+    labels[0x05] = "0x05 EntityEquipment";
+    labels[0x06] = "0x06 SpawnPosition";
+    labels[0x07] = "0x07 UseEntity";
+    labels[0x08] = "0x08 UpdateHealth";
+    labels[0x09] = "0x09 Respawn";
+    labels[0x0A] = "0x0A Player";
+    labels[0x0B] = "0x0B PlayerPosition";
+    labels[0x0C] = "0x0C PlayerLook";
+    labels[0x0D] = "0x0D PlayerPositionLook";
+    labels[0x0E] = "0x0E PlayerDigging";
+    labels[0x0F] = "0x0F PlayerBlockPlacement";
+    labels[0x10] = "0x10 HoldingChange";
+    labels[0x11] = "0x11 UseBed";
+    labels[0x12] = "0x12 Animation";
+    labels[0x13] = "0x13 EntityAction???";
+    labels[0x14] = "0x14 NamedEntitySpawn";
+    labels[0x15] = "0x15 PickupSpawn";
+    labels[0x16] = "0x16 CollectItem";
+    labels[0x17] = "0x17 AddObjectVehicle";
+    labels[0x18] = "0x18 MobSpawn";
+    labels[0x19] = "0x19 Painting";
+    labels[0x1C] = "0x1C EntityVelocity?";
+    labels[0x1D] = "0x1D DestroyEntity";
+    labels[0x1E] = "0x1E Entity";
+    labels[0x1F] = "0x1F EntityRelativeMove";
+    labels[0x20] = "0x20 EntityLook";
+    labels[0x21] = "0x21 EntityLookAndRelativeMove";
+    labels[0x22] = "0x22 EntityTeleport";
+    labels[0x26] = "0x26 EntityStatus?";
+    labels[0x27] = "0x27 AttachEntity?";
+    labels[0x28] = "0x28 EntityMetadata";
+    labels[0x32] = "0x32 PreChunk";
+    labels[0x33] = "0x33 Chunk";
+    labels[0x34] = "0x34 MultiBlockChange";
+    labels[0x35] = "0x35 BlockChange";
+    labels[0x36] = "0x36 PlayNoteBlock";
+    labels[0x3C] = "0x3C Explosion";
+    labels[0x3D] = "0x3D Sound effect";
+    labels[0x46] = "0x46 New/Valid State";
+    labels[0x47] = "0x47 Thunderbolt";
+    labels[0x64] = "0x64 Open window";
+    labels[0x65] = "0x65 Close window";
+    labels[0x66] = "0x66 Window click";
+    labels[0x67] = "0x67 Set slot";
+    labels[0x68] = "0x68 Window items";
+    labels[0x69] = "0x69 Update progress bar";
+    labels[0x6A] = "0x6A Transaction";
+    labels[0x82] = "0x82 Update Sign";
+    labels[0x83] = "0x83 Map Data";
+    labels[0xFF] = "0xFF Disconnect";
+
+    return labels;
+}();
 
 std::string PacketIdToLabel(Packet packet) {
-	uint8_t id = (uint8_t)packet;
-	if (id == 255) {
-		return "0xFF Disconnect";
-	}
-	if (id > packetLabels.size()) {
-		return std::to_string(id);
-	}
-	return packetLabels[id];
+    return packetLabels[(uint8_t)packet];
 }
 
 int16_t GetBlockIndex(Int3 position) {

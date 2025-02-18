@@ -21,12 +21,9 @@ void Respond::Handshake(std::vector<uint8_t> &response) {
     AppendString16ToVector(response,"-");
 }
 
-void Respond::ChatMessage(std::vector<uint8_t> &response, std::string message, bool toConsole) {
+void Respond::ChatMessage(std::vector<uint8_t> &response, std::string message) {
     response.push_back((uint8_t)Packet::ChatMessage);
     AppendString16ToVector(response,message);
-    if (toConsole) {
-        Betrock::Logger::Instance().ChatMessage(message);
-    }
 }
 
 void Respond::Time(std::vector<uint8_t> &response, int64_t time) {

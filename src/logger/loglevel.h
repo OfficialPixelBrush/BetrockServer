@@ -7,5 +7,6 @@ enum LogLevel {
     LOG_INFO    =  4,
     LOG_WARNING =  8,
     LOG_ERROR   = 16,
-    LOG_ALL     = LOG_ERROR | LOG_WARNING | LOG_INFO | LOG_MESSAGE | LOG_CHAT
+    LOG_DEBUG   = 32,
+    LOG_ALL     = LOG_DEBUG | LOG_ERROR | LOG_WARNING | LOG_INFO | LOG_MESSAGE | LOG_CHAT
 };

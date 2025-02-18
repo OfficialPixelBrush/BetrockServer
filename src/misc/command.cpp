@@ -212,13 +212,15 @@ void Command::Creative(Player* player) {
 }
 
 void Command::Stop() {
-	Respond::ChatMessage(response, "§7Stopping server",1);
+	Respond::ChatMessage(response, "§7Stopping server");
+	Betrock::Logger::Instance().Info("Stopping server");
 	Betrock::Server::Instance().Stop();
 	failureReason = "";
 }
 
 void Command::Save() {
-	Respond::ChatMessage(response, "§7Saving all worlds",1);
+	Respond::ChatMessage(response, "§7Saving all worlds");
+	Betrock::Logger::Instance().Info("Saving all worlds");
 	Betrock::Server::Instance().SaveAllWorlds();
 	failureReason = "";
 }
