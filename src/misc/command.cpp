@@ -72,13 +72,18 @@ void Command::Time() {
 void Command::Teleport(Player* player) {
 	// Set the time
 	if (command.size() > 3) {
-		int32_t x = std::stol(command[1].c_str());
-		int32_t y = std::stol(command[2].c_str());
-		int32_t z = std::stol(command[3].c_str());
-		Int3 tpGoal = {x,y,z};
-		player->Teleport(response,Int3ToVec3(tpGoal));
-		Respond::ChatMessage(response, "§7Teleported " + std::to_string(x) + ", "  + std::to_string(y) + ", " + std::to_string(z));
-		failureReason = "";
+		try {
+			int32_t x = std::stoi(command[1].c_str());
+			int32_t y = std::stoi(command[2].c_str());
+			int32_t z = std::stoi(command[3].c_str());
+			// Can only really fail on the stoi
+			Int3 tpGoal = {x,y,z};
+			player->Teleport(response,Int3ToVec3(tpGoal));
+			Respond::ChatMessage(response, "§7Teleported " + std::to_string(x) + ", "  + std::to_string(y) + ", " + std::to_string(z));
+			failureReason = "";
+		} catch (const std::exception &e) {
+			failureReason = "Invalid destination given!";
+		}
 	}
 }
 
@@ -88,13 +93,12 @@ void Command::Give(Player* player) {
 		int8_t amount = -1;
 		int8_t metadata = 0;
 		if (command.size() > 2) {
-			metadata = std::stoi(command[2].c_str());
+			metadata = SafeStringToInt(command[2].c_str());
 		}
 		if (command.size() > 3) {
-			metadata = std::stoi(command[2].c_str());
-			amount = std::stoi(command[3].c_str());
+			amount = SafeStringToInt(command[3].c_str());
 		}
-		int16_t itemId = std::stoi(command[1].c_str());
+		int16_t itemId = SafeStringToInt(command[1].c_str());
 		if (
 			(itemId > BLOCK_AIR && itemId < BLOCK_MAX) ||
 			(itemId >= ITEM_SHOVEL_IRON && itemId < ITEM_MAX)
@@ -207,15 +211,15 @@ void Command::Creative(Player* player) {
 	failureReason = "";
 }
 
-void Command::Chunk(Player* player) {
-	SendChunksAroundPlayer(response, player);
-	//Respond::ChatMessage(response, "§7Generated " + std::to_string(numberOfNewChunks) + " Chunks around player");
+void Command::Stop() {
+	Respond::ChatMessage(response, "§7Stopping server",1);
+	Betrock::Server::Instance().Stop();
 	failureReason = "";
 }
 
-void Command::Stop() {
-	Betrock::Server::Instance().Stop();
-	Respond::ChatMessage(response, "§7Stopping Server",1);
+void Command::Save() {
+	Respond::ChatMessage(response, "§7Saving all worlds",1);
+	Betrock::Server::Instance().SaveAllWorlds();
 	failureReason = "";
 }
 
@@ -234,36 +238,40 @@ void Command::Parse(std::string &rawCommand, Player* player) {
         command.push_back(s);
     }
 
-    if (command[0] == "time") {
-		Time();
-    } else if (command[0] == "tp") {
-		Teleport(player);
-	} else if (command[0] == "pose") {
-		Pose(player);
-	} else if (command[0] == "sound") {
-		Sound(player);
-    } else if (command[0] == "give") {
-		Give(player);
-	} else if (command[0] == "health") {
-		Health(player);
-	} else if (command[0] == "kill") {
-		Kill(player);
-	} else if (command[0] == "summon") {
-		Summon(player);
-	} else if (command[0] == "gamerule") {
-		Gamerule(player);
-	} else if (command[0] == "kick") {
-		Kick(player);
-	} else if (command[0] == "spawn") {
-		Spawn(player);
-	} else if (command[0] == "creative") {
-		Creative(player);
-	} else if (command[0] == "chunk") {
-		Chunk(player);
-	} else if (command[0] == "stop") {
-		Stop();
-	} else {
-		failureReason = "Command does not exist";
+	try {
+		if (command[0] == "time") {
+			Time();
+		} else if (command[0] == "tp") {
+			Teleport(player);
+		} else if (command[0] == "pose") {
+			Pose(player);
+		} else if (command[0] == "sound") {
+			Sound(player);
+		} else if (command[0] == "give") {
+			Give(player);
+		} else if (command[0] == "health") {
+			Health(player);
+		} else if (command[0] == "kill") {
+			Kill(player);
+		} else if (command[0] == "summon") {
+			Summon(player);
+		} else if (command[0] == "gamerule") {
+			Gamerule(player);
+		} else if (command[0] == "kick") {
+			Kick(player);
+		} else if (command[0] == "spawn") {
+			Spawn(player);
+		} else if (command[0] == "creative") {
+			Creative(player);
+		} else if (command[0] == "save") {
+			Save();
+		} else if (command[0] == "stop") {
+			Stop();
+		} else {
+			failureReason = "Command does not exist!";
+		}
+	} catch (const std::exception &e) {
+		Betrock::Logger::Instance().Info(std::string(e.what()) + std::string(" on /") + rawCommand);
 	}
 
 	if (failureReason == "Syntax") {

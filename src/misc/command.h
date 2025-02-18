@@ -26,5 +26,6 @@ class Command {
         static void Spawn(Player* player);
         static void Creative(Player* player);
         static void Chunk(Player* player);
+        static void Save();
         static void Stop();
 };

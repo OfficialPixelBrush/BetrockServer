@@ -82,13 +82,17 @@ void Server::AddWorldManager(int8_t worldId) {
 	}
 }
 
+void Server::SaveAllWorlds() {
+	for (const auto &[key, wm] : worldManagers) {
+		wm->world.Save(ConvertIndexIntoExtra(key));
+	}
+}
+
 void Server::PrepareForShutdown() {
 	alive = false;
 	// Save all active worlds
 	if (!debugDisableSaveLoad) {
-		for (const auto &[key, wm] : worldManagers) {
-			wm->world.Save(ConvertIndexIntoExtra(key));
-		}
+		SaveAllWorlds();
 	}
 	DisconnectAllPlayers("Server closed!");
 	close(serverFd);

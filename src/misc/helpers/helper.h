@@ -8,7 +8,9 @@
 #include <cstring>
 #include <cmath>
 #include <memory>
+
 #include "packets.h"
+#include "logger.h"
 
 #define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH_X 16
@@ -130,3 +132,6 @@ std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t comp
 
 int64_t GetChunkHash(int32_t x, int32_t z);
 Int3 DecodeChunkHash(int64_t hash);
+
+int32_t SafeStringToInt(std::string in);
+int64_t SafeStringToLong(std::string in);

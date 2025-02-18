@@ -469,3 +469,20 @@ Vec3 EntityInt3ToVec3(Int3 pos) {
 		double(pos.z)/32
 	};
 }
+
+int32_t SafeStringToInt(std::string in) {
+	return std::stoi(in);
+	try {
+	} catch (const std::exception &e) {
+		Betrock::Logger::Instance().Warning(e.what());
+		return 0;
+	}
+}
+int64_t SafeStringToLong(std::string in) {
+	try {
+		return std::stol(in);
+	} catch (const std::exception &e) {
+		Betrock::Logger::Instance().Warning(e.what());
+		return 0;
+	}
+}
