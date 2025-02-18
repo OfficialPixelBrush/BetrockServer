@@ -81,4 +81,6 @@ class Player : public Entity {
         bool CanDecrementHotbar();
         void DecrementHotbar(std::vector<uint8_t> &response);
         void PrintStats();
+        void Save();
+        void Load();
 };
