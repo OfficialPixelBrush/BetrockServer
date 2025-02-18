@@ -160,3 +160,34 @@ void Player::DecrementHotbar(std::vector<uint8_t> &response) {
 void Player::PrintStats() {
     std::cout << username << ": " << position.x << ", " << position.y << ", " << position.z << "; " << yaw << ", " << pitch << std::endl;
 }
+
+void Player::Save() {
+    // Health
+    // OnGround
+    // Dimension
+    // Rotation
+    // Pos
+    // Inventory
+        // Slot
+        // Id
+        // Count
+        // Damage
+    std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
+    dirPath += "/players";
+
+    if (std::filesystem::create_directories(dirPath)) {
+        std::cout << "Directory created: " << dirPath << '\n';
+    }
+
+    std::filesystem::path filePath = dirPath / (username + ".dat");
+
+    std::ofstream playerFile (filePath);
+    if (!playerFile.is_open()) {
+        throw std::runtime_error("Failed to save player file " + username);
+    }
+    playerFile.close();
+}
+
+void Player::Load() {
+
+}

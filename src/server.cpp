@@ -82,17 +82,22 @@ void Server::AddWorldManager(int8_t worldId) {
 	}
 }
 
-void Server::SaveAllWorlds() {
+void Server::SaveAll() {
+	Betrock::Logger::Instance().Info("Saving...");
+	for (Player* p : GetConnectedPlayers()){
+		p->Save();
+	}
 	for (const auto &[key, wm] : worldManagers) {
 		wm->world.Save(ConvertIndexIntoExtra(key));
 	}
+	Betrock::Logger::Instance().Info("Saved");
 }
 
 void Server::PrepareForShutdown() {
 	alive = false;
 	// Save all active worlds
 	if (!debugDisableSaveLoad) {
-		SaveAllWorlds();
+		SaveAll();
 	}
 	DisconnectAllPlayers("Server closed!");
 	close(serverFd);

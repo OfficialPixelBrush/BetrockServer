@@ -219,9 +219,9 @@ void Command::Stop() {
 }
 
 void Command::Save() {
-	Respond::ChatMessage(response, "§7Saving all worlds");
-	Betrock::Logger::Instance().Info("Saving all worlds");
-	Betrock::Server::Instance().SaveAllWorlds();
+	Respond::ChatMessage(response, "§7Saving...");
+	Betrock::Server::Instance().SaveAll();
+	Respond::ChatMessage(response, "§7Saved");
 	failureReason = "";
 }
 
