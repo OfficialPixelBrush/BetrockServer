@@ -48,6 +48,7 @@ add_executable(
     src/misc/command.cpp
     src/misc/gamerules.cpp
     src/misc/lighting.cpp
+    src/misc/sysinfo.cpp
 
     src/objects/entity.cpp
     src/objects/player.cpp
@@ -69,6 +70,8 @@ target_compile_definitions(BetrockServer PRIVATE -D_LIBCPP_ENABLE_EXPERIMENTAL=1
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(BetrockServer PRIVATE -ggdb)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
+    set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
 endif ()
 
 set(CMAKE_SYSTEM_NAME Linux)
@@ -81,8 +84,6 @@ if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
     set(CMAKE_RANLIB i686-w64-mingw32-ranlib)
 else()
     # Apply AddressSanitizer to all build types
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
-    set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
 endif()
 
 target_link_libraries(

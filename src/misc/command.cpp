@@ -279,6 +279,10 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 			Free();
 		} else if (command[0] == "loaded") {
 			failureReason = std::to_string(Betrock::Server::Instance().GetWorldManager(player->worldId)->world.GetNumberOfChunks());
+		} else if (command[0] == "used") {
+			std::stringstream ss;
+			ss << std::fixed << std::setprecision(2) << GetUsedMemoryMB();
+			failureReason = ss.str() + "MB";
 		} else {
 			failureReason = "Command does not exist!";
 		}

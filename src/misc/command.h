@@ -8,6 +8,7 @@
 #include "coms.h"
 #include "gamerules.h"
 #include "labels.h"
+#include "sysinfo.h"
 
 class Command {
     public:
