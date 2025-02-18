@@ -109,8 +109,12 @@ void Player::ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId) {
     Respond::EntityEquipment(response, entityId, EQUIPMENT_SLOT_HELD, i.id, i.damage);
 }
 
+int16_t Player::GetHotbarSlot() {
+    return INVENTORY_HOTBAR + currentHotbarSlot;
+}
+
 Item Player::GetHeldItem() {
-    return inventory[INVENTORY_HOTBAR + currentHotbarSlot];
+    return inventory[GetHotbarSlot()];
 }
 
 // TODO: Implement Shift-clicking
@@ -143,14 +147,14 @@ bool Player::CanDecrementHotbar() {
 }
 
 void Player::DecrementHotbar(std::vector<uint8_t> &response) {
-    Item* i = &inventory[INVENTORY_HOTBAR + currentHotbarSlot];
+    Item* i = &inventory[GetHotbarSlot()];
     i->amount--;
     if (i->amount <= 0) {
         i->id = -1;
         i->amount = 0;
         i->damage = 0;
     }
-	Respond::SetSlot(response, 0, INVENTORY_HOTBAR + currentHotbarSlot, i->id, i->amount, i->damage);
+	Respond::SetSlot(response, 0, GetHotbarSlot(), i->id, i->amount, i->damage);
 }
 
 void Player::PrintStats() {

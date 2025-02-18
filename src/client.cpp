@@ -416,7 +416,7 @@ bool Client::LoginRequest() {
 			Vec3ToInt3(others->position),
 			others->yaw,
 			others->pitch,
-			others->inventory[INVENTORY_HOTBAR + others->currentHotbarSlot].id
+			others->inventory[others->GetHotbarSlot()].id
 		);
 		
 		// Apparently needed to entities show up where they need to
@@ -652,6 +652,7 @@ bool Client::PlayerBlockPlacement(World* world) {
 			id = i.id;
 			amount = i.amount;
 			damage = i.damage;
+			Respond::SetSlot(response,0,player->GetHotbarSlot(), id,amount,damage);
 		} else {
 			player->DecrementHotbar(response);
 		}

@@ -76,6 +76,7 @@ class Player : public Entity {
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
         bool UpdateInventory(std::vector<uint8_t> &response);
         void ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId);
+        int16_t GetHotbarSlot();
         Item GetHeldItem();
         bool CanDecrementHotbar();
         void DecrementHotbar(std::vector<uint8_t> &response);
