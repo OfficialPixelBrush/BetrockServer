@@ -73,6 +73,8 @@ class Server {
 
 	void SaveAll();
 
+	void FreeAll();
+
 	void PrepareForShutdown();
 
 	void LoadConfig();

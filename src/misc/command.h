@@ -28,4 +28,5 @@ class Command {
         static void Chunk(Player* player);
         static void Save();
         static void Stop();
+        static void Free();
 };

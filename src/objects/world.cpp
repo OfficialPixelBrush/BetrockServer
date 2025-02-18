@@ -1,11 +1,13 @@
 #include "world.h"
 
+#include "server.h"
+
 int World::GetNumberOfChunks() {
     return chunks.size();
 }
 
 void World::Load(const std::string& extra) {
-    std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
+    dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
         dirPath += "/region";
     } else {
@@ -96,7 +98,7 @@ void World::Load(const std::string& extra) {
 }
 
 void World::Save(const std::string &extra) {
-    std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
+    dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
         dirPath += "/region";
     } else {
@@ -110,36 +112,10 @@ void World::Save(const std::string &extra) {
     uint savedChunks = 0;
     for (const auto& pair : chunks) {
         const int64_t& hash = pair.first;
-        const Chunk& chunk = pair.second;
+        const Chunk& chunk = pair.second; // Keep it as a reference
+    
         Int3 pos = DecodeChunkHash(hash);
-        //std::cout << "Chunk at " << pos << std::endl;
-
-        std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".cnk");
-
-        std::ofstream chunkFile (filePath);
-        if (!chunkFile) {
-            std::cerr << "Failed to save chunk at " << pos.x << ", " << pos.z << '\n';
-            continue;
-        }
-
-        // Acquire existing chunk data
-        auto chunkData = GetChunkData(pos);
-        // Add it to the list of chunks to be compressed and sent
-        if (!chunkData) {
-            std::cout << "Failed to get Chunk " << pos << std::endl;
-            continue;
-        }
-
-        size_t compressedSize = 0;
-        auto chunkBinary = CompressChunk(chunkData.get(), compressedSize);
-        
-        if (!chunkBinary || compressedSize == 0) {		
-            std::cout << "Failed to compress Chunk " << pos << std::endl;
-            continue;
-        }
-
-        chunkFile.write(chunkBinary.get(), compressedSize);
-        chunkFile.close();
+        SaveChunk(pos.x, pos.z, &chunk); // No need to dereference
         savedChunks++;
     }
     std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;
@@ -159,6 +135,68 @@ void World::AddChunk(int32_t x, int32_t z, Chunk c) {
 
 void World::RemoveChunk(int32_t x, int32_t z) {
     chunks.erase(GetChunkHash(x,z));
+}
+
+void World::DumpUnloadedChunks() {
+    std::vector<int64_t> chunksToRemove;
+
+    for (const auto& pair : chunks) {
+        const int64_t& hash = pair.first;
+        const Chunk& chunk = pair.second;
+        Int3 pos = DecodeChunkHash(hash);
+    
+        // Check if any player has this chunk hash in their visibleChunks
+        bool isVisible = false;
+        for (const auto& player : Betrock::Server::Instance().GetConnectedPlayers()) {  // Assuming players is a vector or container of Player objects
+            if (std::find(player->visibleChunks.begin(), player->visibleChunks.end(), DecodeChunkHash(hash)) != player->visibleChunks.end()) {
+                isVisible = true;
+                break;
+            }
+        }
+    
+        if (!isVisible) {
+            SaveChunk(pos.x, pos.z, &chunk);
+            chunksToRemove.push_back(hash);
+        }
+    }    
+
+    // Remove chunks that are not visible to any player
+    for (int64_t hash : chunksToRemove) {
+        Int3 pos = DecodeChunkHash(hash);
+        RemoveChunk(pos.x, pos.z);
+    }
+}
+
+void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
+    Int3 pos = Int3{x,0,z};
+    //std::cout << "Chunk at " << pos << std::endl;
+
+    std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".cnk");
+
+    std::ofstream chunkFile (filePath);
+    if (!chunkFile) {
+        std::cerr << "Failed to save chunk at " << pos.x << ", " << pos.z << '\n';
+        return;
+    }
+
+    // Acquire existing chunk data
+    auto chunkData = GetChunkData(pos);
+    // Add it to the list of chunks to be compressed and sent
+    if (!chunkData) {
+        std::cout << "Failed to get Chunk " << pos << std::endl;
+        return;
+    }
+
+    size_t compressedSize = 0;
+    auto chunkBinary = CompressChunk(chunkData.get(), compressedSize);
+    
+    if (!chunkBinary || compressedSize == 0) {		
+        std::cout << "Failed to compress Chunk " << pos << std::endl;
+        return;
+    }
+
+    chunkFile.write(chunkBinary.get(), compressedSize);
+    chunkFile.close();
 }
 
 void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {

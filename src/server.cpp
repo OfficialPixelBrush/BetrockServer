@@ -93,6 +93,13 @@ void Server::SaveAll() {
 	Betrock::Logger::Instance().Info("Saved");
 }
 
+void Server::FreeAll() {
+	Betrock::Logger::Instance().Info("Freeing Chunks");
+	for (const auto &[key, wm] : worldManagers) {
+		wm->world.DumpUnloadedChunks();
+	}
+}
+
 void Server::PrepareForShutdown() {
 	alive = false;
 	// Save all active worlds

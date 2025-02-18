@@ -225,6 +225,12 @@ void Command::Save() {
 	failureReason = "";
 }
 
+void Command::Free() {
+	Respond::ChatMessage(response, "§7Freeing Chunks");
+	Betrock::Server::Instance().FreeAll();
+	failureReason = "";
+}
+
 // Parses commands and executes them
 void Command::Parse(std::string &rawCommand, Player* player) {
 	// Set these up for command parsing
@@ -269,6 +275,8 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 			Save();
 		} else if (command[0] == "stop") {
 			Stop();
+		} else if (command[0] == "free") {
+			Free();
 		} else {
 			failureReason = "Command does not exist!";
 		}
