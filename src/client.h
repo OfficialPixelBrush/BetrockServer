@@ -59,6 +59,7 @@ class Client {
 
         void Respond(ssize_t bytes_received);
         void SendNewChunks();
+        bool UpdatePositionForOthers(bool includeLook = true);
 
     private:
         bool CheckPosition(Player* player, Vec3 &newPosition, double &newStance); 

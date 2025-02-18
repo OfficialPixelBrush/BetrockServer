@@ -405,6 +405,13 @@ bool Client::LoginRequest() {
 		player->pitch,
 		player->inventory[INVENTORY_HOTBAR].id
 	);
+	Respond::EntityTeleport(
+		broadcastOthersResponse,
+		player->entityId,
+		Vec3ToEntityInt3(player->position),
+		ConvertFloatToPackedByte(player->yaw),
+		ConvertFloatToPackedByte(player->pitch)
+	);
 
 	// Spawn the other players for the new client
     for (Player* others : Betrock::Server::Instance().GetConnectedPlayers()) {
@@ -467,6 +474,45 @@ bool Client::PlayerGrounded() {
 	return true;
 }
 
+bool Client::UpdatePositionForOthers(bool includeLook) {
+	Respond::EntityTeleport(
+		broadcastOthersResponse,
+		player->entityId,
+		Vec3ToEntityInt3(player->position),
+		ConvertFloatToPackedByte(player->yaw),
+		ConvertFloatToPackedByte(player->pitch)
+	);
+	player->lastEntityUpdatePosition = player->position;
+	/*
+	if (GetDistance(player->position,player->lastEntityUpdatePosition) > 4.0) {
+		Respond::EntityTeleport(
+			broadcastOthersResponse,
+			player->entityId,
+			Vec3ToEntityInt3(player->position),
+			ConvertFloatToPackedByte(player->yaw),
+			ConvertFloatToPackedByte(player->pitch)
+		);
+		player->lastEntityUpdatePosition = player->position;
+	} else {
+		if (includeLook) {
+			Respond::EntityRelativeMove(
+				broadcastOthersResponse,
+				player->entityId,
+				Vec3ToEntityInt3(player->position-player->lastEntityUpdatePosition)
+			);
+		} else {
+			Respond::EntityLookRelativeMove(
+				broadcastOthersResponse,
+				player->entityId,
+				Vec3ToEntityInt3(player->position-player->lastEntityUpdatePosition),
+				ConvertFloatToPackedByte(player->yaw),
+				ConvertFloatToPackedByte(player->pitch)
+			);
+		}
+	}*/
+	return true;
+}
+
 bool Client::PlayerPosition() {
 	Vec3 newPosition;
 	double newStance;
@@ -476,14 +522,7 @@ bool Client::PlayerPosition() {
 	newPosition.z = EntryToDouble(message,offset);
 	player->onGround = EntryToByte(message, offset);
 	CheckPosition(player,newPosition,newStance);
-
-	Respond::EntityTeleport(
-		broadcastOthersResponse,
-		player->entityId,
-		Vec3ToEntityInt3(player->position),
-		ConvertFloatToPackedByte(player->yaw),
-		ConvertFloatToPackedByte(player->pitch)
-	);
+	UpdatePositionForOthers(false);
 
 	if (CheckIfNewChunksRequired(player)) {
 		SendChunksAroundPlayer(response,player);
@@ -510,6 +549,9 @@ bool Client::PlayerPositionLook() {
 	player->pitch = EntryToFloat(message,offset);
 	player->onGround = EntryToByte(message, offset);
 	CheckPosition(player,newPosition,newStance);
+
+	UpdatePositionForOthers(true);
+
 	if (CheckIfNewChunksRequired(player)) {
 		SendChunksAroundPlayer(response,player);
 	}

@@ -162,9 +162,9 @@ void Respond::DestroyEntity(std::vector<uint8_t> &response, int32_t& entityId) {
 void Respond::EntityRelativeMove(std::vector<uint8_t> &response, int32_t& entityId, Int3 relativeMovement) {
     response.push_back((uint8_t)Packet::EntityRelativeMove);
     AppendIntegerToVector(response, entityId);
-    response.push_back(relativeMovement.x);
-    response.push_back(relativeMovement.y);
-    response.push_back(relativeMovement.z);
+    response.push_back((int8_t)relativeMovement.x);
+    response.push_back((int8_t)relativeMovement.y);
+    response.push_back((int8_t)relativeMovement.z);
 }
 
 void Respond::EntityLook(std::vector<uint8_t> &response, int32_t& entityId, int8_t yaw, int8_t pitch) {
