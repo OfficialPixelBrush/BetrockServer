@@ -7,6 +7,9 @@
 #include "coms.h"
 #include "inventory.h"
 
+#define NBT_IMPLEMENTATION
+#include "nbt.h"
+
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62
 
