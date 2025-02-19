@@ -99,14 +99,14 @@ Int3 BlockToChunkPosition(Int3 position);
 void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction);
 
 // Converting a network response into a native type
-int8_t EntryToByte(char* message, int32_t& offset);
-int16_t EntryToShort(char* message, int32_t& offset);
-int32_t EntryToInteger(char* message, int32_t& offset);
-int64_t EntryToLong(char* message, int32_t& offset);
-float EntryToFloat(char* message, int32_t& offset);
-double EntryToDouble(char* message, int32_t& offset);
-std::string EntryToString8(char* message, int32_t& offset);
-std::string EntryToString16(char* message, int32_t& offset);
+int8_t EntryToByte(uint8_t* message, int32_t& offset);
+int16_t EntryToShort(uint8_t* message, int32_t& offset);
+int32_t EntryToInteger(uint8_t* message, int32_t& offset);
+int64_t EntryToLong(uint8_t* message, int32_t& offset);
+float EntryToFloat(uint8_t* message, int32_t& offset);
+double EntryToDouble(uint8_t* message, int32_t& offset);
+std::string EntryToString8(uint8_t* message, int32_t& offset);
+std::string EntryToString16(uint8_t* message, int32_t& offset);
 
 // Appending Data onto Network Response
 void AppendShortToVector(std::vector<uint8_t> &vector, int16_t value);

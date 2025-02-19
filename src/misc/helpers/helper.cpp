@@ -106,25 +106,33 @@ void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction) {
 	}
 }
 
-int8_t EntryToByte(char* message, int32_t& offset) {
+int8_t EntryToByte(uint8_t* message, int32_t& offset) {
 	int8_t result = message[offset];
 	offset++;
 	return result;
 }
 
-int16_t EntryToShort(char* message, int32_t& offset) {
-	int16_t result = message[offset] << 8 | message[offset+1];
+int16_t EntryToShort(uint8_t* message, int32_t& offset) {
+	int16_t result = (
+		(int16_t)message[offset  ] << 8 |
+		(int16_t)message[offset+1]
+	);
 	offset+=2;
 	return result;
 }
 
-int32_t EntryToInteger(char* message, int32_t& offset) {
-	int32_t result = (message[offset] << 24 | message[offset+1] << 16 | message[offset+2] << 8 | message[offset+3]);
+int32_t EntryToInteger(uint8_t* message, int32_t& offset) {
+	int32_t result = (
+		(int32_t)message[offset  ] << 24 |
+		(int32_t)message[offset+1] << 16 |
+		(int32_t)message[offset+2] <<  8 |
+		(int32_t)message[offset+3]
+	);
 	offset+=4;
 	return result;
 }
 
-int64_t EntryToLong(char* message, int32_t& offset) {
+int64_t EntryToLong(uint8_t* message, int32_t& offset) {
 	int64_t result = (
 		(int64_t)message[offset  ] << 56 |
 		(int64_t)message[offset+1] << 48 |
@@ -139,26 +147,30 @@ int64_t EntryToLong(char* message, int32_t& offset) {
 	return result;
 }
 
-float EntryToFloat(char* message, int32_t& offset) {
-    uint32_t intBits = (static_cast<uint8_t>(message[offset]) << 24) |
-                       (static_cast<uint8_t>(message[offset + 1]) << 16) |
-                       (static_cast<uint8_t>(message[offset + 2]) << 8) |
-                       (static_cast<uint8_t>(message[offset + 3]));
+float EntryToFloat(uint8_t* message, int32_t& offset) {
+    uint32_t intBits = (
+		(static_cast<uint32_t>(message[offset    ]) << 24) |
+		(static_cast<uint32_t>(message[offset + 1]) << 16) |
+		(static_cast<uint32_t>(message[offset + 2]) <<  8) |
+		(static_cast<uint32_t>(message[offset + 3])      )
+	);
     float result;
     std::memcpy(&result, &intBits, sizeof(result)); // Copy bits into a float
     offset += 4;
     return result;
 }
 
-double EntryToDouble(char* message, int32_t& offset) {
-    uint64_t intBits = (static_cast<uint64_t>(static_cast<uint8_t>(message[offset])) << 56) |
-                       (static_cast<uint64_t>(static_cast<uint8_t>(message[offset + 1])) << 48) |
-                       (static_cast<uint64_t>(static_cast<uint8_t>(message[offset + 2])) << 40) |
-                       (static_cast<uint64_t>(static_cast<uint8_t>(message[offset + 3])) << 32) |
-                       (static_cast<uint64_t>(static_cast<uint8_t>(message[offset + 4])) << 24) |
-                       (static_cast<uint64_t>(static_cast<uint8_t>(message[offset + 5])) << 16) |
-                       (static_cast<uint64_t>(static_cast<uint8_t>(message[offset + 6])) << 8) |
-                       (static_cast<uint64_t>(static_cast<uint8_t>(message[offset + 7])));
+double EntryToDouble(uint8_t* message, int32_t& offset) {
+    uint64_t intBits = (
+		(static_cast<uint64_t>(message[offset    ]) << 56) |
+		(static_cast<uint64_t>(message[offset + 1]) << 48) |
+		(static_cast<uint64_t>(message[offset + 2]) << 40) |
+		(static_cast<uint64_t>(message[offset + 3]) << 32) |
+		(static_cast<uint64_t>(message[offset + 4]) << 24) |
+		(static_cast<uint64_t>(message[offset + 5]) << 16) |
+		(static_cast<uint64_t>(message[offset + 6]) <<  8) |
+		(static_cast<uint64_t>(message[offset + 7])      )
+	);
     double result;
     std::memcpy(&result, &intBits, sizeof(result)); // Copy bits into a double
     offset += 8; // Correctly increment offset by 8 for double
@@ -166,7 +178,7 @@ double EntryToDouble(char* message, int32_t& offset) {
 }
 
 // Turns out this is just UTF-8, not Strings with an 8-Bit Length
-std::string EntryToString8(char* message, int32_t& offset) {
+std::string EntryToString8(uint8_t* message, int32_t& offset) {
 	std::string string8 = "";
 	int16_t stringLength = EntryToShort(message, offset);
 	offset++;
@@ -178,7 +190,7 @@ std::string EntryToString8(char* message, int32_t& offset) {
 }
 
 // Turns out this is just UTF-16, not Strings with a 16-Bit Length
-std::string EntryToString16(char* message, int32_t& offset) {
+std::string EntryToString16(uint8_t* message, int32_t& offset) {
 	std::string string16 = "";
 	int16_t stringLength = EntryToShort(message, offset);
 	for (int16_t i = 0; i < stringLength*2; i+=2) {
