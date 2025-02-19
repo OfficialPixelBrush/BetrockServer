@@ -72,7 +72,7 @@ class Player : public Entity {
         void Hurt(std::vector<uint8_t> &response, int8_t damage);
         void Kill(std::vector<uint8_t> &response);
         bool TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &damage);
-        bool SpreadToSlots(int16_t item, int8_t amount, int16_t damage);
+        bool SpreadToSlots(int16_t item, int8_t amount, int16_t damage, int8_t preferredRange = 0);
         void ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage);
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
         bool UpdateInventory(std::vector<uint8_t> &response);

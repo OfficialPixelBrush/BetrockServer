@@ -62,16 +62,20 @@ bool Player::TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &
     return false;
 }
 
-bool Player::SpreadToSlots(int16_t id, int8_t amount, int16_t damage) {
-    for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST; i++) {
-        if (TryToPutInSlot(i, id, amount, damage)) {
-            return true;
+bool Player::SpreadToSlots(int16_t id, int8_t amount, int16_t damage, int8_t preferredRange) {
+    if (preferredRange == 1 || preferredRange == 0) {
+        for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST; i++) {
+            if (TryToPutInSlot(i, id, amount, damage)) {
+                return true;
+            }
         }
     }
 
-    for (int8_t i = INVENTORY_ROW_1; i <= INVENTORY_ROW_LAST; i++) {
-        if (TryToPutInSlot(i, id, amount, damage)) {
-            return true;
+    if (preferredRange == 2 || preferredRange == 0) {
+        for (int8_t i = INVENTORY_ROW_1; i <= INVENTORY_ROW_LAST; i++) {
+            if (TryToPutInSlot(i, id, amount, damage)) {
+                return true;
+            }
         }
     }
 
@@ -117,8 +121,21 @@ Item Player::GetHeldItem() {
     return inventory[GetHotbarSlot()];
 }
 
-// TODO: Implement Shift-clicking
+// TODO: Implement Right-clicking
 void Player::ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage) {
+    // Shift Click Behavior
+    if (shift) {
+        // Get item
+        Item temp = inventory[slotId];
+        // Empty slot
+        inventory[slotId] = {-1,0,0};
+        if (slotId >= INVENTORY_HOTBAR) {
+            SpreadToSlots(temp.id,temp.amount,temp.damage,2);
+        } else {
+            SpreadToSlots(temp.id,temp.amount,temp.damage,1);
+        }
+    }
+    
     // If we've clicked outside, throw the items to the ground and clear the slot.
     if (slotId == CLICK_OUTSIDE) {
         hoveringItem = Item {-1,0,0};
