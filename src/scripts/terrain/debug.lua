@@ -8,10 +8,14 @@ function GenerateBlock(x,y,z,blocksSinceSkyVisible)
     local type = 0
     local meta = 0
     if (y == 64) then
-        if (x <= 96 and x >= 0) then
-            if (z < 16 and z >= 0) then
-                    type = x
-                    meta = z
+        if (x <= 96*2 and x >= 0) then
+            if (z < 16*2 and z >= 0) then
+                if (x % 2 == 0) then
+                    if (z % 2 == 0) then
+                        type = x/2
+                        meta = z/2
+                    end
+                end
             else 
                 type = 1;
             end
