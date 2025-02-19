@@ -6,5 +6,5 @@ function GenerateBlock(x,y,z,blocksSinceSkyVisible)
     if y < 50 + math.sin(x*10)*3 then
         type = getNaturalGrass(x,y,z,blocksSinceSkyVisible)
     end
-    return type
+    return type,0
 end

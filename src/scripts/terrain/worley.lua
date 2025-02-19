@@ -25,5 +25,5 @@ function GenerateBlock(x,y,z,blocksSinceSkyVisible)
             type = 9
         end
     end
-    return type
+    return type,0
 end

@@ -61,10 +61,11 @@ Block Generator::GenerateBlock(Int3 position, int8_t blocksSinceSkyVisible) {
     lua_pushnumber(L,position.y);
     lua_pushnumber(L,position.z);
     lua_pushnumber(L,blocksSinceSkyVisible);
-    if (CheckLua(L,lua_pcall(L,4,1,0))) {
-        b.type = (int)lua_tonumber(L, -1);
+    if (CheckLua(L,lua_pcall(L,4,2,0))) {
+        b.type = (int)lua_tonumber(L, -2);
+        b.meta = (int)lua_tonumber(L, -1);
+        lua_pop(L,2);
     }
-    lua_pop(L,1);
     return b;
 }
 

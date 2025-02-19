@@ -26,5 +26,5 @@ function GenerateBlock(x,y,z,blocksSinceSkyVisible)
     elseif (y < 64) then
         type = 9
     end
-    return type
+    return type,0
 end

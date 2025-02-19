@@ -19,13 +19,11 @@ void World::Load(const std::string& extra) {
         return;
     }
 
-    /*
     uint loadedChunks = 0;
 
     for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
         // Check if the entry is a regular file and has a .cnk extension
         if (entry.is_regular_file() && entry.path().extension() == ".cnk") {
-            std::string s;
             std::stringstream ss(entry.path().stem().string());  // Get the file name without extension
 
             // Read the chunk coordinates
@@ -40,7 +38,6 @@ void World::Load(const std::string& extra) {
         }
     }
     std::cout << "Loaded " << loadedChunks << " Chunks from Disk" << std::endl;
-    */
 }
 
 void World::Save(const std::string &extra) {
@@ -120,7 +117,7 @@ bool World::LoadChunk(int32_t x, int32_t z) {
     }
 
     // Create the chunk entry file path based on x and z coordinates
-    std::filesystem::path entryPath = dirPath / (std::to_string(x) + "_" + std::to_string(z) + ".cnk");
+    std::filesystem::path entryPath = dirPath / (std::to_string(x) + "," + std::to_string(z) + ".cnk");
 
     // Check if the entry file exists and has a .cnk extension
     if (std::filesystem::exists(entryPath) && std::filesystem::is_regular_file(entryPath) && entryPath.extension() == ".cnk") {
@@ -191,6 +188,8 @@ bool World::LoadChunk(int32_t x, int32_t z) {
         }
         AddChunk(x,z,c);
         chunkFile.close();
+    } else {
+        return false;
     }
     return true;
 } 

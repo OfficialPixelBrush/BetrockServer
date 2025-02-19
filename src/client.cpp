@@ -680,27 +680,33 @@ bool Client::PlayerBlockPlacement(World* world) {
 
 	BlockToFace(x,y,z,direction);
 	Int3 pos = XyzToInt3(x,y,z);
+
 	// This packet has a special case where X, Y, Z, and Direction are all -1.
 	// This special packet indicates that the currently held item for the player should have
 	// its state updated such as eating food, shooting bows, using buckets, etc.
 
 	// Apparently this also handles the player standing inside the block its trying to place in
 	if (x == -1 && y == -1 && z == -1 && direction == -1) {
-		return true;
+		return false;
+	}
+
+	if (id < BLOCK_MAX) {
+		damage = GetMetaData(x,y,z,direction,id,damage);
 	}
 	// Place a block if we can
 	if (id > BLOCK_AIR && id < BLOCK_MAX && !BlockTooCloseToPosition(pos) && player->CanDecrementHotbar()) {
 		//std::cout << BlockTooCloseToPosition(pos) << ": " << pos << " - " << player->position << std::endl;
 		Item i = player->inventory[INVENTORY_HOTBAR+player->currentHotbarSlot];
-		Respond::BlockChange(broadcastResponse,pos,(int8_t)i.id,(int8_t)i.damage);
-		world->PlaceBlock(pos,(int8_t)i.id,(int8_t)i.damage);
+		// TODO: Make sure damage value is valid(?)
+		//damage = CheckIfValidDamage();
+		Respond::BlockChange(broadcastResponse,pos,(int8_t)i.id,(int8_t)damage);
+		world->PlaceBlock(pos,(int8_t)i.id,(int8_t)damage);
 		// Immediately give back item if we're in creative mode
 		if (player->creativeMode) {
 			Item i = player->GetHeldItem();
 			id = i.id;
 			amount = i.amount;
-			damage = i.damage;
-			Respond::SetSlot(response,0,player->GetHotbarSlot(), id,amount,damage);
+			Respond::SetSlot(response,0,player->GetHotbarSlot(),id,amount,i.damage);
 		} else {
 			player->DecrementHotbar(response);
 		}

@@ -83,26 +83,26 @@ Int3 BlockToChunkPosition(Vec3 position) {
 
 void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction) {
 	switch(direction) {
-		case 0:
+		case yMinus:
 			y--;
 			break;
-		case 1:
+		case yPlus:
 			y++;
 			break;
-		case 2:
+		case zMinus:
 			z--;
 			break;
-		case 3:
+		case zPlus:
 			z++;
 			break;
-		case 4:
+		case xMinus:
 			x--;
 			break;
-		case 5:
+		case xPlus:
 			x++;
 			break;
 		default:
-			break;		
+			break;
 	}
 }
 
@@ -479,4 +479,24 @@ int64_t SafeStringToLong(std::string in) {
 		Betrock::Logger::Instance().Warning(e.what());
 		return 0;
 	}
+}
+
+int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t direction, int16_t id, int16_t damage) {
+	if (id == BLOCK_TORCH) {
+		switch(direction) {
+			case yMinus:
+				return SLOT_EMPTY;
+			case zPlus:
+				return 3;
+			case zMinus:
+				return 4;
+			case xPlus:
+				return 1;
+			case xMinus:
+				return 2;
+			default:
+				return 0;
+		}
+	}
+	return damage;
 }
