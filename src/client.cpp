@@ -74,18 +74,14 @@ void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldMan
         return;
     }
 
-    // Get existing chunk data
-	// TODO: Getting all chunk data like this is stupid.
-    auto chunkData = wm->world.GetChunkData(position);
-    if (!chunkData) {
-		// Try to load chunk
-		//wm->world.LoadChunk(position.x,position.z);
-		// Queue chunk generation if missing
+    // Check if the chunk has already been loaded
+    if (!wm->world.ChunkExists(position.x,position.z)) {
+		// Otherwise queue chunk loading or generation
 		wm->AddChunkToQueue(position.x, position.z, player);
 		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
         return;
     }
-    
+    // If the chunk is already available, send it over
     player->newChunks.push_back(position);
 }
 

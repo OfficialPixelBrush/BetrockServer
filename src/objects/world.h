@@ -18,12 +18,11 @@ class World {
         Chunk* GetChunk(int32_t x, int32_t z);
         void RemoveChunk(int32_t x, int32_t z);
     public:
+        World(const std::string &extra = "");
         int64_t seed;
-        void Load(const std::string &extra = "");
-        void Save(const std::string &extra = "");
+        void Save();
         int GetNumberOfChunks();
         std::unique_ptr<char[]> GetChunkData(Int3 position);
-        //void GenerateChunk(int32_t x, int32_t z);
         void PlaceBlock(Int3 position, int8_t type, int8_t meta);
         Block BreakBlock(Int3 position);
         Block* GetBlock(Int3 position);
@@ -32,4 +31,6 @@ class World {
         void DumpUnloadedChunks();
         void SaveChunk(int32_t x, int32_t z, const Chunk* chunk);
         bool LoadChunk(int32_t x, int32_t z);
+        bool ChunkFileExists(int32_t x, int32_t z);
+        bool ChunkExists(int32_t x, int32_t z);
 };

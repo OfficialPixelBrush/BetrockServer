@@ -70,8 +70,7 @@ void WorldManager::GenerateQueuedChunks() {
 void WorldManager::ForceGenerateChunk(int32_t x, int32_t z) {
     Generator generator;
     generator.PrepareGenerator(seed);
-    Chunk c = generator.GenerateChunk(x, z);
-    world.AddChunk(x, z, c);
+    GetChunk(x,z,generator);
 }
 
 void WorldManager::WorkerThread() {
@@ -93,8 +92,9 @@ void WorldManager::WorkerThread() {
         int64_t key = GetChunkHash(cq.position.x, cq.position.z);
         chunkPositions.erase(key);  // Remove from tracking set
 
-        Chunk c = generator.GenerateChunk(cq.position.x, cq.position.z);
-        world.AddChunk(cq.position.x, cq.position.z, c);
+
+		// Try to load chunk
+        GetChunk(cq.position.x, cq.position.z,generator);
 
         std::scoped_lock lock(Betrock::Server::Instance().GetConnectedPlayerMutex());
         for (Player* p : cq.requestedPlayers) {
@@ -103,6 +103,15 @@ void WorldManager::WorkerThread() {
                 p->newChunks.push_back(cq.position);
             }
         }
+    }
+}
+
+void WorldManager::GetChunk(int32_t x, int32_t z, Generator &generator) {
+    if (world.ChunkFileExists(x,z)) {
+        world.LoadChunk(x,z);
+    }  else {
+        Chunk c = generator.GenerateChunk(x,z);
+        world.AddChunk(x, z, c);
     }
 }
 

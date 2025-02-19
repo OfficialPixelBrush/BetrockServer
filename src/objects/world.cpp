@@ -6,41 +6,27 @@ int World::GetNumberOfChunks() {
     return chunks.size();
 }
 
-void World::Load(const std::string& extra) {
-    dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
-    if (extra.empty()) {
-        dirPath += "/region";
-    } else {
-        dirPath += "/" + extra + "/region";
-    }
-
+bool World::ChunkFileExists(int32_t x, int32_t z) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
-        return;
+        return false;
     }
 
-    uint loadedChunks = 0;
+    // Create the chunk entry file path based on x and z coordinates
+    std::filesystem::path entryPath = dirPath / (std::to_string(x) + "," + std::to_string(z) + ".cnk");
 
-    for (const auto& entry : std::filesystem::directory_iterator(dirPath)) {
-        // Check if the entry is a regular file and has a .cnk extension
-        if (entry.is_regular_file() && entry.path().extension() == ".cnk") {
-            std::stringstream ss(entry.path().stem().string());  // Get the file name without extension
-
-            // Read the chunk coordinates
-            int x, z;
-            char comma;  // To capture the comma delimiter
-
-            // Extract two integers (x, z) from the string using stringstream
-            ss >> x >> comma >> z;
-
-            LoadChunk(x,z);
-            loadedChunks++;
-        }
+    // Check if the entry file exists and has a .cnk extension
+    if (std::filesystem::exists(entryPath) && std::filesystem::is_regular_file(entryPath) && entryPath.extension() == ".cnk") {
+        return true;
     }
-    std::cout << "Loaded " << loadedChunks << " Chunks from Disk" << std::endl;
+    return false;
 }
 
-void World::Save(const std::string &extra) {
+bool World::ChunkExists(int32_t x, int32_t z) {
+    return chunks.contains(GetChunkHash(x,z));
+}
+
+World::World(const std::string& extra) {
     dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
         dirPath += "/region";
@@ -51,7 +37,9 @@ void World::Save(const std::string &extra) {
     if (std::filesystem::create_directories(dirPath)) {
         std::cout << "Directory created: " << dirPath << '\n';
     }
+}
 
+void World::Save() {
     uint savedChunks = 0;
     for (const auto& pair : chunks) {
         const int64_t& hash = pair.first;
@@ -81,7 +69,7 @@ void World::RemoveChunk(int32_t x, int32_t z) {
 }
 
 void World::DumpUnloadedChunks() {
-    std::vector<int64_t> chunksToRemove;
+    std::vector<Int3> chunksToRemove;
 
     for (const auto& pair : chunks) {
         const int64_t& hash = pair.first;
@@ -99,13 +87,12 @@ void World::DumpUnloadedChunks() {
     
         if (!isVisible) {
             SaveChunk(pos.x, pos.z, &chunk);
-            chunksToRemove.push_back(hash);
+            chunksToRemove.push_back(pos);
         }
     }    
 
     // Remove chunks that are not visible to any player
-    for (int64_t hash : chunksToRemove) {
-        Int3 pos = DecodeChunkHash(hash);
+    for (Int3 pos : chunksToRemove) {
         RemoveChunk(pos.x, pos.z);
     }
 }
@@ -120,79 +107,69 @@ bool World::LoadChunk(int32_t x, int32_t z) {
     std::filesystem::path entryPath = dirPath / (std::to_string(x) + "," + std::to_string(z) + ".cnk");
 
     // Check if the entry file exists and has a .cnk extension
-    if (std::filesystem::exists(entryPath) && std::filesystem::is_regular_file(entryPath) && entryPath.extension() == ".cnk") {
-        std::string s;
-        std::stringstream ss(entryPath.stem().string());  // Get the file name without extension
-
-        // Read the chunk coordinates
-        int x, z;
-        char comma;  // To capture the comma delimiter
-
-        // Extract two integers (x, z) from the string using stringstream
-        ss >> x >> comma >> z;
-
-        std::ifstream chunkFile (entryPath);
-        if (!chunkFile.is_open()) {
-            Betrock::Logger::Instance().Warning("Failed to load chunk " + std::string(entryPath));
-            return false;
-        }      
-
-        // Get the length of the file
-        chunkFile.seekg(0, std::ios::end);
-        std::streamsize size = chunkFile.tellg();
-        chunkFile.seekg(0, std::ios::beg);
-
-        std::vector<char> buffer(size);
-        chunkFile.read(buffer.data(), size);
-        char* compressedChunk = buffer.data();
-
-        size_t compressedSize = size;
-        size_t decompressedSize = 0;
-
-        auto chunkData = DecompressChunk(compressedChunk,compressedSize,decompressedSize);
-
-        if (!chunkData) {
-            Betrock::Logger::Instance().Warning("Failed to decompress " + std::string(entryPath));
-            return false;
-        }
-
-        Chunk c;
-        size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;
-        size_t nibbleDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*(CHUNK_HEIGHT/2);
-        for (size_t i = 0; i < decompressedSize; i++) {
-            if (i < blockDataSize) {
-                // Block Data
-                c.blocks[i].type = chunkData[i];
-            } else if (
-                // Metadata
-                i >= blockDataSize &&
-                i <  blockDataSize+nibbleDataSize)
-            {
-                c.blocks[(i%nibbleDataSize)*2  ].meta = (chunkData[i]     )&0xF;
-                c.blocks[(i%nibbleDataSize)*2+1].meta = (chunkData[i] >> 4)&0xF;
-            } else if (
-                // Block Light
-                i >= blockDataSize+nibbleDataSize &&
-                i <  blockDataSize+(nibbleDataSize*2))
-            {
-                c.blocks[(i%nibbleDataSize)*2  ].lightBlock = (chunkData[i]     )&0xF;
-                c.blocks[(i%nibbleDataSize)*2+1].lightBlock = (chunkData[i] >> 4)&0xF;
-            } else if (
-                // Sky Light
-                i >= blockDataSize+(nibbleDataSize*2) &&
-                i <  blockDataSize+(nibbleDataSize*3))
-            {
-                c.blocks[(i%nibbleDataSize)*2  ].lightSky = (chunkData[i]     )&0xF;
-                c.blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
-            }
-        }
-        AddChunk(x,z,c);
-        chunkFile.close();
-    } else {
+    if (!ChunkFileExists(x,z)) {
         return false;
     }
+
+    std::ifstream chunkFile (entryPath);
+    if (!chunkFile.is_open()) {
+        Betrock::Logger::Instance().Warning("Failed to load chunk " + std::string(entryPath));
+        return false;
+    }      
+
+    // Get the length of the file
+    chunkFile.seekg(0, std::ios::end);
+    std::streamsize size = chunkFile.tellg();
+    chunkFile.seekg(0, std::ios::beg);
+
+    std::vector<char> buffer(size);
+    chunkFile.read(buffer.data(), size);
+    char* compressedChunk = buffer.data();
+
+    size_t compressedSize = size;
+    size_t decompressedSize = 0;
+
+    auto chunkData = DecompressChunk(compressedChunk,compressedSize,decompressedSize);
+
+    if (!chunkData) {
+        Betrock::Logger::Instance().Warning("Failed to decompress " + std::string(entryPath));
+        return false;
+    }
+
+    Chunk c;
+    size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;
+    size_t nibbleDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*(CHUNK_HEIGHT/2);
+    for (size_t i = 0; i < decompressedSize; i++) {
+        if (i < blockDataSize) {
+            // Block Data
+            c.blocks[i].type = chunkData[i];
+        } else if (
+            // Metadata
+            i >= blockDataSize &&
+            i <  blockDataSize+nibbleDataSize)
+        {
+            c.blocks[(i%nibbleDataSize)*2  ].meta = (chunkData[i]     )&0xF;
+            c.blocks[(i%nibbleDataSize)*2+1].meta = (chunkData[i] >> 4)&0xF;
+        } else if (
+            // Block Light
+            i >= blockDataSize+nibbleDataSize &&
+            i <  blockDataSize+(nibbleDataSize*2))
+        {
+            c.blocks[(i%nibbleDataSize)*2  ].lightBlock = (chunkData[i]     )&0xF;
+            c.blocks[(i%nibbleDataSize)*2+1].lightBlock = (chunkData[i] >> 4)&0xF;
+        } else if (
+            // Sky Light
+            i >= blockDataSize+(nibbleDataSize*2) &&
+            i <  blockDataSize+(nibbleDataSize*3))
+        {
+            c.blocks[(i%nibbleDataSize)*2  ].lightSky = (chunkData[i]     )&0xF;
+            c.blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
+        }
+    }
+    AddChunk(x,z,c);
+    chunkFile.close();
     return true;
-} 
+}
 
 void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
     Int3 pos = Int3{x,0,z};
