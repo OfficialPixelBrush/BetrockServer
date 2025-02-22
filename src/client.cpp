@@ -376,23 +376,30 @@ bool Client::LoginRequest() {
 
 	// Set the Respawn Point, Time and Player Health
 	Respond::SpawnPoint(response,Vec3ToInt3(spawnPoint));
+	
 	Respond::Time(response,server.GetServerTime());
 	// This is usually only done if the players health isn't full upon joining
 	Respond::UpdateHealth(response,player->health);
 
 	// Fill the players inventory
-	player->Give(response,ITEM_PICKAXE_DIAMOND);
-	player->Give(response,ITEM_AXE_DIAMOND);
-	player->Give(response,ITEM_SHOVEL_DIAMOND);
-	player->Give(response,BLOCK_STONE);
-	player->Give(response,BLOCK_COBBLESTONE);
-	player->Give(response,BLOCK_PLANKS);
-	//player->UpdateInventory();
+	if (!player->Load()) {
+		// Place the player at spawn
+		player->position = spawnPoint;
 
-	// Place the player at spawn
+		// Give starter items
+		player->Give(response,ITEM_PICKAXE_DIAMOND);
+		player->Give(response,ITEM_AXE_DIAMOND);
+		player->Give(response,ITEM_SHOVEL_DIAMOND);
+		player->Give(response,BLOCK_STONE);
+		player->Give(response,BLOCK_COBBLESTONE);
+		player->Give(response,BLOCK_PLANKS);
+	} else {
+		player->UpdateInventory(response);
+	}
+
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
-	player->Teleport(response,spawnPoint);
+	player->Teleport(response,player->position);
 
 	// Create the player for other players
 	Respond::NamedEntitySpawn(

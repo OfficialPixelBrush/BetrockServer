@@ -6,6 +6,7 @@
 #include "entity.h"
 #include "coms.h"
 #include "inventory.h"
+#include "nbt.h"
 
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62
@@ -83,5 +84,5 @@ class Player : public Entity {
         void DecrementHotbar(std::vector<uint8_t> &response);
         void PrintStats();
         void Save();
-        void Load();
+        bool Load();
 };

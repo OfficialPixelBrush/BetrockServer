@@ -18,6 +18,7 @@ DESTINATION "${CMAKE_BINARY_DIR}/scripts")
 configure_file(${CMAKE_SOURCE_DIR}/src/misc/version.h.in ${CMAKE_SOURCE_DIR}/src/misc/version.h)
 
 include_directories(
+    "${PROJECT_SOURCE_DIR}/include/pixnbt"
     "${PROJECT_SOURCE_DIR}/src/coms"
     "${PROJECT_SOURCE_DIR}/src/enums"
     "${PROJECT_SOURCE_DIR}/src/logger"
@@ -32,6 +33,9 @@ include_directories(
 
 add_executable(
     BetrockServer
+
+    include/pixnbt/nbt.cpp
+    include/pixnbt/tags/tag.cpp
 
     src/coms/coms.cpp
     src/coms/responses.cpp
