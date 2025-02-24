@@ -11,7 +11,8 @@ namespace Betrock {
 class Logger {
     private:
         std::ofstream logFile;
-        int8_t logLevel = LOG_ALL;
+        int8_t logLevelText = LOG_ALL;
+        int8_t logLevelTerminal = LOG_ALL;
 
         Logger() {
             logFile.open("logfile.log", std::ios::out | std::ios::app);
@@ -43,6 +44,12 @@ class Logger {
         void Info(std::string message);
         void Warning(std::string message);
         void Error(std::string message);
-        void SetLogLevel(int8_t logLevel = LOG_ALL) { this->logLevel = logLevel; }
+        void Debug(std::string message);
+        void SetLogLevelTerminal(int8_t logLevel = LOG_ALL) { this->logLevelTerminal = logLevel; }
+        void SetLogLevelText(int8_t logLevel = LOG_ALL) { this->logLevelText = logLevel; }
+        void SetLogLevel(int8_t logLevel = LOG_ALL) {
+            SetLogLevelText(logLevel);
+            SetLogLevelTerminal(logLevel);
+        }
 };
 }

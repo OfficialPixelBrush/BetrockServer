@@ -26,7 +26,7 @@ class Client {
         Player* player;
         int32_t previousOffset = 0;
         int32_t offset = 0;
-        char message[PACKET_MAX] = {0};
+        uint8_t message[PACKET_MAX] = {0};
 
         int8_t activeWindow = INVENTORY_NONE;
 
@@ -59,6 +59,7 @@ class Client {
 
         void Respond(ssize_t bytes_received);
         void SendNewChunks();
+        bool UpdatePositionForOthers(bool includeLook = true);
 
     private:
         bool CheckPosition(Player* player, Vec3 &newPosition, double &newStance); 

@@ -6,6 +6,7 @@
 #include "entity.h"
 #include "coms.h"
 #include "inventory.h"
+#include "nbt.h"
 
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62
@@ -51,6 +52,7 @@ class Player : public Entity {
         int client_fd;
         ConnectionStatus connectionStatus = ConnectionStatus::Disconnected;
         Vec3 lastChunkUpdatePosition;
+        Vec3 lastEntityUpdatePosition;
 
         Player(int client_fd, int &entityId, Vec3 position, int8_t worldId, Vec3 respawnPosition, int8_t respawnWorldId)
             : Entity(entityId++, position, worldId),
@@ -71,13 +73,16 @@ class Player : public Entity {
         void Hurt(std::vector<uint8_t> &response, int8_t damage);
         void Kill(std::vector<uint8_t> &response);
         bool TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &damage);
-        bool SpreadToSlots(int16_t item, int8_t amount, int16_t damage);
+        bool SpreadToSlots(int16_t item, int8_t amount, int16_t damage, int8_t preferredRange = 0);
         void ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage);
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
         bool UpdateInventory(std::vector<uint8_t> &response);
         void ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId);
+        int16_t GetHotbarSlot();
         Item GetHeldItem();
         bool CanDecrementHotbar();
         void DecrementHotbar(std::vector<uint8_t> &response);
         void PrintStats();
+        void Save();
+        bool Load();
 };

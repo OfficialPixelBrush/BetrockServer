@@ -22,11 +22,12 @@ sudo apt install build-essential git libdeflate-dev liblua5.4-dev
 
 ### Clone
 ```bash
-git clone https://github.com/OfficialPixelBrush/BetrockServer.git
+git clone --recurse-submodules https://github.com/OfficialPixelBrush/BetrockServer.git
 cd BetrockServer
 ```
 ```bash
 cmake -S . -B build
+cd build
 ```
 
 ### Build

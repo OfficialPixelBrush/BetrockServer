@@ -21,12 +21,9 @@ void Respond::Handshake(std::vector<uint8_t> &response) {
     AppendString16ToVector(response,"-");
 }
 
-void Respond::ChatMessage(std::vector<uint8_t> &response, std::string message, bool toConsole) {
+void Respond::ChatMessage(std::vector<uint8_t> &response, std::string message) {
     response.push_back((uint8_t)Packet::ChatMessage);
     AppendString16ToVector(response,message);
-    if (toConsole) {
-        Betrock::Logger::Instance().ChatMessage(message);
-    }
 }
 
 void Respond::Time(std::vector<uint8_t> &response, int64_t time) {
@@ -34,11 +31,11 @@ void Respond::Time(std::vector<uint8_t> &response, int64_t time) {
     AppendLongToVector(response, time);
 }
 
-void Respond::EntityEquipment(std::vector<uint8_t> &response, int32_t entityId, int16_t slotId, int16_t itemId, int16_t damage) {
+void Respond::EntityEquipment(std::vector<uint8_t> &response, int32_t entityId, int16_t slotId, int16_t item, int16_t damage) {
     response.push_back((uint8_t)Packet::EntityEquipment);
     AppendIntegerToVector(response, entityId);
     AppendShortToVector(response, slotId);
-    AppendShortToVector(response, itemId);
+    AppendShortToVector(response, item);
     AppendShortToVector(response, damage);
 }
 
@@ -165,9 +162,9 @@ void Respond::DestroyEntity(std::vector<uint8_t> &response, int32_t& entityId) {
 void Respond::EntityRelativeMove(std::vector<uint8_t> &response, int32_t& entityId, Int3 relativeMovement) {
     response.push_back((uint8_t)Packet::EntityRelativeMove);
     AppendIntegerToVector(response, entityId);
-    response.push_back(relativeMovement.x);
-    response.push_back(relativeMovement.y);
-    response.push_back(relativeMovement.z);
+    response.push_back((int8_t)relativeMovement.x);
+    response.push_back((int8_t)relativeMovement.y);
+    response.push_back((int8_t)relativeMovement.z);
 }
 
 void Respond::EntityLook(std::vector<uint8_t> &response, int32_t& entityId, int8_t yaw, int8_t pitch) {
@@ -244,18 +241,18 @@ void Respond::Soundeffect(std::vector<uint8_t> &response, int32_t sound, Int3 po
     AppendIntegerToVector(response,extra);
 }
 
-void Respond::SetSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slot, int16_t itemId, int8_t itemCount, int16_t itemUses) {
-    response.push_back(0x67);
-    response.push_back(windowId);
+void Respond::SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slot, int16_t item, int8_t amount, int16_t damage) {
+    response.push_back((uint8_t)Packet::SetSlot);
+    response.push_back(window);
     AppendShortToVector(response,slot);
-    AppendShortToVector(response,itemId);
-    response.push_back(itemCount);
-    AppendShortToVector(response,itemUses);
+    AppendShortToVector(response,item);
+    response.push_back(amount);
+    AppendShortToVector(response,damage);
 }
 
-void Respond::WindowItems(std::vector<uint8_t> &response, int8_t windowId, std::vector<Item> payload) {
+void Respond::WindowItems(std::vector<uint8_t> &response, int8_t window, std::vector<Item> payload) {
     response.push_back((uint8_t)Packet::WindowItems);
-    response.push_back(windowId); // Player Inventory
+    response.push_back(window); // Player Inventory
     AppendShortToVector(response, payload.size());
     for (int16_t slot = 0; slot < payload.size(); slot++) {
         Item i = payload[slot];

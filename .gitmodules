@@ -1,0 +1,3 @@
+[submodule "include/pixnbt"]
+	path = include/pixnbt
+	url = https://github.com/OfficialPixelBrush/pixnbt.git

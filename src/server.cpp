@@ -82,13 +82,31 @@ void Server::AddWorldManager(int8_t worldId) {
 	}
 }
 
+void Server::SaveAll() {
+	Betrock::Logger::Instance().Info("Saving...");
+	for (Player* p : GetConnectedPlayers()){
+		if (p) {
+			p->Save();
+		}
+	}
+	for (const auto &[key, wm] : worldManagers) {
+		wm->world.Save();
+	}
+	Betrock::Logger::Instance().Info("Saved");
+}
+
+void Server::FreeAll() {
+	Betrock::Logger::Instance().Info("Freeing Chunks");
+	for (const auto &[key, wm] : worldManagers) {
+		wm->world.DumpUnloadedChunks();
+	}
+}
+
 void Server::PrepareForShutdown() {
 	alive = false;
 	// Save all active worlds
 	if (!debugDisableSaveLoad) {
-		for (const auto &[key, wm] : worldManagers) {
-			wm->world.Save(ConvertIndexIntoExtra(key));
-		}
+		SaveAll();
 	}
 	DisconnectAllPlayers("Server closed!");
 	close(serverFd);
@@ -127,9 +145,8 @@ void Server::LoadConfig() {
 	AddWorldManager(0);
 	for (const auto &[key, wm] : worldManagers) {
 		wm->SetSeed(seed);
-		if (!debugDisableSaveLoad) {
-			wm->world.Load(ConvertIndexIntoExtra(key));
-		}
+		// TODO: Currently the extra part is not passed to the world!!
+		//wm->SetExtra(ConvertIndexIntoExtra(key));
 	}
 
 	GlobalConfig::Instance().SaveToDisk();

@@ -16,7 +16,7 @@ class Respond {
         static void KeepAlive(std::vector<uint8_t> &response);
         static void Login(std::vector<uint8_t> &response, int32_t& entityId, int64_t seed, int8_t dimension);
         static void Handshake(std::vector<uint8_t> &response);
-        static void ChatMessage(std::vector<uint8_t> &response, std::string message, bool toConsole = 1);
+        static void ChatMessage(std::vector<uint8_t> &response, std::string message);
         static void Time(std::vector<uint8_t> &response, int64_t time);
         static void EntityEquipment(std::vector<uint8_t> &response, int32_t entityId, int16_t slotId, int16_t itemId, int16_t damage);
         static void SpawnPoint(std::vector<uint8_t> &response, Int3 position);
@@ -42,7 +42,7 @@ class Respond {
         static void Chunk(std::vector<uint8_t> &response, Int3 position, uint8_t sizeX, uint8_t sizeY, uint8_t sizeZ, size_t compressedSize, char* compressedData);
         static void BlockChange(std::vector<uint8_t> &response, Int3 position, int8_t type, int8_t meta);
         static void Soundeffect(std::vector<uint8_t> &response, int32_t sound, Int3 position, int32_t extra);
-        static void SetSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slot, int16_t itemId, int8_t itemCount, int16_t itemUses);
-        static void WindowItems(std::vector<uint8_t> &response, int8_t windowId, std::vector<Item> payload);
+        static void SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slot, int16_t itemId, int8_t itemCount, int16_t itemUses);
+        static void WindowItems(std::vector<uint8_t> &response, int8_t window, std::vector<Item> payload);
         static void Disconnect(std::vector<uint8_t> &response, Player* player, std::string message);
 };

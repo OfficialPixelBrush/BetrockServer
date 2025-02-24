@@ -8,7 +8,12 @@
 #include <cstring>
 #include <cmath>
 #include <memory>
+
 #include "packets.h"
+#include "logger.h"
+#include "blocks.h"
+#include "items.h"
+#include "directions.h"
 
 #define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH_X 16
@@ -94,14 +99,14 @@ Int3 BlockToChunkPosition(Int3 position);
 void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction);
 
 // Converting a network response into a native type
-int8_t EntryToByte(char* message, int32_t& offset);
-int16_t EntryToShort(char* message, int32_t& offset);
-int32_t EntryToInteger(char* message, int32_t& offset);
-int64_t EntryToLong(char* message, int32_t& offset);
-float EntryToFloat(char* message, int32_t& offset);
-double EntryToDouble(char* message, int32_t& offset);
-std::string EntryToString8(char* message, int32_t& offset);
-std::string EntryToString16(char* message, int32_t& offset);
+int8_t EntryToByte(uint8_t* message, int32_t& offset);
+int16_t EntryToShort(uint8_t* message, int32_t& offset);
+int32_t EntryToInteger(uint8_t* message, int32_t& offset);
+int64_t EntryToLong(uint8_t* message, int32_t& offset);
+float EntryToFloat(uint8_t* message, int32_t& offset);
+double EntryToDouble(uint8_t* message, int32_t& offset);
+std::string EntryToString8(uint8_t* message, int32_t& offset);
+std::string EntryToString16(uint8_t* message, int32_t& offset);
 
 // Appending Data onto Network Response
 void AppendShortToVector(std::vector<uint8_t> &vector, int16_t value);
@@ -130,3 +135,8 @@ std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t comp
 
 int64_t GetChunkHash(int32_t x, int32_t z);
 Int3 DecodeChunkHash(int64_t hash);
+
+int32_t SafeStringToInt(std::string in);
+int64_t SafeStringToLong(std::string in);
+
+int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t direction, int16_t id, int16_t damage);

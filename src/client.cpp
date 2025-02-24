@@ -30,7 +30,7 @@ ssize_t Client::Setup() {
 
 void Client::PrintReceived(Packet packetType, ssize_t bytes_received) {
 	if (debugReceivedPacketType) {
-		std::cout << "Received " << PacketIdToLabel(packetType) << " from " << player->username << "! (" << bytes_received << " Bytes)" << std::endl;
+		Betrock::Logger::Instance().Debug("Received " + PacketIdToLabel(packetType) + " from " + player->username + "! (" + std::to_string(bytes_received) + " Bytes)");
 	}
 	if (debugReceivedBytes) {
 		for (uint i = 0; i < bytes_received; i++) {
@@ -74,15 +74,14 @@ void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldMan
         return;
     }
 
-    // Get existing chunk data
-    auto chunkData = wm->world.GetChunkData(position);
-    if (!chunkData) {
-        // Queue chunk generation if missing
-        wm->AddChunkToQueue(position.x, position.z, player);
-        Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
+    // Check if the chunk has already been loaded
+    if (!wm->world.ChunkExists(position.x,position.z)) {
+		// Otherwise queue chunk loading or generation
+		wm->AddChunkToQueue(position.x, position.z, player);
+		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
         return;
     }
-    
+    // If the chunk is already available, send it over
     player->newChunks.push_back(position);
 }
 
@@ -185,7 +184,7 @@ void Client::Respond(ssize_t bytes_received) {
 	BroadcastToPlayers(broadcastResponse);
 	BroadcastToPlayers(broadcastOthersResponse, player);
 	if (debugNumberOfPacketBytes) {
-		std::cout << "--- " << offset << "/" << bytes_received << " Bytes Read from Packet ---" << std::endl << std::endl; 
+		Betrock::Logger::Instance().Debug("--- " + std::to_string(offset) + "/" + std::to_string(bytes_received) + " Bytes Read from Packet ---"); 
 	}
 }
 
@@ -206,7 +205,7 @@ void HandlePacket(Client &client) {
 
 	// Read packet bundle until end
 	if (debugReceivedBundleDelimiter) {
-		std::cout << "--- Start of Packet bundle ---" << std::endl;
+		Betrock::Logger::Instance().Debug("--- Start of Packet bundle ---");
 	}
 	while (client.offset < bytes_received && client.player->connectionStatus > ConnectionStatus::Disconnected) {
 		int8_t packetIndex = EntryToByte(client.message,client.offset);
@@ -312,6 +311,7 @@ void HandleClient(Player* player) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
 	}
 	std::lock_guard<std::mutex> lock(server.GetConnectedPlayerMutex());
+	player->Save();
 	int clientFdToDisconnect = player->client_fd;
 	auto &connectedPlayers = server.GetConnectedPlayers();
     auto it = std::ranges::find(std::ranges::views::all(connectedPlayers), player);
@@ -346,7 +346,7 @@ bool Client::Handshake() {
 }
 
 bool Client::LoginRequest() {
-  auto &server = Betrock::Server::Instance();
+	auto &server = Betrock::Server::Instance();
 	if (player->connectionStatus != ConnectionStatus::LoggingIn) {
 		Disconnect(player,"Expected Login.");
 		return false;
@@ -354,11 +354,7 @@ bool Client::LoginRequest() {
 
 	// Login response
 	int protocolVersion = EntryToInteger(message,offset);
-	std::string username = EntryToString16(message,offset); // Get username again
-	if (username != player->username) {
-		Disconnect(player,"Client has mismatched username.");
-		return false;
-	} 
+	std::string username = EntryToString16(message,offset);
 	EntryToLong(message,offset); // Get map seed
 	EntryToByte(message,offset); // Get dimension
 
@@ -367,33 +363,46 @@ bool Client::LoginRequest() {
 		Disconnect(player,"Wrong Protocol Version!");
 		return false;
 	}
+
+	if (username != player->username) {
+		Disconnect(player,"Client has mismatched username.");
+		return false;
+	} 
 	// Accept the Login
 	Respond::Login(response,player->entityId,1,0);
 	Betrock::Logger::Instance().Message(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
-	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.", 0);
+	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.");
 
   	const auto &spawnPoint = server.GetSpawnPoint();
 
 	// Set the Respawn Point, Time and Player Health
 	Respond::SpawnPoint(response,Vec3ToInt3(spawnPoint));
+	
 	Respond::Time(response,server.GetServerTime());
-	Respond::UpdateHealth(response,player->health);
 
 	// Fill the players inventory
-	player->Give(response,ITEM_PICKAXE_DIAMOND);
-	player->Give(response,ITEM_AXE_DIAMOND);
-	player->Give(response,ITEM_SHOVEL_DIAMOND);
-	player->Give(response,BLOCK_STONE);
-	player->Give(response,BLOCK_COBBLESTONE);
-	player->Give(response,BLOCK_PLANKS);
-	//player->UpdateInventory();
+	if (!player->Load()) {
+		// Place the player at spawn
+		player->position = spawnPoint;
 
-	// Place the player at spawn
+		// Give starter items
+		player->Give(response,ITEM_PICKAXE_DIAMOND);
+		player->Give(response,ITEM_AXE_DIAMOND);
+		player->Give(response,ITEM_SHOVEL_DIAMOND);
+		player->Give(response,BLOCK_STONE);
+		player->Give(response,BLOCK_COBBLESTONE);
+		player->Give(response,BLOCK_PLANKS);
+	} else {
+		// This is usually only done if the players health isn't full upon joining
+		Respond::UpdateHealth(response,player->health);
+		// TODO: This hack seems stupid
+		player->position.y += 0.1;
+		player->UpdateInventory(response);
+	}
+
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
-	player->Teleport(response,spawnPoint);
-	//SendChunksAroundPlayer(response,player);
-	//SendNewChunks();
+	player->Teleport(response,player->position, player->yaw, player->pitch);
 
 	// Create the player for other players
 	Respond::NamedEntitySpawn(
@@ -404,6 +413,13 @@ bool Client::LoginRequest() {
 		player->yaw,
 		player->pitch,
 		player->inventory[INVENTORY_HOTBAR].id
+	);
+	Respond::EntityTeleport(
+		broadcastOthersResponse,
+		player->entityId,
+		Vec3ToEntityInt3(player->position),
+		ConvertFloatToPackedByte(player->yaw),
+		ConvertFloatToPackedByte(player->pitch)
 	);
 
 	// Spawn the other players for the new client
@@ -416,7 +432,7 @@ bool Client::LoginRequest() {
 			Vec3ToInt3(others->position),
 			others->yaw,
 			others->pitch,
-			others->inventory[INVENTORY_HOTBAR + others->currentHotbarSlot].id
+			others->inventory[others->GetHotbarSlot()].id
 		);
 		
 		// Apparently needed to entities show up where they need to
@@ -429,8 +445,10 @@ bool Client::LoginRequest() {
 		);
 
     }
+	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION));
+	SendToPlayer(response,player);
+	// ONLY SET THIS AFTER LOGIN HAS FINISHED
 	player->connectionStatus = ConnectionStatus::Connected;
-	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION), false);
 	return true;
 }
 
@@ -441,6 +459,7 @@ bool Client::ChatMessage() {
 		Command::Parse(command, player);
 	} else {
 		std::string sentChatMessage = "<" + player->username + "> " + chatMessage;
+		Betrock::Logger::Instance().ChatMessage(sentChatMessage);
 		Respond::ChatMessage(broadcastResponse,sentChatMessage);
 	}
 	return true;
@@ -464,6 +483,45 @@ bool Client::PlayerGrounded() {
 	return true;
 }
 
+bool Client::UpdatePositionForOthers(bool includeLook) {
+	Respond::EntityTeleport(
+		broadcastOthersResponse,
+		player->entityId,
+		Vec3ToEntityInt3(player->position),
+		ConvertFloatToPackedByte(player->yaw),
+		ConvertFloatToPackedByte(player->pitch)
+	);
+	player->lastEntityUpdatePosition = player->position;
+	/*
+	if (GetDistance(player->position,player->lastEntityUpdatePosition) > 4.0) {
+		Respond::EntityTeleport(
+			broadcastOthersResponse,
+			player->entityId,
+			Vec3ToEntityInt3(player->position),
+			ConvertFloatToPackedByte(player->yaw),
+			ConvertFloatToPackedByte(player->pitch)
+		);
+		player->lastEntityUpdatePosition = player->position;
+	} else {
+		if (includeLook) {
+			Respond::EntityRelativeMove(
+				broadcastOthersResponse,
+				player->entityId,
+				Vec3ToEntityInt3(player->position-player->lastEntityUpdatePosition)
+			);
+		} else {
+			Respond::EntityLookRelativeMove(
+				broadcastOthersResponse,
+				player->entityId,
+				Vec3ToEntityInt3(player->position-player->lastEntityUpdatePosition),
+				ConvertFloatToPackedByte(player->yaw),
+				ConvertFloatToPackedByte(player->pitch)
+			);
+		}
+	}*/
+	return true;
+}
+
 bool Client::PlayerPosition() {
 	Vec3 newPosition;
 	double newStance;
@@ -473,14 +531,7 @@ bool Client::PlayerPosition() {
 	newPosition.z = EntryToDouble(message,offset);
 	player->onGround = EntryToByte(message, offset);
 	CheckPosition(player,newPosition,newStance);
-
-	Respond::EntityTeleport(
-		broadcastOthersResponse,
-		player->entityId,
-		Vec3ToEntityInt3(player->position),
-		ConvertFloatToPackedByte(player->yaw),
-		ConvertFloatToPackedByte(player->pitch)
-	);
+	UpdatePositionForOthers(false);
 
 	if (CheckIfNewChunksRequired(player)) {
 		SendChunksAroundPlayer(response,player);
@@ -507,6 +558,9 @@ bool Client::PlayerPositionLook() {
 	player->pitch = EntryToFloat(message,offset);
 	player->onGround = EntryToByte(message, offset);
 	CheckPosition(player,newPosition,newStance);
+
+	UpdatePositionForOthers(true);
+
 	if (CheckIfNewChunksRequired(player)) {
 		SendChunksAroundPlayer(response,player);
 	}
@@ -632,26 +686,33 @@ bool Client::PlayerBlockPlacement(World* world) {
 
 	BlockToFace(x,y,z,direction);
 	Int3 pos = XyzToInt3(x,y,z);
+
 	// This packet has a special case where X, Y, Z, and Direction are all -1.
 	// This special packet indicates that the currently held item for the player should have
 	// its state updated such as eating food, shooting bows, using buckets, etc.
 
 	// Apparently this also handles the player standing inside the block its trying to place in
 	if (x == -1 && y == -1 && z == -1 && direction == -1) {
-		return true;
+		return false;
+	}
+
+	if (id < BLOCK_MAX) {
+		damage = GetMetaData(x,y,z,direction,id,damage);
 	}
 	// Place a block if we can
 	if (id > BLOCK_AIR && id < BLOCK_MAX && !BlockTooCloseToPosition(pos) && player->CanDecrementHotbar()) {
 		//std::cout << BlockTooCloseToPosition(pos) << ": " << pos << " - " << player->position << std::endl;
 		Item i = player->inventory[INVENTORY_HOTBAR+player->currentHotbarSlot];
-		Respond::BlockChange(broadcastResponse,pos,(int8_t)i.id,(int8_t)i.damage);
-		world->PlaceBlock(pos,(int8_t)i.id,(int8_t)i.damage);
+		// TODO: Make sure damage value is valid(?)
+		//damage = CheckIfValidDamage();
+		Respond::BlockChange(broadcastResponse,pos,(int8_t)i.id,(int8_t)damage);
+		world->PlaceBlock(pos,(int8_t)i.id,(int8_t)damage);
 		// Immediately give back item if we're in creative mode
 		if (player->creativeMode) {
 			Item i = player->GetHeldItem();
 			id = i.id;
 			amount = i.amount;
-			damage = i.damage;
+			Respond::SetSlot(response,0,player->GetHotbarSlot(),id,amount,i.damage);
 		} else {
 			player->DecrementHotbar(response);
 		}

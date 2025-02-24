@@ -10,5 +10,5 @@ function GenerateBlock(x,y,z,blocksSinceSkyVisible)
     elseif y == 3 then
         type = 2
     end
-    return type
+    return type,0
 end

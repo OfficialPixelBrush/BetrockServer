@@ -8,6 +8,7 @@
 #include "coms.h"
 #include "gamerules.h"
 #include "labels.h"
+#include "sysinfo.h"
 
 class Command {
     public:
@@ -26,5 +27,7 @@ class Command {
         static void Spawn(Player* player);
         static void Creative(Player* player);
         static void Chunk(Player* player);
+        static void Save();
         static void Stop();
+        static void Free();
 };
