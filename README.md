@@ -40,9 +40,17 @@ cmake --build .
 cpack --config CPackConfig.cmake -G TGZ
 ```
 
-## Resources
-- [beta-wiki by mudkipdev](https://github.com/mudkipdev/beta-wiki)
-- [wiki.vg (Now part of the Minecraft Wiki)](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Protocol?oldid=2769758)
+## Misc
+- [PixNBT](https://github.com/OfficialPixelBrush/pixnbt) - A C++ native NBT parsing library
+- [BetaPacketPlainTextifier](https://github.com/OfficialPixelBrush/BetaPacketPlainTextifier) - A utility for turning WireShark captures of Minecraft Client-Server data into Markdown files for easy decoding
 
-**Used for the Logo**
-- [Help:Isometric Renders (Minecraft Wiki)](https://minecraft.wiki/w/Help:Isometric_renders)
+## Resources
+- GitHub
+    - [beta-wiki](https://github.com/mudkipdev/beta-wiki) by [mudkipdev](https://github.com/mudkipdev)
+- Wiki.vg (Now part of the Minecraft Wiki)
+    - [Protocol](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Protocol?oldid=2769758)
+    - [Region Files](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Region_Files)
+- Minecraft Wiki
+    - [NBT Format](https://minecraft.wiki/w/NBT_format)
+    - [Region File Format](https://minecraft.wiki/w/Region_file_format)
+    - [Help:Isometric Renders](https://minecraft.wiki/w/Help:Isometric_renders) (Used for the Logo)
