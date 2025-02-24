@@ -6,6 +6,7 @@ uint8_t GetTranslucency(int16_t id, uint8_t &skylight);
 bool IsTransparent(int16_t id);
 bool IsEmissive(int16_t id);
 uint8_t GetEmissiveness(int16_t id);
+bool IsInstantlyBreakable(int16_t id);
 
 enum Blocks {
     BLOCK_AIR           = 0,

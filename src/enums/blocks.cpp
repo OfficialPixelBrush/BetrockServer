@@ -127,3 +127,27 @@ uint8_t GetEmissiveness(int16_t id) {
     // Test this!
     return 0;
 }
+
+bool IsInstantlyBreakable(int16_t id) {
+    if (id == BLOCK_SAPLING ||
+        id == BLOCK_DEADBUSH ||
+        id == BLOCK_TALLGRASS ||
+        id == BLOCK_DANDELION || 
+        id == BLOCK_ROSE ||
+        id == BLOCK_MUSHROOM_BROWN ||
+        id == BLOCK_MUSHROOM_RED ||
+        id == BLOCK_TNT ||
+        id == BLOCK_TORCH ||
+        id == BLOCK_FIRE ||
+        id == BLOCK_REDSTONE_WIRE ||
+        id == BLOCK_CROP_WHEAT ||
+        id == BLOCK_REDSTONE_TORCH_OFF ||
+        id == BLOCK_REDSTONE_TORCH_ON ||
+        id == BLOCK_SUGARCANE ||
+        id == BLOCK_REDSTONE_REPEATER_OFF ||
+        id == BLOCK_REDSTONE_REPEATER_ON)
+    {
+        return true;
+    }
+    return false;
+}

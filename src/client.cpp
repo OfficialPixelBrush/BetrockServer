@@ -622,7 +622,8 @@ bool Client::PlayerDigging(World* world) {
 	int8_t face = EntryToByte(message, offset);
 
 	Int3 pos = XyzToInt3(x,y,z);
-	if (status == 2 || player->creativeMode) {
+	Block* b = world->GetBlock(pos);
+	if (status == 2 || player->creativeMode || IsInstantlyBreakable(b->type)) {
 		Respond::BlockChange(broadcastResponse,pos,0,0);
 		Block b = world->BreakBlock(pos);
 		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,b.type);
