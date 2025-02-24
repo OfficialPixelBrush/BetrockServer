@@ -642,7 +642,11 @@ bool Client::PlayerDigging(World* world) {
 				0,0,0
 			);
 			*/
-			player->Give(response,b.type,1,b.meta);
+			Item item = Item{b.type,1,b.meta};
+			if (!player->creativeMode) {
+				item = GetDrop(item);
+			}
+			player->Give(response,item.id,item.amount,item.damage);
 		}
 	}
 	return true;

@@ -1,12 +1,17 @@
 #pragma once
 #include <cstdint>
 
+#include "datatypes.h"
+#include "items.h"
+
 bool IsTranslucent(int16_t id);
 uint8_t GetTranslucency(int16_t id, uint8_t &skylight);
 bool IsTransparent(int16_t id);
 bool IsEmissive(int16_t id);
 uint8_t GetEmissiveness(int16_t id);
 bool IsInstantlyBreakable(int16_t id);
+bool NoDrop(Item item);
+Item GetDrop(Item item);
 
 enum Blocks {
     BLOCK_AIR           = 0,
