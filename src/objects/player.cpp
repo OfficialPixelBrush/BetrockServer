@@ -179,6 +179,8 @@ void Player::PrintStats() {
 }
 
 void Player::Save() {
+    // Note: Right now this implements all tags that a Beta 1.7.3 player.nbt has
+    // This does not mean we actually, properly implement all of these just yet
 	auto root = std::make_shared<CompoundTag>("");
 
 	auto motionList = std::make_shared<ListTag>("Motion");
@@ -188,7 +190,7 @@ void Player::Save() {
 	motionList->Put(std::make_shared<DoubleTag>("z",0.0));
 
 	root->Put(std::make_shared<ShortTag>("SleepTimer", 0));
-	root->Put(std::make_shared<ShortTag>("Health",20));
+	root->Put(std::make_shared<ShortTag>("Health",health));
 	root->Put(std::make_shared<ShortTag>("Air",300));
 	root->Put(std::make_shared<ByteTag>("OnGround",onGround));
 	root->Put(std::make_shared<IntTag>("Dimension",worldId));
@@ -252,33 +254,36 @@ bool Player::Load() {
         return false;
     }
 
+    // Load the NBT Data into the root node
     std::shared_ptr<CompoundTag> root = std::dynamic_pointer_cast<CompoundTag>(NbtReadFromFile(entryPath));
 
+    // Get the players saved rotation
     std::shared_ptr<ListTag> rotationList = std::dynamic_pointer_cast<ListTag>(root->Get("Rotation"));
     yaw   = std::dynamic_pointer_cast<FloatTag>(rotationList->Get(0))->GetData();
     pitch = std::dynamic_pointer_cast<FloatTag>(rotationList->Get(1))->GetData();
 
+    // Get the players saved position
     std::shared_ptr<ListTag> posList = std::dynamic_pointer_cast<ListTag>(root->Get("Pos"));
     position.x = std::dynamic_pointer_cast<DoubleTag>(posList->Get(0))->GetData();
     position.y = std::dynamic_pointer_cast<DoubleTag>(posList->Get(1))->GetData();
     position.z = std::dynamic_pointer_cast<DoubleTag>(posList->Get(2))->GetData();
 
+    health = std::dynamic_pointer_cast<ShortTag>(root->Get("Health"))->GetData();
 
-    /*
-    for (int i = 0; i < INVENTORY_MAX_SLOTS; i++) {
-        Item item = inventory[i];
-        if (item.id == SLOT_EMPTY) {
-            continue;
-        }
-        nbtInventory->Put(
-            NbtItem(
-                NbtConvertToSlot(i),
-                item.id,
-                item.amount,
-                item.damage
-            )
-        );
-        
-    }*/
+
+    // Get the players saved inventory
+    std::shared_ptr<ListTag> inventoryList = std::dynamic_pointer_cast<ListTag>(root->Get("Inventory"));
+    for (int i = 0; i < inventoryList->GetNumberOfTags(); i++) {
+        auto slot = std::dynamic_pointer_cast<CompoundTag>(inventoryList->Get(i));
+        int8_t  slotNumber = std::dynamic_pointer_cast<ByteTag>(slot->Get("Slot"))->GetData();
+        int16_t itemId = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"))->GetData();
+        int8_t  itemCount = std::dynamic_pointer_cast<ByteTag>(slot->Get("Count"))->GetData();
+        int16_t itemDamage = std::dynamic_pointer_cast<ShortTag>(slot->Get("Damage"))->GetData();
+        inventory[NbtConvertToSlot(slotNumber)] = {
+            itemId,
+            itemCount,
+            itemDamage
+        };
+    }
     return true;
 }

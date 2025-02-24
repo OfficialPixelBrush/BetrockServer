@@ -311,6 +311,7 @@ void HandleClient(Player* player) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
 	}
 	std::lock_guard<std::mutex> lock(server.GetConnectedPlayerMutex());
+	player->Save();
 	int clientFdToDisconnect = player->client_fd;
 	auto &connectedPlayers = server.GetConnectedPlayers();
     auto it = std::ranges::find(std::ranges::views::all(connectedPlayers), player);
@@ -378,8 +379,6 @@ bool Client::LoginRequest() {
 	Respond::SpawnPoint(response,Vec3ToInt3(spawnPoint));
 	
 	Respond::Time(response,server.GetServerTime());
-	// This is usually only done if the players health isn't full upon joining
-	Respond::UpdateHealth(response,player->health);
 
 	// Fill the players inventory
 	if (!player->Load()) {
@@ -394,12 +393,16 @@ bool Client::LoginRequest() {
 		player->Give(response,BLOCK_COBBLESTONE);
 		player->Give(response,BLOCK_PLANKS);
 	} else {
+		// This is usually only done if the players health isn't full upon joining
+		Respond::UpdateHealth(response,player->health);
+		// TODO: This hack seems stupid
+		player->position.y += 0.1;
 		player->UpdateInventory(response);
 	}
 
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
-	player->Teleport(response,player->position);
+	player->Teleport(response,player->position, player->yaw, player->pitch);
 
 	// Create the player for other players
 	Respond::NamedEntitySpawn(
