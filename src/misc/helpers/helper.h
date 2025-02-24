@@ -144,3 +144,5 @@ int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t direction, int16_t id
 
 std::string GetRealTime();
 std::string GetRealTimeFileFormat();
+
+std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size);

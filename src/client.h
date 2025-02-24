@@ -11,6 +11,7 @@
 #include "command.h"
 #include "worldManager.h"
 #include "version.h"
+#include "helper.h"
 
 #include "inventory.h"
 #include "blocks.h"

@@ -191,6 +191,7 @@ void Client::Respond(ssize_t bytes_received) {
 void HandlePacket(Client &client) {
 	auto serverTime = Betrock::Server::Instance().GetServerTime();
 	int64_t lastPacketTime = serverTime;
+	bool validPacket = true;
 	// Prep for next packet
 	ssize_t bytes_received = client.Setup();
 
@@ -207,7 +208,7 @@ void HandlePacket(Client &client) {
 	if (debugReceivedBundleDelimiter) {
 		Betrock::Logger::Instance().Debug("--- Start of Packet bundle ---");
 	}
-	while (client.offset < bytes_received && client.player->connectionStatus > ConnectionStatus::Disconnected) {
+	while (validPacket && client.offset < bytes_received && client.player->connectionStatus > ConnectionStatus::Disconnected) {
 		int8_t packetIndex = EntryToByte(client.message,client.offset);
 		Packet packetType = (Packet)packetIndex;
 
@@ -276,7 +277,8 @@ void HandlePacket(Client &client) {
 				client.DisconnectClient();
 				break;
 			default:
-				Betrock::Logger::Instance().Warning("Unhandled Server-bound packet: " + std::to_string(packetIndex));
+				Betrock::Logger::Instance().Debug("Unhandled Server-bound packet: " + std::to_string(packetIndex) + "\n" + Uint8ArrayToHexDump(client.message,bytes_received));
+				validPacket = false;
 				break;
 		}
 		if (client.player != nullptr && client.player->connectionStatus == ConnectionStatus::Connected) {

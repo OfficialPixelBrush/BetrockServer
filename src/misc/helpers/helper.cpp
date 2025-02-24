@@ -530,3 +530,34 @@ std::string GetRealTimeFileFormat() {
 	ss << std::put_time(std::localtime(&in_time_t), "%Y-%m-%d-%H-%M-%S");
 	return ss.str();
 }
+
+std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size) {
+    std::ostringstream oss;
+    oss << std::hex << std::setfill('0');
+
+    for (size_t i = 0; i < size; i += 16) {
+        // Print offset
+        oss << std::setw(4) << i << "  ";
+
+        // Print hex values
+        for (size_t j = 0; j < 16; ++j) {
+            if (i + j < size) {
+                oss << std::setw(2) << static_cast<int>(array[i + j]) << " ";
+            } else {
+                oss << "   "; // Padding for alignment
+            }
+        }
+
+        oss << " ";
+
+        // Print ASCII representation
+        for (size_t j = 0; j < 16 && i + j < size; ++j) {
+            char c = array[i + j];
+            oss << (std::isprint(c) ? c : '.');
+        }
+
+        oss << std::endl;
+    }
+
+    return oss.str();
+}
