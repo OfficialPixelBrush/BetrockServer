@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <libdeflate.h>
 #include <iostream>
 #include <vector>
@@ -140,3 +141,6 @@ int32_t SafeStringToInt(std::string in);
 int64_t SafeStringToLong(std::string in);
 
 int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t direction, int16_t id, int16_t damage);
+
+std::string GetRealTime();
+std::string GetRealTimeFileFormat();

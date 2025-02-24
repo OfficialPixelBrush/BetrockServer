@@ -138,8 +138,6 @@ void Server::LoadConfig() {
 		seed = GlobalConfig::Instance().GetAsNumber<int>("level-seed");
 	}
 
-	std::cout << "Level seed is " << seed << std::endl;
-
 	// Load all defined worlds
 	// TODO: Add file to configure custom worlds
 	AddWorldManager(0);

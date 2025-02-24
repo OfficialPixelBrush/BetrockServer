@@ -276,7 +276,7 @@ void HandlePacket(Client &client) {
 				client.DisconnectClient();
 				break;
 			default:
-				Betrock::Logger::Instance().Log("Unhandled Server-bound packet: " + std::to_string(packetIndex), LOG_WARNING);
+				Betrock::Logger::Instance().Warning("Unhandled Server-bound packet: " + std::to_string(packetIndex));
 				break;
 		}
 		if (client.player != nullptr && client.player->connectionStatus == ConnectionStatus::Connected) {
@@ -370,7 +370,7 @@ bool Client::LoginRequest() {
 	} 
 	// Accept the Login
 	Respond::Login(response,player->entityId,1,0);
-	Betrock::Logger::Instance().Message(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
+	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
 	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.");
 
   	const auto &spawnPoint = server.GetSpawnPoint();
@@ -459,7 +459,7 @@ bool Client::ChatMessage() {
 		Command::Parse(command, player);
 	} else {
 		std::string sentChatMessage = "<" + player->username + "> " + chatMessage;
-		Betrock::Logger::Instance().ChatMessage(sentChatMessage);
+		Betrock::Logger::Instance().Info(sentChatMessage);
 		Respond::ChatMessage(broadcastResponse,sentChatMessage);
 	}
 	return true;

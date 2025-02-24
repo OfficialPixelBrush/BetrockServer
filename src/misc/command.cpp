@@ -8,6 +8,10 @@ std::vector<std::string> command;
 std::string failureReason;
 
 // Toggle the players pose bits
+void Command::Help(Player* player) {
+}
+
+// Toggle the players pose bits
 void Command::Pose(Player* player) {	
 	// Set the time
 	if (command.size() > 1) {
@@ -70,20 +74,47 @@ void Command::Time() {
 }
 
 void Command::Teleport(Player* player) {
+	std::vector<uint8_t> sourceResponse;
 	// Set the time
-	if (command.size() > 3) {
-		try {
-			int32_t x = std::stoi(command[1].c_str());
-			int32_t y = std::stoi(command[2].c_str());
-			int32_t z = std::stoi(command[3].c_str());
-			// Can only really fail on the stoi
-			Int3 tpGoal = {x,y,z};
-			player->Teleport(response,Int3ToVec3(tpGoal));
-			Respond::ChatMessage(response, "§7Teleported " + std::to_string(x) + ", "  + std::to_string(y) + ", " + std::to_string(z));
-			failureReason = "";
-		} catch (const std::exception &e) {
-			failureReason = "Invalid destination given!";
+	if (command.size() > 1) {
+		// Player that is to-be teleported
+		std::string source = command[1];
+		auto sourcePlayer = Betrock::Server::Instance().FindPlayerByUsername(source);
+		if (!sourcePlayer) {
+			failureReason = source + " does not exist! (Source)";
+			return;
 		}
+
+		// Option 1: Target coordinates
+		try {
+			int32_t x = std::stoi(command[2].c_str());
+			int32_t y = std::stoi(command[3].c_str());
+			int32_t z = std::stoi(command[4].c_str());
+			Int3 tpGoal = {x,y,z};
+			sourcePlayer->Teleport(sourceResponse,Int3ToVec3(tpGoal));
+			SendToPlayer(sourceResponse, sourcePlayer);
+			Respond::ChatMessage(response, "§7Teleported  " + sourcePlayer->username + " to (" + std::to_string(x) + ", "  + std::to_string(y) + ", " + std::to_string(z) + ")");
+			failureReason = "";
+			return;
+		} catch (const std::exception &e) {
+			// Fallthrough
+		}
+
+		// Option 2: Target player
+		try {
+			std::string destination = command[2];
+			auto destinationPlayer = Betrock::Server::Instance().FindPlayerByUsername(destination);
+			if (!destinationPlayer) {
+				failureReason = destination + " does not exist! (Destination)";
+				return;
+			}
+			sourcePlayer->Teleport(sourceResponse,destinationPlayer->position,destinationPlayer->yaw,destinationPlayer->pitch);
+			SendToPlayer(sourceResponse, sourcePlayer);
+			Respond::ChatMessage(response, "§7Teleported " + sourcePlayer->username + " to " + destinationPlayer->username);
+		} catch (const std::exception &e) {
+			failureReason = e.what();
+		}
+		failureReason = "";
 	}
 }
 
@@ -231,6 +262,20 @@ void Command::Free() {
 	failureReason = "";
 }
 
+void Command::Op(Player* player) {
+	if (command.size() > 0) {
+		Respond::ChatMessage(response, "§7Opping " + player->username);
+		failureReason = "";
+	}
+}
+
+void Command::Deop(Player* player) {
+	if (command.size() > 0) {
+		Respond::ChatMessage(response, "§7De-opping " + player->username);
+		failureReason = "";
+	}
+}
+
 // Parses commands and executes them
 void Command::Parse(std::string &rawCommand, Player* player) {
 	// Set these up for command parsing
@@ -249,6 +294,12 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 	try {
 		if (command[0] == "time") {
 			Time();
+		} else if (command[0] == "help") {
+			Help(player);
+		} else if (command[0] == "op") {
+			Op(player);
+		} else if (command[0] == "deop") {
+			Deop(player);
 		} else if (command[0] == "tp") {
 			Teleport(player);
 		} else if (command[0] == "pose") {
