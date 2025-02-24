@@ -19,6 +19,6 @@ assignees: ''
 **Screenshots**
 
 **System Info:**
-- OS (Server): [e.g. Debian 12, Ubuntu Server 24.04.1 LTS]
-- OS (Client): [e.g. Windows 10, Linux Mint 22.1]
-- Version: [e.g. v0.1.9]
+- OS (Server): 
+- OS (Client): 
+- Version: v0.1.14
