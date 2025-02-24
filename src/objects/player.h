@@ -52,7 +52,7 @@ class Player : public Entity {
         int client_fd;
         ConnectionStatus connectionStatus = ConnectionStatus::Disconnected;
         Vec3 lastChunkUpdatePosition;
-        Vec3 lastEntityUpdatePosition;
+        Vec3 lastTickPosition;
 
         Player(int client_fd, int &entityId, Vec3 position, int8_t worldId, Vec3 respawnPosition, int8_t respawnWorldId)
             : Entity(entityId++, position, worldId),

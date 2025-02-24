@@ -346,6 +346,7 @@ bool Client::Handshake() {
 }
 
 bool Client::LoginRequest() {
+	bool firstJoin = true;
 	auto &server = Betrock::Server::Instance();
 	if (player->connectionStatus != ConnectionStatus::LoggingIn) {
 		Disconnect(player,"Expected Login.");
@@ -368,6 +369,12 @@ bool Client::LoginRequest() {
 		Disconnect(player,"Client has mismatched username.");
 		return false;
 	} 
+
+	// Fill the players inventory
+	if (player->Load()) {
+		firstJoin = false;
+	}
+
 	// Accept the Login
 	Respond::Login(response,player->entityId,1,0);
 	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
@@ -377,11 +384,13 @@ bool Client::LoginRequest() {
 
 	// Set the Respawn Point, Time and Player Health
 	Respond::SpawnPoint(response,Vec3ToInt3(spawnPoint));
-	
 	Respond::Time(response,server.GetServerTime());
+	// This is usually only done if the players health isn't full upon joining
+	if (player->health != HEALTH_MAX) {
+		Respond::UpdateHealth(response,player->health);
+	}
 
-	// Fill the players inventory
-	if (!player->Load()) {
+	if (firstJoin) {
 		// Place the player at spawn
 		player->position = spawnPoint;
 
@@ -393,13 +402,11 @@ bool Client::LoginRequest() {
 		player->Give(response,BLOCK_COBBLESTONE);
 		player->Give(response,BLOCK_PLANKS);
 	} else {
-		// This is usually only done if the players health isn't full upon joining
-		Respond::UpdateHealth(response,player->health);
-		// TODO: This hack seems stupid
-		player->position.y += 0.1;
 		player->UpdateInventory(response);
 	}
 
+	// TODO: This hack seems stupid
+	player->position.y += 0.1;
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
 	player->Teleport(response,player->position, player->yaw, player->pitch);
@@ -491,9 +498,9 @@ bool Client::UpdatePositionForOthers(bool includeLook) {
 		ConvertFloatToPackedByte(player->yaw),
 		ConvertFloatToPackedByte(player->pitch)
 	);
-	player->lastEntityUpdatePosition = player->position;
+	player->lastTickPosition = player->position;
 	/*
-	if (GetDistance(player->position,player->lastEntityUpdatePosition) > 4.0) {
+	if (GetDistance(player->position,player->lastTickPosition) > 4.0) {
 		Respond::EntityTeleport(
 			broadcastOthersResponse,
 			player->entityId,
@@ -501,19 +508,19 @@ bool Client::UpdatePositionForOthers(bool includeLook) {
 			ConvertFloatToPackedByte(player->yaw),
 			ConvertFloatToPackedByte(player->pitch)
 		);
-		player->lastEntityUpdatePosition = player->position;
+		player->lastTickPosition = player->position;
 	} else {
 		if (includeLook) {
 			Respond::EntityRelativeMove(
 				broadcastOthersResponse,
 				player->entityId,
-				Vec3ToEntityInt3(player->position-player->lastEntityUpdatePosition)
+				Vec3ToEntityInt3(player->position-player->lastTickPosition)
 			);
 		} else {
 			Respond::EntityLookRelativeMove(
 				broadcastOthersResponse,
 				player->entityId,
-				Vec3ToEntityInt3(player->position-player->lastEntityUpdatePosition),
+				Vec3ToEntityInt3(player->position-player->lastTickPosition),
 				ConvertFloatToPackedByte(player->yaw),
 				ConvertFloatToPackedByte(player->pitch)
 			);

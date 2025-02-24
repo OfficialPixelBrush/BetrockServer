@@ -183,6 +183,8 @@ void Player::Save() {
     // This does not mean we actually, properly implement all of these just yet
 	auto root = std::make_shared<CompoundTag>("");
 
+    // TODO: Probably calulated based on where the player was in the previous tick?
+    // Could use lastTickPosition
 	auto motionList = std::make_shared<ListTag>("Motion");
 	root->Put(motionList);
 	motionList->Put(std::make_shared<DoubleTag>("x",0.0));
