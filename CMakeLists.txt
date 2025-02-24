@@ -96,8 +96,12 @@ target_link_libraries(
     ${LUA_LIBRARIES}
 )
 
-
-include(CPack)
+# Detect CPU architecture
+if(CMAKE_SYSTEM_PROCESSOR)
+    set(ARCH_SUFFIX "${CMAKE_SYSTEM_PROCESSOR}")
+else()
+    set(ARCH_SUFFIX "unknown")
+endif()
 
 # Set up CPack for AppImage
 set(CPACK_PACKAGE_NAME "BetrockServer")
@@ -107,5 +111,11 @@ set(CPACK_PACKAGE_VENDOR "Torben J. Virtmann")
 set(CPACK_PACKAGE_CONTACT "letsplaytvirtmann@gmail.com")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
 
+# Override the default package file name
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${ARCH_SUFFIX}")
+
+include(CPack)
+
 # Install the Betrock executable
 install(TARGETS BetrockServer DESTINATION bin)
+
