@@ -59,23 +59,22 @@ jobs:
         echo "PACKAGE=$PACKAGE"
         echo "package=$PACKAGE" >> $GITHUB_ENV
 
-    - name: Create GitHub Release
-      id: create_release
-      uses: actions/create-release@v1
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Create GitHub Release (Only Once)
+      if: ${{ matrix.os == 'ubuntu-latest' }}  # Only first OS creates the release
+      uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ env.version }}
         release_name: v${{ env.version }}
         draft: false
         prerelease: false
-
-    - name: Upload Release Asset
-      uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+    - name: Upload Release Asset
+      uses: softprops/action-gh-release@v1
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }}
-        asset_path: ${{ env.package }}
-        asset_name: BetrockServer-${{ env.version }}-${{ runner.os }}-${{ runner.arch }}.tar.gz
-        asset_content_type: application/gzip
+        tag_name: v${{ env.version }}
+        files: ${{ env.package }}
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
