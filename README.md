@@ -32,12 +32,12 @@ cd build
 
 ### Build
 ```bash
-cmake --build build
+cmake --build .
 ```
 
 ### Packing (Optional)
 ```bash
-cpack --config build/CPackConfig.cmake -G TGZ
+cpack --config CPackConfig.cmake -G TGZ
 ```
 
 ## Resources
