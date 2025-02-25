@@ -1,7 +1,5 @@
 #include "generator.h"
 
-#include <string>
-
 void Generator::PrepareGenerator(int64_t seed) {
 	logger = &Betrock::Logger::Instance();
     this->seed = seed;
@@ -23,6 +21,7 @@ void Generator::PrepareGenerator(int64_t seed) {
     lua_register(L,"between", lua_Between);
     lua_register(L,"spatialPrng", lua_SpatialPRNG);
     lua_register(L,"getNoiseWorley", lua_GetNoiseWorley);
+    lua_register(L,"getNoisePerlin2d", lua_GetNoisePerlin2D);
     lua_register(L,"getNaturalGrass", lua_GetNaturalGrass);
     
     // Execute a Lua script
@@ -190,6 +189,10 @@ double GetNoiseWorley(int64_t seed, Int3 position, double threshold, Vec3 scale)
     return 1.0 - SmoothStep(0.0, threshold, distance);
 }
 
+double GetNoisePerlin2D(int64_t seed, Vec3 position, int octaves) {
+    return perlin.octave2D_01(position.x, position.z, octaves);
+}
+
 Block GetNaturalGrass(int64_t seed, Int3 position, int32_t blocksSinceSkyVisible) {
     Block b;
     if (blocksSinceSkyVisible == 0) {
@@ -322,6 +325,39 @@ int lua_GetNoiseWorley(lua_State *L) {
 
     // Call GetNoiseWorley and push result
     double result = GetNoiseWorley(seed, position, threshold, scale);
+    lua_pushnumber(L, result);
+    return 1;
+}
+
+
+int lua_GetNoisePerlin2D(lua_State *L) {
+    // Get the seed
+    lua_getglobal(L, "seed");
+    if (!lua_isnumber(L,1)) {
+        std::cerr << "Invalid seed value!" << std::endl;
+        return 0;
+    }
+    int64_t seed = (int64_t)lua_tonumber(L, 1);
+
+    // Validate and extract x, y, z
+    if (!CheckNum3(L)) {
+        return 0;
+    }
+    double x = (double)lua_tonumber(L, 1);
+    double y = (double)lua_tonumber(L, 2);
+    double z = (double)lua_tonumber(L, 3);
+    Vec3 position = Vec3{x, y, z};
+
+    // Validate and extract octaves
+    if (!lua_isnumber(L, 4)) {
+        luaL_error(L, "Octaves must be a numeric value");
+        return 0;
+    }
+    int octaves = (int)lua_tonumber(L, 4);
+
+    // Call GetNoisePerlin2D and push result
+    double result = GetNoisePerlin2D(seed, position, octaves);
+    //std::cout << result << std::endl;
     lua_pushnumber(L, result);
     return 1;
 }

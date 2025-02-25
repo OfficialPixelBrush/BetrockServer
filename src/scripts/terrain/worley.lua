@@ -5,16 +5,16 @@ GenName = "Worley"
 GenApiVersion = 2
 
 function PlaceTree(c,x,y,z)
-    for h = 0, 5 do
-        c[index(x,y+h,z)] = {17,0}
-    end
-
     for h = 0, 3 do
         for w = -2, 1 do
             for l = -2, 1 do
                 c[index(x+w,y+3+h,z+l)] = {18,0}
             end
         end
+    end
+
+    for h = 0, 5 do
+        c[index(x,y+h,z)] = {17,0}
     end
 end
 
