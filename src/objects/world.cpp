@@ -68,7 +68,7 @@ void World::RemoveChunk(int32_t x, int32_t z) {
     chunks.erase(GetChunkHash(x,z));
 }
 
-void World::DumpUnloadedChunks() {
+void World::FreeUnseenChunks() {
     std::vector<Int3> chunksToRemove;
 
     for (const auto& pair : chunks) {

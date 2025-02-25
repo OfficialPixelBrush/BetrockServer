@@ -28,7 +28,7 @@ class World {
         Block* GetBlock(Int3 position);
         Int3 FindSpawnableBlock(Int3 position);
         void AddChunk(int32_t x, int32_t z, Chunk c);
-        void DumpUnloadedChunks();
+        void FreeUnseenChunks();
         void SaveChunk(int32_t x, int32_t z, const Chunk* chunk);
         bool LoadChunk(int32_t x, int32_t z);
         bool ChunkFileExists(int32_t x, int32_t z);

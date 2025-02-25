@@ -45,6 +45,8 @@ void WorldManager::Run() {
         workers.emplace_back(&WorldManager::WorkerThread, this);
     }
 
+    // TODO: Add clean-up thread to remove unseen chunks
+
     while (Betrock::Server::Instance().IsAlive()) {
         GenerateQueuedChunks();
         std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Sleep for half a second
@@ -129,3 +131,54 @@ std::string ConvertIndexIntoExtra(int8_t worldId) {
     }
     return "DIM" + std::to_string(worldId);
 }
+
+void WorldManager::FreeUnseenChunks() {
+    world.FreeUnseenChunks();
+}
+
+void WorldManager::SaveNbt() {
+	auto &server = Betrock::Server::Instance();
+	auto root = std::make_shared<CompoundTag>("");
+	auto data = std::make_shared<CompoundTag>("Data");
+	root->Put(data);
+
+    Int3 spawn = Vec3ToInt3(server.GetSpawnPoint());
+
+	data->Put(std::make_shared<LongTag>("RandomSeed",seed));
+	data->Put(std::make_shared<IntTag>("SpawnY", spawn.y));
+	data->Put(std::make_shared<IntTag>("rainTime", 87264));
+	data->Put(std::make_shared<IntTag>("thunderTime", 26271));
+	data->Put(std::make_shared<IntTag>("SpawnZ", spawn.z));
+	data->Put(std::make_shared<IntTag>("SpawnX", spawn.x));
+	data->Put(std::make_shared<ByteTag>("raining", 0));
+	data->Put(std::make_shared<LongTag>("Time", server.GetServerTime()));
+	data->Put(std::make_shared<ByteTag>("thundering", 0));
+	data->Put(std::make_shared<IntTag>("version", 19132));
+	data->Put(std::make_shared<LongTag>("LastPlayed", 1740410572431));
+    std::string levelName = std::string(Betrock::GlobalConfig::Instance().Get("level-name"));
+	data->Put(std::make_shared<StringTag>("LevelName", levelName));
+	data->Put(std::make_shared<LongTag>("SizeOnDisk", 3956736));
+
+	NbtWriteToFile(levelName + "/level.dat",root);
+}
+
+/*
+void WorldManager::LoadNbt() {
+	auto root = std::make_shared<CompoundTag>("");
+	auto data = std::make_shared<CompoundTag>("Data");
+	root->Put(data);
+
+	data->Put(std::make_shared<LongTag>("RandomSeed",8703966663084738725));
+	data->Put(std::make_shared<IntTag>("SpawnY", 64));
+	data->Put(std::make_shared<IntTag>("rainTime", 87264));
+	data->Put(std::make_shared<IntTag>("thunderTime", 26271));
+	data->Put(std::make_shared<IntTag>("SpawnZ", -51));
+	data->Put(std::make_shared<IntTag>("SpawnX", 63));
+	data->Put(std::make_shared<ByteTag>("raining", 0));
+	data->Put(std::make_shared<LongTag>("Time", 56719));
+	data->Put(std::make_shared<ByteTag>("thundering", 0));
+	data->Put(std::make_shared<IntTag>("version", 19132));
+	data->Put(std::make_shared<LongTag>("LastPlayed", 1740410572431));
+	data->Put(std::make_shared<StringTag>("LevelName", "world"));
+	data->Put(std::make_shared<LongTag>("SizeOnDisk", 3956736));
+}*/

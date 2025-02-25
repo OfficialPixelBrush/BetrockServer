@@ -98,7 +98,7 @@ void Server::SaveAll() {
 void Server::FreeAll() {
 	Betrock::Logger::Instance().Info("Freeing Chunks");
 	for (const auto &[key, wm] : worldManagers) {
-		wm->world.DumpUnloadedChunks();
+		wm->world.FreeUnseenChunks();
 	}
 }
 

@@ -24,7 +24,7 @@ class WorldManager {
         std::mutex queueMutex;
         std::queue<QueueChunk> chunkQueue;
         std::unordered_set<int64_t> chunkPositions;  // Set to track chunk hashes
-        uint64_t seed;
+        int64_t seed;
         std::condition_variable queueCV;
         std::vector<std::thread> workers;
         const int workerCount = std::thread::hardware_concurrency();  // Use number of CPU cores
@@ -43,6 +43,9 @@ class WorldManager {
         void SetName(std::string name);
         std::string GetName();
         bool QueueIsEmpty();
+        void SaveNbt();
+        void LoadNbt();
+        void FreeUnseenChunks();
 };
 
 std::string ConvertIndexIntoExtra(int8_t worldId);
