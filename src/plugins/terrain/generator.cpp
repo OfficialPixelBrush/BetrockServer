@@ -205,7 +205,6 @@ Block GetNaturalGrass(int64_t seed, Int3 position, int32_t blocksSinceSkyVisible
     return b;
 }
 
-
 // --- Lua Bindings Functions ---
 int lua_Index(lua_State *L) {
     // Check if all arguments are numbers

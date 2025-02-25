@@ -5,17 +5,24 @@ GenName = "Worley"
 GenApiVersion = 2
 
 function PlaceTree(c,x,y,z)
-    for h = 0, 3 do
-        for w = -2, 1 do
-            for l = -2, 1 do
+    for h = 0, 1 do
+        for w = -2, 2 do
+            for l = -2, 2 do
                 c[index(x+w,y+3+h,z+l)] = {18,0}
             end
         end
+    end
+    for h = 0, 1 do
+        c[index(x+1,y+5+h,z)] = {18,0}
+        c[index(x-1,y+5+h,z)] = {18,0}
+        c[index(x,y+5+h,z+1)] = {18,0}
+        c[index(x,y+5+h,z-1)] = {18,0}
     end
 
     for h = 0, 5 do
         c[index(x,y+h,z)] = {17,0}
     end
+    c[index(x,y+6,z)] = {18,0}
 end
 
 function GenerateChunk(cx,cz)
