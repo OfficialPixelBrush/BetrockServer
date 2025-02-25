@@ -53,6 +53,7 @@ class Player : public Entity {
         ConnectionStatus connectionStatus = ConnectionStatus::Disconnected;
         Vec3 lastChunkUpdatePosition;
         Vec3 lastTickPosition;
+        void ClearInventory();
 
         Player(int client_fd, int &entityId, Vec3 position, int8_t worldId, Vec3 respawnPosition, int8_t respawnWorldId)
             : Entity(entityId++, position, worldId),
@@ -61,10 +62,7 @@ class Player : public Entity {
             client_fd(client_fd),
             connectionStatus(ConnectionStatus::Disconnected)
         {
-            // Fill inventory with empty slots
-            for (int i = 0; i < INVENTORY_MAX_SLOTS; ++i) {
-                inventory[i] = Item{-1, 0, 0};
-            }
+            ClearInventory();
         }
 
         void Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw = 0, float pitch = 0);

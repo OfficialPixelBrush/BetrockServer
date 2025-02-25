@@ -155,6 +155,13 @@ void Player::ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_
     lastClickedSlot = slotId;
 }
 
+void Player::ClearInventory() {
+    // Fill inventory with empty slots
+    for (int i = 0; i < INVENTORY_MAX_SLOTS; ++i) {
+        inventory[i] = Item{-1, 0, 0};
+    }
+}
+
 bool Player::CanDecrementHotbar() {
     Item i = GetHeldItem();
     if (i.id > BLOCK_AIR && i.amount > 0) {

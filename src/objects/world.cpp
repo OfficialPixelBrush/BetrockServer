@@ -172,8 +172,9 @@ bool World::LoadChunk(int32_t x, int32_t z) {
 }
 
 void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
+    // Update Chunklight before saving
+    CalculateChunkLight(GetChunk(x,z));
     Int3 pos = Int3{x,0,z};
-    //std::cout << "Chunk at " << pos << std::endl;
 
     std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".cnk");
 
