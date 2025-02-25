@@ -236,6 +236,10 @@ void Player::Save() {
 
 	// Yeet to file
     std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
+    if (dirPath == "") {
+        Betrock::Logger::Instance().Warning(("Dirpath is empty!"));
+        return;
+    }
     dirPath += "/players/";
     if (std::filesystem::create_directories(dirPath)) {
         std::cout << "Directory created: " << dirPath << '\n';

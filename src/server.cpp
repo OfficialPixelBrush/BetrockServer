@@ -86,7 +86,7 @@ void Server::SaveAll() {
 	Betrock::Logger::Instance().Info("Saving...");
 	for (Player* p : GetConnectedPlayers()){
 		if (p) {
-			p->Save();
+			Disconnect(p,"Goodbye!");
 		}
 	}
 	for (const auto &[key, wm] : worldManagers) {
@@ -108,7 +108,7 @@ void Server::PrepareForShutdown() {
 	if (!debugDisableSaveLoad) {
 		SaveAll();
 	}
-	DisconnectAllPlayers("Server closed!");
+	//DisconnectAllPlayers("Server closed!");
 	close(serverFd);
 }
 

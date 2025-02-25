@@ -314,16 +314,10 @@ void HandleClient(Player* player) {
 	}
 	std::lock_guard<std::mutex> lock(server.GetConnectedPlayerMutex());
 	player->Save();
-	int clientFdToDisconnect = player->client_fd;
-	auto &connectedPlayers = server.GetConnectedPlayers();
-    auto it = std::ranges::find(std::ranges::views::all(connectedPlayers), player);
-    if (it != connectedPlayers.end()) {
-        connectedPlayers.erase(it);
-    }
+    int clientFdToDisconnect = player->client_fd;
 
-  	// TODO: >:c (translation: smart pointer)
-	delete player;
-	player = nullptr;
+    auto &connectedPlayers = server.GetConnectedPlayers();
+    std::erase(connectedPlayers, player);
 
 	close(clientFdToDisconnect);
 	return;

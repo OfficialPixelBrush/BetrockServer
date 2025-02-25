@@ -192,12 +192,23 @@ Item GetDrop(Item item) {
         item.id = ITEM_COAL;
         item.damage = 0;
     }
+    if (item.id == BLOCK_LEAVES) {
+        item.id = BLOCK_SAPLING;
+        // 1/20 chance
+        item.amount = 1;
+    }
     if (item.id == BLOCK_ORE_LAPIS_LAZULI) {
         item.id = ITEM_DYE;
+        // 4-8
+        item.amount = 4;
         item.damage = 4;
     }
     if (item.id == BLOCK_BED) {
         item.id = ITEM_BED;
+        item.damage = 0;
+    }
+    if (item.id == BLOCK_REDSTONE_WIRE) {
+        item.id = ITEM_REDSTONE;
         item.damage = 0;
     }
     if (item.id == BLOCK_ORE_DIAMOND) {
@@ -222,6 +233,8 @@ Item GetDrop(Item item) {
     }
     if (item.id == BLOCK_ORE_REDSTONE || item.id == BLOCK_ORE_REDSTONE_GLOWING) {
         item.id = ITEM_REDSTONE;
+        // 4-5
+        item.amount = 4;
         item.damage = 0;
     }
     if (item.id == BLOCK_REDSTONE_TORCH_OFF || item.id == BLOCK_REDSTONE_TORCH_ON) {
@@ -230,11 +243,14 @@ Item GetDrop(Item item) {
     }
     if (item.id == BLOCK_CLAY) {
         item.id = ITEM_CLAY;
+        // ???
+        item.amount = 4;
         item.damage = 0;
     }
     if (item.id == BLOCK_GLOWSTONE) {
         item.id = ITEM_GLOWSTONE_DUST;
-        item.damage = 0;
+        // 2-4
+        item.damage = 2;
     }
     if (item.id == BLOCK_REDSTONE_REPEATER_ON || item.id == BLOCK_REDSTONE_REPEATER_OFF) {
         item.id = BLOCK_REDSTONE_REPEATER_OFF;
