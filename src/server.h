@@ -8,7 +8,6 @@
 #include <stdexcept>
 
 #include "client.h"
-#include "player.h"
 #include "world.h"
 #include "worldManager.h"
 #include "plugins.h"
@@ -34,11 +33,13 @@ class Server {
 
 	bool IsAlive() const noexcept;
 
-	int8_t GetSpawnWorld() const noexcept;
+	int8_t GetSpawnDimension() const noexcept;
+
+	std::string GetSpawnWorld() const noexcept;
 
 	int GetServerFd() const noexcept;
 
-	std::vector<Player *> &GetConnectedPlayers() noexcept;
+	std::vector<Client *> &GetConnectedClients() noexcept;
 
 	int32_t &GetLatestEntityId() noexcept;
 
@@ -58,7 +59,7 @@ class Server {
 
 	const Vec3 &GetSpawnPoint() const noexcept;
 
-	std::mutex &GetConnectedPlayerMutex() noexcept;
+	std::mutex &GetConnectedClientMutex() noexcept;
 
 	std::mutex &GetEntityIdMutex() noexcept;
 
@@ -66,7 +67,7 @@ class Server {
 
 	void SetSpawnPoint(const Vec3 &spawnPoint) noexcept;
 
-	Player *FindPlayerByUsername(std::string_view username) const;
+	Client *FindClientByUsername(std::string_view username) const;
 
 	// add a new world manager (and also a new world)
 	void AddWorldManager(int8_t world_id);
@@ -88,7 +89,7 @@ class Server {
 		auto &server = Server::Instance();
 		// TODO: add sockets to epoll
 		struct sockaddr_in address;
-		std::vector<std::jthread> playerThreadPool;
+		std::vector<std::jthread> clientThreadPool;
 		int addrlen = sizeof(address);
 		int client_fd;
 
@@ -105,20 +106,24 @@ class Server {
 			std::scoped_lock lockEntityId(server.entityIdMutex);
 
 			// TODO: oh you know exactly what to do
-			Player *player = new Player(client_fd, server.latestEntityId, server.spawnPoint, server.spawnWorld,
-										server.spawnPoint, server.spawnWorld);
+			auto client = std::make_shared<Client>(client_fd);
 
-			player->connectionStatus = ConnectionStatus::Handshake;
+			client->SetConnectionStatus(ConnectionStatus::Handshake);
+
+			std::jthread clientThread([client]() {
+				client->HandleClient();
+			});
+
 
 			// Add this new player to the list of connected Players
-			std::scoped_lock lockConnectedPlayers(server.connectedPlayersMutex);
-			server.connectedPlayers.push_back(player);
+			std::scoped_lock lockConnectedClients(server.connectedClientsMutex);
+			server.connectedClients.emplace_back(std::move(clientThread));
 
 			// Let each player have their own thread
 			// TODO: Make this non-cancerous, and close player threads upon disconnect
 			// IDEA: disconnect player socket in their destructor, when we try to read from a closed socket epoll will
 			// yell at us
-			playerThreadPool.emplace_back(HandleClient, player);
+			//clientThreadPool.emplace_back(HandleClient);
 		}
 	}
 
@@ -140,9 +145,8 @@ class Server {
 	// =====================================================
 
 	bool alive = true; // server alive
-	std::int8_t spawnWorld;
 	int serverFd = -1;
-	std::vector<Player *> connectedPlayers;
+	std::vector<Client *> connectedClients;
 	int32_t latestEntityId = 0;
 	int chunkDistance = 10;
 	atomic_uint64_t serverTime = 0;
@@ -150,8 +154,10 @@ class Server {
 	std::unordered_map<int8_t, std::jthread> worldManagerThreads;
 	std::vector<std::unique_ptr<Plugin>> plugins;
 	Vec3 spawnPoint;
+	std::int8_t spawnDimension;
+	std::string spawnWorld;
 
-	std::mutex connectedPlayersMutex;
+	std::mutex connectedClientsMutex;
 	std::mutex entityIdMutex;
 };
 } // namespace Betrock

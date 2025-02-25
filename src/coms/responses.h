@@ -44,5 +44,5 @@ class Respond {
         static void Soundeffect(std::vector<uint8_t> &response, int32_t sound, Int3 position, int32_t extra);
         static void SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slot, int16_t itemId, int8_t itemCount, int16_t itemUses);
         static void WindowItems(std::vector<uint8_t> &response, int8_t window, std::vector<Item> payload);
-        static void Disconnect(std::vector<uint8_t> &response, Player* player, std::string message);
+        static void Disconnect(std::vector<uint8_t> &response, std::string message);
 };

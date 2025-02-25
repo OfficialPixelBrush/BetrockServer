@@ -78,8 +78,8 @@ void World::FreeUnseenChunks() {
     
         // Check if any player has this chunk hash in their visibleChunks
         bool isVisible = false;
-        for (const auto& player : Betrock::Server::Instance().GetConnectedPlayers()) {  // Assuming players is a vector or container of Player objects
-            if (std::find(player->visibleChunks.begin(), player->visibleChunks.end(), DecodeChunkHash(hash)) != player->visibleChunks.end()) {
+        for (const auto& c : Betrock::Server::Instance().GetConnectedClients()) {
+            if (c->ChunkIsVisible(pos)) {
                 isVisible = true;
                 break;
             }

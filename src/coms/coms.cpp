@@ -2,49 +2,19 @@
 
 #include "server.h"
 
-// Send the contents of response to the specified Player
-void SendToPlayer(std::vector<uint8_t> &response, Player* player, bool autoclear) {
-	if (response.empty() || !player || player->connectionStatus <= ConnectionStatus::Disconnected) {
-		return;
-	}
-
-	if (debugSentPacketType) {
-		Betrock::Logger::Instance().Debug("Sending " + PacketIdToLabel((Packet)response[0]) + " to " + player->username + "(" + std::to_string(player->entityId) + ") ! (" + std::to_string(response.size()) + " Bytes)");
-	}
-		
-	if (debugSentBytes) {
-		for (uint i = 0; i < response.size(); i++) {
-			std::cout << std::hex << (int)response[i];
-			if (i < response.size()-1) {
-				std::cout << ", ";
-			}
-		}
-		std::cout << std::dec << std::endl;
-	}
-	
-	ssize_t bytes_sent = send(player->client_fd, response.data(), response.size(), 0);
-	if (bytes_sent == -1) {
-		perror("send");
-		return;
-	}
-	if (autoclear) {
-		response.clear();
-	}
-}
-
-// Sent the specified message to all currently connected Players
-void BroadcastToPlayers(std::vector<uint8_t> &response, Player* sender, bool autoclear) {
+// Sent the specified message to all currently connected Clients
+void BroadcastToClients(std::vector<uint8_t> &response, Client* sender, bool autoclear) {
 	if (response.empty()) {
 		return;
 	}
 
 	auto &server = Betrock::Server::Instance();
 
-	std::scoped_lock lock(server.GetConnectedPlayerMutex());
-    for (Player *player : server.GetConnectedPlayers()) {
-		if (player == sender) { continue; }
-		if (player->connectionStatus == ConnectionStatus::Connected) {
-        	SendToPlayer(response, player, false);
+	std::scoped_lock lock(server.GetConnectedClientMutex());
+    for (auto client : server.GetConnectedClients()) {
+		if (client == sender) { continue; }
+		if (client->GetConnectionStatus() == ConnectionStatus::Connected) {
+			client->AppendResponse(response);
 		}
     }
 	if (autoclear) {
@@ -52,22 +22,14 @@ void BroadcastToPlayers(std::vector<uint8_t> &response, Player* sender, bool aut
 	}
 }
 
-// Disconnects the specified client immediately
-void Disconnect(Player* player, std::string message) {
-	std::vector<uint8_t> disconnectResponse;
-	player->connectionStatus = ConnectionStatus::Disconnected;
-	Respond::Disconnect(disconnectResponse, player, message);
-	SendToPlayer(disconnectResponse, player);
-	Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + message + ")");
-}
-
-// Disconnects all currently connected Players
-void DisconnectAllPlayers(std::string message) {
+// Disconnects all currently connected Clients
+void DisconnectAllClients(std::string message) {
 	auto &server = Betrock::Server::Instance();
 
 	std::vector<uint8_t> disconnectResponse;
-	std::scoped_lock lock(server.GetConnectedPlayerMutex());
-    for (Player* player : server.GetConnectedPlayers()) {
-        Disconnect(player, message);
+	std::scoped_lock lock(server.GetConnectedClientMutex());
+    for (auto client : server.GetConnectedClients()) {
+        //Disconnect(player, message);
+		client->HandleDisconnect(message);
     }
 }

@@ -2,16 +2,16 @@
 
 #include "server.h"
 
-QueueChunk::QueueChunk(Int3 position, Player* requestPlayer) {
+QueueChunk::QueueChunk(Int3 position, Client* requestClient) {
     this->position = position;
-    AddPlayer(requestPlayer);
+    AddClient(requestClient);
 }
 
-void QueueChunk::AddPlayer(Player* requestPlayer) {
-    requestedPlayers.push_back(requestPlayer);
+void QueueChunk::AddClient(Client* requestClient) {
+    requestedClients.push_back(requestClient);
 }
 
-void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Player* requestPlayer) {
+void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Client* requestClient) {
     std::lock_guard<std::mutex> lock(queueMutex);  // Ensure thread safety
 
     auto hash = GetChunkHash(x, z);  // Compute hash
@@ -22,7 +22,7 @@ void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Player* requestPlayer) 
     }
 
     // Add to queue and track position
-    chunkQueue.emplace(Int3{x, 0, z}, requestPlayer);
+    chunkQueue.emplace(Int3{x, 0, z}, requestClient);
     chunkPositions.insert(hash);
 }
 
@@ -98,11 +98,11 @@ void WorldManager::WorkerThread() {
 		// Try to load chunk
         GetChunk(cq.position.x, cq.position.z,generator);
 
-        std::scoped_lock lock(Betrock::Server::Instance().GetConnectedPlayerMutex());
-        for (Player* p : cq.requestedPlayers) {
-            if (p) {
-                std::lock_guard<std::mutex> lock(p->newChunksMutex);
-                p->newChunks.push_back(cq.position);
+        std::scoped_lock lock(Betrock::Server::Instance().GetConnectedClientMutex());
+        for (auto c : cq.requestedClients) {
+            if (c) {
+                std::lock_guard<std::mutex> lock(c->GetNewChunksMutex());
+                c->AddNewChunk(cq.position);
             }
         }
     }

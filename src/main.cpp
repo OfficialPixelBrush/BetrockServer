@@ -59,7 +59,7 @@ int main() {
 			server.SetServerTime(server.GetServerTime() + 20);
 		}
 		Respond::Time(response, server.GetServerTime());
-		BroadcastToPlayers(response);
+		BroadcastToClients(response);
 		sleep(1); // Send data every second
 	}
 
