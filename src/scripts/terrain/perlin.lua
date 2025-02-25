@@ -69,13 +69,21 @@ local function perlin(x, y)
 end
 
 -- Terrain generation using seeded Perlin noise
-function GenerateBlock(x, y, z, blocksSinceSkyVisible)
-    local type = 0
-    if y < 40 + ((perlin(x / 64, z / 64) + 1) * 25) then
-        type = getNaturalGrass(x, y, z, blocksSinceSkyVisible)
+function GenerateChunk(cx,cz)
+    local c = {}
+    for x = 0, CHUNK_WIDTH_X do
+        for z = 0, CHUNK_WIDTH_Z do
+            for y = 0, CHUNK_HEIGHT do
+                local type = 0
+                if y < 40 + ((perlin((cx*16+x) / 64, (cz*16+z) / 64) + 1) * 25) then
+                    type = 3 --getNaturalGrass(x, y, z, blocksSinceSkyVisible)
+                end
+                if y < 64 and type == 0 then
+                    type = 9 -- Water
+                end
+                c[index(x, y, z)] = {type, 0}
+            end
+        end
     end
-    if y < 64 and type == 0 then
-        type = 9 -- Water
-    end
-    return type, 0
+    return c
 end
