@@ -56,9 +56,9 @@ class Client {
         bool PlayerBlockPlacement(World* world);
         bool CloseWindow();
         bool WindowClick();
-        bool DisconnectClient();
+        bool DisconnectClient(std::string disconnectMessage = "");
 
-        void Respond(ssize_t bytes_received);
+        void Respond();
         void SendNewChunks();
         bool UpdatePositionForOthers(bool includeLook = true);
 

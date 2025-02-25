@@ -179,13 +179,10 @@ void Client::SendNewChunks() {
 	}
 }
 
-void Client::Respond(ssize_t bytes_received) {
+void Client::Respond() {
 	SendToPlayer(response, player);
 	BroadcastToPlayers(broadcastResponse);
 	BroadcastToPlayers(broadcastOthersResponse, player);
-	if (debugNumberOfPacketBytes) {
-		Betrock::Logger::Instance().Debug("--- " + std::to_string(offset) + "/" + std::to_string(bytes_received) + " Bytes Read from Packet ---"); 
-	}
 }
 
 void HandlePacket(Client &client) {
@@ -198,7 +195,7 @@ void HandlePacket(Client &client) {
 	// If we receive no Data from the player, such as when they 
 	if (bytes_received <= 0) {
 		perror("read");
-		Disconnect(client.player,"No data.");
+		client.DisconnectClient("No data.");
 		return;
 	}
 
@@ -298,7 +295,10 @@ void HandlePacket(Client &client) {
 		}
 	}
 	client.SendNewChunks();
-	client.Respond(bytes_received);
+	client.Respond();
+	if (debugNumberOfPacketBytes) {
+		Betrock::Logger::Instance().Debug("--- " + std::to_string(client.offset) + "/" + std::to_string(bytes_received) + " Bytes Read from Packet ---"); 
+	}
 }
 
 // Give each Player their own thread
@@ -320,6 +320,9 @@ void HandleClient(Player* player) {
     std::erase(connectedPlayers, player);
 
 	close(clientFdToDisconnect);
+
+	delete player;
+
 	return;
 }
 
@@ -332,7 +335,7 @@ bool Client::KeepAlive() {
 
 bool Client::Handshake() {
 	if (player->connectionStatus != ConnectionStatus::Handshake) {
-		Disconnect(player,"Expected Handshake.");
+		DisconnectClient("Expected Handshake.");
 		return false;
 	}
 	player->username = EntryToString16(message, offset);
@@ -345,7 +348,7 @@ bool Client::LoginRequest() {
 	bool firstJoin = true;
 	auto &server = Betrock::Server::Instance();
 	if (player->connectionStatus != ConnectionStatus::LoggingIn) {
-		Disconnect(player,"Expected Login.");
+		DisconnectClient("Expected Login.");
 		return false;
 	}
 
@@ -357,12 +360,12 @@ bool Client::LoginRequest() {
 
 	if (protocolVersion != PROTOCOL_VERSION) {
 		// If client has wrong protocol, close
-		Disconnect(player,"Wrong Protocol Version!");
+		DisconnectClient("Wrong Protocol Version!");
 		return false;
 	}
 
 	if (username != player->username) {
-		Disconnect(player,"Client has mismatched username.");
+		DisconnectClient("Client has mismatched username.");
 		return false;
 	} 
 
@@ -751,11 +754,14 @@ bool Client::WindowClick() {
 	return true;
 }
 
-// TODO: This completely ignores the disconnect message sent by the player
-bool Client::DisconnectClient() {
-	std::string disconnectMessage = EntryToString16(message, offset);
-	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
+// This should be used for disconnecting clients
+bool Client::DisconnectClient(std::string disconnectMessage) {
+	if (disconnectMessage == "") {
+		disconnectMessage = EntryToString16(message, offset);
+	}
 	Disconnect(player,disconnectMessage);
+	Respond::DestroyEntity(broadcastResponse,player->entityId);
 	Respond::ChatMessage(broadcastResponse, "§e" + player->username + " left the game.");
+	Respond();
 	return true;
 }
