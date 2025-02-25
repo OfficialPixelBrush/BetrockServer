@@ -12,7 +12,7 @@ void BroadcastToClients(std::vector<uint8_t> &response, Client* sender, bool aut
 
 	std::scoped_lock lock(server.GetConnectedClientMutex());
     for (auto client : server.GetConnectedClients()) {
-		if (client == sender) { continue; }
+		if (client.get() == sender) { continue; }
 		if (client->GetConnectionStatus() == ConnectionStatus::Connected) {
 			client->AppendResponse(response);
 		}

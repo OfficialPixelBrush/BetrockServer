@@ -33,16 +33,12 @@ class Player : public Entity {
         // Inventory
         Item inventory[INVENTORY_MAX_SLOTS];
 
-        void ClearInventory();
-
         Player(int &entityId, Vec3 position, int8_t dimension, std::string world, Vec3 spawnPosition, int8_t spawnDimension, std::string spawnWorld)
             : Entity(entityId++, position, dimension, world),
             spawnPosition(spawnPosition),
             spawnDimension(spawnDimension),
             spawnWorld(spawnWorld)
-        {
-            ClearInventory();
-        }
+        {}
 
         void SetHealth(std::vector<uint8_t> &response, int8_t health);
         void Hurt(std::vector<uint8_t> &response, int8_t damage);

@@ -32,7 +32,7 @@ enum class ConnectionStatus {
 
 class Client {
     private:
-        std::shared_ptr<Player> player;
+        std::unique_ptr<Player> player;
         int32_t previousOffset = 0;
         int32_t offset = 0;
         uint8_t message[PACKET_MAX] = {0};

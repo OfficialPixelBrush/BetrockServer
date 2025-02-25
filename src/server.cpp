@@ -15,7 +15,7 @@ std::string Server::GetSpawnWorld() const noexcept { return this->spawnWorld; }
 
 int Server::GetServerFd() const noexcept { return this->serverFd; }
 
-std::vector<Client *> &Server::GetConnectedClients() noexcept { return this->connectedClients; }
+std::vector<std::shared_ptr<Client>> &Server::GetConnectedClients() noexcept { return this->connectedClients; }
 
 int32_t &Server::GetLatestEntityId() noexcept { return this->latestEntityId; }
 

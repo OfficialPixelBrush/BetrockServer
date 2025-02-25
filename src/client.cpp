@@ -287,8 +287,8 @@ void Client::HandlePacket() {
 	SendNewChunks();
 
 	SendResponse();
-	//BroadcastToPlayers(broadcastResponse);
-	//BroadcastToPlayers(broadcastOthersResponse, player);
+	BroadcastToClients(broadcastResponse);
+	BroadcastToClients(broadcastOthersResponse, this);
 	
 	if (debugNumberOfPacketBytes) {
 		Betrock::Logger::Instance().Debug("--- " + std::to_string(offset) + "/" + std::to_string(bytes_received) + " Bytes Read from Packet ---"); 
@@ -298,7 +298,7 @@ void Client::HandlePacket() {
 // Give each Client their own thread
 void Client::HandleClient() {
   	auto &server = Betrock::Server::Instance();
-	player = std::make_shared<Player>(clientFd,
+	player = std::make_unique<Player>(
 		server.GetLatestEntityId(),
 		server.GetSpawnPoint(),
 		server.GetSpawnDimension(),
@@ -307,6 +307,7 @@ void Client::HandleClient() {
 		server.GetSpawnDimension(),
 		server.GetSpawnWorld()
 	);
+	ClearInventory();
 	// Assign player
 	//Client client = Client(player);
 
@@ -319,7 +320,7 @@ void Client::HandleClient() {
 	player->Save();
 
     auto &connectedClients = server.GetConnectedClients();
-    std::erase(connectedClients, player);
+    //std::erase(connectedClients, player);
 
 	close(GetClientFd());
 
