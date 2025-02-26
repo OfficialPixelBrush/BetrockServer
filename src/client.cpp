@@ -809,9 +809,9 @@ void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
     player->yaw = yaw;
     player->pitch = pitch;
     player->stance = player->position.y + STANCE_OFFSET;
-    //this->newChunks.clear();
+    newChunks.clear();
     Respond::PlayerPositionLook(response, player.get());
-    //SendChunksAroundPlayer(response,this, true);
+    SendChunksAroundPlayer(true);
 }
 
 void Client::Respawn(std::vector<uint8_t> &response) {

@@ -62,13 +62,13 @@ void Command::Time() {
 	if (command.size() > 1) {
 		server.SetServerTime(std::stol(command[1]));
 
-		Respond::Time(response, serverTime);
-		Respond::ChatMessage(response, "§7Set time to " + std::to_string(serverTime));
+		Respond::Time(response, server.GetServerTime());
+		Respond::ChatMessage(response, "§7Set time to " + std::to_string(server.GetServerTime()));
 		failureReason = "";
 	}
 	// Get the time
 	if (command.size() == 1) {
-		Respond::ChatMessage(response, "§7Current Time is " + std::to_string(serverTime));
+		Respond::ChatMessage(response, "§7Current Time is " + std::to_string(server.GetServerTime()));
 		failureReason = "";
 	}
 }
