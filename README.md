@@ -3,7 +3,7 @@ A Server-Engine written in C++, made to work with Minecraft Beta 1.7.3. The goal
 ![BetrockServer Logo](media/betrock_server_logo.png)
 
 ## Features
-(as of 0.1.14)
+(as of 0.2.0)
 - Players can connect, chat, build and explore
 - Commands
 - Lua-driven World Generation
