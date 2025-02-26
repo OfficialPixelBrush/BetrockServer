@@ -31,7 +31,7 @@ enum class ConnectionStatus {
     Connected
 };
 
-class Client {
+class Client : public std::enable_shared_from_this<Client> {
     private:
         std::unique_ptr<Player> player;
         int32_t previousOffset = 0;
@@ -46,7 +46,6 @@ class Client {
         int64_t lastPacketTime = 0;
         int clientFd;
         std::atomic<ConnectionStatus> connectionStatus = ConnectionStatus::Disconnected;
-        std::jthread thread;
         
         std::vector<Int3> visibleChunks;
         std::vector<Int3> newChunks;
@@ -103,8 +102,7 @@ class Client {
         void SetClientFd(int clientFd) { this->clientFd = clientFd; }
         int GetClientFd() { return this->clientFd; }
 
-        Client(int clientFd) : clientFd(clientFd), thread(&Client::HandleClient, this) {}
-        ~Client() { close(GetClientFd()); std::cout << "Client died!" << std::endl; };
+        Client(int clientFd) : clientFd(clientFd) {}
         void HandleClient();
         bool HandleDisconnect(std::string disconnectMessage = "");
 

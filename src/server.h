@@ -110,10 +110,8 @@ class Server {
 					std::scoped_lock lockConnectedClients(server.connectedClientsMutex);
 					server.connectedClients.push_back(client);
 				}
-				// Let each player have their own thread
-				// TODO: Make this non-cancerous, and close player threads upon disconnect
-				// IDEA: disconnect player socket in their destructor, when we try to read from a closed socket epoll will
-				// yell at us
+				std::jthread clientThread(&Client::HandleClient, client);
+				clientThread.detach();
 			}
 		}
 	}

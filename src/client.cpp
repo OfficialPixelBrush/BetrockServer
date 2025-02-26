@@ -309,14 +309,23 @@ void Client::HandleClient() {
 
 	// While the player is connected, read packets from them
 	while (GetConnectionStatus() > ConnectionStatus::Disconnected) {
-		std::cout << "Packet" << std::endl;
 		HandlePacket();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
 	}
 
 	player->Save();
-	thread.join();
-	delete this;
+	
+	close(GetClientFd());
+
+    // Remove the client from the connected clients list before it goes out of scope
+    {
+        std::scoped_lock lockConnectedClients(server.GetConnectedClientMutex());
+		auto &clients = server.GetConnectedClients();
+        auto it = std::find(clients.begin(), clients.end(), shared_from_this());
+        if (it != clients.end()) {
+            clients.erase(it);
+        }
+    }
 }
 
 // --- Packet answers ---
@@ -433,6 +442,18 @@ bool Client::HandleLoginRequest() {
 			otherPlayer->yaw,
 			otherPlayer->pitch,
 			other->GetHeldItem().id
+		);
+
+		// Note: Even though we already send a packet that
+		// tells the client what item the player holds,
+		// this packet needs to be sent regardless
+		// because otherwise the sky inverts
+		Respond::EntityEquipment(
+			response,
+			otherPlayer->entityId,
+			0,
+			other->GetHeldItem().id,
+			other->GetHeldItem().damage
 		);
 		
 		// Apparently needed to entities show up where they need to
