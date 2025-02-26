@@ -7,11 +7,11 @@ std::vector<uint8_t> response;
 std::vector<std::string> command;
 std::string failureReason;
 
-// Toggle the players pose bits
-void Command::Help(Player* player) {
+// Toggle the clients pose bits
+void Command::Help(Client* client) {
 }
 
-// Toggle the players pose bits
+// Toggle the clients pose bits
 void Command::Pose(Player* player) {	
 	// Set the time
 	if (command.size() > 1) {
@@ -29,13 +29,13 @@ void Command::Pose(Player* player) {
 		int8_t responseByte = (player->sitting << 2 | player->crouching << 1 | player->onFire);
 		Respond::ChatMessage(response, "§7Set Pose " + std::to_string((int)responseByte));
 		Respond::EntityMetadata(broadcastResponse, player->entityId, responseByte);
-		BroadcastToPlayers(broadcastResponse);
+		BroadcastToClients(broadcastResponse);
 		failureReason = "";
 		return;
 	}
 }
 
-// Play a sound at the players location
+// Play a sound at the clients location
 void Command::Sound(Player* player) {	
 	// Set the time
 	if (command.size() > 1) {
@@ -47,7 +47,7 @@ void Command::Sound(Player* player) {
 		std::vector<uint8_t> broadcastResponse;
 		Respond::Soundeffect(broadcastResponse,sound,Vec3ToInt3(player->position),extraData);
 		Respond::ChatMessage(response, "§7Playing Sound " + std::to_string(sound));
-		BroadcastToPlayers(broadcastResponse);
+		BroadcastToClients(broadcastResponse);
 		failureReason = "";
 		return;
 	}
@@ -62,25 +62,25 @@ void Command::Time() {
 	if (command.size() > 1) {
 		server.SetServerTime(std::stol(command[1]));
 
-		Respond::Time(response, serverTime);
-		Respond::ChatMessage(response, "§7Set time to " + std::to_string(serverTime));
+		Respond::Time(response, server.GetServerTime());
+		Respond::ChatMessage(response, "§7Set time to " + std::to_string(server.GetServerTime()));
 		failureReason = "";
 	}
 	// Get the time
 	if (command.size() == 1) {
-		Respond::ChatMessage(response, "§7Current Time is " + std::to_string(serverTime));
+		Respond::ChatMessage(response, "§7Current Time is " + std::to_string(server.GetServerTime()));
 		failureReason = "";
 	}
 }
 
-void Command::Teleport(Player* player) {
+void Command::Teleport(Client* client) {
 	std::vector<uint8_t> sourceResponse;
 	// Set the time
 	if (command.size() > 1) {
-		// Player that is to-be teleported
+		// client that is to-be teleported
 		std::string source = command[1];
-		auto sourcePlayer = Betrock::Server::Instance().FindPlayerByUsername(source);
-		if (!sourcePlayer) {
+		auto sourceClient = Betrock::Server::Instance().FindClientByUsername(source);
+		if (!sourceClient) {
 			failureReason = source + " does not exist! (Source)";
 			return;
 		}
@@ -91,8 +91,12 @@ void Command::Teleport(Player* player) {
 			int32_t y = std::stoi(command[3].c_str());
 			int32_t z = std::stoi(command[4].c_str());
 			Int3 tpGoal = {x,y,z};
-			sourcePlayer->Teleport(sourceResponse,Int3ToVec3(tpGoal));
-			SendToPlayer(sourceResponse, sourcePlayer);
+			sourceClient->Teleport(
+				sourceResponse,
+				Int3ToVec3(tpGoal)
+			);
+			sourceClient->AppendResponse(sourceResponse);
+			auto sourcePlayer = sourceClient->GetPlayer();
 			Respond::ChatMessage(response, "§7Teleported  " + sourcePlayer->username + " to (" + std::to_string(x) + ", "  + std::to_string(y) + ", " + std::to_string(z) + ")");
 			failureReason = "";
 			return;
@@ -100,16 +104,23 @@ void Command::Teleport(Player* player) {
 			// Fallthrough
 		}
 
-		// Option 2: Target player
+		// Option 2: Target client
 		try {
 			std::string destination = command[2];
-			auto destinationPlayer = Betrock::Server::Instance().FindPlayerByUsername(destination);
-			if (!destinationPlayer) {
+			auto destinationClient = Betrock::Server::Instance().FindClientByUsername(destination);
+			if (!destinationClient) {
 				failureReason = destination + " does not exist! (Destination)";
 				return;
 			}
-			sourcePlayer->Teleport(sourceResponse,destinationPlayer->position,destinationPlayer->yaw,destinationPlayer->pitch);
-			SendToPlayer(sourceResponse, sourcePlayer);
+			auto destinationPlayer = destinationClient->GetPlayer();
+			auto sourcePlayer = sourceClient->GetPlayer();
+			sourceClient->Teleport(
+				sourceResponse,
+				destinationPlayer->position,
+				destinationPlayer->yaw,
+				destinationPlayer->pitch
+			);
+			sourceClient->AppendResponse(sourceResponse);
 			Respond::ChatMessage(response, "§7Teleported " + sourcePlayer->username + " to " + destinationPlayer->username);
 		} catch (const std::exception &e) {
 			failureReason = e.what();
@@ -119,7 +130,7 @@ void Command::Teleport(Player* player) {
 }
 
 // Give any Item
-void Command::Give(Player* player) {
+void Command::Give(Client* client) {
 	if (command.size() > 1) {
 		int8_t amount = -1;
 		int8_t metadata = 0;
@@ -135,7 +146,7 @@ void Command::Give(Player* player) {
 			(itemId >= ITEM_SHOVEL_IRON && itemId < ITEM_MAX)
 		) {
 			// TODO: Find first empty slot in inventory!!
-			bool result = player->Give(response,itemId,amount,metadata);
+			bool result = client->Give(response,itemId,amount,metadata);
 			if (!result) {
 				failureReason = "Unable to give " + GetLabel(itemId);
 				return;
@@ -148,7 +159,7 @@ void Command::Give(Player* player) {
 	}
 }
 
-// Set the players health
+// Set the clients health
 void Command::Health(Player* player) {
 	if (command.size() > 1) {
 		int health = std::stoi(command[1].c_str());
@@ -162,14 +173,14 @@ void Command::Health(Player* player) {
 	}
 }
 
-// Kill the current player
+// Kill the current client
 void Command::Kill(Player* player) {
 	if (command.size() > 0) {
 		std::string username = player->username;
 		if (command.size() > 1) {
-			// Search for the player by username
+			// Search for the client by username
 			username = command[1];
-			player = Betrock::Server::Instance().FindPlayerByUsername(username);
+			player = Betrock::Server::Instance().FindClientByUsername(username)->GetPlayer();
 		}
 		if (player) {
 			player->Kill(response);
@@ -177,19 +188,19 @@ void Command::Kill(Player* player) {
 			failureReason = "";
 			return;
 		}
-		failureReason = "Player \"" + username + "\" does not exist";
+		failureReason = "client \"" + username + "\" does not exist";
 	}
 }
 
-void Command::Summon(Player* player) {
+void Command::Summon(Client* client) {
 	auto &server = Betrock::Server::Instance();
 
 	if (command.size() > 1) {
 		std::scoped_lock lock(server.GetEntityIdMutex());
 		std::string username = command[1];
 		std::vector<uint8_t> broadcastResponse;
-		Respond::NamedEntitySpawn(broadcastResponse, server.GetLatestEntityId(), username, Vec3ToInt3(player->position), 0,0, 5);
-		BroadcastToPlayers(broadcastResponse);
+		Respond::NamedEntitySpawn(broadcastResponse, server.GetLatestEntityId(), username, Vec3ToInt3(client->GetPlayer()->position), 0,0, 5);
+		BroadcastToClients(broadcastResponse);
 		Respond::ChatMessage(response, "§7Summoned " + username);
 		failureReason = "";
 	}
@@ -197,7 +208,7 @@ void Command::Summon(Player* player) {
 
 
 // Set gamerules
-void Command::Gamerule(Player* player) {
+void Command::Gamerule(Client* client) {
 	if (command.size() > 1) {
 		if (command[1] == "doDaylightCycle") {
 			doDaylightCycle = !doDaylightCycle;
@@ -213,26 +224,26 @@ void Command::Gamerule(Player* player) {
 	}
 }
 
-void Command::Kick(Player* player) {
+void Command::Kick(Client* client) {
 	if (command.size() > 0) {
-		std::string username = player->username;
+		std::string username = client->GetPlayer()->username;
 		if (command.size() > 1) {
-			// Search for the player by username
+			// Search for the client by username
 			username = command[1];
-			player = Betrock::Server::Instance().FindPlayerByUsername(username);
+			client = Betrock::Server::Instance().FindClientByUsername(username);
 		}
-		if (player) {
-			Disconnect(player, "Kicked by " + player->username);
+		if (client) {
+			client->HandleDisconnect("Kicked by " + client->GetPlayer()->username);
 			//Respond::ChatMessage(response, "§7Kicked " + kicked->username);
 			failureReason = "";
 			return;
 		}
-		failureReason = "Player \"" + username + "\" does not exist";
+		failureReason = "client \"" + username + "\" does not exist";
 	}
 }
 
-void Command::Spawn(Player* player) {
-	player->Teleport(response, Betrock::Server::Instance().GetSpawnPoint());
+void Command::Spawn(Client* client) {
+	client->Teleport(response, Betrock::Server::Instance().GetSpawnPoint());
 	failureReason = "";
 }
 
@@ -262,22 +273,23 @@ void Command::Free() {
 	failureReason = "";
 }
 
-void Command::Op(Player* player) {
+void Command::Op(Client* client) {
 	if (command.size() > 0) {
-		Respond::ChatMessage(response, "§7Opping " + player->username);
+		Respond::ChatMessage(response, "§7Opping " + client->GetPlayer()->username);
 		failureReason = "";
 	}
 }
 
-void Command::Deop(Player* player) {
+void Command::Deop(Client* client) {
 	if (command.size() > 0) {
-		Respond::ChatMessage(response, "§7De-opping " + player->username);
+		Respond::ChatMessage(response, "§7De-opping " + client->GetPlayer()->username);
 		failureReason = "";
 	}
 }
 
 // Parses commands and executes them
-void Command::Parse(std::string &rawCommand, Player* player) {
+void Command::Parse(std::string &rawCommand, Client* client) {
+	auto player = client->GetPlayer();
 	// Set these up for command parsing
 	failureReason = "Syntax";
     command.clear();
@@ -295,31 +307,31 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 		if (command[0] == "time") {
 			Time();
 		} else if (command[0] == "help") {
-			Help(player);
+			Help(client);
 		} else if (command[0] == "op") {
-			Op(player);
+			Op(client);
 		} else if (command[0] == "deop") {
-			Deop(player);
+			Deop(client);
 		} else if (command[0] == "tp") {
-			Teleport(player);
+			Teleport(client);
 		} else if (command[0] == "pose") {
 			Pose(player);
 		} else if (command[0] == "sound") {
 			Sound(player);
 		} else if (command[0] == "give") {
-			Give(player);
+			Give(client);
 		} else if (command[0] == "health") {
 			Health(player);
 		} else if (command[0] == "kill") {
 			Kill(player);
 		} else if (command[0] == "summon") {
-			Summon(player);
+			Summon(client);
 		} else if (command[0] == "gamerule") {
-			Gamerule(player);
+			Gamerule(client);
 		} else if (command[0] == "kick") {
-			Kick(player);
+			Kick(client);
 		} else if (command[0] == "spawn") {
-			Spawn(player);
+			Spawn(client);
 		} else if (command[0] == "creative") {
 			Creative(player);
 		} else if (command[0] == "save") {
@@ -329,7 +341,7 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 		} else if (command[0] == "free") {
 			Free();
 		} else if (command[0] == "loaded") {
-			failureReason = std::to_string(Betrock::Server::Instance().GetWorldManager(player->worldId)->world.GetNumberOfChunks());
+			failureReason = std::to_string(Betrock::Server::Instance().GetWorldManager(player->dimension)->world.GetNumberOfChunks());
 		} else if (command[0] == "used") {
 			std::stringstream ss;
 			ss << std::fixed << std::setprecision(2) << GetUsedMemoryMB();
@@ -346,5 +358,5 @@ void Command::Parse(std::string &rawCommand, Player* player) {
 	} else if (!failureReason.empty()) {
 		Respond::ChatMessage(response, "§c" + failureReason);
 	}
-	SendToPlayer(response,player);
+	client->AppendResponse(response);
 }

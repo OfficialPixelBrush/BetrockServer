@@ -9,11 +9,13 @@ void Server::Stop() noexcept { this->alive = false; }
 
 bool Server::IsAlive() const noexcept { return this->alive; }
 
-int8_t Server::GetSpawnWorld() const noexcept { return this->spawnWorld; }
+int8_t Server::GetSpawnDimension() const noexcept { return this->spawnDimension; }
+
+std::string Server::GetSpawnWorld() const noexcept { return this->spawnWorld; }
 
 int Server::GetServerFd() const noexcept { return this->serverFd; }
 
-std::vector<Player *> &Server::GetConnectedPlayers() noexcept { return this->connectedPlayers; }
+std::vector<std::shared_ptr<Client>> &Server::GetConnectedClients() noexcept { return this->connectedClients; }
 
 int32_t &Server::GetLatestEntityId() noexcept { return this->latestEntityId; }
 
@@ -41,7 +43,7 @@ World *Server::GetWorld(int8_t worldId) const {
 
 const Vec3 &Server::GetSpawnPoint() const noexcept { return this->spawnPoint; }
 
-std::mutex &Server::GetConnectedPlayerMutex() noexcept { return this->connectedPlayersMutex; }
+std::mutex &Server::GetConnectedClientMutex() noexcept { return this->connectedClientsMutex; }
 
 std::mutex &Server::GetEntityIdMutex() noexcept { return this->entityIdMutex; }
 
@@ -49,15 +51,15 @@ void Server::SetServerTime(uint64_t serverTime) { this->serverTime = serverTime;
 
 void Server::SetSpawnPoint(const Vec3 &spawnPoint) noexcept { this->spawnPoint = spawnPoint; }
 
-Player *Server::FindPlayerByUsername(std::string_view username) const {
-	auto player = std::ranges::find_if(std::ranges::views::all(this->connectedPlayers),
-									   [&username](const auto &p) { return p->username == username; });
+Client *Server::FindClientByUsername(std::string_view username) const {
+	auto client = std::ranges::find_if(std::ranges::views::all(this->connectedClients),
+									   [&username](const auto &c) { return c->GetPlayer()->username == username; });
 
-	if (player == this->connectedPlayers.end()) {
+	if (client == this->connectedClients.end()) {
 		return nullptr;
 	}
 
-	return std::to_address(*player);
+	return std::to_address(*client);
 }
 
 void Server::AddWorldManager(int8_t worldId) {
@@ -84,9 +86,9 @@ void Server::AddWorldManager(int8_t worldId) {
 
 void Server::SaveAll() {
 	Betrock::Logger::Instance().Info("Saving...");
-	for (Player* p : GetConnectedPlayers()){
-		if (p) {
-			Disconnect(p,"Goodbye!");
+	for (auto c : GetConnectedClients()){
+		if (c) {
+			c->HandleDisconnect("Goodbye!");
 		}
 	}
 	for (const auto &[key, wm] : worldManagers) {
@@ -100,6 +102,7 @@ void Server::FreeAll() {
 	for (const auto &[key, wm] : worldManagers) {
 		wm->world.FreeUnseenChunks();
 	}
+	Betrock::Logger::Instance().Info("Freed Chunks");
 }
 
 void Server::PrepareForShutdown() {

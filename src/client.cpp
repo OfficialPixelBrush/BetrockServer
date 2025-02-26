@@ -4,11 +4,7 @@
 
 #include <ranges>
 
-Client::Client(Player* player) {
-	this->player = player;	
-}
-
-bool Client::CheckPosition(Player* player, Vec3 &newPosition, double &newStance) {
+bool Client::CheckPosition(Vec3 &newPosition, double &newStance) {
 	player->previousPosition = player->position;
 
 	player->position = newPosition;
@@ -25,21 +21,19 @@ ssize_t Client::Setup() {
 	previousOffset = 0;
 
 	// Read Data
-	return read(player->client_fd, message, PACKET_MAX);
+	return read(GetClientFd(), message, PACKET_MAX);
 }
 
 void Client::PrintReceived(Packet packetType, ssize_t bytes_received) {
+	std::string debugMessage = "";
 	if (debugReceivedPacketType) {
-		Betrock::Logger::Instance().Debug("Received " + PacketIdToLabel(packetType) + " from " + player->username + "! (" + std::to_string(bytes_received) + " Bytes)");
+		debugMessage += "Received " + PacketIdToLabel(packetType) + " from " + player->username + "! (" + std::to_string(bytes_received) + " Bytes)";
 	}
 	if (debugReceivedBytes) {
-		for (uint i = 0; i < bytes_received; i++) {
-			std::cout << std::hex << (int)message[i];
-			if (i < bytes_received-1) {
-				std::cout << ", ";
-			}
-		}
-		std::cout << std::dec << std::endl;
+		debugMessage += "\n" + Uint8ArrayToHexDump(message,bytes_received);
+	}
+	if (debugReceivedPacketType || debugReceivedBytes) {
+		Betrock::Logger::Instance().Debug(debugMessage);
 	}
 }
 
@@ -55,8 +49,8 @@ void Client::PrintRead(Packet packetType) {
 	previousOffset = offset;
 }
 
-bool CheckIfNewChunksRequired(Player* player) {
-	Vec3 lastPos = player->lastChunkUpdatePosition;
+bool Client::CheckIfNewChunksRequired() {
+	Vec3 lastPos = lastChunkUpdatePosition;
 	Vec3 newPos = player->position;
 	// Remove vertical component
 	lastPos.y = 0;
@@ -67,32 +61,32 @@ bool CheckIfNewChunksRequired(Player* player) {
 	return false;
 }
 
-void ProcessChunk(std::vector<uint8_t>& response, const Int3& position, WorldManager* wm, Player* player) {
+void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
 	// TODO: This is awful to do for every chunk :(
     // Skip processing if chunk is already visible
-    if (std::find(player->visibleChunks.begin(), player->visibleChunks.end(), position) != player->visibleChunks.end()) {
+    if (std::find(visibleChunks.begin(), visibleChunks.end(), position) != visibleChunks.end()) {
         return;
     }
 
     // Check if the chunk has already been loaded
     if (!wm->world.ChunkExists(position.x,position.z)) {
 		// Otherwise queue chunk loading or generation
-		wm->AddChunkToQueue(position.x, position.z, player);
+		wm->AddChunkToQueue(position.x, position.z, this);
 		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
         return;
     }
     // If the chunk is already available, send it over
-    player->newChunks.push_back(position);
+    newChunks.push_back(position);
 }
 
-void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player, bool forcePlayerAsCenter) {
+void Client::SendChunksAroundPlayer(bool forcePlayerAsCenter) {
     auto &server = Betrock::Server::Instance();
 
     Int3 centerPos;
 	if (forcePlayerAsCenter) {
 		centerPos = Vec3ToInt3(player->position);
 	} else {
-    	Vec3 delta = player->position - player->lastChunkUpdatePosition;
+    	Vec3 delta = player->position - lastChunkUpdatePosition;
 		centerPos = Vec3ToInt3(player->position+delta);
 	}
     Int3 playerChunkPos = BlockToChunkPosition(centerPos);
@@ -102,19 +96,19 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player, bool
     auto chunkDistance = server.GetChunkDistance();
 
     // Remove chunks that are out of range
-    for (auto it = player->visibleChunks.begin(); it != player->visibleChunks.end(); ) {
+    for (auto it = visibleChunks.begin(); it != visibleChunks.end(); ) {
         int distanceX = abs(pX - it->x);
         int distanceZ = abs(pZ - it->z);
         if (distanceX > chunkDistance || distanceZ > chunkDistance) {
             Respond::PreChunk(response, it->x, it->z, 0); // Tell client chunk is no longer visible
-            it = player->visibleChunks.erase(it);
+            it = visibleChunks.erase(it);
 			//std::cout << "Deleted " << it->x << ", " << it->z << std::endl;
         } else {
             ++it;
         }
     }
 
-    auto wm = server.GetWorldManager(player->worldId);
+    auto wm = server.GetWorldManager(player->dimension);
 
 	// Iterate over all chunks within a bounding box defined by chunkDistance
 	for (int r = 0; r < chunkDistance; r++) {
@@ -122,33 +116,33 @@ void SendChunksAroundPlayer(std::vector<uint8_t> &response, Player* player, bool
 		for (int x = -r; x <= r; x++) {
 			for (int z : {-r, r}) {
 				Int3 position = XyzToInt3(x+pX, 0, z+pZ);
-				ProcessChunk(response, position, wm, player);
+				ProcessChunk(position, wm);
 			}
 		}
 		// Left and Right columns (excluding corners to avoid duplicates)
 		for (int z = -r + 1; z <= r - 1; z++) {
 			for (int x : {-r, r}) {
 				Int3 position = XyzToInt3(x+pX, 0, z+pZ);
-				ProcessChunk(response, position, wm, player);
+				ProcessChunk(position, wm);
 			}
 		}
 	}
 
-    player->lastChunkUpdatePosition = player->position;
+    lastChunkUpdatePosition = player->position;
 }
 
 void Client::SendNewChunks() {
 	// Send chunks in batches of 5
 	int sentThisCycle = 5;
-	auto wm = Betrock::Server::Instance().GetWorldManager(player->worldId);
-  	std::lock_guard<std::mutex> lock(player->newChunksMutex);
+	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
+  	std::lock_guard<std::mutex> lock(newChunksMutex);
 	while(sentThisCycle > 0) {
-		if(!player->newChunks.empty()) {
-			auto nc = player->newChunks.begin();
+		if(!newChunks.empty()) {
+			auto nc = newChunks.begin();
 			auto chunkData = wm->world.GetChunkData(*nc);
 			if (!chunkData) {
 				// We'll just drop this chunk
-				player->newChunks.erase(nc);
+				newChunks.erase(nc);
 				return;
 			}
 
@@ -159,7 +153,7 @@ void Client::SendNewChunks() {
 			if (chunk) {
 				//std::cout << "Sent " << nc->x << ", " << nc->z << std::endl;
 				Respond::PreChunk(response, nc->x, nc->z, 1);
-				player->visibleChunks.push_back(Int3{nc->x,0,nc->z});
+				visibleChunks.push_back(Int3{nc->x,0,nc->z});
 
 				Respond::Chunk(
 					response, 
@@ -173,29 +167,23 @@ void Client::SendNewChunks() {
 			}
 			// Better to remove the entry either way if compression fails,
 			// otherwise we may get an infinite build-up of failing chunks
-			player->newChunks.erase(nc);
+			newChunks.erase(nc);
 		}
 		sentThisCycle--;
 	}
 }
 
-void Client::Respond() {
-	SendToPlayer(response, player);
-	BroadcastToPlayers(broadcastResponse);
-	BroadcastToPlayers(broadcastOthersResponse, player);
-}
-
-void HandlePacket(Client &client) {
+void Client::HandlePacket() {
 	auto serverTime = Betrock::Server::Instance().GetServerTime();
 	int64_t lastPacketTime = serverTime;
 	bool validPacket = true;
 	// Prep for next packet
-	ssize_t bytes_received = client.Setup();
+	ssize_t bytes_received = Setup();
 
 	// If we receive no Data from the player, such as when they 
 	if (bytes_received <= 0) {
 		perror("read");
-		client.DisconnectClient("No data.");
+		HandleDisconnect("No data.");
 		return;
 	}
 
@@ -205,150 +193,166 @@ void HandlePacket(Client &client) {
 	if (debugReceivedBundleDelimiter) {
 		Betrock::Logger::Instance().Debug("--- Start of Packet bundle ---");
 	}
-	while (validPacket && client.offset < bytes_received && client.player->connectionStatus > ConnectionStatus::Disconnected) {
-		int8_t packetIndex = EntryToByte(client.message,client.offset);
+	while (validPacket && offset < bytes_received && GetConnectionStatus() > ConnectionStatus::Disconnected) {
+		int8_t packetIndex = EntryToByte(message,offset);
 		Packet packetType = (Packet)packetIndex;
 
 		// Provide debug info
 		if (debugReceivedBytes || debugReceivedPacketType) {
-			client.PrintReceived(packetType,bytes_received);
+			PrintReceived(packetType,bytes_received);
 		}
 
 		// Get the current Dimension
-		World* world = Betrock::Server::Instance().GetWorld(client.player->worldId);
+		World* world = Betrock::Server::Instance().GetWorld(player->dimension);
 		
-		// The Client tries to join the Server
-		switch(packetType) {
-			case Packet::KeepAlive:
-				client.KeepAlive();
-				break;
-			case Packet::LoginRequest:
-				client.LoginRequest();
-				break;
-			case Packet::Handshake:
-				client.Handshake();
-				break;
-			case Packet::ChatMessage:
-				client.ChatMessage();
-				break;
-			case Packet::UseEntity:
-				client.UseEntity();
-				break;
-			case Packet::Respawn:
-				client.Respawn();
-				break;
-			case Packet::Player:
-				client.PlayerGrounded();
-				break;
-			case Packet::PlayerPosition:
-				client.PlayerPosition();
-				break;
-			case Packet::PlayerLook:
-				client.PlayerLook();
-				break;
-			case Packet::PlayerPositionLook:
-				client.PlayerPositionLook();
-				break;
-			case Packet::HoldingChange:
-				client.HoldingChange();
-				break;
-			case Packet::Animation:
-				client.Animation();
-				break;
-			case Packet::EntityAction:
-				client.EntityAction();
-				break;
-			case Packet::PlayerDigging:
-				client.PlayerDigging(world);
-				break;
-			case Packet::PlayerBlockPlacement:
-				client.PlayerBlockPlacement(world);
-				break;
-			case Packet::CloseWindow:
-				client.CloseWindow();
-				break;
-			case Packet::WindowClick:
-				client.WindowClick();
-				break;
-			case Packet::Disconnect:
-				client.DisconnectClient();
-				break;
-			default:
-				Betrock::Logger::Instance().Debug("Unhandled Server-bound packet: " + std::to_string(packetIndex) + "\n" + Uint8ArrayToHexDump(client.message,bytes_received));
-				validPacket = false;
-				break;
-		}
-		if (client.player != nullptr && client.player->connectionStatus == ConnectionStatus::Connected) {
-			if (debugPlayerStatus) {
-				client.player->PrintStats();
+		// Ensure proper packet order
+		if ((packetType == Packet::Handshake && GetConnectionStatus() == ConnectionStatus::Handshake) ||
+			(packetType == Packet::LoginRequest && GetConnectionStatus() == ConnectionStatus::LoggingIn) ||
+			GetConnectionStatus() == ConnectionStatus::Connected
+		)
+		{
+			switch(packetType) {
+				case Packet::KeepAlive:
+					HandleKeepAlive();
+					break;
+				case Packet::LoginRequest:
+					HandleLoginRequest();
+					break;
+				case Packet::Handshake:
+					HandleHandshake();
+					break;
+				case Packet::ChatMessage:
+					HandleChatMessage();
+					break;
+				case Packet::UseEntity:
+					HandleUseEntity();
+					break;
+				case Packet::Respawn:
+					HandleRespawn();
+					break;
+				case Packet::Player:
+					HandlePlayerGrounded();
+					break;
+				case Packet::PlayerPosition:
+					HandlePlayerPosition();
+					break;
+				case Packet::PlayerLook:
+					HandlePlayerLook();
+					break;
+				case Packet::PlayerPositionLook:
+					HandlePlayerPositionLook();
+					break;
+				case Packet::HoldingChange:
+					HandleHoldingChange();
+					break;
+				case Packet::Animation:
+					HandleAnimation();
+					break;
+				case Packet::EntityAction:
+					HandleEntityAction();
+					break;
+				case Packet::PlayerDigging:
+					HandlePlayerDigging(world);
+					break;
+				case Packet::PlayerBlockPlacement:
+					HandlePlayerBlockPlacement(world);
+					break;
+				case Packet::CloseWindow:
+					HandleCloseWindow();
+					break;
+				case Packet::WindowClick:
+					HandleWindowClick();
+					break;
+				case Packet::Disconnect:
+					HandleDisconnect();
+					break;
+				default:
+					Betrock::Logger::Instance().Debug("Unhandled Server-bound packet: " + std::to_string(packetIndex) + "\n" + Uint8ArrayToHexDump(message,bytes_received));
+					validPacket = false;
+					break;
 			}
-			// TODO: Fix this from killing the player during lag
-			// Kill player if he goes below 0,0
-			/*
-			if (client.player->position.y < 0) {
-				Respond::UpdateHealth(client.response,0);
+			if (player != nullptr && GetConnectionStatus() == ConnectionStatus::Connected) {
+				if (debugPlayerStatus) {
+					player->PrintStats();
+				}
+				// TODO: Fix this from killing the player during lag
+				// Kill player if he goes below 0,0
+				/*
+				if (client.player->position.y < 0) {
+					Respond::UpdateHealth(client.response,0);
+				}
+				*/
 			}
-			*/
-		}
-		if (debugReceivedRead) {
-			client.PrintRead(packetType);
+			if (debugReceivedRead) {
+				PrintRead(packetType);
+			}
 		}
 	}
-	client.SendNewChunks();
-	client.Respond();
+	SendNewChunks();
+
+	SendResponse(true);
+	BroadcastToClients(broadcastResponse);
+	BroadcastToClients(broadcastOthersResponse, this);
+	
 	if (debugNumberOfPacketBytes) {
-		Betrock::Logger::Instance().Debug("--- " + std::to_string(client.offset) + "/" + std::to_string(bytes_received) + " Bytes Read from Packet ---"); 
+		Betrock::Logger::Instance().Debug("--- " + std::to_string(offset) + "/" + std::to_string(bytes_received) + " Bytes Read from Packet ---"); 
 	}
 }
 
-// Give each Player their own thread
-void HandleClient(Player* player) {
-  auto &server = Betrock::Server::Instance();
-	// Assign player
-	Client client = Client(player);
+// Give each Client their own thread
+void Client::HandleClient() {
+  	auto &server = Betrock::Server::Instance();
+	player = std::make_unique<Player>(
+		server.GetLatestEntityId(),
+		server.GetSpawnPoint(),
+		server.GetSpawnDimension(),
+		server.GetSpawnWorld(),
+		server.GetSpawnPoint(),
+		server.GetSpawnDimension(),
+		server.GetSpawnWorld()
+	);
+	ClearInventory();
 
 	// While the player is connected, read packets from them
-	while (player->connectionStatus > ConnectionStatus::Disconnected) {
-		HandlePacket(client);
+	while (GetConnectionStatus() > ConnectionStatus::Disconnected) {
+		HandlePacket();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
 	}
-	std::lock_guard<std::mutex> lock(server.GetConnectedPlayerMutex());
+
 	player->Save();
-    int clientFdToDisconnect = player->client_fd;
+	
+	close(GetClientFd());
 
-    auto &connectedPlayers = server.GetConnectedPlayers();
-    std::erase(connectedPlayers, player);
-
-	close(clientFdToDisconnect);
-
-	delete player;
-
-	return;
+    // Remove the client from the connected clients list before it goes out of scope
+    {
+        std::scoped_lock lockConnectedClients(server.GetConnectedClientMutex());
+		auto &clients = server.GetConnectedClients();
+        auto it = std::find(clients.begin(), clients.end(), shared_from_this());
+        if (it != clients.end()) {
+            clients.erase(it);
+        }
+    }
 }
 
 // --- Packet answers ---
 
-bool Client::KeepAlive() {
+bool Client::HandleKeepAlive() {
 	Respond::KeepAlive(response);
 	return true;
 }
 
-bool Client::Handshake() {
-	if (player->connectionStatus != ConnectionStatus::Handshake) {
-		DisconnectClient("Expected Handshake.");
-		return false;
-	}
+bool Client::HandleHandshake() {
 	player->username = EntryToString16(message, offset);
 	Respond::Handshake(response);
-	player->connectionStatus = ConnectionStatus::LoggingIn;
+	SetConnectionStatus(ConnectionStatus::LoggingIn);
 	return true;
 }
 
-bool Client::LoginRequest() {
+bool Client::HandleLoginRequest() {
 	bool firstJoin = true;
 	auto &server = Betrock::Server::Instance();
-	if (player->connectionStatus != ConnectionStatus::LoggingIn) {
-		DisconnectClient("Expected Login.");
+	if (GetConnectionStatus() != ConnectionStatus::LoggingIn) {
+		HandleDisconnect("Expected Login.");
 		return false;
 	}
 
@@ -360,12 +364,12 @@ bool Client::LoginRequest() {
 
 	if (protocolVersion != PROTOCOL_VERSION) {
 		// If client has wrong protocol, close
-		DisconnectClient("Wrong Protocol Version!");
+		HandleDisconnect("Wrong Protocol Version!");
 		return false;
 	}
 
 	if (username != player->username) {
-		DisconnectClient("Client has mismatched username.");
+		HandleDisconnect("Client has mismatched username.");
 		return false;
 	} 
 
@@ -394,21 +398,21 @@ bool Client::LoginRequest() {
 		player->position = spawnPoint;
 
 		// Give starter items
-		player->Give(response,ITEM_PICKAXE_DIAMOND);
-		player->Give(response,ITEM_AXE_DIAMOND);
-		player->Give(response,ITEM_SHOVEL_DIAMOND);
-		player->Give(response,BLOCK_STONE);
-		player->Give(response,BLOCK_COBBLESTONE);
-		player->Give(response,BLOCK_PLANKS);
+		Give(response,ITEM_PICKAXE_DIAMOND);
+		Give(response,ITEM_AXE_DIAMOND);
+		Give(response,ITEM_SHOVEL_DIAMOND);
+		Give(response,BLOCK_STONE);
+		Give(response,BLOCK_COBBLESTONE);
+		Give(response,BLOCK_PLANKS);
 	} else {
-		player->UpdateInventory(response);
+		UpdateInventory(response);
 	}
 
 	// TODO: This hack seems stupid
 	player->position.y += 0.1;
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
-	player->Teleport(response,player->position, player->yaw, player->pitch);
+	Teleport(response,player->position, player->yaw, player->pitch);
 
 	// Create the player for other players
 	Respond::NamedEntitySpawn(
@@ -429,40 +433,53 @@ bool Client::LoginRequest() {
 	);
 
 	// Spawn the other players for the new client
-    for (Player* others : Betrock::Server::Instance().GetConnectedPlayers()) {
-		if (others == player) { continue; }
+    for (auto other : Betrock::Server::Instance().GetConnectedClients()) {
+		if (other.get() == this) { continue; }
+		auto otherPlayer = other->GetPlayer();
 		Respond::NamedEntitySpawn(
 			response,
-			others->entityId,
-			others->username,
-			Vec3ToInt3(others->position),
-			others->yaw,
-			others->pitch,
-			others->inventory[others->GetHotbarSlot()].id
+			otherPlayer->entityId,
+			otherPlayer->username,
+			Vec3ToInt3(otherPlayer->position),
+			otherPlayer->yaw,
+			otherPlayer->pitch,
+			other->GetHeldItem().id
+		);
+
+		// Note: Even though we already send a packet that
+		// tells the client what item the player holds,
+		// this packet needs to be sent regardless
+		// because otherwise the sky inverts
+		Respond::EntityEquipment(
+			response,
+			otherPlayer->entityId,
+			0,
+			other->GetHeldItem().id,
+			other->GetHeldItem().damage
 		);
 		
 		// Apparently needed to entities show up where they need to
 		Respond::EntityTeleport(
 			response,
-			others->entityId,
-			Vec3ToEntityInt3(others->position),
-			ConvertFloatToPackedByte(others->yaw),
-			ConvertFloatToPackedByte(others->pitch)
+			otherPlayer->entityId,
+			Vec3ToEntityInt3(otherPlayer->position),
+			ConvertFloatToPackedByte(otherPlayer->yaw),
+			ConvertFloatToPackedByte(otherPlayer->pitch)
 		);
 
     }
 	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION));
-	SendToPlayer(response,player);
+	SendResponse(true);
 	// ONLY SET THIS AFTER LOGIN HAS FINISHED
-	player->connectionStatus = ConnectionStatus::Connected;
+	SetConnectionStatus(ConnectionStatus::Connected);
 	return true;
 }
 
-bool Client::ChatMessage() {
+bool Client::HandleChatMessage() {
 	std::string chatMessage = EntryToString16(message, offset);
 	if (chatMessage.size() > 0 && chatMessage[0] == '/') {
 		std::string command = chatMessage.substr(1);
-		Command::Parse(command, player);
+		Command::Parse(command, this);
 	} else {
 		std::string sentChatMessage = "<" + player->username + "> " + chatMessage;
 		Betrock::Logger::Instance().Info(sentChatMessage);
@@ -471,20 +488,20 @@ bool Client::ChatMessage() {
 	return true;
 }
 
-bool Client::UseEntity() {
+bool Client::HandleUseEntity() {
 	int32_t originEntityId = EntryToInteger(message, offset);
 	int32_t recipientEntityId = EntryToInteger(message, offset);
 	bool leftClick = EntryToByte(message, offset);
 	return true;
 }
 
-bool Client::Respawn() {
+bool Client::HandleRespawn() {
 	int8_t dimension = EntryToByte(message, offset);
-	player->Respawn(response);
+	Respawn(response);
 	return true;
 }
 
-bool Client::PlayerGrounded() {
+bool Client::HandlePlayerGrounded() {
 	player->onGround = EntryToByte(message, offset);
 	return true;
 }
@@ -497,7 +514,7 @@ bool Client::UpdatePositionForOthers(bool includeLook) {
 		ConvertFloatToPackedByte(player->yaw),
 		ConvertFloatToPackedByte(player->pitch)
 	);
-	player->lastTickPosition = player->position;
+	player->previousPosition = player->position;
 	/*
 	if (GetDistance(player->position,player->lastTickPosition) > 4.0) {
 		Respond::EntityTeleport(
@@ -528,7 +545,7 @@ bool Client::UpdatePositionForOthers(bool includeLook) {
 	return true;
 }
 
-bool Client::PlayerPosition() {
+bool Client::HandlePlayerPosition() {
 	Vec3 newPosition;
 	double newStance;
 	newPosition.x = EntryToDouble(message,offset);
@@ -536,16 +553,16 @@ bool Client::PlayerPosition() {
 	newStance = EntryToDouble(message,offset);
 	newPosition.z = EntryToDouble(message,offset);
 	player->onGround = EntryToByte(message, offset);
-	CheckPosition(player,newPosition,newStance);
+	CheckPosition(newPosition,newStance);
 	UpdatePositionForOthers(false);
 
-	if (CheckIfNewChunksRequired(player)) {
-		SendChunksAroundPlayer(response,player);
+	if (CheckIfNewChunksRequired()) {
+		SendChunksAroundPlayer();
 	}
 	return true;
 }
 
-bool Client::PlayerLook() {
+bool Client::HandlePlayerLook() {
 	player->yaw = EntryToFloat(message,offset);
 	player->pitch = EntryToFloat(message,offset);
 	player->onGround = EntryToByte(message, offset);
@@ -553,7 +570,7 @@ bool Client::PlayerLook() {
 	return true;
 }
 
-bool Client::PlayerPositionLook() {
+bool Client::HandlePlayerPositionLook() {
 	Vec3 newPosition;
 	double newStance;
 	newPosition.x = EntryToDouble(message,offset);
@@ -563,23 +580,23 @@ bool Client::PlayerPositionLook() {
 	player->yaw   = EntryToFloat(message,offset);
 	player->pitch = EntryToFloat(message,offset);
 	player->onGround = EntryToByte(message, offset);
-	CheckPosition(player,newPosition,newStance);
+	CheckPosition(newPosition,newStance);
 
 	UpdatePositionForOthers(true);
 
-	if (CheckIfNewChunksRequired(player)) {
-		SendChunksAroundPlayer(response,player);
+	if (CheckIfNewChunksRequired()) {
+		SendChunksAroundPlayer();
 	}
 	return true;
 }
 
-bool Client::HoldingChange() {
+bool Client::HandleHoldingChange() {
 	int16_t slot = EntryToShort(message, offset);
-	player->ChangeHeldItem(broadcastOthersResponse,slot);
+	ChangeHeldItem(broadcastOthersResponse,slot);
 	return true;
 }
 
-bool Client::Animation() {
+bool Client::HandleAnimation() {
 	int32_t entityId = EntryToInteger(message, offset);
 	int8_t animation = EntryToByte(message, offset);
 	// Only send this to other clients
@@ -587,7 +604,7 @@ bool Client::Animation() {
 	return true;
 }
 
-bool Client::EntityAction() {
+bool Client::HandleEntityAction() {
 	int32_t entityId = EntryToInteger(message, offset);
 	int8_t action = EntryToByte(message, offset);
 	// some EntityMetadata info
@@ -611,7 +628,7 @@ bool Client::EntityAction() {
 	return true;
 }
 
-bool Client::PlayerDigging(World* world) {
+bool Client::HandlePlayerDigging(World* world) {
 	int8_t status = EntryToByte(message, offset);
 	int32_t x = EntryToInteger(message, offset);
 	int8_t y = EntryToByte(message, offset);
@@ -643,7 +660,7 @@ bool Client::PlayerDigging(World* world) {
 			if (!player->creativeMode) {
 				item = GetDrop(item);
 			}
-			player->Give(response,item.id,item.amount,item.damage);
+			Give(response,item.id,item.amount,item.damage);
 		}
 	}
 	return true;
@@ -682,7 +699,7 @@ bool Client::BlockTooCloseToPosition(Int3 position) {
     return overlapX && overlapY && overlapZ;
 }
 
-bool Client::PlayerBlockPlacement(World* world) {
+bool Client::HandlePlayerBlockPlacement(World* world) {
 	int32_t x = EntryToInteger(message, offset);
 	int8_t y = EntryToByte(message, offset);
 	int32_t z = EntryToInteger(message, offset);
@@ -711,33 +728,33 @@ bool Client::PlayerBlockPlacement(World* world) {
 		damage = GetMetaData(x,y,z,direction,id,damage);
 	}
 	// Place a block if we can
-	if (id > BLOCK_AIR && id < BLOCK_MAX && !BlockTooCloseToPosition(pos) && player->CanDecrementHotbar()) {
+	if (id > BLOCK_AIR && id < BLOCK_MAX && !BlockTooCloseToPosition(pos) && CanDecrementHotbar()) {
 		//std::cout << BlockTooCloseToPosition(pos) << ": " << pos << " - " << player->position << std::endl;
-		Item i = player->inventory[INVENTORY_HOTBAR+player->currentHotbarSlot];
+		Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
 		// TODO: Make sure damage value is valid(?)
 		//damage = CheckIfValidDamage();
 		Respond::BlockChange(broadcastResponse,pos,(int8_t)i.id,(int8_t)damage);
 		world->PlaceBlock(pos,(int8_t)i.id,(int8_t)damage);
 		// Immediately give back item if we're in creative mode
 		if (player->creativeMode) {
-			Item i = player->GetHeldItem();
+			Item i = GetHeldItem();
 			id = i.id;
 			amount = i.amount;
-			Respond::SetSlot(response,0,player->GetHotbarSlot(),id,amount,i.damage);
+			Respond::SetSlot(response,0,GetHotbarSlot(),id,amount,i.damage);
 		} else {
-			player->DecrementHotbar(response);
+			DecrementHotbar(response);
 		}
 	}
 	return true;
 }
 
-bool Client::CloseWindow() {
+bool Client::HandleCloseWindow() {
 	int8_t window 	= EntryToByte(message, offset);
 	activeWindow = INVENTORY_NONE;
 	return true;
 }
 
-bool Client::WindowClick() {
+bool Client::HandleWindowClick() {
 	int8_t window 		= EntryToByte(message, offset);
 	int16_t slot 		= EntryToShort(message,offset);
 	int8_t rightClick 	= EntryToByte(message, offset);
@@ -750,18 +767,226 @@ bool Client::WindowClick() {
 		itemCount		= EntryToByte(message, offset);
 		itemUses		= EntryToShort(message,offset);
 	}
-	player->ClickedSlot(response,window,slot,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
+	ClickedSlot(response,window,slot,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
 	return true;
 }
 
 // This should be used for disconnecting clients
-bool Client::DisconnectClient(std::string disconnectMessage) {
+bool Client::HandleDisconnect(std::string disconnectMessage) {
 	if (disconnectMessage == "") {
 		disconnectMessage = EntryToString16(message, offset);
 	}
-	Disconnect(player,disconnectMessage);
+
+	SetConnectionStatus(ConnectionStatus::Disconnected);
+	Respond::Disconnect(response, disconnectMessage);
+	SendResponse();
+	Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
+
 	Respond::DestroyEntity(broadcastResponse,player->entityId);
 	Respond::ChatMessage(broadcastResponse, "§e" + player->username + " left the game.");
 	Respond();
 	return true;
+}
+
+void Client::AppendResponse(std::vector<uint8_t> &addition) {
+	//Betrock::Logger::Instance().Debug("Appended\n" + Uint8ArrayToHexDump(&addition[0], addition.size()));
+	response.insert(response.end(), addition.begin(), addition.end());
+	SendResponse(true);
+	//Betrock::Logger::Instance().Debug("After appending\n" + Uint8ArrayToHexDump(&response[0], response.size()));
+}
+
+// Send the contents of response to the Client
+void Client::SendResponse(bool autoclear) {
+	if (response.empty() || GetConnectionStatus() <= ConnectionStatus::Disconnected) {
+		return;
+	}
+
+	std::string debugMessage = "";
+	if (debugReceivedPacketType) {
+		debugMessage += "Sending " + PacketIdToLabel((Packet)response[0]) + " to " + player->username + "(" + std::to_string(player->entityId) + ") ! (" + std::to_string(response.size()) + " Bytes)";
+	}
+	if (debugReceivedBytes) {
+		debugMessage += "\n" + Uint8ArrayToHexDump(&response[0],response.size());
+	}
+	if (debugReceivedPacketType || debugReceivedBytes) {
+		Betrock::Logger::Instance().Debug(debugMessage);
+	}
+	
+	ssize_t bytes_sent = send(GetClientFd(), response.data(), response.size(), 0);
+	if (bytes_sent == -1) {
+		perror("send");
+		return;
+	}
+	if (autoclear) {
+		response.clear();
+	}
+}
+
+void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, float pitch) {
+    player->position = position;
+    player->yaw = yaw;
+    player->pitch = pitch;
+    player->stance = player->position.y + STANCE_OFFSET;
+    newChunks.clear();
+    Respond::PlayerPositionLook(response, player.get());
+    SendChunksAroundPlayer(true);
+}
+
+void Client::Respawn(std::vector<uint8_t> &response) {
+    player->dimension = player->spawnDimension;
+    player->world = player->spawnWorld;
+    Teleport(response, player->spawnPosition);
+    Respond::Respawn(response, player->dimension);
+    // After respawning, the health is automatically set back to the maximum health
+    // The Client should do this automatically
+    player->health = HEALTH_MAX;
+}
+
+
+bool Client::TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &damage) {
+    // First, try to stack into existing slots
+    if (player->inventory[slot].id == id && player->inventory[slot].damage == damage) {
+        // Skip the slot if its full
+        if (player->inventory[slot].amount >= MAX_STACK) {
+            return false;
+        }
+        // If we fill the slot, we're done
+        if (player->inventory[slot].amount + amount <= MAX_STACK) {
+            player->inventory[slot].amount += amount;
+            return true;
+        }
+        // If we fill it but items remain, keep going
+        amount -= (MAX_STACK - player->inventory[slot].amount);
+        player->inventory[slot].amount = MAX_STACK;
+        return false;
+    }
+    // Secondly, try to stack into empty slots
+    if (player->inventory[slot].id == SLOT_EMPTY) {
+        player->inventory[slot] = { id, amount, damage };
+        return true;
+    }
+    return false;
+}
+
+bool Client::SpreadToSlots(int16_t id, int8_t amount, int16_t damage, int8_t preferredRange) {
+    if (preferredRange == 1 || preferredRange == 0) {
+        for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST; i++) {
+            if (TryToPutInSlot(i, id, amount, damage)) {
+                return true;
+            }
+        }
+    }
+
+    if (preferredRange == 2 || preferredRange == 0) {
+        for (int8_t i = INVENTORY_ROW_1; i <= INVENTORY_ROW_LAST; i++) {
+            if (TryToPutInSlot(i, id, amount, damage)) {
+                return true;
+            }
+        }
+    }
+
+    // If there are still items left, inventory is full
+    return false;
+}
+
+bool Client::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, int16_t damage) {
+    // Amount is not specified
+    if (amount == -1) {
+        if (item < BLOCK_MAX) {
+            amount = MAX_STACK;
+        } else {
+            amount = 1;
+        }
+    }
+    // Look for empty slot
+    SpreadToSlots(item,amount,damage);
+    //inventory[slotId] = Item { item,amount,damage };
+    // TODO: This is a horrible solution, please find something better,
+    // like checking if the inventory was changed, and only then sending out an UpdateInventory
+    UpdateInventory(response);
+    return true;
+}
+
+bool Client::UpdateInventory(std::vector<uint8_t> &response) {
+    std::vector<Item> v(std::begin(player->inventory), std::end(player->inventory));
+    Respond::WindowItems(response, 0, v);
+    return true;
+}
+
+void Client::ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId) {
+	currentHotbarSlot = (int8_t)slotId;
+    Item i = GetHeldItem();
+    Respond::EntityEquipment(response, player->entityId, EQUIPMENT_SLOT_HELD, i.id, i.damage);
+}
+
+int16_t Client::GetHotbarSlot() {
+    return INVENTORY_HOTBAR + currentHotbarSlot;
+}
+
+Item Client::GetHeldItem() {
+    return player->inventory[GetHotbarSlot()];
+}
+
+// TODO: Implement Right-clicking
+void Client::ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage) {
+    // Shift Click Behavior
+    if (shift) {
+        // Get item
+        Item temp = player->inventory[slotId];
+        // Empty slot
+        player->inventory[slotId] = {-1,0,0};
+        if (slotId >= INVENTORY_HOTBAR) {
+            SpreadToSlots(temp.id,temp.amount,temp.damage,2);
+        } else {
+            SpreadToSlots(temp.id,temp.amount,temp.damage,1);
+        }
+    }
+    
+    // If we've clicked outside, throw the items to the ground and clear the slot.
+    if (slotId == CLICK_OUTSIDE) {
+        hoveringItem = Item {-1,0,0};
+        return;
+    }
+
+    // If something is being held
+    if (hoveringItem.id < BLOCK_STONE) {
+        Item temp = hoveringItem;
+        hoveringItem = player->inventory[slotId];
+        player->inventory[slotId] = temp;
+    } else {
+        Item temp = player->inventory[slotId];
+        player->inventory[slotId] = hoveringItem;
+        hoveringItem = temp;
+    }
+    lastClickedSlot = slotId;
+}
+
+void Client::ClearInventory() {
+    // Fill inventory with empty slots
+    for (int i = 0; i < INVENTORY_MAX_SLOTS; ++i) {
+        player->inventory[i] = Item{-1, 0, 0};
+    }
+}
+
+bool Client::CanDecrementHotbar() {
+    Item i = GetHeldItem();
+    if (i.id > BLOCK_AIR && i.amount > 0) {
+        return true;
+    }
+    return false;
+}
+
+void Client::DecrementHotbar(std::vector<uint8_t> &response) {
+    Item* i = &player->inventory[GetHotbarSlot()];
+    i->amount--;
+    if (i->amount <= 0) {
+        i->id = -1;
+        i->amount = 0;
+        i->damage = 0;
+    }
+	Respond::SetSlot(response, 0, GetHotbarSlot(), i->id, i->amount, i->damage);
+}
+
+bool Client::ChunkIsVisible(Int3 pos) {
+	return std::find(visibleChunks.begin(), visibleChunks.end(), pos) != visibleChunks.end();
 }

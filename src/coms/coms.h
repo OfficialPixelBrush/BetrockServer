@@ -6,13 +6,13 @@
 #include <vector>
 #include <mutex>
 
-#include "player.h"
+#include "client.h"
 #include "debug.h"
 #include "responses.h"
 #include "world.h"
 #include "packets.h"
 
-void SendToPlayer(std::vector<uint8_t> &response, Player* player, bool autoclear = true);
-void BroadcastToPlayers(std::vector<uint8_t> &response, Player* sender = nullptr, bool autoclear = true);
-void Disconnect(Player* player, std::string message = "");
-void DisconnectAllPlayers(std::string message = "");
+class Client;
+
+void BroadcastToClients(std::vector<uint8_t> &response, Client* sender = nullptr, bool autoclear = true);
+void DisconnectAllClients(std::string message = "");
