@@ -44,7 +44,14 @@ cpack --config CPackConfig.cmake -G TGZ
 - [PixNBT](https://github.com/OfficialPixelBrush/pixnbt) - A C++ native NBT parsing library
 - [BetaPacketPlainTextifier](https://github.com/OfficialPixelBrush/BetaPacketPlainTextifier) - A utility for turning WireShark captures of Minecraft Client-Server data into Markdown files for easy decoding
 
-## Resources
+# Contributing
+Simply fork the [`latest` branch](https://github.com/OfficialPixelBrush/BetrockServer/tree/latest) and commit whatever changes you want to make.
+
+Please, rebase to the latest commit and squash all your changes into a single commit before making a PR. This just makes it easier to merge into the branch.
+
+The [SerenityOS](https://github.com/SerenityOS/serenity) folks do this as well :p
+
+# Resources
 - GitHub
     - [beta-wiki](https://github.com/mudkipdev/beta-wiki) by [mudkipdev](https://github.com/mudkipdev)
 - Wiki.vg (Now part of the Minecraft Wiki)
@@ -54,3 +61,16 @@ cpack --config CPackConfig.cmake -G TGZ
     - [NBT Format](https://minecraft.wiki/w/NBT_format)
     - [Region File Format](https://minecraft.wiki/w/Region_file_format)
     - [Help:Isometric Renders](https://minecraft.wiki/w/Help:Isometric_renders) (Used for the Logo)
+
+# Stats
+![Contributors](https://img.shields.io/github/contributors/OfficialPixelBrush/BetrockServer)
+
+| Issues | PRs |
+| - | - |
+| ![Open Issues](https://img.shields.io/github/issues/OfficialPixelBrush/BetrockServer) | ![Open PRs](https://img.shields.io/github/issues-pr/OfficialPixelBrush/BetrockServer) |
+| ![Closed Issues](https://img.shields.io/github/issues-closed/OfficialPixelBrush/BetrockServer) | ![Closed PRs](https://img.shields.io/github/issues-pr-closed/OfficialPixelBrush/BetrockServer) |
+
+| Branch | Commits |
+| - | - |
+| main | ![Commits (main)](https://img.shields.io/github/commit-activity/t/OfficialPixelBrush/BetrockServer/main) |
+| latest | ![Commits (latest)](https://img.shields.io/github/commit-activity/t/OfficialPixelBrush/BetrockServer/latest) |
