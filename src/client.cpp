@@ -306,25 +306,17 @@ void Client::HandleClient() {
 		server.GetSpawnWorld()
 	);
 	ClearInventory();
-	// Assign player
-	//Client client = Client(player);
 
 	// While the player is connected, read packets from them
 	while (GetConnectionStatus() > ConnectionStatus::Disconnected) {
+		std::cout << "Packet" << std::endl;
 		HandlePacket();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
 	}
-	std::lock_guard<std::mutex> lock(server.GetConnectedClientMutex());
+
 	player->Save();
-
-    auto &connectedClients = server.GetConnectedClients();
-    //std::erase(connectedClients, player);
-
-	close(GetClientFd());
-
-	//delete player;
-
-	return;
+	thread.join();
+	delete this;
 }
 
 // --- Packet answers ---

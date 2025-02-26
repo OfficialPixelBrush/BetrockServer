@@ -90,8 +90,6 @@ class Server {
 		struct sockaddr_in address;
 		int addrlen = sizeof(address);
 
-		std::vector<std::jthread> clientThreadPool;
-
 		while (server.alive) {
 			// Accept connections
 			int client_fd = accept(server.serverFd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
@@ -107,10 +105,6 @@ class Server {
 				auto client = std::make_shared<Client>(client_fd);
 				client->SetConnectionStatus(ConnectionStatus::Handshake);
 
-				clientThreadPool.emplace_back([client]() {
-					client->HandleClient();
-				});
-
 				// Add this new client to the list of connected Players
 				{
 					std::scoped_lock lockConnectedClients(server.connectedClientsMutex);
@@ -122,16 +116,9 @@ class Server {
 				// yell at us
 			}
 		}
-
-		// Join and clean up the threads
-		for (auto &clientThread : clientThreadPool) {
-			if (clientThread.joinable()) {
-				clientThread.join();
-			}
-		}
 	}
 
-  private:
+  	private:
 	Server() = default;
 	~Server() = default;
 

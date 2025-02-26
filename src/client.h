@@ -6,6 +6,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 #include <mutex>
+#include <thread>
 
 #include "player.h"
 #include "command.h"
@@ -44,7 +45,8 @@ class Client {
         int8_t activeWindow = INVENTORY_NONE;
         int64_t lastPacketTime = 0;
         int clientFd;
-        ConnectionStatus connectionStatus = ConnectionStatus::Disconnected;
+        std::atomic<ConnectionStatus> connectionStatus = ConnectionStatus::Disconnected;
+        std::jthread thread;
         
         std::vector<Int3> visibleChunks;
         std::vector<Int3> newChunks;
@@ -101,7 +103,8 @@ class Client {
         void SetClientFd(int clientFd) { this->clientFd = clientFd; }
         int GetClientFd() { return this->clientFd; }
 
-        Client(int clientFd) : clientFd(clientFd){};
+        Client(int clientFd) : clientFd(clientFd), thread(&Client::HandleClient, this) {}
+        ~Client() { close(GetClientFd()); std::cout << "Client died!" << std::endl; };
         void HandleClient();
         bool HandleDisconnect(std::string disconnectMessage = "");
 
