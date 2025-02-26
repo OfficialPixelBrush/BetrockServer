@@ -16,7 +16,7 @@ function PlaceTree(c,x,y,z)
         c[index(x,y+5+h,z-1)] = {18,0}
     end
 
-    for h = 0, 5 do
+    for h = 1, 5 do
         c[index(x,y+h,z)] = {17,0}
     end
     c[index(x,y+6,z)] = {18,0}

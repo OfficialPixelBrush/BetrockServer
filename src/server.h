@@ -87,44 +87,47 @@ class Server {
 
 	static void ServerJoin() {
 		auto &server = Server::Instance();
-		// TODO: add sockets to epoll
 		struct sockaddr_in address;
-		std::vector<std::jthread> clientThreadPool;
 		int addrlen = sizeof(address);
-		int client_fd;
+
+		std::vector<std::jthread> clientThreadPool;
 
 		while (server.alive) {
 			// Accept connections
-			client_fd = accept(server.serverFd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
+			int client_fd = accept(server.serverFd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
 			if (client_fd < 0) {
 				if (!server.alive) break;
 				perror("Accept failed");
 				continue;
 			}
 
-			// Create new player
-			std::scoped_lock lockEntityId(server.entityIdMutex);
-
-			// TODO: oh you know exactly what to do
-			auto client = std::make_shared<Client>(client_fd);
-
-			client->SetConnectionStatus(ConnectionStatus::Handshake);
-
-			std::jthread clientThread([client]() {
-				client->HandleClient();
-			});
-
-
-			// Add this new player to the list of connected Players
+			// Create new Client
 			{
-				std::scoped_lock lockConnectedClients(server.connectedClientsMutex);
-				server.connectedClients.push_back(client);
+				std::scoped_lock lockEntityId(server.entityIdMutex);
+				auto client = std::make_shared<Client>(client_fd);
+				client->SetConnectionStatus(ConnectionStatus::Handshake);
+
+				clientThreadPool.emplace_back([client]() {
+					client->HandleClient();
+				});
+
+				// Add this new client to the list of connected Players
+				{
+					std::scoped_lock lockConnectedClients(server.connectedClientsMutex);
+					server.connectedClients.push_back(client);
+				}
+				// Let each player have their own thread
+				// TODO: Make this non-cancerous, and close player threads upon disconnect
+				// IDEA: disconnect player socket in their destructor, when we try to read from a closed socket epoll will
+				// yell at us
 			}
-			// Let each player have their own thread
-			// TODO: Make this non-cancerous, and close player threads upon disconnect
-			// IDEA: disconnect player socket in their destructor, when we try to read from a closed socket epoll will
-			// yell at us
-			//clientThreadPool.emplace_back(HandleClient);
+		}
+
+		// Join and clean up the threads
+		for (auto &clientThread : clientThreadPool) {
+			if (clientThread.joinable()) {
+				clientThread.join();
+			}
 		}
 	}
 

@@ -430,29 +430,29 @@ bool Client::HandleLoginRequest() {
 	);
 
 	// Spawn the other players for the new client
-	/*
-    for (Player* others : Betrock::Server::Instance().GetConnectedPlayers()) {
-		if (others == player) { continue; }
+    for (auto other : Betrock::Server::Instance().GetConnectedClients()) {
+		if (other.get() == this) { continue; }
+		auto otherPlayer = other->GetPlayer();
 		Respond::NamedEntitySpawn(
 			response,
-			others->entityId,
-			others->username,
-			Vec3ToInt3(others->position),
-			others->yaw,
-			others->pitch,
-			others->inventory[others->GetHotbarSlot()].id
+			otherPlayer->entityId,
+			otherPlayer->username,
+			Vec3ToInt3(otherPlayer->position),
+			otherPlayer->yaw,
+			otherPlayer->pitch,
+			other->GetHeldItem().id
 		);
 		
 		// Apparently needed to entities show up where they need to
 		Respond::EntityTeleport(
 			response,
-			others->entityId,
-			Vec3ToEntityInt3(others->position),
-			ConvertFloatToPackedByte(others->yaw),
-			ConvertFloatToPackedByte(others->pitch)
+			otherPlayer->entityId,
+			Vec3ToEntityInt3(otherPlayer->position),
+			ConvertFloatToPackedByte(otherPlayer->yaw),
+			ConvertFloatToPackedByte(otherPlayer->pitch)
 		);
 
-    }*/
+    }
 	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION));
 	SendResponse(true);
 	// ONLY SET THIS AFTER LOGIN HAS FINISHED
@@ -774,7 +774,10 @@ bool Client::HandleDisconnect(std::string disconnectMessage) {
 }
 
 void Client::AppendResponse(std::vector<uint8_t> &addition) {
+	//Betrock::Logger::Instance().Debug("Appended\n" + Uint8ArrayToHexDump(&addition[0], addition.size()));
 	response.insert(response.end(), addition.begin(), addition.end());
+	SendResponse(true);
+	//Betrock::Logger::Instance().Debug("After appending\n" + Uint8ArrayToHexDump(&response[0], response.size()));
 }
 
 // Send the contents of response to the Client
@@ -790,7 +793,7 @@ void Client::SendResponse(bool autoclear) {
 	if (debugReceivedBytes) {
 		debugMessage += "\n" + Uint8ArrayToHexDump(&response[0],response.size());
 	}
-	if (debugSentPacketType || debugSentBytes) {
+	if (debugReceivedPacketType || debugReceivedBytes) {
 		Betrock::Logger::Instance().Debug(debugMessage);
 	}
 	

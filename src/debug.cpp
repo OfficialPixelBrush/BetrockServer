@@ -1,6 +1,6 @@
 #include "debug.h"
-bool debugReceivedBytes = true;
-bool debugReceivedPacketType = true;
+bool debugReceivedBytes = false;
+bool debugReceivedPacketType = false;
 
 bool debugReceivedBundleDelimiter = false;
 bool debugReceivedRead = false;
