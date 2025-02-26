@@ -24,7 +24,7 @@ ssize_t Client::Setup() {
 	return read(GetClientFd(), message, PACKET_MAX);
 }
 
-void Client::PrintReceived(Packet packetType, ssize_t bytes_received) {
+void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
 	std::string debugMessage = "";
 	if (debugReceivedPacketType) {
 		debugMessage += "Received " + PacketIdToLabel(packetType) + " from " + player->username + "! (" + std::to_string(bytes_received) + " Bytes)";
@@ -173,6 +173,56 @@ void Client::SendNewChunks() {
 	}
 }
 
+// This is incredibly ugly, but it makes the Server show up in 1.6+ Server Lists!
+void Client::HandleLegacyPing() {
+	response.push_back((uint8_t)Packet::Disconnect);
+	response.push_back(0x00);
+	response.push_back(0x23);
+	response.push_back(0x00);
+	response.push_back(0xA7);
+	response.push_back(0x00);
+	response.push_back('1');
+	response.push_back(0x00);
+	response.push_back(0x00);
+	response.push_back(0x00);
+	std::string protocol = std::to_string(PROTOCOL_VERSION);
+	for (int16_t i = 0; i < protocol.size(); i++) {
+		response.push_back(protocol[i]);
+		response.push_back(0);
+	}
+	response.push_back(0);
+	response.push_back(0);
+	std::string gameVersion = std::string("b1.7.3");
+	for (int16_t i = 0; i < gameVersion.size(); i++) {
+		response.push_back(gameVersion[i]);
+		response.push_back(0);
+	}
+	response.push_back(0);
+	response.push_back(0);
+	std::string motd = std::string("A Minecraft Server");
+	for (int16_t i = 0; i < motd.size(); i++) {
+		response.push_back(motd[i]);
+		response.push_back(0);
+	}
+	response.push_back(0);
+	response.push_back(0);
+	std::string connectedPlayerCount = std::to_string(Betrock::Server::Instance().GetConnectedClients().size());
+	for (int16_t i = 0; i < connectedPlayerCount.size(); i++) {
+		response.push_back(connectedPlayerCount[i]);
+		response.push_back(0);
+	}
+	response.push_back(0);
+	response.push_back(0);
+	std::string maxPlayerCount = "0";
+	for (int16_t i = 0; i < maxPlayerCount.size(); i++) {
+		response.push_back(maxPlayerCount[i]);
+		response.push_back(0);
+	}
+
+	SendResponse(true);
+	SetConnectionStatus(ConnectionStatus::Disconnected);
+}
+
 void Client::HandlePacket() {
 	auto serverTime = Betrock::Server::Instance().GetServerTime();
 	int64_t lastPacketTime = serverTime;
@@ -194,12 +244,23 @@ void Client::HandlePacket() {
 		Betrock::Logger::Instance().Debug("--- Start of Packet bundle ---");
 	}
 	while (validPacket && offset < bytes_received && GetConnectionStatus() > ConnectionStatus::Disconnected) {
-		int8_t packetIndex = EntryToByte(message,offset);
+		uint8_t packetIndex = EntryToByte(message,offset);
 		Packet packetType = (Packet)packetIndex;
 
 		// Provide debug info
 		if (debugReceivedBytes || debugReceivedPacketType) {
-			PrintReceived(packetType,bytes_received);
+			PrintReceived(bytes_received,packetType);
+		}
+
+		// Legacy ping
+		if (packetIndex == 0xFE) {
+			uint8_t p1 = EntryToByte(message,offset);
+			uint8_t p2 = EntryToByte(message,offset);
+			if (p1 == 0x01 && p2 == 0xFA) {
+				HandleLegacyPing();
+				SetConnectionStatus(ConnectionStatus::Disconnected);
+				break;
+			}
 		}
 
 		// Get the current Dimension
@@ -283,9 +344,8 @@ void Client::HandlePacket() {
 				}
 				*/
 			}
-			if (debugReceivedRead) {
-				PrintRead(packetType);
-			}
+		} else {
+			SetConnectionStatus(ConnectionStatus::Disconnected);
 		}
 	}
 	SendNewChunks();
@@ -802,13 +862,13 @@ void Client::SendResponse(bool autoclear) {
 	}
 
 	std::string debugMessage = "";
-	if (debugReceivedPacketType) {
+	if (debugSentPacketType) {
 		debugMessage += "Sending " + PacketIdToLabel((Packet)response[0]) + " to " + player->username + "(" + std::to_string(player->entityId) + ") ! (" + std::to_string(response.size()) + " Bytes)";
 	}
-	if (debugReceivedBytes) {
+	if (debugSentBytes) {
 		debugMessage += "\n" + Uint8ArrayToHexDump(&response[0],response.size());
 	}
-	if (debugReceivedPacketType || debugReceivedBytes) {
+	if (debugSentPacketType || debugSentBytes) {
 		Betrock::Logger::Instance().Debug(debugMessage);
 	}
 	

@@ -58,7 +58,7 @@ class Client : public std::enable_shared_from_this<Client> {
         int8_t currentHotbarSlot = 0;
         
         ssize_t Setup();
-        void PrintReceived(Packet packetType, ssize_t bytes_received);
+        void PrintReceived(ssize_t bytes_received, Packet packetType = Packet::KeepAlive);
         void PrintRead(Packet packetType);
 
         // Packets
@@ -79,6 +79,7 @@ class Client : public std::enable_shared_from_this<Client> {
         bool HandlePlayerBlockPlacement(World* world);
         bool HandleCloseWindow();
         bool HandleWindowClick();
+        void HandleLegacyPing();
 
         // Helpers
         void Respawn(std::vector<uint8_t> &response);
