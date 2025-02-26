@@ -25,17 +25,15 @@ ssize_t Client::Setup() {
 }
 
 void Client::PrintReceived(Packet packetType, ssize_t bytes_received) {
+	std::string debugMessage = "";
 	if (debugReceivedPacketType) {
-		Betrock::Logger::Instance().Debug("Received " + PacketIdToLabel(packetType) + " from " + player->username + "! (" + std::to_string(bytes_received) + " Bytes)");
+		debugMessage += "Received " + PacketIdToLabel(packetType) + " from " + player->username + "! (" + std::to_string(bytes_received) + " Bytes)";
 	}
 	if (debugReceivedBytes) {
-		for (uint i = 0; i < bytes_received; i++) {
-			std::cout << std::hex << (int)message[i];
-			if (i < bytes_received-1) {
-				std::cout << ", ";
-			}
-		}
-		std::cout << std::dec << std::endl;
+		debugMessage += "\n" + Uint8ArrayToHexDump(message,bytes_received);
+	}
+	if (debugReceivedPacketType || debugReceivedBytes) {
+		Betrock::Logger::Instance().Debug(debugMessage);
 	}
 }
 
@@ -286,7 +284,7 @@ void Client::HandlePacket() {
 	}
 	SendNewChunks();
 
-	SendResponse();
+	SendResponse(true);
 	BroadcastToClients(broadcastResponse);
 	BroadcastToClients(broadcastOthersResponse, this);
 	
@@ -456,7 +454,7 @@ bool Client::HandleLoginRequest() {
 
     }*/
 	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION));
-	SendResponse();
+	SendResponse(true);
 	// ONLY SET THIS AFTER LOGIN HAS FINISHED
 	SetConnectionStatus(ConnectionStatus::Connected);
 	return true;
@@ -785,18 +783,15 @@ void Client::SendResponse(bool autoclear) {
 		return;
 	}
 
-	if (debugSentPacketType) {
-		Betrock::Logger::Instance().Debug("Sending " + PacketIdToLabel((Packet)response[0]) + " to " + player->username + "(" + std::to_string(player->entityId) + ") ! (" + std::to_string(response.size()) + " Bytes)");
+	std::string debugMessage = "";
+	if (debugReceivedPacketType) {
+		debugMessage += "Sending " + PacketIdToLabel((Packet)response[0]) + " to " + player->username + "(" + std::to_string(player->entityId) + ") ! (" + std::to_string(response.size()) + " Bytes)";
 	}
-		
-	if (debugSentBytes) {
-		for (uint i = 0; i < response.size(); i++) {
-			std::cout << std::hex << (int)response[i];
-			if (i < response.size()-1) {
-				std::cout << ", ";
-			}
-		}
-		std::cout << std::dec << std::endl;
+	if (debugReceivedBytes) {
+		debugMessage += "\n" + Uint8ArrayToHexDump(&response[0],response.size());
+	}
+	if (debugSentPacketType || debugSentBytes) {
+		Betrock::Logger::Instance().Debug(debugMessage);
 	}
 	
 	ssize_t bytes_sent = send(GetClientFd(), response.data(), response.size(), 0);
