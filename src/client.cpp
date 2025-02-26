@@ -205,81 +205,87 @@ void Client::HandlePacket() {
 		// Get the current Dimension
 		World* world = Betrock::Server::Instance().GetWorld(player->dimension);
 		
-		// The Client tries to join the Server
-		switch(packetType) {
-			case Packet::KeepAlive:
-				HandleKeepAlive();
-				break;
-			case Packet::LoginRequest:
-				HandleLoginRequest();
-				break;
-			case Packet::Handshake:
-				HandleHandshake();
-				break;
-			case Packet::ChatMessage:
-				HandleChatMessage();
-				break;
-			case Packet::UseEntity:
-				HandleUseEntity();
-				break;
-			case Packet::Respawn:
-				HandleRespawn();
-				break;
-			case Packet::Player:
-				HandlePlayerGrounded();
-				break;
-			case Packet::PlayerPosition:
-				HandlePlayerPosition();
-				break;
-			case Packet::PlayerLook:
-				HandlePlayerLook();
-				break;
-			case Packet::PlayerPositionLook:
-				HandlePlayerPositionLook();
-				break;
-			case Packet::HoldingChange:
-				HandleHoldingChange();
-				break;
-			case Packet::Animation:
-				HandleAnimation();
-				break;
-			case Packet::EntityAction:
-				HandleEntityAction();
-				break;
-			case Packet::PlayerDigging:
-				HandlePlayerDigging(world);
-				break;
-			case Packet::PlayerBlockPlacement:
-				HandlePlayerBlockPlacement(world);
-				break;
-			case Packet::CloseWindow:
-				HandleCloseWindow();
-				break;
-			case Packet::WindowClick:
-				HandleWindowClick();
-				break;
-			case Packet::Disconnect:
-				HandleDisconnect();
-				break;
-			default:
-				Betrock::Logger::Instance().Debug("Unhandled Server-bound packet: " + std::to_string(packetIndex) + "\n" + Uint8ArrayToHexDump(message,bytes_received));
-				validPacket = false;
-				break;
-		}
-		if (player != nullptr && GetConnectionStatus() == ConnectionStatus::Connected) {
-			if (debugPlayerStatus) {
-				player->PrintStats();
+		// Ensure proper packet order
+		if ((packetType == Packet::Handshake && GetConnectionStatus() == ConnectionStatus::Handshake) ||
+			(packetType == Packet::LoginRequest && GetConnectionStatus() == ConnectionStatus::LoggingIn) ||
+			GetConnectionStatus() == ConnectionStatus::Connected
+		)
+		{
+			switch(packetType) {
+				case Packet::KeepAlive:
+					HandleKeepAlive();
+					break;
+				case Packet::LoginRequest:
+					HandleLoginRequest();
+					break;
+				case Packet::Handshake:
+					HandleHandshake();
+					break;
+				case Packet::ChatMessage:
+					HandleChatMessage();
+					break;
+				case Packet::UseEntity:
+					HandleUseEntity();
+					break;
+				case Packet::Respawn:
+					HandleRespawn();
+					break;
+				case Packet::Player:
+					HandlePlayerGrounded();
+					break;
+				case Packet::PlayerPosition:
+					HandlePlayerPosition();
+					break;
+				case Packet::PlayerLook:
+					HandlePlayerLook();
+					break;
+				case Packet::PlayerPositionLook:
+					HandlePlayerPositionLook();
+					break;
+				case Packet::HoldingChange:
+					HandleHoldingChange();
+					break;
+				case Packet::Animation:
+					HandleAnimation();
+					break;
+				case Packet::EntityAction:
+					HandleEntityAction();
+					break;
+				case Packet::PlayerDigging:
+					HandlePlayerDigging(world);
+					break;
+				case Packet::PlayerBlockPlacement:
+					HandlePlayerBlockPlacement(world);
+					break;
+				case Packet::CloseWindow:
+					HandleCloseWindow();
+					break;
+				case Packet::WindowClick:
+					HandleWindowClick();
+					break;
+				case Packet::Disconnect:
+					HandleDisconnect();
+					break;
+				default:
+					Betrock::Logger::Instance().Debug("Unhandled Server-bound packet: " + std::to_string(packetIndex) + "\n" + Uint8ArrayToHexDump(message,bytes_received));
+					validPacket = false;
+					break;
 			}
-			// TODO: Fix this from killing the player during lag
-			// Kill player if he goes below 0,0
-			/*
-			if (client.player->position.y < 0) {
-				Respond::UpdateHealth(client.response,0);
+			if (player != nullptr && GetConnectionStatus() == ConnectionStatus::Connected) {
+				if (debugPlayerStatus) {
+					player->PrintStats();
+				}
+				// TODO: Fix this from killing the player during lag
+				// Kill player if he goes below 0,0
+				/*
+				if (client.player->position.y < 0) {
+					Respond::UpdateHealth(client.response,0);
+				}
+				*/
 			}
-			*/
-		}
-		if (debugReceivedRead) {
-			PrintRead(packetType);
+			if (debugReceivedRead) {
+				PrintRead(packetType);
+			}
 		}
 	}
 	SendNewChunks();
@@ -336,10 +342,6 @@ bool Client::HandleKeepAlive() {
 }
 
 bool Client::HandleHandshake() {
-	if (GetConnectionStatus() != ConnectionStatus::Handshake) {
-		HandleDisconnect("Expected Handshake.");
-		return false;
-	}
 	player->username = EntryToString16(message, offset);
 	Respond::Handshake(response);
 	SetConnectionStatus(ConnectionStatus::LoggingIn);
