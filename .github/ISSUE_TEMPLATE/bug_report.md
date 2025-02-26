@@ -21,4 +21,4 @@ assignees: ''
 **System Info:**
 - OS (Server): 
 - OS (Client): 
-- Version: v0.1.14
+- Version: v0.2.0

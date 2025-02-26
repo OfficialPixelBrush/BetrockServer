@@ -1,8 +1,8 @@
 -- Generates some pretty cool cliffs towards the Left side of spawn!
 GenName = "Cliffs"
-GenApiVersion = 1
+GenApiVersion = 2
 
-function GenerateBlock(x,y,z,blocksSinceSkyVisible)
+function GenerateBlock(x,y,z)
     local type = 0
     local solid = true
     if (y == 0) then
@@ -17,9 +17,21 @@ function GenerateBlock(x,y,z,blocksSinceSkyVisible)
         end
     end
     if (solid) then
-        type = getNaturalGrass(x,y,z,blocksSinceSkyVisible);
+        type = 3 -- getNaturalGrass(x,y,z,blocksSinceSkyVisible);
     elseif (y < 64) then
         type = 9
     end
-    return type,0
+    return {type,0}
+end
+
+function GenerateChunk(cx,cz)
+    local c = {}
+    for x = 0, CHUNK_WIDTH_X do
+        for z = 0, CHUNK_WIDTH_Z do
+            for y = 0, CHUNK_HEIGHT do
+                c[index(x, y, z)] = GenerateBlock(cx*16+x,y,cz*16+z)
+            end
+        end
+    end
+    return c
 end

@@ -264,7 +264,7 @@ void Respond::WindowItems(std::vector<uint8_t> &response, int8_t window, std::ve
     }
 }
 
-void Respond::Disconnect(std::vector<uint8_t> &response, Player* player, std::string message) {
+void Respond::Disconnect(std::vector<uint8_t> &response, std::string message) {
 	std::vector<uint8_t> disconnectResponse;
 	disconnectResponse.push_back((uint8_t)Packet::Disconnect);
 	AppendString16ToVector(disconnectResponse,message);

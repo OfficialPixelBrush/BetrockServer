@@ -8,14 +8,17 @@
 #include "world.h"
 #include "generator.h"
 #include "coms.h"
+#include "client.h"
+
+class Client;  // Forward declaration
 
 class QueueChunk {
     public:
         Int3 position;
-        std::vector<Player*> requestedPlayers;
-        QueueChunk() : position(Int3()), requestedPlayers() {}
-        QueueChunk(Int3 position, Player* requestPlayer = nullptr);
-        void AddPlayer(Player* requestPlayer);
+        std::vector<Client*> requestedClients;
+        QueueChunk() : position(Int3()), requestedClients() {}
+        QueueChunk(Int3 position, Client* requestClient = nullptr);
+        void AddClient(Client* requestClient);
 };
 
 class WorldManager {
@@ -24,7 +27,7 @@ class WorldManager {
         std::mutex queueMutex;
         std::queue<QueueChunk> chunkQueue;
         std::unordered_set<int64_t> chunkPositions;  // Set to track chunk hashes
-        uint64_t seed;
+        int64_t seed;
         std::condition_variable queueCV;
         std::vector<std::thread> workers;
         const int workerCount = std::thread::hardware_concurrency();  // Use number of CPU cores
@@ -32,7 +35,7 @@ class WorldManager {
         void GetChunk(int32_t x, int32_t z, Generator &generator);
     public:
         World world;
-        void AddChunkToQueue(int32_t x, int32_t z, Player* requestPlayer = nullptr);
+        void AddChunkToQueue(int32_t x, int32_t z, Client* requestClient = nullptr);
         void GenerateQueuedChunks();
         void ForceGenerateChunk(int32_t x, int32_t z);
         void SetSeed(int64_t seed);
@@ -43,6 +46,9 @@ class WorldManager {
         void SetName(std::string name);
         std::string GetName();
         bool QueueIsEmpty();
+        void SaveNbt();
+        void LoadNbt();
+        void FreeUnseenChunks();
 };
 
 std::string ConvertIndexIntoExtra(int8_t worldId);

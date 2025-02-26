@@ -1,10 +1,7 @@
--- Up ahead is my own attempt at a world generator.
--- Be warned, it may be terrible
--- This is heavily baed on my Godot world generator
 GenName = "Debug"
-GenApiVersion = 1
+GenApiVersion = 2
 
-function GenerateBlock(x,y,z,blocksSinceSkyVisible)
+function GenerateBlock(x,y,z)
     local type = 0
     local meta = 0
     if (y == 64) then
@@ -27,5 +24,17 @@ function GenerateBlock(x,y,z,blocksSinceSkyVisible)
         type = 1;
         meta = 0;
     end
-    return type,meta
+    return {type,meta}
+end
+
+function GenerateChunk(cx,cz)
+    local c = {}
+    for x = 0, CHUNK_WIDTH_X do
+        for z = 0, CHUNK_WIDTH_Z do
+            for y = 0, CHUNK_HEIGHT do
+                c[index(x, y, z)] = GenerateBlock(cx*16+x,y,cz*16+z)
+            end
+        end
+    end
+    return c
 end

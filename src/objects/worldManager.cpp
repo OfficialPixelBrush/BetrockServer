@@ -2,16 +2,16 @@
 
 #include "server.h"
 
-QueueChunk::QueueChunk(Int3 position, Player* requestPlayer) {
+QueueChunk::QueueChunk(Int3 position, Client* requestClient) {
     this->position = position;
-    AddPlayer(requestPlayer);
+    AddClient(requestClient);
 }
 
-void QueueChunk::AddPlayer(Player* requestPlayer) {
-    requestedPlayers.push_back(requestPlayer);
+void QueueChunk::AddClient(Client* requestClient) {
+    requestedClients.push_back(requestClient);
 }
 
-void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Player* requestPlayer) {
+void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Client* requestClient) {
     std::lock_guard<std::mutex> lock(queueMutex);  // Ensure thread safety
 
     auto hash = GetChunkHash(x, z);  // Compute hash
@@ -22,7 +22,7 @@ void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Player* requestPlayer) 
     }
 
     // Add to queue and track position
-    chunkQueue.emplace(Int3{x, 0, z}, requestPlayer);
+    chunkQueue.emplace(Int3{x, 0, z}, requestClient);
     chunkPositions.insert(hash);
 }
 
@@ -44,6 +44,8 @@ void WorldManager::Run() {
     for (int i = 0; i < workerCount; ++i) {
         workers.emplace_back(&WorldManager::WorkerThread, this);
     }
+
+    // TODO: Add clean-up thread to remove unseen chunks
 
     while (Betrock::Server::Instance().IsAlive()) {
         GenerateQueuedChunks();
@@ -96,11 +98,11 @@ void WorldManager::WorkerThread() {
 		// Try to load chunk
         GetChunk(cq.position.x, cq.position.z,generator);
 
-        std::scoped_lock lock(Betrock::Server::Instance().GetConnectedPlayerMutex());
-        for (Player* p : cq.requestedPlayers) {
-            if (p) {
-                std::lock_guard<std::mutex> lock(p->newChunksMutex);
-                p->newChunks.push_back(cq.position);
+        std::scoped_lock lock(Betrock::Server::Instance().GetConnectedClientMutex());
+        for (auto c : cq.requestedClients) {
+            if (c) {
+                std::lock_guard<std::mutex> lock(c->GetNewChunksMutex());
+                c->AddNewChunk(cq.position);
             }
         }
     }
@@ -129,3 +131,54 @@ std::string ConvertIndexIntoExtra(int8_t worldId) {
     }
     return "DIM" + std::to_string(worldId);
 }
+
+void WorldManager::FreeUnseenChunks() {
+    world.FreeUnseenChunks();
+}
+
+void WorldManager::SaveNbt() {
+	auto &server = Betrock::Server::Instance();
+	auto root = std::make_shared<CompoundTag>("");
+	auto data = std::make_shared<CompoundTag>("Data");
+	root->Put(data);
+
+    Int3 spawn = Vec3ToInt3(server.GetSpawnPoint());
+
+	data->Put(std::make_shared<LongTag>("RandomSeed",seed));
+	data->Put(std::make_shared<IntTag>("SpawnY", spawn.y));
+	data->Put(std::make_shared<IntTag>("rainTime", 87264));
+	data->Put(std::make_shared<IntTag>("thunderTime", 26271));
+	data->Put(std::make_shared<IntTag>("SpawnZ", spawn.z));
+	data->Put(std::make_shared<IntTag>("SpawnX", spawn.x));
+	data->Put(std::make_shared<ByteTag>("raining", 0));
+	data->Put(std::make_shared<LongTag>("Time", server.GetServerTime()));
+	data->Put(std::make_shared<ByteTag>("thundering", 0));
+	data->Put(std::make_shared<IntTag>("version", 19132));
+	data->Put(std::make_shared<LongTag>("LastPlayed", 1740410572431));
+    std::string levelName = std::string(Betrock::GlobalConfig::Instance().Get("level-name"));
+	data->Put(std::make_shared<StringTag>("LevelName", levelName));
+	data->Put(std::make_shared<LongTag>("SizeOnDisk", 3956736));
+
+	NbtWriteToFile(levelName + "/level.dat",root);
+}
+
+/*
+void WorldManager::LoadNbt() {
+	auto root = std::make_shared<CompoundTag>("");
+	auto data = std::make_shared<CompoundTag>("Data");
+	root->Put(data);
+
+	data->Put(std::make_shared<LongTag>("RandomSeed",8703966663084738725));
+	data->Put(std::make_shared<IntTag>("SpawnY", 64));
+	data->Put(std::make_shared<IntTag>("rainTime", 87264));
+	data->Put(std::make_shared<IntTag>("thunderTime", 26271));
+	data->Put(std::make_shared<IntTag>("SpawnZ", -51));
+	data->Put(std::make_shared<IntTag>("SpawnX", 63));
+	data->Put(std::make_shared<ByteTag>("raining", 0));
+	data->Put(std::make_shared<LongTag>("Time", 56719));
+	data->Put(std::make_shared<ByteTag>("thundering", 0));
+	data->Put(std::make_shared<IntTag>("version", 19132));
+	data->Put(std::make_shared<LongTag>("LastPlayed", 1740410572431));
+	data->Put(std::make_shared<StringTag>("LevelName", "world"));
+	data->Put(std::make_shared<LongTag>("SizeOnDisk", 3956736));
+}*/

@@ -1,9 +1,18 @@
 #include "logger.h"
 
+#include "server.h"
+
 // Reference for Escape Codes
 // https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
 
 namespace Betrock {
+
+Logger::Logger() {
+    logFile.open(GetRealTimeFileFormat() + ".log", std::ios::out | std::ios::app);
+    if (!logFile.is_open()) {
+        throw std::runtime_error("Failed to open log file");
+    }
+}
 
 void Logger::Log(std::string message, int level) {
     switch(level) {
@@ -26,66 +35,72 @@ void Logger::Log(std::string message, int level) {
 }
 
 void Logger::ChatMessage(std::string message) {
+    std::string time = GetRealTime();
     if (logLevelTerminal & LOG_CHAT) 
     {
-        std::cout << HandleFormattingCodes(message) << std::endl;
+        std::cout << time << " " << HandleFormattingCodes(message) << std::endl;
     }
     if (logLevelText & LOG_CHAT) {
-        logFile << message << std::endl;
+        logFile << time << " " << message << std::endl;
     }
 }
 
 void Logger::Message(std::string message) {
+    std::string time = GetRealTime();
     if (logLevelTerminal & LOG_MESSAGE) 
     {
-        std::cout << message << std::endl;
+        std::cout << time << " " << message << std::endl;
     }
     if (logLevelText & LOG_MESSAGE) {
-        logFile << message << std::endl;
+        logFile << time << " " << message << std::endl;
     }
 }
 
 void Logger::Info(std::string message) {
+    std::string time = GetRealTime();
     std::string header = "[INFO]";
     if (logLevelTerminal & LOG_INFO) 
     {
-        std::cout << "\x1b[1;107m" << header << "\x1b[0m " << message << std::endl;
+        std::cout << time << " \x1b[1;107m" << header << "\x1b[0m " << message << std::endl;
     }
     if (logLevelText & LOG_INFO) {
-        logFile << header << " " << message << std::endl;
+        logFile << time << " " << header << " " << message << std::endl;
     }
 }
 
 void Logger::Warning(std::string message) {
+    std::string time = GetRealTime();
     std::string header = "[WARNING]";
     if (logLevelTerminal & LOG_WARNING) 
     {
-        std::cerr << "\x1b[1;43m" << header << "\e[0;33m " << message << "\x1b[0m " << std::endl;
+        std::cerr << time << " \x1b[1;43m" << header << "\e[0;33m " << message << "\x1b[0m " << std::endl;
     }
     if (logLevelText & LOG_WARNING) {
-        logFile << header << " " << message << std::endl;
+        logFile << time << " " << header << " " << message << std::endl;
     }
 }
 
 void Logger::Error(std::string message) {
+    std::string time = GetRealTime();
     std::string header = "[ERROR]";
     if (logLevelTerminal & LOG_ERROR) 
     {
-        std::cerr << "\x1b[1;101m" << header << " " << message << "\x1b[0m" << std::endl;
+        std::cerr << time << " \x1b[1;101m" << header << " " << message << "\x1b[0m" << std::endl;
     }
     if (logLevelText & LOG_ERROR) {
-        logFile << header << " " << message << std::endl;
+        logFile << time << " " << header << " " << message << std::endl;
     }
 }
 
 void Logger::Debug(std::string message) {
+    std::string time = GetRealTime();
     std::string header = "[DEBUG]";
     if (logLevelTerminal & LOG_DEBUG) 
     {
-        std::cerr << "\x1b[1;46m" << header << "\x1b[0m " << message << std::endl;
+        std::cerr << time << " \x1b[1;46m" << header << "\x1b[0m " << message << std::endl;
     }
     if (logLevelText & LOG_DEBUG) {
-        logFile << header << " " << message << std::endl;
+        logFile << time << " " << header << " " << message << std::endl;
     }
 }
 }

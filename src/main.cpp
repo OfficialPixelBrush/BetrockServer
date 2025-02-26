@@ -16,12 +16,12 @@ int main() {
 	signal(SIGINT, HandleSignal);  // Handle Ctrl+C
 	signal(SIGTERM, HandleSignal); // Handle termination signals
 
-	logger.Log("Starting " + std::string(PROJECT_NAME) + " version " + std::string(PROJECT_VERSION_STRING));
+	logger.Info("Starting " + std::string(PROJECT_NAME) + " version " + std::string(PROJECT_VERSION_STRING));
 
 	server.LoadConfig();
 
 	auto port = Betrock::GlobalConfig::Instance().GetAsNumber<uint16_t>("server-port");
-	logger.Log("Starting " + std::string(PROJECT_NAME) + " on *:" + std::to_string(port));
+	logger.Info("Starting " + std::string(PROJECT_NAME) + " on *:" + std::to_string(port));
 
 	if (!server.SocketBootstrap(port)) {
 		return EXIT_FAILURE;
@@ -35,7 +35,7 @@ int main() {
 
 	// Generate spawn area
 	if (overworld->GetNumberOfChunks() == 0) {
-		std::cout << "Generating..." << std::endl;
+		logger.Info("Preparing level \"" + std::string(Betrock::GlobalConfig::Instance().Get("level-name")) + "\"");
 		for (int x = -1; x < 2; x++) {
 			for (int z = -1; z < 2; z++) {
 				wm->ForceGenerateChunk(x, z);
@@ -59,7 +59,7 @@ int main() {
 			server.SetServerTime(server.GetServerTime() + 20);
 		}
 		Respond::Time(response, server.GetServerTime());
-		BroadcastToPlayers(response);
+		BroadcastToClients(response);
 		sleep(1); // Send data every second
 	}
 

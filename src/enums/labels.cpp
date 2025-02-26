@@ -181,7 +181,6 @@ std::array<std::string, ITEM_MAX-ITEM_MINIMUM> itemLabels = {
     "Cooked Porkchop",
     "Painting",
     "Golden Apple",
-    "Enchanted Golden Apple",
     "Sign",
     "Wooden Door",
     "Bucket",

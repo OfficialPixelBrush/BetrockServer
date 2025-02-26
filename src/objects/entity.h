@@ -11,15 +11,17 @@ class Entity {
         bool onGround = true;
         float yaw = 0.0f;
         float pitch = 0.0f;
-        int8_t worldId;
+
+        int8_t dimension;
+        std::string world;
 
         int8_t health;
 
         // Connection Stats
         int32_t entityId;
 
-        Entity(int entityId, Vec3 position, int8_t worldId)
-            : entityId(entityId++), position(position), worldId(worldId) {}
+        Entity(int entityId, Vec3 position, int8_t dimension, std::string world)
+            : entityId(entityId++), position(position), dimension(dimension), world(world) {}
 
         virtual ~Entity() = default;
 

@@ -68,7 +68,7 @@ void World::RemoveChunk(int32_t x, int32_t z) {
     chunks.erase(GetChunkHash(x,z));
 }
 
-void World::DumpUnloadedChunks() {
+void World::FreeUnseenChunks() {
     std::vector<Int3> chunksToRemove;
 
     for (const auto& pair : chunks) {
@@ -78,8 +78,8 @@ void World::DumpUnloadedChunks() {
     
         // Check if any player has this chunk hash in their visibleChunks
         bool isVisible = false;
-        for (const auto& player : Betrock::Server::Instance().GetConnectedPlayers()) {  // Assuming players is a vector or container of Player objects
-            if (std::find(player->visibleChunks.begin(), player->visibleChunks.end(), DecodeChunkHash(hash)) != player->visibleChunks.end()) {
+        for (const auto& c : Betrock::Server::Instance().GetConnectedClients()) {
+            if (c->ChunkIsVisible(pos)) {
                 isVisible = true;
                 break;
             }
@@ -172,8 +172,9 @@ bool World::LoadChunk(int32_t x, int32_t z) {
 }
 
 void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
+    // Update Chunklight before saving
+    CalculateChunkLight(GetChunk(x,z));
     Int3 pos = Int3{x,0,z};
-    //std::cout << "Chunk at " << pos << std::endl;
 
     std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".cnk");
 

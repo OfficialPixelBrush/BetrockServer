@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.1.14)
+project(BetrockServer VERSION 0.2.0)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,6 +18,7 @@ DESTINATION "${CMAKE_BINARY_DIR}/scripts")
 configure_file(${CMAKE_SOURCE_DIR}/src/misc/version.h.in ${CMAKE_SOURCE_DIR}/src/misc/version.h)
 
 include_directories(
+    "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/include/pixnbt"
     "${PROJECT_SOURCE_DIR}/src/coms"
     "${PROJECT_SOURCE_DIR}/src/enums"
@@ -96,8 +97,12 @@ target_link_libraries(
     ${LUA_LIBRARIES}
 )
 
-
-include(CPack)
+# Detect CPU architecture
+if(CMAKE_SYSTEM_PROCESSOR)
+    set(ARCH_SUFFIX "${CMAKE_SYSTEM_PROCESSOR}")
+else()
+    set(ARCH_SUFFIX "unknown")
+endif()
 
 # Set up CPack for AppImage
 set(CPACK_PACKAGE_NAME "BetrockServer")
@@ -107,5 +112,11 @@ set(CPACK_PACKAGE_VENDOR "Torben J. Virtmann")
 set(CPACK_PACKAGE_CONTACT "letsplaytvirtmann@gmail.com")
 set(CPACK_RESOURCE_FILE_README "${CMAKE_SOURCE_DIR}/README.md")
 
+# Override the default package file name
+set(CPACK_PACKAGE_FILE_NAME "${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CMAKE_SYSTEM_NAME}-${ARCH_SUFFIX}")
+
+include(CPack)
+
 # Install the Betrock executable
 install(TARGETS BetrockServer DESTINATION bin)
+

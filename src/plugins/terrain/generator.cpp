@@ -1,7 +1,5 @@
 #include "generator.h"
 
-#include <string>
-
 void Generator::PrepareGenerator(int64_t seed) {
 	logger = &Betrock::Logger::Instance();
     this->seed = seed;
@@ -11,10 +9,19 @@ void Generator::PrepareGenerator(int64_t seed) {
     lua_pushnumber(L, seed);
     lua_setglobal(L, "seed");
 
+    lua_pushnumber(L, CHUNK_WIDTH_X-1);
+    lua_setglobal(L, "CHUNK_WIDTH_X");
+    lua_pushnumber(L, CHUNK_WIDTH_Z-1);
+    lua_setglobal(L, "CHUNK_WIDTH_Z");
+    lua_pushnumber(L, CHUNK_HEIGHT-1);
+    lua_setglobal(L, "CHUNK_HEIGHT");
+
     // Add helper functions
+    lua_register(L,"index", lua_Index);
     lua_register(L,"between", lua_Between);
     lua_register(L,"spatialPrng", lua_SpatialPRNG);
     lua_register(L,"getNoiseWorley", lua_GetNoiseWorley);
+    lua_register(L,"getNoisePerlin2d", lua_GetNoisePerlin2D);
     lua_register(L,"getNaturalGrass", lua_GetNaturalGrass);
     
     // Execute a Lua script
@@ -48,45 +55,40 @@ void Generator::PrepareGenerator(int64_t seed) {
     }
 }
 
-Block Generator::GenerateBlock(Int3 position, int8_t blocksSinceSkyVisible) {
-    Block b;
-    if (!L) {
-        return b;
-    }
-    lua_getglobal(L, "GenerateBlock");
-    if (!lua_isfunction(L,-1)) {
-        throw std::runtime_error("GenerateBlock was not found!");
-    }
-    lua_pushnumber(L,position.x);
-    lua_pushnumber(L,position.y);
-    lua_pushnumber(L,position.z);
-    lua_pushnumber(L,blocksSinceSkyVisible);
-    if (CheckLua(L,lua_pcall(L,4,2,0))) {
-        b.type = (int)lua_tonumber(L, -2);
-        b.meta = (int)lua_tonumber(L, -1);
-        lua_pop(L,2);
-    }
-    return b;
-}
-
 Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
     Chunk c = Chunk();
-    for (uint8_t x = 0; x < CHUNK_WIDTH_X; x++) {
-        for (uint8_t z = 0; z < CHUNK_WIDTH_X; z++) {
-            int8_t blocksSinceSkyVisible = 0;
-            for (int8_t y = CHUNK_HEIGHT - 1; y >= 0; --y) {
-                Int3 blockPos = Int3 {x,y,z};
-                Int3 chunkPos = Int3 {cX,0,cZ};
-                Int3 globalPos = LocalToGlobalPosition(chunkPos,blockPos);
-                Block b = GenerateBlock(globalPos,blocksSinceSkyVisible);
-                if (b.type > BLOCK_AIR) {
-                    blocksSinceSkyVisible++;
-                }
-                
-                c.blocks[GetBlockIndex(blockPos)] = b;
-            }
-        }   
+    
+    if (!L) {
+        return c;
     }
+    lua_getglobal(L, "GenerateChunk");
+    if (!lua_isfunction(L,-1)) {
+        throw std::runtime_error("GenerateChunk was not found!");
+    }
+    lua_pushnumber(L,cX);
+    lua_pushnumber(L,cZ);
+    if (CheckLua(L, lua_pcall(L, 2, 1, 0))) {
+        if (lua_istable(L, -1)) {    
+            for (int i = 1; i <= CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z; i++) {
+                lua_rawgeti(L, -1, i);
+                if (lua_istable(L, -1)) {
+                    lua_rawgeti(L, -1, 1);
+                    lua_rawgeti(L, -2, 2);
+    
+                    if (lua_isnumber(L, -2) && lua_isnumber(L, -1)) {
+                        c.blocks[i].type = lua_tointeger(L, -2);
+                        c.blocks[i].meta = lua_tointeger(L, -1);
+                    }
+    
+                    lua_pop(L, 2);  // Pop both numbers
+                }
+                lua_pop(L, 1);  // Pop table[i]
+            }
+    
+            lua_pop(L, 1);  // Pop the table itself
+        }
+    }
+
     CalculateChunkLight(&c);
     return c;
 }
@@ -187,6 +189,10 @@ double GetNoiseWorley(int64_t seed, Int3 position, double threshold, Vec3 scale)
     return 1.0 - SmoothStep(0.0, threshold, distance);
 }
 
+double GetNoisePerlin2D(int64_t seed, Vec3 position, int octaves) {
+    return perlin.octave2D_01(position.x, position.z, octaves);
+}
+
 Block GetNaturalGrass(int64_t seed, Int3 position, int32_t blocksSinceSkyVisible) {
     Block b;
     if (blocksSinceSkyVisible == 0) {
@@ -199,8 +205,43 @@ Block GetNaturalGrass(int64_t seed, Int3 position, int32_t blocksSinceSkyVisible
     return b;
 }
 
-
 // --- Lua Bindings Functions ---
+int lua_Index(lua_State *L) {
+    // Check if all arguments are numbers
+    if (!CheckNum3(L)) {
+        return 0;
+    }
+
+    int x = (int)lua_tonumber(L, 1);
+    int y = (int)lua_tonumber(L, 2);
+    int z = (int)lua_tonumber(L, 3);
+    if (x < 0) {
+        x = 0;
+    }
+    if (x > CHUNK_WIDTH_X) {
+        x = CHUNK_WIDTH_X;
+    }
+    if (z < 0) {
+        z = 0;
+    }
+    if (z > CHUNK_WIDTH_Z) {
+        z = CHUNK_WIDTH_Z;
+    }
+    if (y < 0) {
+        y = 0;
+    }
+    if (y > CHUNK_HEIGHT) {
+        y = CHUNK_HEIGHT;
+    }
+    Int3 pos = Int3{x,y,z};
+
+    // Call Between and push the result
+    int32_t result = GetBlockIndex(pos);
+    lua_pushnumber(L, result);
+
+    return 1; // One return value on the Lua stack
+}
+
 int lua_Between(lua_State *L) {
     // Check if all arguments are numbers
     if (!CheckNum3(L)) {
@@ -283,6 +324,39 @@ int lua_GetNoiseWorley(lua_State *L) {
 
     // Call GetNoiseWorley and push result
     double result = GetNoiseWorley(seed, position, threshold, scale);
+    lua_pushnumber(L, result);
+    return 1;
+}
+
+
+int lua_GetNoisePerlin2D(lua_State *L) {
+    // Get the seed
+    lua_getglobal(L, "seed");
+    if (!lua_isnumber(L,1)) {
+        std::cerr << "Invalid seed value!" << std::endl;
+        return 0;
+    }
+    int64_t seed = (int64_t)lua_tonumber(L, 1);
+
+    // Validate and extract x, y, z
+    if (!CheckNum3(L)) {
+        return 0;
+    }
+    double x = (double)lua_tonumber(L, 1);
+    double y = (double)lua_tonumber(L, 2);
+    double z = (double)lua_tonumber(L, 3);
+    Vec3 position = Vec3{x, y, z};
+
+    // Validate and extract octaves
+    if (!lua_isnumber(L, 4)) {
+        luaL_error(L, "Octaves must be a numeric value");
+        return 0;
+    }
+    int octaves = (int)lua_tonumber(L, 4);
+
+    // Call GetNoisePerlin2D and push result
+    double result = GetNoisePerlin2D(seed, position, octaves);
+    //std::cout << result << std::endl;
     lua_pushnumber(L, result);
     return 1;
 }

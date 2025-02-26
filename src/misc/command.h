@@ -1,7 +1,7 @@
 #pragma once
 #include <sstream>
 
-#include "player.h"
+#include "client.h"
 #include "helper.h"
 #include "responses.h"
 #include "world.h"
@@ -10,24 +10,33 @@
 #include "labels.h"
 #include "sysinfo.h"
 
+class Client;
+
 class Command {
     public:
-        static void Parse(std::string &rawCommand, Player* player);
+        static void Parse(std::string &rawCommand, Client* client);
     private:
-        static void Pose(Player* player);
-        static void Sound(Player* player);
-        static void Time();
-        static void Teleport(Player* player);
-        static void Give(Player* player);
-        static void Health(Player* player);
-        static void Kill(Player* player);
-        static void Summon(Player* player);
-        static void Gamerule(Player* player);
-        static void Kick(Player* player);
-        static void Spawn(Player* player);
+        // Operator
+        static void Chunk(Client* client);
         static void Creative(Player* player);
-        static void Chunk(Player* player);
+        static void Free();
+        static void Gamerule(Client* client);
+        static void Kick(Client* client);
         static void Save();
         static void Stop();
-        static void Free();
+        static void Summon(Client* client);
+        static void Teleport(Client* client);
+        static void Time();
+        
+        static void Op(Client* client);
+        static void Deop(Client* client);
+
+        // Creative Player
+        static void Give(Client* client);
+        static void Health(Player* player);
+        static void Help(Client* client);
+        static void Kill(Player* player);
+        static void Pose(Player* player);
+        static void Sound(Player* player);
+        static void Spawn(Client* client);
 };
