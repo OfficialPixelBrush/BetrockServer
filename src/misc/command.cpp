@@ -233,7 +233,7 @@ void Command::Kick(Client* client) {
 			client = Betrock::Server::Instance().FindClientByUsername(username);
 		}
 		if (client) {
-			client->HandleDisconnect("Kicked by " + client->GetPlayer()->username);
+			client->DisconnectClient("Kicked by " + client->GetPlayer()->username);
 			//Respond::ChatMessage(response, "§7Kicked " + kicked->username);
 			failureReason = "";
 			return;

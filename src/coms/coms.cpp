@@ -30,6 +30,6 @@ void DisconnectAllClients(std::string message) {
 	std::scoped_lock lock(server.GetConnectedClientMutex());
     for (auto client : server.GetConnectedClients()) {
         //Disconnect(player, message);
-		client->HandleDisconnect(message);
+		client->DisconnectClient(message);
     }
 }

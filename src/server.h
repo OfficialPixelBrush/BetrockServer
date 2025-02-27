@@ -72,7 +72,7 @@ class Server {
 	// add a new world manager (and also a new world)
 	void AddWorldManager(int8_t world_id);
 
-	void SaveAll();
+	void SaveAll(bool shutdown = false);
 
 	void FreeAll();
 

@@ -80,6 +80,7 @@ class Client : public std::enable_shared_from_this<Client> {
         bool HandleCloseWindow();
         bool HandleWindowClick();
         void HandleLegacyPing();
+        bool HandleDisconnect();
 
         // Helpers
         void Respawn(std::vector<uint8_t> &response);
@@ -105,7 +106,7 @@ class Client : public std::enable_shared_from_this<Client> {
 
         Client(int clientFd) : clientFd(clientFd) {}
         void HandleClient();
-        bool HandleDisconnect(std::string disconnectMessage = "");
+        void DisconnectClient(std::string disconnectMessage = "");
 
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
         bool UpdateInventory(std::vector<uint8_t> &response);
