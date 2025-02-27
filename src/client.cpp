@@ -233,7 +233,7 @@ void Client::HandlePacket() {
 	// If we receive no Data from the player, such as when they 
 	if (bytes_received <= 0) {
 		perror("read");
-		HandleDisconnect("No data.");
+		DisconnectClient("No data.");
 		return;
 	}
 
@@ -412,7 +412,7 @@ bool Client::HandleLoginRequest() {
 	bool firstJoin = true;
 	auto &server = Betrock::Server::Instance();
 	if (GetConnectionStatus() != ConnectionStatus::LoggingIn) {
-		HandleDisconnect("Expected Login.");
+		DisconnectClient("Expected Login.");
 		return false;
 	}
 
@@ -424,12 +424,12 @@ bool Client::HandleLoginRequest() {
 
 	if (protocolVersion != PROTOCOL_VERSION) {
 		// If client has wrong protocol, close
-		HandleDisconnect("Wrong Protocol Version!");
+		DisconnectClient("Wrong Protocol Version!");
 		return false;
 	}
 
 	if (username != player->username) {
-		HandleDisconnect("Client has mismatched username.");
+		DisconnectClient("Client has mismatched username.");
 		return false;
 	} 
 
@@ -832,20 +832,20 @@ bool Client::HandleWindowClick() {
 }
 
 // This should be used for disconnecting clients
-bool Client::HandleDisconnect(std::string disconnectMessage) {
-	if (disconnectMessage == "") {
-		disconnectMessage = EntryToString16(message, offset);
-	}
+bool Client::HandleDisconnect() {
+	std::string disconnectMessage = EntryToString16(message, offset);
+	DisconnectClient(disconnectMessage);
+	return true;
+}
 
-	SetConnectionStatus(ConnectionStatus::Disconnected);
+void Client::DisconnectClient(std::string disconnectMessage) {
 	Respond::Disconnect(response, disconnectMessage);
 	SendResponse();
 	Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
-
-	Respond::DestroyEntity(broadcastResponse,player->entityId);
-	Respond::ChatMessage(broadcastResponse, "§e" + player->username + " left the game.");
-	Respond();
-	return true;
+	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
+	Respond::ChatMessage(broadcastOthersResponse, "§e" + player->username + " left the game.");
+	BroadcastToClients(broadcastOthersResponse,this);
+	SetConnectionStatus(ConnectionStatus::Disconnected);
 }
 
 void Client::AppendResponse(std::vector<uint8_t> &addition) {
