@@ -1,7 +1,7 @@
 # This starter workflow is for a CMake project running on a single platform. There is a different starter workflow if you need cross-platform coverage.
 # See: https://github.com/actions/starter-workflows/blob/main/ci/cmake-multi-platform.yml
 
-name: CMake on a single platform
+name: Publish new Version
 
 on:
   #push:
@@ -26,12 +26,13 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [ubuntu-latest, ubuntu-24.04-arm]
+        os: [ubuntu-latest, ubuntu-latest-arm]
 
     steps:
     - uses: actions/checkout@v4
       with:
         submodules: true  # Fetch submodules
+        fetch-depth: 0  # Fetch full commit history
 
     - name: Extract Version from CMakeLists.txt
       id: extract_version
@@ -39,6 +40,13 @@ jobs:
         VERSION=$(grep -oP 'project\([^\)]*VERSION\s+\K[^\)]+' CMakeLists.txt)
         echo "VERSION=$VERSION"
         echo "version=$VERSION" >> $GITHUB_ENV
+
+    - name: Get last commit message
+      id: last_commit
+      run: |
+        echo "MESSAGE<<EOF" >> $GITHUB_ENV
+        git log -1 --pretty=%B >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
       
     - name: Install dependencies
       run: sudo apt-get install libdeflate-dev liblua5.4-dev
@@ -59,13 +67,13 @@ jobs:
         echo "PACKAGE=$PACKAGE"
         echo "package=$PACKAGE" >> $GITHUB_ENV
 
-
     - name: Create GitHub Release (Only Once)
       if: ${{ matrix.os == 'ubuntu-latest' }}  # Only first OS creates the release
       uses: softprops/action-gh-release@v1
       with:
         tag_name: v${{ env.version }}
-        release_name: v${{ env.version }}
+        name: v${{ env.version }}
+        body: ${{ env.MESSAGE }}
         draft: false
         prerelease: false
       env:

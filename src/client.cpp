@@ -528,7 +528,7 @@ bool Client::HandleLoginRequest() {
 		);
 
     }
-	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION));
+	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION_FULL));
 	SendResponse(true);
 	// ONLY SET THIS AFTER LOGIN HAS FINISHED
 	SetConnectionStatus(ConnectionStatus::Connected);
