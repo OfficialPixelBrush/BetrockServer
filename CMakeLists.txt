@@ -34,7 +34,16 @@ execute_process(
 )
 
 # Configure the version header file
-configure_file(${CMAKE_SOURCE_DIR}/src/misc/version.h.in ${CMAKE_SOURCE_DIR}/src/misc/version.h)
+configure_file(
+    ${CMAKE_SOURCE_DIR}/src/misc/version.h.in
+    ${CMAKE_SOURCE_DIR}/src/misc/version.h
+)
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/.github/ISSUE_TEMPLATE/bug_report.md.in
+    ${CMAKE_SOURCE_DIR}/.github/ISSUE_TEMPLATE/bug_report.md
+    @ONLY
+)
 
 include_directories(
     "${PROJECT_SOURCE_DIR}/include"
@@ -43,6 +52,7 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/src/enums"
     "${PROJECT_SOURCE_DIR}/src/logger"
     "${PROJECT_SOURCE_DIR}/src/misc/helpers"
+    "${PROJECT_SOURCE_DIR}/src/misc/commands"
     "${PROJECT_SOURCE_DIR}/src/misc"
     "${PROJECT_SOURCE_DIR}/src/objects"
     "${PROJECT_SOURCE_DIR}/src/plugins"
@@ -69,7 +79,7 @@ add_executable(
     src/misc/helpers/helper.cpp
     src/misc/helpers/luahelper.cpp
 
-    src/misc/command.cpp
+    src/misc/commands/command.cpp
     src/misc/gamerules.cpp
     src/misc/lighting.cpp
     src/misc/sysinfo.cpp

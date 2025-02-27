@@ -16,7 +16,7 @@ int main() {
 	signal(SIGINT, HandleSignal);  // Handle Ctrl+C
 	signal(SIGTERM, HandleSignal); // Handle termination signals
 
-	logger.Info("Starting " + std::string(PROJECT_NAME) + " version " + std::string(PROJECT_VERSION_STRING));
+	logger.Info("Starting " + std::string(PROJECT_NAME) + " version " + std::string(PROJECT_VERSION_FULL_STRING));
 
 	server.LoadConfig();
 

@@ -73,6 +73,7 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
 		// Otherwise queue chunk loading or generation
 		wm->AddChunkToQueue(position.x, position.z, this);
 		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
+		SendResponse(true);
         return;
     }
     // If the chunk is already available, send it over
