@@ -26,10 +26,10 @@ void BroadcastToClients(std::vector<uint8_t> &response, Client* sender, bool aut
 void DisconnectAllClients(std::string message) {
 	auto &server = Betrock::Server::Instance();
 
-	std::vector<uint8_t> disconnectResponse;
-	std::scoped_lock lock(server.GetConnectedClientMutex());
-    for (auto client : server.GetConnectedClients()) {
-        //Disconnect(player, message);
-		client->DisconnectClient(message);
-    }
+	{
+		std::scoped_lock lock(server.GetConnectedClientMutex());
+		for (auto client : server.GetConnectedClients()) {
+			client->DisconnectClient(message);
+		}
+	}
 }

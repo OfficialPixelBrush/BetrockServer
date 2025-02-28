@@ -5,6 +5,7 @@
 
 void __attribute__((noreturn)) HandleSignal(int) {
 	Betrock::Server::Instance().PrepareForShutdown();
+	Betrock::Server::Instance().Stop();
 	shutdown(Betrock::Server::Instance().GetServerFd(), SHUT_RDWR); // Interrupt accept
 	exit(0);
 }
@@ -64,6 +65,6 @@ int main() {
 	}
 
 	join_thread.join();
-	server.PrepareForShutdown();
+	server.Stop();
 	return 0;
 }

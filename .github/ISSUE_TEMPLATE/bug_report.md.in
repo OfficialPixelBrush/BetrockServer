@@ -21,4 +21,4 @@ assignees: ''
 **System Info:**
 - OS (Server): 
 - OS (Client): 
-- Version: v@PROJECT_VERSION@ (@PROJECT_GIT_BRANCH@/@PROJECT_GIT_COMMIT@)
+- Version: v@PROJECT_VERSION@ (BRANCH/COMMIT_HASH)

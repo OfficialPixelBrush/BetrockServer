@@ -267,6 +267,7 @@ void Command::Creative(Player* player) {
 void Command::Stop() {
 	Respond::ChatMessage(response, "§7Stopping server");
 	Betrock::Logger::Instance().Info("Stopping server");
+	Betrock::Server::Instance().PrepareForShutdown();
 	Betrock::Server::Instance().Stop();
 	failureReason = "";
 }

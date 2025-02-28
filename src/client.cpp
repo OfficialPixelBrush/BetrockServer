@@ -21,7 +21,7 @@ ssize_t Client::Setup() {
 	previousOffset = 0;
 
 	// Read Data
-	return read(GetClientFd(), message, PACKET_MAX);
+	return read(clientFd, message, PACKET_MAX);
 }
 
 void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
@@ -375,14 +375,15 @@ void Client::HandleClient() {
 	ClearInventory();
 
 	// While the player is connected, read packets from them
-	while (GetConnectionStatus() > ConnectionStatus::Disconnected) {
+	while (server.IsAlive() && GetConnectionStatus() > ConnectionStatus::Disconnected) {
 		HandlePacket();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
 	}
+	
+	close(clientFd);
+	clientFd = -1;
 
 	player->Save();
-	
-	close(GetClientFd());
 
     // Remove the client from the connected clients list before it goes out of scope
     {
@@ -840,13 +841,15 @@ bool Client::HandleDisconnect() {
 }
 
 void Client::DisconnectClient(std::string disconnectMessage) {
+	SetConnectionStatus(ConnectionStatus::Disconnected);
 	Respond::Disconnect(response, disconnectMessage);
-	SendResponse();
+	SendResponse(true);
+	/*
 	Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
 	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
 	Respond::ChatMessage(broadcastOthersResponse, "§e" + player->username + " left the game.");
 	BroadcastToClients(broadcastOthersResponse,this);
-	SetConnectionStatus(ConnectionStatus::Disconnected);
+	*/
 }
 
 void Client::AppendResponse(std::vector<uint8_t> &addition) {
@@ -873,7 +876,7 @@ void Client::SendResponse(bool autoclear) {
 		Betrock::Logger::Instance().Debug(debugMessage);
 	}
 	
-	ssize_t bytes_sent = send(GetClientFd(), response.data(), response.size(), 0);
+	ssize_t bytes_sent = send(clientFd, response.data(), response.size(), 0);
 	if (bytes_sent == -1) {
 		perror("send");
 		return;

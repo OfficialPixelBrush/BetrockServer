@@ -133,7 +133,7 @@ class Server {
 
 	// =====================================================
 
-	bool alive = true; // server alive
+	std::atomic<bool> alive = true; // server alive
 	int serverFd = -1;
 	std::vector<std::shared_ptr<Client>> connectedClients;
 	int32_t latestEntityId = 0;
