@@ -72,7 +72,7 @@ class Server {
 	// add a new world manager (and also a new world)
 	void AddWorldManager(int8_t world_id);
 
-	void SaveAll(bool shutdown = false);
+	void SaveAll();
 
 	void FreeAll();
 
@@ -90,11 +90,11 @@ class Server {
 		struct sockaddr_in address;
 		int addrlen = sizeof(address);
 
-		while (server.alive) {
+		while (server.IsAlive()) {
 			// Accept connections
 			int client_fd = accept(server.serverFd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
 			if (client_fd < 0) {
-				if (!server.alive) break;
+				if (!server.IsAlive()) break;
 				perror("Accept failed");
 				continue;
 			}

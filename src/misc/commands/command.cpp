@@ -7,8 +7,19 @@ std::vector<uint8_t> response;
 std::vector<std::string> command;
 std::string failureReason;
 
-// Toggle the clients pose bits
-void Command::Help(Client* client) {
+// Send the client help pages
+// Do these in markdown(?)
+void Command::Help() {
+	Respond::ChatMessage(response, "§7Current " + std::string(PROJECT_NAME) + " version is "  + std::string(PROJECT_VERSION_FULL_STRING));
+	failureReason = "";
+	return;
+}
+
+// Send the client the current server version
+void Command::Version() {
+	Respond::ChatMessage(response, "§7Current " + std::string(PROJECT_NAME) + " version is "  + std::string(PROJECT_VERSION_FULL_STRING));
+	failureReason = "";
+	return;
 }
 
 // Toggle the clients pose bits
@@ -255,8 +266,7 @@ void Command::Creative(Player* player) {
 
 void Command::Stop() {
 	Respond::ChatMessage(response, "§7Stopping server");
-	Betrock::Logger::Instance().Info("Stopping server");
-	Betrock::Server::Instance().Stop();
+	Betrock::Server::Instance().PrepareForShutdown();
 	failureReason = "";
 }
 
@@ -307,7 +317,11 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 		if (command[0] == "time") {
 			Time();
 		} else if (command[0] == "help") {
-			Help(client);
+			Help();
+		} else if (command[0] == "version") {
+			Version();
+		} else if (command[0] == "help") {
+			Help();
 		} else if (command[0] == "op") {
 			Op(client);
 		} else if (command[0] == "deop") {

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.2.1)
+project(BetrockServer VERSION 0.2.2)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -14,8 +14,36 @@ find_package(Lua REQUIRED)
 file(COPY "${CMAKE_SOURCE_DIR}/src/scripts/"
 DESTINATION "${CMAKE_BINARY_DIR}/scripts")
 
+# Find Git
+find_package(Git REQUIRED)
+
+# Get the latest Git commit hash
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE PROJECT_GIT_COMMIT
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
+# Get the current Git branch name
+execute_process(
+    COMMAND ${GIT_EXECUTABLE} rev-parse --abbrev-ref HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE PROJECT_GIT_BRANCH
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+)
+
 # Configure the version header file
-configure_file(${CMAKE_SOURCE_DIR}/src/misc/version.h.in ${CMAKE_SOURCE_DIR}/src/misc/version.h)
+configure_file(
+    ${CMAKE_SOURCE_DIR}/src/misc/version.h.in
+    ${CMAKE_SOURCE_DIR}/src/misc/version.h
+)
+
+configure_file(
+    ${CMAKE_SOURCE_DIR}/.github/ISSUE_TEMPLATE/bug_report.md.in
+    ${CMAKE_SOURCE_DIR}/.github/ISSUE_TEMPLATE/bug_report.md
+    @ONLY
+)
 
 include_directories(
     "${PROJECT_SOURCE_DIR}/include"
@@ -24,6 +52,7 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/src/enums"
     "${PROJECT_SOURCE_DIR}/src/logger"
     "${PROJECT_SOURCE_DIR}/src/misc/helpers"
+    "${PROJECT_SOURCE_DIR}/src/misc/commands"
     "${PROJECT_SOURCE_DIR}/src/misc"
     "${PROJECT_SOURCE_DIR}/src/objects"
     "${PROJECT_SOURCE_DIR}/src/plugins"
@@ -50,7 +79,7 @@ add_executable(
     src/misc/helpers/helper.cpp
     src/misc/helpers/luahelper.cpp
 
-    src/misc/command.cpp
+    src/misc/commands/command.cpp
     src/misc/gamerules.cpp
     src/misc/lighting.cpp
     src/misc/sysinfo.cpp

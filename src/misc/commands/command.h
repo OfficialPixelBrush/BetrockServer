@@ -17,7 +17,6 @@ class Command {
         static void Parse(std::string &rawCommand, Client* client);
     private:
         // Operator
-        static void Chunk(Client* client);
         static void Creative(Player* player);
         static void Free();
         static void Gamerule(Client* client);
@@ -34,9 +33,10 @@ class Command {
         // Creative Player
         static void Give(Client* client);
         static void Health(Player* player);
-        static void Help(Client* client);
+        static void Help();
         static void Kill(Player* player);
         static void Pose(Player* player);
         static void Sound(Player* player);
         static void Spawn(Client* client);
+        static void Version();
 };

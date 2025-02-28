@@ -15,4 +15,3 @@
 class Client;
 
 void BroadcastToClients(std::vector<uint8_t> &response, Client* sender = nullptr, bool autoclear = true);
-void DisconnectAllClients(std::string message = "");

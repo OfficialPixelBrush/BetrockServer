@@ -21,7 +21,7 @@ ssize_t Client::Setup() {
 	previousOffset = 0;
 
 	// Read Data
-	return read(GetClientFd(), message, PACKET_MAX);
+	return read(clientFd, message, PACKET_MAX);
 }
 
 void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
@@ -73,6 +73,7 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
 		// Otherwise queue chunk loading or generation
 		wm->AddChunkToQueue(position.x, position.z, this);
 		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
+		SendResponse(true);
         return;
     }
     // If the chunk is already available, send it over
@@ -374,24 +375,26 @@ void Client::HandleClient() {
 	ClearInventory();
 
 	// While the player is connected, read packets from them
-	while (GetConnectionStatus() > ConnectionStatus::Disconnected) {
+	while (server.IsAlive() && GetConnectionStatus() > ConnectionStatus::Disconnected) {
 		HandlePacket();
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
 	}
-
-	player->Save();
 	
-	close(GetClientFd());
+	close(clientFd);
+	clientFd = -1;
 
-    // Remove the client from the connected clients list before it goes out of scope
-    {
-        std::scoped_lock lockConnectedClients(server.GetConnectedClientMutex());
-		auto &clients = server.GetConnectedClients();
-        auto it = std::find(clients.begin(), clients.end(), shared_from_this());
-        if (it != clients.end()) {
-            clients.erase(it);
-        }
-    }
+	// If the server is dead, it'll take care of all this
+	if (server.IsAlive()) {
+		player->Save();
+		{
+			std::scoped_lock lockConnectedClients(server.GetConnectedClientMutex());
+			auto &clients = server.GetConnectedClients();
+			auto it = std::find(clients.begin(), clients.end(), shared_from_this());
+			if (it != clients.end()) {
+				clients.erase(it);
+			}
+		}
+	}
 }
 
 // --- Packet answers ---
@@ -528,7 +531,7 @@ bool Client::HandleLoginRequest() {
 		);
 
     }
-	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION));
+	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION_FULL));
 	SendResponse(true);
 	// ONLY SET THIS AFTER LOGIN HAS FINISHED
 	SetConnectionStatus(ConnectionStatus::Connected);
@@ -839,13 +842,14 @@ bool Client::HandleDisconnect() {
 }
 
 void Client::DisconnectClient(std::string disconnectMessage) {
+	SetConnectionStatus(ConnectionStatus::Disconnected);
 	Respond::Disconnect(response, disconnectMessage);
-	SendResponse();
+	SendResponse(true);
+	// Inform other clients
 	Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
 	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
 	Respond::ChatMessage(broadcastOthersResponse, "§e" + player->username + " left the game.");
 	BroadcastToClients(broadcastOthersResponse,this);
-	SetConnectionStatus(ConnectionStatus::Disconnected);
 }
 
 void Client::AppendResponse(std::vector<uint8_t> &addition) {
@@ -872,7 +876,7 @@ void Client::SendResponse(bool autoclear) {
 		Betrock::Logger::Instance().Debug(debugMessage);
 	}
 	
-	ssize_t bytes_sent = send(GetClientFd(), response.data(), response.size(), 0);
+	ssize_t bytes_sent = send(clientFd, response.data(), response.size(), 0);
 	if (bytes_sent == -1) {
 		perror("send");
 		return;

@@ -5,8 +5,6 @@
 
 namespace Betrock {
 
-void Server::Stop() noexcept { this->alive = false; }
-
 bool Server::IsAlive() const noexcept { return this->alive; }
 
 int8_t Server::GetSpawnDimension() const noexcept { return this->spawnDimension; }
@@ -84,15 +82,11 @@ void Server::AddWorldManager(int8_t worldId) {
 	}
 }
 
-void Server::SaveAll(bool shutdown) {
+void Server::SaveAll() {
 	Betrock::Logger::Instance().Info("Saving...");
-	if (shutdown) {
-		DisconnectAllClients("Server closed");
-	} else {
-		for (auto c : GetConnectedClients()){
-			if (c) {
-					c->GetPlayer()->Save();
-			}
+	for (auto c : GetConnectedClients()){
+		if (c) {
+			c->GetPlayer()->Save();
 		}
 	}
 	for (const auto &[key, wm] : worldManagers) {
@@ -110,13 +104,21 @@ void Server::FreeAll() {
 }
 
 void Server::PrepareForShutdown() {
-	alive = false;
-	// Save all active worlds
-	if (!debugDisableSaveLoad) {
-		SaveAll(true);
+	this->alive = false;
+}
+
+void Server::Stop() noexcept {
+	if (!this->alive) {
+		// Save all active worlds
+		for (auto client : connectedClients) {
+			client->DisconnectClient("Server closed!");
+		}
+		SaveAll();
+
+		shutdown(serverFd, SHUT_RDWR);
+		close(serverFd);
+		serverFd = -1;
 	}
-	//DisconnectAllPlayers("Server closed!");
-	close(serverFd);
 }
 
 void Server::LoadConfig() {

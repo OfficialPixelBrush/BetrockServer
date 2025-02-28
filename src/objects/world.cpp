@@ -43,10 +43,10 @@ void World::Save() {
     uint savedChunks = 0;
     for (const auto& pair : chunks) {
         const int64_t& hash = pair.first;
-        const Chunk& chunk = pair.second; // Keep it as a reference
+        const Chunk& chunk = pair.second;
     
         Int3 pos = DecodeChunkHash(hash);
-        SaveChunk(pos.x, pos.z, &chunk); // No need to dereference
+        SaveChunk(pos.x, pos.z, &chunk);
         savedChunks++;
     }
     std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;

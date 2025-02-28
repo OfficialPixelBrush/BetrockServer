@@ -102,7 +102,7 @@ class Client : public std::enable_shared_from_this<Client> {
         void SetConnectionStatus(ConnectionStatus status) { this->connectionStatus = status; }
         ConnectionStatus GetConnectionStatus() { return this->connectionStatus; }
         void SetClientFd(int clientFd) { this->clientFd = clientFd; }
-        int GetClientFd() { return this->clientFd; }
+        int &GetClientFd() { return this->clientFd; }
 
         Client(int clientFd) : clientFd(clientFd) {}
         void HandleClient();

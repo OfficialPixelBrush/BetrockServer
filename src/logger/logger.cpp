@@ -8,9 +8,11 @@
 namespace Betrock {
 
 Logger::Logger() {
-    logFile.open(GetRealTimeFileFormat() + ".log", std::ios::out | std::ios::app);
-    if (!logFile.is_open()) {
-        throw std::runtime_error("Failed to open log file");
+    if (logLevelText != LOG_NONE) {
+        logFile.open(GetRealTimeFileFormat() + ".log", std::ios::out | std::ios::app);
+        if (!logFile.is_open()) {
+            throw std::runtime_error("Failed to open log file");
+        }
     }
 }
 

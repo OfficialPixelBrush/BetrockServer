@@ -3,20 +3,18 @@
 #include "config.h"
 #include "server.h"
 
-void __attribute__((noreturn)) HandleSignal(int) {
+void HandleGracefulSignal(int) {
 	Betrock::Server::Instance().PrepareForShutdown();
-	shutdown(Betrock::Server::Instance().GetServerFd(), SHUT_RDWR); // Interrupt accept
-	exit(0);
 }
 
 int main() {
 	auto &server = Betrock::Server::Instance();
 	auto &logger = Betrock::Logger::Instance();
 
-	signal(SIGINT, HandleSignal);  // Handle Ctrl+C
-	signal(SIGTERM, HandleSignal); // Handle termination signals
+	signal(SIGINT, HandleGracefulSignal);  // Handle Ctrl+C
+	signal(SIGTERM, HandleGracefulSignal); // Handle termination signals
 
-	logger.Info("Starting " + std::string(PROJECT_NAME) + " version " + std::string(PROJECT_VERSION_STRING));
+	logger.Info("Starting " + std::string(PROJECT_NAME) + " version " + std::string(PROJECT_VERSION_FULL_STRING));
 
 	server.LoadConfig();
 
@@ -48,7 +46,7 @@ int main() {
 	server.SetSpawnPoint(spawnPoint);
 
 	// Create threads for sending and receiving data
-	std::jthread join_thread(&Betrock::Server::ServerJoin);
+	std::thread join_thread(&Betrock::Server::ServerJoin);
 	std::vector<uint8_t> response;
 
 	while (server.IsAlive()) {
@@ -63,7 +61,7 @@ int main() {
 		sleep(1); // Send data every second
 	}
 
+	server.Stop();
 	join_thread.join();
-	server.PrepareForShutdown();
 	return 0;
 }
