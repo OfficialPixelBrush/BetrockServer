@@ -21,15 +21,3 @@ void BroadcastToClients(std::vector<uint8_t> &response, Client* sender, bool aut
 		response.clear();
 	}
 }
-
-// Disconnects all currently connected Clients
-void DisconnectAllClients(std::string message) {
-	auto &server = Betrock::Server::Instance();
-
-	{
-		std::scoped_lock lock(server.GetConnectedClientMutex());
-		for (auto client : server.GetConnectedClients()) {
-			client->DisconnectClient(message);
-		}
-	}
-}

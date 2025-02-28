@@ -46,17 +46,12 @@ void WorldManager::Run() {
     }
 
     // TODO: Add clean-up thread to remove unseen chunks
-
     while (Betrock::Server::Instance().IsAlive()) {
         GenerateQueuedChunks();
         std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Sleep for half a second
     }
 
     // Stop workers
-    {
-        std::lock_guard<std::mutex> lock(queueMutex);
-        Betrock::Server::Instance().Stop();
-    }
     queueCV.notify_all();
 
     for (auto& worker : workers) {
@@ -79,7 +74,7 @@ void WorldManager::WorkerThread() {
     Generator generator;
     generator.PrepareGenerator(seed);
 
-    while (true) {
+    while (Betrock::Server::Instance().IsAlive()) {
         QueueChunk cq;
         {
             std::unique_lock<std::mutex> lock(queueMutex);

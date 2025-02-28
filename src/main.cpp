@@ -3,10 +3,9 @@
 #include "config.h"
 #include "server.h"
 
+// TODO: This is still causing issues!!!
 void __attribute__((noreturn)) HandleSignal(int) {
 	Betrock::Server::Instance().PrepareForShutdown();
-	Betrock::Server::Instance().Stop();
-	shutdown(Betrock::Server::Instance().GetServerFd(), SHUT_RDWR); // Interrupt accept
 	exit(0);
 }
 
@@ -15,7 +14,7 @@ int main() {
 	auto &logger = Betrock::Logger::Instance();
 
 	signal(SIGINT, HandleSignal);  // Handle Ctrl+C
-	signal(SIGTERM, HandleSignal); // Handle termination signals
+	//signal(SIGTERM, HandleSignal); // Handle termination signals
 
 	logger.Info("Starting " + std::string(PROJECT_NAME) + " version " + std::string(PROJECT_VERSION_FULL_STRING));
 
@@ -49,7 +48,7 @@ int main() {
 	server.SetSpawnPoint(spawnPoint);
 
 	// Create threads for sending and receiving data
-	std::jthread join_thread(&Betrock::Server::ServerJoin);
+	std::thread join_thread(&Betrock::Server::ServerJoin);
 	std::vector<uint8_t> response;
 
 	while (server.IsAlive()) {
@@ -64,7 +63,7 @@ int main() {
 		sleep(1); // Send data every second
 	}
 
-	join_thread.join();
 	server.Stop();
+	join_thread.join();
 	return 0;
 }

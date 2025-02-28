@@ -383,17 +383,18 @@ void Client::HandleClient() {
 	close(clientFd);
 	clientFd = -1;
 
-	player->Save();
-
-    // Remove the client from the connected clients list before it goes out of scope
-    {
-        std::scoped_lock lockConnectedClients(server.GetConnectedClientMutex());
-		auto &clients = server.GetConnectedClients();
-        auto it = std::find(clients.begin(), clients.end(), shared_from_this());
-        if (it != clients.end()) {
-            clients.erase(it);
-        }
-    }
+	// If the server is dead, it'll take care of all this
+	if (server.IsAlive()) {
+		player->Save();
+		{
+			std::scoped_lock lockConnectedClients(server.GetConnectedClientMutex());
+			auto &clients = server.GetConnectedClients();
+			auto it = std::find(clients.begin(), clients.end(), shared_from_this());
+			if (it != clients.end()) {
+				clients.erase(it);
+			}
+		}
+	}
 }
 
 // --- Packet answers ---
@@ -844,12 +845,11 @@ void Client::DisconnectClient(std::string disconnectMessage) {
 	SetConnectionStatus(ConnectionStatus::Disconnected);
 	Respond::Disconnect(response, disconnectMessage);
 	SendResponse(true);
-	/*
+	// Inform other clients
 	Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
 	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
 	Respond::ChatMessage(broadcastOthersResponse, "§e" + player->username + " left the game.");
 	BroadcastToClients(broadcastOthersResponse,this);
-	*/
 }
 
 void Client::AppendResponse(std::vector<uint8_t> &addition) {
