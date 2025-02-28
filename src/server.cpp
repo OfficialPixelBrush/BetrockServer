@@ -84,13 +84,11 @@ void Server::AddWorldManager(int8_t worldId) {
 
 void Server::SaveAll() {
 	Betrock::Logger::Instance().Info("Saving...");
-	/*
 	for (auto c : GetConnectedClients()){
 		if (c) {
 			c->GetPlayer()->Save();
 		}
 	}
-	*/
 	for (const auto &[key, wm] : worldManagers) {
 		wm->world.Save();
 	}

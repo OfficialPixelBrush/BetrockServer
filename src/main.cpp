@@ -3,18 +3,16 @@
 #include "config.h"
 #include "server.h"
 
-// TODO: This is still causing issues!!!
-void __attribute__((noreturn)) HandleSignal(int) {
+void HandleGracefulSignal(int) {
 	Betrock::Server::Instance().PrepareForShutdown();
-	exit(0);
 }
 
 int main() {
 	auto &server = Betrock::Server::Instance();
 	auto &logger = Betrock::Logger::Instance();
 
-	signal(SIGINT, HandleSignal);  // Handle Ctrl+C
-	//signal(SIGTERM, HandleSignal); // Handle termination signals
+	signal(SIGINT, HandleGracefulSignal);  // Handle Ctrl+C
+	signal(SIGTERM, HandleGracefulSignal); // Handle termination signals
 
 	logger.Info("Starting " + std::string(PROJECT_NAME) + " version " + std::string(PROJECT_VERSION_FULL_STRING));
 

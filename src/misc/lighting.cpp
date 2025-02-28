@@ -2,6 +2,9 @@
 #include "lighting.h"
 
 void CalculateColumnLight(int32_t x, int32_t z, Chunk* c) {
+    if (!c) {
+        return;
+    }
     uint8_t skyVisible = 0xF;
     for (int8_t y = CHUNK_HEIGHT-1; y > 0; y--) {
         Int3 position { x,y,z };
@@ -18,6 +21,9 @@ void CalculateColumnLight(int32_t x, int32_t z, Chunk* c) {
 
 // Recalculates all the light in the chunk the block position is found in
 void CalculateChunkLight(Chunk* c) {
+    if (!c) {
+        return;
+    }
     for (int32_t x = 0; x < CHUNK_WIDTH_X; x++) {
         for (int32_t z = 0; z < CHUNK_WIDTH_Z; z++) {
             CalculateColumnLight(x,z,c);
