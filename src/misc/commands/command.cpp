@@ -210,13 +210,12 @@ void Command::Summon(Client* client) {
 		std::scoped_lock lock(server.GetEntityIdMutex());
 		std::string username = command[1];
 		std::vector<uint8_t> broadcastResponse;
-		Respond::NamedEntitySpawn(broadcastResponse, server.GetLatestEntityId(), username, Vec3ToInt3(client->GetPlayer()->position), 0,0, 5);
+		Respond::NamedEntitySpawn(broadcastResponse, server.GetLatestEntityId(), username, Vec3ToEntityInt3(client->GetPlayer()->position), 0,0, 5);
 		BroadcastToClients(broadcastResponse);
 		Respond::ChatMessage(response, "§7Summoned " + username);
 		failureReason = "";
 	}
 }
-
 
 // Set gamerules
 void Command::Gamerule(Client* client) {

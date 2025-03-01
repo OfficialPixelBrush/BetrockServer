@@ -172,36 +172,32 @@ bool World::LoadChunk(int32_t x, int32_t z) {
 }
 
 void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
+    if (!chunk) {
+        //
+    }
     // Update Chunklight before saving
     CalculateChunkLight(GetChunk(x,z));
     Int3 pos = Int3{x,0,z};
 
-    std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".cnk");
-
-    std::ofstream chunkFile (filePath);
-    if (!chunkFile) {
-        std::cerr << "Failed to save chunk at " << pos.x << ", " << pos.z << '\n';
-        return;
-    }
+    std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".ncnk");
 
     // Acquire existing chunk data
-    auto chunkData = GetChunkData(pos);
-    // Add it to the list of chunks to be compressed and sent
-    if (!chunkData) {
-        std::cout << "Failed to get Chunk " << pos << std::endl;
-        return;
-    }
+    auto blocks = GetChunkBlocks(chunk);
+    auto meta = GetChunkMeta(chunk);
+    auto blockLight = GetChunkBlockLight(chunk);
+    auto skyLight = GetChunkSkyLight(chunk);
 
-    size_t compressedSize = 0;
-    auto chunkBinary = CompressChunk(chunkData.get(), compressedSize);
+    auto root = std::make_shared<CompoundTag>("");
+    auto level = std::make_shared<CompoundTag>("Level");
+    root->Put(level);
+    level->Put(std::make_shared<ByteArrayTag>("Blocks", blocks));
+    level->Put(std::make_shared<ByteArrayTag>("Data", meta));
+    level->Put(std::make_shared<ByteArrayTag>("SkyLight", skyLight));
+    level->Put(std::make_shared<ByteArrayTag>("BlockLight", blockLight));
+    level->Put(std::make_shared<IntTag>("zPos",x));
+    level->Put(std::make_shared<IntTag>("xPos",z));
     
-    if (!chunkBinary || compressedSize == 0) {		
-        std::cout << "Failed to compress Chunk " << pos << std::endl;
-        return;
-    }
-
-    chunkFile.write(chunkBinary.get(), compressedSize);
-    chunkFile.close();
+    NbtWriteToFile(filePath,root);
 }
 
 void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
@@ -239,6 +235,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     if (!c) {
         return nullptr;
     }
+    // TODO: Make use of the individual functions!!!
     // BlockData
     for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
@@ -286,6 +283,85 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
         }
     }
     return bytes;
+}
+
+std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkBlocks(const Chunk* c) {
+    std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
+    if (!c) {
+        return data;
+    }
+    int index = 0;
+    // BlockData
+    for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
+        for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
+            for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
+                Block b = c->blocks[GetBlockIndex(XyzToInt3(cX,cY,cZ))];
+                data[index] = b.type;
+                index++;
+            }
+        }
+    }
+    return data;
+}
+
+std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkMeta(const Chunk* c) {
+    std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
+    if (!c) {
+        return data;
+    }
+    int index = 0;
+    // Metadata
+    for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
+        for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
+            for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
+                Block b = c->blocks[GetBlockIndex(XyzToInt3(cX,cY,cZ))];
+                data[index] = b.meta;
+                index++;
+            }
+        }
+    }
+    return data;
+}
+
+std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkBlockLight(const Chunk* c) {
+    std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
+    if (!c) {
+        return data;
+    }
+    int index = 0;
+    // Block Light
+    for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
+        for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
+            for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+                Block b1 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2  ,cZ))];
+                Block b2 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2+1,cZ))];
+                data[index] = (b2.lightBlock << 4 | b1.lightBlock);
+                index++;
+            }
+        }
+    }
+    return data;
+}
+
+std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkSkyLight(const Chunk* c) {
+    std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
+    if (!c) {
+        return data;
+    }
+    int index = 0;
+
+    // Sky Light
+    for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
+        for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
+            for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+                Block b1 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2  ,cZ))];
+                Block b2 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2+1,cZ))];
+                data[index] = (b2.lightSky << 4 | b1.lightSky);
+                index++;
+            }
+        }
+    }
+    return data;
 }
 
 Int3 World::FindSpawnableBlock(Int3 position) {
