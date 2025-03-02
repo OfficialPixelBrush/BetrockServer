@@ -76,8 +76,8 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
                     lua_rawgeti(L, -2, 2);
     
                     if (lua_isnumber(L, -2) && lua_isnumber(L, -1)) {
-                        c.blocks[i].type = lua_tointeger(L, -2);
-                        c.blocks[i].meta = lua_tointeger(L, -1);
+                        c.blocks[i-1].type = lua_tointeger(L, -2);
+                        c.blocks[i-1].meta = lua_tointeger(L, -1);
                     }
     
                     lua_pop(L, 2);  // Pop both numbers
@@ -88,7 +88,6 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
             lua_pop(L, 1);  // Pop the table itself
         }
     }
-
     CalculateChunkLight(&c);
     return c;
 }
@@ -218,25 +217,25 @@ int lua_Index(lua_State *L) {
     if (x < 0) {
         x = 0;
     }
-    if (x > CHUNK_WIDTH_X) {
-        x = CHUNK_WIDTH_X;
+    if (x >= CHUNK_WIDTH_X) {
+        x = CHUNK_WIDTH_X-1;
     }
     if (z < 0) {
         z = 0;
     }
-    if (z > CHUNK_WIDTH_Z) {
-        z = CHUNK_WIDTH_Z;
+    if (z >= CHUNK_WIDTH_Z) {
+        z = CHUNK_WIDTH_Z-1;
     }
     if (y < 0) {
         y = 0;
     }
-    if (y > CHUNK_HEIGHT) {
-        y = CHUNK_HEIGHT;
+    if (y >= CHUNK_HEIGHT) {
+        y = CHUNK_HEIGHT-1;
     }
     Int3 pos = Int3{x,y,z};
 
     // Call Between and push the result
-    int32_t result = GetBlockIndex(pos);
+    int32_t result = GetBlockIndex(pos)+1;
     lua_pushnumber(L, result);
 
     return 1; // One return value on the Lua stack

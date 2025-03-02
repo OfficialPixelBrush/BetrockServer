@@ -108,66 +108,47 @@ bool World::LoadChunk(int32_t x, int32_t z) {
 
     // Check if the entry file exists and has a .cnk extension
     if (!ChunkFileExists(x,z)) {
+        std::cout << "File doesn't exist!" << std::endl;
         return false;
     }
 
-    std::ifstream chunkFile (entryPath);
-    if (!chunkFile.is_open()) {
-        Betrock::Logger::Instance().Warning("Failed to load chunk " + std::string(entryPath));
-        return false;
-    }      
+    auto readRoot = NbtReadFromFile(entryPath,NBT_UNCOMPRESSED);
+    //readRoot->NbtPrintData();
 
-    // Get the length of the file
-    chunkFile.seekg(0, std::ios::end);
-    std::streamsize size = chunkFile.tellg();
-    chunkFile.seekg(0, std::ios::beg);
+    auto root = std::dynamic_pointer_cast<CompoundTag>(readRoot);
+    auto level = std::dynamic_pointer_cast<CompoundTag>(root->Get("Level"));
+    auto blockTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Blocks"));
+    auto blocks = blockTag->GetData();
+    auto meta = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Data"))->GetData();
+    auto blockLight = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("BlockLight"))->GetData();
+    auto skyLight = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("SkyLight"))->GetData();
 
-    std::vector<char> buffer(size);
-    chunkFile.read(buffer.data(), size);
-    char* compressedChunk = buffer.data();
-
-    size_t compressedSize = size;
-    size_t decompressedSize = 0;
-
-    auto chunkData = DecompressChunk(compressedChunk,compressedSize,decompressedSize);
-
-    if (!chunkData) {
-        Betrock::Logger::Instance().Warning("Failed to decompress " + std::string(entryPath));
-        return false;
-    }
+    auto terrainPopulated = std::dynamic_pointer_cast<ByteTag>(level->Get("TerrainPopulated"))->GetData();
 
     Chunk c;
-    size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;
-    size_t nibbleDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*(CHUNK_HEIGHT/2);
-    for (size_t i = 0; i < decompressedSize; i++) {
-        if (i < blockDataSize) {
-            // Block Data
-            c.blocks[i].type = chunkData[i];
-        } else if (
-            // Metadata
-            i >= blockDataSize &&
-            i <  blockDataSize+nibbleDataSize)
-        {
-            c.blocks[(i%nibbleDataSize)*2  ].meta = (chunkData[i]     )&0xF;
-            c.blocks[(i%nibbleDataSize)*2+1].meta = (chunkData[i] >> 4)&0xF;
-        } else if (
-            // Block Light
-            i >= blockDataSize+nibbleDataSize &&
-            i <  blockDataSize+(nibbleDataSize*2))
-        {
-            c.blocks[(i%nibbleDataSize)*2  ].lightBlock = (chunkData[i]     )&0xF;
-            c.blocks[(i%nibbleDataSize)*2+1].lightBlock = (chunkData[i] >> 4)&0xF;
-        } else if (
-            // Sky Light
-            i >= blockDataSize+(nibbleDataSize*2) &&
-            i <  blockDataSize+(nibbleDataSize*3))
-        {
-            c.blocks[(i%nibbleDataSize)*2  ].lightSky = (chunkData[i]     )&0xF;
-            c.blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
-        }
+    size_t blockDataSize  = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z *  CHUNK_HEIGHT   );
+    size_t nibbleDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT/2));
+    // Block Data
+    for (size_t i = 0; i < blockDataSize; i++) {
+        c.blocks[i].type = blocks[i];
     }
+    // Block Metadata
+    for (size_t i = 0; i < nibbleDataSize; i++) {
+        c.blocks[i*2  ].meta = (meta[i]     )&0xF;
+        c.blocks[i*2+1].meta = (meta[i] >> 4)&0xF;
+    }
+    // Block Light
+    for (size_t i = 0; i < nibbleDataSize; i++) {
+        c.blocks[i*2  ].lightBlock = (blockLight[i]     )&0xF;
+        c.blocks[i*2+1].lightBlock = (blockLight[i] >> 4)&0xF;
+    }
+    // Sky Light
+    for (size_t i = 0; i < nibbleDataSize; i++) {
+        c.blocks[i*2  ].lightSky = (skyLight[i]     )&0xF;
+        c.blocks[i*2+1].lightSky = (skyLight[i] >> 4)&0xF;
+    }
+    c.populated = (bool)terrainPopulated;
     AddChunk(x,z,c);
-    chunkFile.close();
     return true;
 }
 
@@ -179,7 +160,7 @@ void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
     CalculateChunkLight(GetChunk(x,z));
     Int3 pos = Int3{x,0,z};
 
-    std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".ncnk");
+    std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + ".cnk");
 
     // Acquire existing chunk data
     auto blocks = GetChunkBlocks(chunk);
@@ -192,12 +173,13 @@ void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
     root->Put(level);
     level->Put(std::make_shared<ByteArrayTag>("Blocks", blocks));
     level->Put(std::make_shared<ByteArrayTag>("Data", meta));
-    level->Put(std::make_shared<ByteArrayTag>("SkyLight", skyLight));
     level->Put(std::make_shared<ByteArrayTag>("BlockLight", blockLight));
+    level->Put(std::make_shared<ByteArrayTag>("SkyLight", skyLight));
+    level->Put(std::make_shared<ByteTag>("TerrainPopulated", chunk->populated));
     level->Put(std::make_shared<IntTag>("zPos",x));
     level->Put(std::make_shared<IntTag>("xPos",z));
     
-    NbtWriteToFile(filePath,root);
+    NbtWriteToFile(filePath,root,NBT_UNCOMPRESSED);
 }
 
 void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
@@ -310,12 +292,13 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
         return data;
     }
     int index = 0;
-    // Metadata
-    for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
-        for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                Block b = c->blocks[GetBlockIndex(XyzToInt3(cX,cY,cZ))];
-                data[index] = b.meta;
+    // Block Metadata
+    for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
+        for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
+            for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+                Block b1 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2  ,cZ))];
+                Block b2 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2+1,cZ))];
+                data[index] = (b2.meta << 4 | b1.meta);
                 index++;
             }
         }
