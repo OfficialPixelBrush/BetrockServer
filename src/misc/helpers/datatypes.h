@@ -22,9 +22,18 @@ struct Block {
     uint8_t lightSky = 0;
 };
 
+#define OLD_CHUNK_FILE_EXTENSION ".cnk"
+#define CHUNK_FILE_EXTENSION ".ncnk"
+
 // TODO: Add a "modified" tag to a chunk to see if we need to bother re-saving it(?)
 struct Chunk {
     struct Block blocks[CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT];
+    // This describes the number of clients that can see this chunk.
+    // If this hits 0, the chunk is invisible and can be removed
+    uint16_t viewers = 0;
+
+    // A non-populated chunk still needs to be popualated with foliage
+    bool populated = false;
 };
 
 // Custom Types

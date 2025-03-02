@@ -2,9 +2,9 @@
 
 Vec3 Int3ToVec3(Int3 i) {
 	Vec3 v = {
-		(double)i.x,
+		(double)i.x+0.5,
 		(double)i.y,
-		(double)i.z
+		(double)i.z+0.5
 	};
 	return v;
 }

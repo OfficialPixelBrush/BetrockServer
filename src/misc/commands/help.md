@@ -50,7 +50,7 @@ Gets/sets the server time
 ## op
 Grants operator from the passed player
 ```
-/deop <username>
+/op <username>
 ```
 ## deop
 Removes operator from the passed player
@@ -89,5 +89,11 @@ Plays the passed sound id
 ```
 ## spawn
 Teleports the player to spawn
+```
+/spawn
+```
 ## version
 Prints the server version
+```
+/version
+```

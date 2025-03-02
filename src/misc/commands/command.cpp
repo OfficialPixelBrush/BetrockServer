@@ -3,6 +3,8 @@
 #include "client.h"
 #include "server.h"
 
+#include "help.h"
+
 std::vector<uint8_t> response;
 std::vector<std::string> command;
 std::string failureReason;
@@ -10,7 +12,18 @@ std::string failureReason;
 // Send the client help pages
 // Do these in markdown(?)
 void Command::Help() {
-	Respond::ChatMessage(response, "§7Current " + std::string(PROJECT_NAME) + " version is "  + std::string(PROJECT_VERSION_FULL_STRING));
+	Respond::ChatMessage(response, "§7-- All commands --");
+	std::string msg = "§7";
+	for (int i = 0; i < commandListing.size(); i++) {
+		msg += commandListing[i];
+		if (i < commandListing.size()-1) {
+			msg += ", ";
+		}
+		if (msg.size() > 40 || i == commandListing.size()-1) {
+			Respond::ChatMessage(response, msg);
+			msg = "§7";
+		}
+	}
 	failureReason = "";
 	return;
 }
@@ -210,13 +223,12 @@ void Command::Summon(Client* client) {
 		std::scoped_lock lock(server.GetEntityIdMutex());
 		std::string username = command[1];
 		std::vector<uint8_t> broadcastResponse;
-		Respond::NamedEntitySpawn(broadcastResponse, server.GetLatestEntityId(), username, Vec3ToInt3(client->GetPlayer()->position), 0,0, 5);
+		Respond::NamedEntitySpawn(broadcastResponse, server.GetLatestEntityId(), username, Vec3ToEntityInt3(client->GetPlayer()->position), 0,0, 5);
 		BroadcastToClients(broadcastResponse);
 		Respond::ChatMessage(response, "§7Summoned " + username);
 		failureReason = "";
 	}
 }
-
 
 // Set gamerules
 void Command::Gamerule(Client* client) {

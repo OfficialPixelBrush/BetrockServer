@@ -21,4 +21,4 @@ assignees: ''
 **System Info:**
 - OS (Server): 
 - OS (Client): 
-- Version: v0.2.2 (BRANCH/COMMIT_HASH)
+- Version: v0.2.3 (BRANCH/COMMIT_HASH)
