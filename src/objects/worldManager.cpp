@@ -107,7 +107,9 @@ void WorldManager::WorkerThread() {
 void WorldManager::GetChunk(int32_t x, int32_t z, Generator &generator) {
     if (world.ChunkFileExists(x,z)) {
         world.LoadChunk(x,z);
-    }  else {
+    } else if (world.ChunkFileExists(x,z,OLD_CHUNK_FILE_EXTENSION)) {
+        world.LoadOldChunk(x,z);
+    } else {
         Chunk c = generator.GenerateChunk(x,z);
         world.AddChunk(x, z, c);
     }

@@ -853,10 +853,10 @@ void Client::DisconnectClient(std::string disconnectMessage) {
 }
 
 void Client::AppendResponse(std::vector<uint8_t> &addition) {
-	//Betrock::Logger::Instance().Debug("Appended\n" + Uint8ArrayToHexDump(&addition[0], addition.size()));
-	response.insert(response.end(), addition.begin(), addition.end());
-	SendResponse(true);
-	//Betrock::Logger::Instance().Debug("After appending\n" + Uint8ArrayToHexDump(&response[0], response.size()));
+	if (!addition.empty()) {
+		response.insert(response.end(), addition.begin(), addition.end());
+		SendResponse(true);
+	}
 }
 
 // Send the contents of response to the Client
