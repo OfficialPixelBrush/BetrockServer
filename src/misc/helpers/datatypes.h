@@ -22,6 +22,9 @@ struct Block {
     uint8_t lightSky = 0;
 };
 
+#define OLD_CHUNK_FILE_EXTENSION ".cnk"
+#define CHUNK_FILE_EXTENSION ".ncnk"
+
 // TODO: Add a "modified" tag to a chunk to see if we need to bother re-saving it(?)
 struct Chunk {
     struct Block blocks[CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT];

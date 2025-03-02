@@ -112,7 +112,8 @@ bool World::LoadChunk(int32_t x, int32_t z) {
         return false;
     }
 
-    auto readRoot = NbtReadFromFile(entryPath,NBT_UNCOMPRESSED);
+    // TODO: We can know the uncompressed size beforehand, since its always the same.
+    auto readRoot = NbtReadFromFile(entryPath,NBT_ZLIB,50);
     //readRoot->NbtPrintData();
 
     auto root = std::dynamic_pointer_cast<CompoundTag>(readRoot);
@@ -179,7 +180,7 @@ void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
     level->Put(std::make_shared<IntTag>("zPos",x));
     level->Put(std::make_shared<IntTag>("xPos",z));
     
-    NbtWriteToFile(filePath,root,NBT_UNCOMPRESSED);
+    NbtWriteToFile(filePath,root,NBT_ZLIB);
 }
 
 void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {

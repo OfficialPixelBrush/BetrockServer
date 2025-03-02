@@ -18,6 +18,7 @@ void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Client* requestClient) 
 
     if (chunkPositions.find(hash) != chunkPositions.end()) {
         // Chunk is already in the queue, no need to add it again
+        // TODO: Add other requestClient to chunk!!
         return;
     }
 
