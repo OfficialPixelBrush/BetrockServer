@@ -1,5 +1,6 @@
 #include "generator.h"
 
+// Prepare the Generator to utilize some preset numbers and functions
 void Generator::PrepareGenerator(int64_t seed) {
 	logger = &Betrock::Logger::Instance();
     this->seed = seed;
@@ -55,6 +56,8 @@ void Generator::PrepareGenerator(int64_t seed) {
     }
 }
 
+// Run the GenerateChunk function and pass its execution onto lua
+// Then retrieve the generated Chunk data
 Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
     Chunk c = Chunk();
     

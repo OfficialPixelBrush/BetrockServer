@@ -1,5 +1,7 @@
 #include "blocks.h"
 
+// Returns true for all translucent blocks
+// So blocks that aren't 100% transparent
 bool IsTranslucent(int16_t id) {
     if (id == BLOCK_WATER_FLOWING ||
         id == BLOCK_WATER_STILL ||
@@ -15,6 +17,7 @@ bool IsTranslucent(int16_t id) {
     return false;
 }
 
+// Returns how much the skylight is filtered by the specified block
 uint8_t GetTranslucency(int16_t id, uint8_t &skylight) {
     uint8_t subtractor = 0;
     // Water seems to drop the skylight brightness by 3 levels with each block
@@ -47,6 +50,7 @@ uint8_t GetTranslucency(int16_t id, uint8_t &skylight) {
     return skylight;
 }
 
+// Returns true for all blocks that are completely or partially transparent
 bool IsTransparent(int16_t id) {
     if (id == BLOCK_AIR ||
         id == BLOCK_SAPLING ||
@@ -87,6 +91,7 @@ bool IsTransparent(int16_t id) {
 }
 
 // TODO: Turn into int8_t for different light levels
+// Returns true for all blocks that are emissive
 bool IsEmissive(int16_t id) {
     if (id == BLOCK_LAVA_FLOWING ||
         id == BLOCK_LAVA_STILL ||
@@ -104,6 +109,7 @@ bool IsEmissive(int16_t id) {
     return false;
 }
 
+// Returns the level of emissiveness for each block
 uint8_t GetEmissiveness(int16_t id) {
     if (id == BLOCK_LAVA_FLOWING ||
         id == BLOCK_LAVA_STILL ||
@@ -128,6 +134,7 @@ uint8_t GetEmissiveness(int16_t id) {
     return 0;
 }
 
+// Returns true for all blocks that are instantly breakable
 bool IsInstantlyBreakable(int16_t id) {
     if (id == BLOCK_SAPLING ||
         id == BLOCK_DEADBUSH ||
@@ -152,6 +159,7 @@ bool IsInstantlyBreakable(int16_t id) {
     return false;
 }
 
+// Returns true for all blocks that do not drop anything when they're destroyed
 bool NoDrop(Item item) {
     if (item.id == BLOCK_BEDROCK ||
         item.id == BLOCK_WATER_FLOWING ||
@@ -175,6 +183,7 @@ bool NoDrop(Item item) {
     return false;
 }
 
+// Returns the items that're dropped when a block is destroyed
 Item GetDrop(Item item) {
     if (NoDrop(item)) {
         return Item{ -1, 0, 0 };

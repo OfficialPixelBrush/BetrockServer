@@ -9,6 +9,7 @@
 #include <cstring>
 #include <cmath>
 #include <memory>
+#include <array>
 
 #include "packets.h"
 #include "logger.h"

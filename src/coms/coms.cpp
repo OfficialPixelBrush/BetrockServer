@@ -2,7 +2,7 @@
 
 #include "server.h"
 
-// Sent the specified message to all currently connected Clients
+// Sends the specified message to all currently connected Clients
 void BroadcastToClients(std::vector<uint8_t> &response, Client* sender, bool autoclear) {
 	if (response.empty()) {
 		return;

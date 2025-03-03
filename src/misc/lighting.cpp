@@ -1,6 +1,7 @@
 
 #include "lighting.h"
 
+// Calculate a vertical column of light
 void CalculateColumnLight(int32_t x, int32_t z, Chunk* c) {
     if (!c) {
         return;

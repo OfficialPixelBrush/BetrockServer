@@ -1,5 +1,6 @@
 #include "luahelper.h"
 
+// Check if the current lua state is valid
 bool CheckLua(lua_State *L, int r) {
     if (r != LUA_OK)  {
         std::string errormsg = lua_tostring(L,-1);
@@ -9,6 +10,7 @@ bool CheckLua(lua_State *L, int r) {
     return true;
 }
 
+// Check if 3 Numbers are passed
 bool CheckNum3(lua_State *L, int startIndex) {
     if (!lua_isnumber(L, startIndex+0) || !lua_isnumber(L, startIndex+1) || !lua_isnumber(L, startIndex+2)) {
         luaL_error(L, "Expected three numeric arguments");

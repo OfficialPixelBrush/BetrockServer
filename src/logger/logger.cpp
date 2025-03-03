@@ -16,6 +16,7 @@ Logger::Logger() {
     }
 }
 
+// Log a message with the passed Level
 void Logger::Log(std::string message, int level) {
     switch(level) {
         case LOG_CHAT:
@@ -36,6 +37,7 @@ void Logger::Log(std::string message, int level) {
     }
 }
 
+// Log a chat message
 void Logger::ChatMessage(std::string message) {
     std::string time = GetRealTime();
     if (logLevelTerminal & LOG_CHAT) 
@@ -47,6 +49,7 @@ void Logger::ChatMessage(std::string message) {
     }
 }
 
+// Log a message without a header
 void Logger::Message(std::string message) {
     std::string time = GetRealTime();
     if (logLevelTerminal & LOG_MESSAGE) 
@@ -58,6 +61,7 @@ void Logger::Message(std::string message) {
     }
 }
 
+// Log a message with an INFO header
 void Logger::Info(std::string message) {
     std::string time = GetRealTime();
     std::string header = "[INFO]";
@@ -70,6 +74,7 @@ void Logger::Info(std::string message) {
     }
 }
 
+// Log a warning
 void Logger::Warning(std::string message) {
     std::string time = GetRealTime();
     std::string header = "[WARNING]";
@@ -82,6 +87,7 @@ void Logger::Warning(std::string message) {
     }
 }
 
+// Log an error
 void Logger::Error(std::string message) {
     std::string time = GetRealTime();
     std::string header = "[ERROR]";
@@ -94,6 +100,7 @@ void Logger::Error(std::string message) {
     }
 }
 
+// Log Debug Data
 void Logger::Debug(std::string message) {
     std::string time = GetRealTime();
     std::string header = "[DEBUG]";

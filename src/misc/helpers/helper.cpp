@@ -1,5 +1,6 @@
 #include "helper.h"
 
+// Convert an Int3 into a Vec3
 Vec3 Int3ToVec3(Int3 i) {
 	Vec3 v = {
 		(double)i.x+0.5,
@@ -9,6 +10,7 @@ Vec3 Int3ToVec3(Int3 i) {
 	return v;
 }
 
+// Convert an Vec3 into a Int3
 Int3 Vec3ToInt3(Vec3 v) {
 	Int3 i = {
 		(int32_t)v.x,
@@ -18,6 +20,7 @@ Int3 Vec3ToInt3(Vec3 v) {
 	return i;
 }
 
+// Convert 3 integers into an Int3
 Int3 XyzToInt3(int32_t x, int32_t y, int32_t z) {
 	Int3 i = {
 		x,
@@ -27,6 +30,7 @@ Int3 XyzToInt3(int32_t x, int32_t y, int32_t z) {
 	return i;
 }
 
+// Check if the passed value is between a and b
 bool Between(int value, int a, int b) {
 	if (a < b) {
 		if (value > a && value < b) {
@@ -40,6 +44,7 @@ bool Between(int value, int a, int b) {
 	return false;
 }
 
+// Get the distance between two Vec3s
 double GetDistance(Vec3 a, Vec3 b) {
 	double x = (b.x-a.x)*(b.x-a.x);
 	double y = (b.y-a.y)*(b.y-a.y);
@@ -47,6 +52,7 @@ double GetDistance(Vec3 a, Vec3 b) {
 	return abs(std::sqrt(x+y+z));
 }
 
+// Get the distance between two Int3s
 double GetDistance(Int3 a, Int3 b) {
 	int32_t x = (b.x-a.x)*(b.x-a.x);
 	int32_t y = (b.y-a.y)*(b.y-a.y);
@@ -54,13 +60,16 @@ double GetDistance(Int3 a, Int3 b) {
 	return abs(std::sqrt(double(x+y+z)));
 }
 
+// Turn an Int3 into a string
 std::string GetInt3(Int3 position) {
 	return "( " + std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z) + ")";
 }
+// Turn an Vec3 into a string
 std::string GetVec3(Vec3 position) {
 	return "( " + std::to_string(position.x) + ", " + std::to_string(position.y) + ", " + std::to_string(position.z) + ")";
 }
 
+// Determine the global position based on where within the passed chunk position the block position is
 Int3 LocalToGlobalPosition(Int3 chunkPos, Int3 blockPos) {
 	return Int3 {
         chunkPos.x*CHUNK_WIDTH_X + blockPos.x,
@@ -69,6 +78,7 @@ Int3 LocalToGlobalPosition(Int3 chunkPos, Int3 blockPos) {
     };
 }
 
+// Get the Chunk Position of an Int3 coordinate
 Int3 BlockToChunkPosition(Int3 position) {
 	position.x = position.x >> 4;
 	position.y = 0;
@@ -76,11 +86,13 @@ Int3 BlockToChunkPosition(Int3 position) {
 	return position;
 }
 
+// Get the Chunk Position of a Vec3 coordinate
 Int3 BlockToChunkPosition(Vec3 position) {
 	Int3 intPos = Vec3ToInt3(position);
 	return BlockToChunkPosition(intPos);
 }
 
+// Determine in which direction a block needs to be placed
 void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction) {
 	switch(direction) {
 		case yMinus:
@@ -290,18 +302,12 @@ void AppendString16ToVector(std::vector<uint8_t> &vector, std::string value) {
 	}
 }
 
+// Turn a float value into a byte, mapping the range 0-255 to 0°-360°
 int8_t ConvertFloatToPackedByte(float value) {
 	return static_cast<int8_t>((value/360.0)*255.0);
 }
 
-Vec3 SubtractVec3(Vec3 previousPosition, Vec3 currentPosition) {
-	Vec3 difference = previousPosition;
-	difference.x -= currentPosition.x;
-	difference.y -= currentPosition.y;
-	difference.z -= currentPosition.z;
-	return difference;
-}
-
+// 
 Int3 Vec3ToRelativeInt3(Vec3 previousPosition, Vec3 currentPosition) {
 	Vec3 difference = SubtractVec3(previousPosition, currentPosition);
 	return Int3 {
@@ -310,8 +316,6 @@ Int3 Vec3ToRelativeInt3(Vec3 previousPosition, Vec3 currentPosition) {
 		static_cast<int8_t>(difference.z*32.0)
 	};
 }
-#include <array>
-#include <string>
 
 constexpr std::array<const char*, 256> packetLabels = [] {
     std::array<const char*, 256> labels{};
@@ -376,14 +380,17 @@ constexpr std::array<const char*, 256> packetLabels = [] {
     return labels;
 }();
 
+// Get the Label of a Packet
 std::string PacketIdToLabel(Packet packet) {
     return packetLabels[(uint8_t)packet];
 }
 
+// Get the Index of a Block within a chunk
 int16_t GetBlockIndex(Int3 position) {
     return (int32_t)((int8_t)position.y + position.z*CHUNK_HEIGHT + (position.x*CHUNK_HEIGHT*CHUNK_WIDTH_Z));
 }
 
+// Compress the passed binary Chunk data
 std::unique_ptr<char[]> CompressChunk(char* chunk, size_t &compressed_size) {
 
     // Create a compression context
@@ -411,6 +418,7 @@ std::unique_ptr<char[]> CompressChunk(char* chunk, size_t &compressed_size) {
     return compressed_data;
 }
 
+// Decompress the passed binary Chunk data
 std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size) {
     // Create a decompression context
     struct libdeflate_decompressor* decompressor = libdeflate_alloc_decompressor();
@@ -439,11 +447,12 @@ std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t comp
     return decompressed_data;
 }
 
-
+// Get the Chunk Hash of a Chunk
 int64_t GetChunkHash(int32_t x, int32_t z) {
     return ((int64_t)x << 32) | (z & 0xFFFFFFFF);
 }
 
+// Turn the chunk hash into X and Z coordinates
 Int3 DecodeChunkHash(int64_t hash) {
     return Int3 {
         (int32_t)(hash >> 32),
@@ -452,6 +461,7 @@ Int3 DecodeChunkHash(int64_t hash) {
     };
 }
 
+// Translate a block space position to entity space
 Int3 Int3ToEntityInt3(Int3 pos) {
 	return Int3 {
 		pos.x << 5 | 16,
@@ -460,6 +470,7 @@ Int3 Int3ToEntityInt3(Int3 pos) {
 	};
 }
 
+// Translate a player space position to entity space
 Int3 Vec3ToEntityInt3(Vec3 pos) {
 	return Int3 {
 		int32_t(pos.x*32),
@@ -468,6 +479,7 @@ Int3 Vec3ToEntityInt3(Vec3 pos) {
 	};
 }
 
+// Translate an entity space position to player space
 Vec3 EntityInt3ToVec3(Int3 pos) {
 	return Vec3 {
 		double(pos.x)/32,
@@ -476,6 +488,7 @@ Vec3 EntityInt3ToVec3(Int3 pos) {
 	};
 }
 
+// Safely transform a string into an integer
 int32_t SafeStringToInt(std::string in) {
 	return std::stoi(in);
 	try {
@@ -484,6 +497,8 @@ int32_t SafeStringToInt(std::string in) {
 		return 0;
 	}
 }
+
+// Safely transform a string into a long
 int64_t SafeStringToLong(std::string in) {
 	try {
 		return std::stol(in);
@@ -493,6 +508,7 @@ int64_t SafeStringToLong(std::string in) {
 	}
 }
 
+// Get the metadata of a placed block based on the passed parameters
 int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDirection, int16_t id, int16_t damage) {
 	if (id == BLOCK_STAIRS_WOOD ||
 		id == BLOCK_STAIRS_COBBLESTONE
@@ -571,6 +587,7 @@ int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDi
 	return damage;
 }
 
+// Get the current time as a string
 std::string GetRealTime() {
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
@@ -580,6 +597,7 @@ std::string GetRealTime() {
 	return ss.str();
 }
 
+// Get the current time as a string without any spaces
 std::string GetRealTimeFileFormat() {
 	auto now = std::chrono::system_clock::now();
 	auto in_time_t = std::chrono::system_clock::to_time_t(now);
@@ -589,6 +607,7 @@ std::string GetRealTimeFileFormat() {
 	return ss.str();
 }
 
+// Create a hex-dump string of the passed uint8_t array
 std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size) {
     std::ostringstream oss;
     oss << std::hex << std::setfill('0');

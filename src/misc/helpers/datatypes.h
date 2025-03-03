@@ -11,7 +11,7 @@
 struct Item {
     int16_t id = 0;
     int8_t  amount = 0;
-    int16_t damage = 0;
+    int16_t damage = 0; // Also known as metadata
 };
 
 // Building blocks
