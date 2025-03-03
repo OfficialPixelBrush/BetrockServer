@@ -309,7 +309,7 @@ int8_t ConvertFloatToPackedByte(float value) {
 
 // 
 Int3 Vec3ToRelativeInt3(Vec3 previousPosition, Vec3 currentPosition) {
-	Vec3 difference = SubtractVec3(previousPosition, currentPosition);
+	Vec3 difference = previousPosition - currentPosition;
 	return Int3 {
 		static_cast<int8_t>(difference.x*32.0),
 		static_cast<int8_t>(difference.y*32.0),
