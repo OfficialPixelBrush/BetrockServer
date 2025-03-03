@@ -39,3 +39,4 @@
 
 # Language Server
 .cache
+*.mp4
