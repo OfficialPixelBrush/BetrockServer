@@ -50,6 +50,7 @@ class Client : public std::enable_shared_from_this<Client> {
         std::vector<Int3> visibleChunks;
         std::vector<Int3> newChunks;
         std::mutex newChunksMutex;  
+        std::mutex responseMutex;  
         Vec3 lastChunkUpdatePosition;
 
         // Server-side inventory

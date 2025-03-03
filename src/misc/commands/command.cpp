@@ -77,10 +77,15 @@ void Command::Sound(Player* player) {
 	}
 }
 
+// Get the uptime
+void Command::Uptime() {
+	Respond::ChatMessage(response, "§7Uptime is " + std::to_string(Betrock::Server::Instance().GetUpTime()) + " Ticks");
+	failureReason = "";
+}
+
 // Get and Set the time
 void Command::Time() {
 	auto &server = Betrock::Server::Instance();
-	auto serverTime = server.GetServerTime();
 	
 	// Set the time
 	if (command.size() > 1) {
@@ -337,6 +342,8 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 	try {
 		if (command[0] == "time") {
 			Time();
+		} else if (command[0] == "uptime") {
+			Uptime();
 		} else if (command[0] == "help") {
 			Help();
 		} else if (command[0] == "version") {

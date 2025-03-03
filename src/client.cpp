@@ -891,6 +891,7 @@ void Client::DisconnectClient(std::string disconnectMessage) {
 // Add something to the current clients upcoming response packet
 void Client::AppendResponse(std::vector<uint8_t> &addition) {
 	if (!addition.empty()) {
+		std::lock_guard<std::mutex> lock(responseMutex);
 		response.insert(response.end(), addition.begin(), addition.end());
 		SendResponse(true);
 	}

@@ -21,6 +21,8 @@ int Server::GetChunkDistance() const noexcept { return this->chunkDistance; }
 
 uint64_t Server::GetServerTime() const noexcept { return this->serverTime; }
 
+uint64_t Server::GetUpTime() const noexcept { return this->upTime; }
+
 WorldManagerMap &Server::GetWorldManagers() noexcept { return this->worldManagers; }
 
 WorldManager *Server::GetWorldManager(int8_t worldId) const {
@@ -46,6 +48,8 @@ std::mutex &Server::GetConnectedClientMutex() noexcept { return this->connectedC
 std::mutex &Server::GetEntityIdMutex() noexcept { return this->entityIdMutex; }
 
 void Server::SetServerTime(uint64_t serverTime) { this->serverTime = serverTime; }
+
+void Server::AddUpTime(uint64_t upTime) { this->upTime += upTime; }
 
 void Server::SetSpawnPoint(const Vec3 &spawnPoint) noexcept { this->spawnPoint = spawnPoint; }
 

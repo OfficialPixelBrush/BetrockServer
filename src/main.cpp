@@ -60,14 +60,16 @@ int main() {
 		// Server is alive
 
 		if (doDaylightCycle) {
-			server.SetServerTime(server.GetServerTime() + 20);
+			server.SetServerTime(server.GetServerTime() + TICK_SPEED);
 		}
+		server.AddUpTime(TICK_SPEED);
+
 		Respond::Time(response, server.GetServerTime());
 		BroadcastToClients(response);
 
-		if (server.GetServerTime() > lastSave+SAVE_INTERVAL) {
+		if (server.GetUpTime() - lastSave >= SAVE_INTERVAL) {
 			server.SaveAll();
-			lastSave = server.GetServerTime();
+			lastSave = server.GetUpTime();
 		}
 
 		sleep(1); // Send data every second
