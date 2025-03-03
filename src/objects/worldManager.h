@@ -48,7 +48,7 @@ class WorldManager {
         bool QueueIsEmpty();
         void SaveNbt();
         void LoadNbt();
-        void FreeUnseenChunks();
+        void FreeAndSave();
 };
 
 std::string ConvertIndexIntoExtra(int8_t worldId);

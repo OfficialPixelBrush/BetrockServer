@@ -130,8 +130,11 @@ std::string ConvertIndexIntoExtra(int8_t worldId) {
     return "DIM" + std::to_string(worldId);
 }
 
-void WorldManager::FreeUnseenChunks() {
+void WorldManager::FreeAndSave() {
+    // Remove all we can't see
     world.FreeUnseenChunks();
+    // Save all that's left
+    world.Save();
 }
 
 void WorldManager::SaveNbt() {
