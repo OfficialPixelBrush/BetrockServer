@@ -19,7 +19,7 @@ void Player::Kill(std::vector<uint8_t> &response) {
 }
 
 void Player::PrintStats() {
-    std::cout << username << ": " << position.x << ", " << position.y << ", " << position.z << "; " << yaw << ", " << pitch << std::endl;
+    std::cout << username << ": " << position << "; " << yaw << ", " << pitch << std::endl;
 }
 
 void Player::Save() {

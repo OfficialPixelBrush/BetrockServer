@@ -766,7 +766,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	int32_t x = EntryToInteger(message, offset);
 	int8_t y = EntryToByte(message, offset);
 	int32_t z = EntryToInteger(message, offset);
-	int8_t direction = EntryToByte(message, offset);
+	int8_t face = EntryToByte(message, offset);
 	int16_t id = EntryToShort(message, offset);
 	int8_t amount = 0;
 	int16_t damage = 0;
@@ -775,7 +775,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		damage = EntryToShort(message, offset);
 	}
 
-	BlockToFace(x,y,z,direction);
+	BlockToFace(x,y,z,face);
 	Int3 pos = XyzToInt3(x,y,z);
 
 	// This packet has a special case where X, Y, Z, and Direction are all -1.
@@ -783,12 +783,12 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	// its state updated such as eating food, shooting bows, using buckets, etc.
 
 	// Apparently this also handles the player standing inside the block its trying to place in
-	if (x == -1 && y == -1 && z == -1 && direction == -1) {
+	if (x == -1 && y == -1 && z == -1 && face == -1) {
 		return false;
 	}
 
 	if (id < BLOCK_MAX) {
-		damage = GetMetaData(x,y,z,direction,id,damage);
+		damage = GetMetaData(x,y,z,face,GetPlayerOrientation(),id,damage);
 	}
 	// Place a block if we can
 	if (id > BLOCK_AIR && id < BLOCK_MAX && !BlockTooCloseToPosition(pos) && CanDecrementHotbar()) {
@@ -951,6 +951,22 @@ bool Client::SpreadToSlots(int16_t id, int8_t amount, int16_t damage, int8_t pre
 
     // If there are still items left, inventory is full
     return false;
+}
+
+// Get Player Orientation
+int8_t Client::GetPlayerOrientation() {
+    float limitedYaw = fmod(player->yaw, 360.0f);
+    if (limitedYaw < 0) limitedYaw += 360.0f; // Ensure yaw is in [0, 360)
+
+    int roundedYaw = static_cast<int>(round(limitedYaw / 90.0f)) % 4; // Round to nearest multiple of 90
+
+    switch (roundedYaw) {
+        case 0: return zPlus;  // 0°   -> +Z
+        case 1: return xMinus; // 90°  -> -X
+        case 2: return zMinus; // 180° -> -Z
+        case 3: return xPlus;  // 270° -> +X
+        default: return zPlus; // Should never happen
+    }
 }
 
 bool Client::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, int16_t damage) {
