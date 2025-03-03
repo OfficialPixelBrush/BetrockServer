@@ -112,45 +112,52 @@ bool World::LoadChunk(int32_t x, int32_t z) {
         return false;
     }
 
-    // TODO: We can know the uncompressed size beforehand, since its always the same.
-    auto readRoot = NbtReadFromFile(entryPath,NBT_ZLIB,50);
-    //readRoot->NbtPrintData();
+    try {
+        // TODO: This estimate is probably overkill
+        auto readRoot = NbtReadFromFile(entryPath,NBT_ZLIB,-1,CHUNK_DATA_SIZE*2);
+        if (!readRoot) {
+            throw std::runtime_error("Unable to read NBT data!");
+        }
 
-    auto root = std::dynamic_pointer_cast<CompoundTag>(readRoot);
-    auto level = std::dynamic_pointer_cast<CompoundTag>(root->Get("Level"));
-    auto blockTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Blocks"));
-    auto blocks = blockTag->GetData();
-    auto meta = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Data"))->GetData();
-    auto blockLight = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("BlockLight"))->GetData();
-    auto skyLight = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("SkyLight"))->GetData();
+        auto root = std::dynamic_pointer_cast<CompoundTag>(readRoot);
+        auto level = std::dynamic_pointer_cast<CompoundTag>(root->Get("Level"));
+        auto blockTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Blocks"));
+        auto blocks = blockTag->GetData();
+        auto meta = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Data"))->GetData();
+        auto blockLight = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("BlockLight"))->GetData();
+        auto skyLight = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("SkyLight"))->GetData();
 
-    auto terrainPopulated = std::dynamic_pointer_cast<ByteTag>(level->Get("TerrainPopulated"))->GetData();
+        auto terrainPopulated = std::dynamic_pointer_cast<ByteTag>(level->Get("TerrainPopulated"))->GetData();
 
-    Chunk c;
-    size_t blockDataSize  = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z *  CHUNK_HEIGHT   );
-    size_t nibbleDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT/2));
-    // Block Data
-    for (size_t i = 0; i < blockDataSize; i++) {
-        c.blocks[i].type = blocks[i];
+        Chunk c;
+        size_t blockDataSize  = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z *  CHUNK_HEIGHT   );
+        size_t nibbleDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT/2));
+        // Block Data
+        for (size_t i = 0; i < blockDataSize; i++) {
+            c.blocks[i].type = blocks[i];
+        }
+        // Block Metadata
+        for (size_t i = 0; i < nibbleDataSize; i++) {
+            c.blocks[i*2  ].meta = (meta[i]     )&0xF;
+            c.blocks[i*2+1].meta = (meta[i] >> 4)&0xF;
+        }
+        // Block Light
+        for (size_t i = 0; i < nibbleDataSize; i++) {
+            c.blocks[i*2  ].lightBlock = (blockLight[i]     )&0xF;
+            c.blocks[i*2+1].lightBlock = (blockLight[i] >> 4)&0xF;
+        }
+        // Sky Light
+        for (size_t i = 0; i < nibbleDataSize; i++) {
+            c.blocks[i*2  ].lightSky = (skyLight[i]     )&0xF;
+            c.blocks[i*2+1].lightSky = (skyLight[i] >> 4)&0xF;
+        }
+        c.populated = (bool)terrainPopulated;
+        AddChunk(x,z,c);
+        return true;
+    } catch (const std::exception& e) {
+        Betrock::Logger::Instance().Error(e.what());
+        return false;
     }
-    // Block Metadata
-    for (size_t i = 0; i < nibbleDataSize; i++) {
-        c.blocks[i*2  ].meta = (meta[i]     )&0xF;
-        c.blocks[i*2+1].meta = (meta[i] >> 4)&0xF;
-    }
-    // Block Light
-    for (size_t i = 0; i < nibbleDataSize; i++) {
-        c.blocks[i*2  ].lightBlock = (blockLight[i]     )&0xF;
-        c.blocks[i*2+1].lightBlock = (blockLight[i] >> 4)&0xF;
-    }
-    // Sky Light
-    for (size_t i = 0; i < nibbleDataSize; i++) {
-        c.blocks[i*2  ].lightSky = (skyLight[i]     )&0xF;
-        c.blocks[i*2+1].lightSky = (skyLight[i] >> 4)&0xF;
-    }
-    c.populated = (bool)terrainPopulated;
-    AddChunk(x,z,c);
-    return true;
 }
 
 void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
