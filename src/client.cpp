@@ -955,20 +955,18 @@ bool Client::SpreadToSlots(int16_t id, int8_t amount, int16_t damage, int8_t pre
 
 // Get Player Orientation
 int8_t Client::GetPlayerOrientation() {
-	float limitedYaw = fmod(player->yaw,360.0f);
-	if (Between(limitedYaw,-45,45)) {
-		// 0 -> +Z
-		return zPlus;
-	} else if (Between(limitedYaw,45,135)) {
-		// 90 -> -X
-		return xMinus;
-	} else if (Between(limitedYaw,135,225)) {
-		// 180 -> -Z
-		return zMinus;
-	} else {
-		// 270 -> +X
-		return xPlus;
-	}
+    float limitedYaw = fmod(player->yaw, 360.0f);
+    if (limitedYaw < 0) limitedYaw += 360.0f; // Ensure yaw is in [0, 360)
+
+    int roundedYaw = static_cast<int>(round(limitedYaw / 90.0f)) % 4; // Round to nearest multiple of 90
+
+    switch (roundedYaw) {
+        case 0: return zPlus;  // 0°   -> +Z
+        case 1: return xMinus; // 90°  -> -X
+        case 2: return zMinus; // 180° -> -Z
+        case 3: return xPlus;  // 270° -> +X
+        default: return zPlus; // Should never happen
+    }
 }
 
 bool Client::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, int16_t damage) {

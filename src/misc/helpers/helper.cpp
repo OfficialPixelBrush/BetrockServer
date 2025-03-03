@@ -508,7 +508,25 @@ int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDi
 				return 3;
 		}
 	}
-	if (id == BLOCK_TORCH) {
+	if (id == BLOCK_DISPENSER ||
+		id == BLOCK_FURNACE ||
+		id == BLOCK_FURNACE_LIT
+	) {
+		switch(playerDirection) {
+			case zPlus:
+				return 2;
+			case zMinus:
+				return 3;
+			case xPlus:
+				return 4;
+			case xMinus:
+				return 5;
+		}
+	}
+	if (id == BLOCK_TORCH ||
+		id == BLOCK_REDSTONE_TORCH_OFF||
+		id == BLOCK_REDSTONE_TORCH_ON
+	) {
 		switch(face) {
 			case yMinus:
 				return SLOT_EMPTY;
