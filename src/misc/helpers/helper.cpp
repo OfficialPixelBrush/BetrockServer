@@ -523,6 +523,20 @@ int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDi
 				return 5;
 		}
 	}
+	if (id == BLOCK_PUMPKIN ||
+		id == BLOCK_PUMPKIN_LIT
+	) {
+		switch(playerDirection) {
+			case zMinus:
+				return 0;
+			case xPlus:
+				return 1;
+			case zPlus:
+				return 2;
+			case xMinus:
+				return 3;
+		}
+	}
 	if (id == BLOCK_TORCH ||
 		id == BLOCK_REDSTONE_TORCH_OFF||
 		id == BLOCK_REDSTONE_TORCH_ON
