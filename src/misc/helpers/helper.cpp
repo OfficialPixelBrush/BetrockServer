@@ -556,6 +556,18 @@ int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDi
 				return 0;
 		}
 	}
+	if (id == BLOCK_LADDER) {
+		switch(face) {
+			case zMinus:
+				return 2;
+			case zPlus:
+				return 3;
+			case xMinus:
+				return 4;
+			case xPlus:
+				return 5;
+		}
+	}
 	return damage;
 }
 
