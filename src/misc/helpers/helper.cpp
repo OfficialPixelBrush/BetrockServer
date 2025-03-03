@@ -493,9 +493,23 @@ int64_t SafeStringToLong(std::string in) {
 	}
 }
 
-int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t direction, int16_t id, int16_t damage) {
+int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDirection, int16_t id, int16_t damage) {
+	if (id == BLOCK_STAIRS_WOOD ||
+		id == BLOCK_STAIRS_COBBLESTONE
+	) {
+		switch(playerDirection) {
+			case xPlus:
+				return 0;
+			case xMinus:
+				return 1;
+			case zPlus:
+				return 2;
+			case zMinus:
+				return 3;
+		}
+	}
 	if (id == BLOCK_TORCH) {
-		switch(direction) {
+		switch(face) {
 			case yMinus:
 				return SLOT_EMPTY;
 			case zPlus:

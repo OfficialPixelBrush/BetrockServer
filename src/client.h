@@ -85,6 +85,7 @@ class Client : public std::enable_shared_from_this<Client> {
         // Helpers
         void Respawn(std::vector<uint8_t> &response);
 
+        int8_t GetPlayerOrientation();
         void SendNewChunks();
         bool UpdatePositionForOthers(bool includeLook = true);
         bool CheckPosition(Vec3 &newPosition, double &newStance); 
