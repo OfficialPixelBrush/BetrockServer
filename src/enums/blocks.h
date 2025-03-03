@@ -3,6 +3,7 @@
 
 #include "datatypes.h"
 #include "items.h"
+#include "directions.h"
 
 bool IsTranslucent(int16_t id);
 uint8_t GetTranslucency(int16_t id, uint8_t &skylight);
@@ -10,8 +11,13 @@ bool IsTransparent(int16_t id);
 bool IsEmissive(int16_t id);
 uint8_t GetEmissiveness(int16_t id);
 bool IsInstantlyBreakable(int16_t id);
+bool IsInteractable(int16_t id);
+bool InteractWithBlock(Block* b);
+bool KeepDamageOnDrop(int8_t type);
 bool NoDrop(Item item);
 Item GetDrop(Item item);
+Block GetPlacedBlock(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDirection, int16_t id, int16_t damage);
+void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction);
 
 enum Blocks {
     BLOCK_AIR           = 0,

@@ -159,6 +159,28 @@ bool IsInstantlyBreakable(int16_t id) {
     return false;
 }
 
+// Returns true if the passed block is interactable, and should thus cancel any block-placements
+bool IsInteractable(int16_t id) {
+    if (id == BLOCK_BED ||
+        id == BLOCK_DOOR_IRON ||
+        id == BLOCK_DOOR_WOOD ||
+        id == BLOCK_TRAPDOOR ||
+        id == BLOCK_BUTTON_STONE ||
+        id == BLOCK_LEVER
+    ) {
+        return true;
+    }
+    return false;
+}
+
+bool InteractWithBlock(Block* b) {
+    if (b->type == BLOCK_TRAPDOOR) {
+        b->meta = b->meta ^ 0b100;
+        std::cout << "Toggled block!" << std::endl;
+    }
+    return true;
+}
+
 // Returns true if the destroyed item maintains its NBT data upon being dropped
 bool KeepDamageOnDrop(int8_t type) {
     if (type == BLOCK_WOOL) {
@@ -266,4 +288,187 @@ Item GetDrop(Item item) {
         item.id = BLOCK_REDSTONE_REPEATER_OFF;
     }
     return item;
+}
+
+// Determine in which direction a block needs to be placed
+void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction) {
+	switch(direction) {
+		case yMinus:
+			y--;
+			break;
+		case yPlus:
+			y++;
+			break;
+		case zMinus:
+			z--;
+			break;
+		case zPlus:
+			z++;
+			break;
+		case xMinus:
+			x--;
+			break;
+		case xPlus:
+			x++;
+			break;
+		default:
+			break;
+	}
+}
+
+// Figure out which block should be placed based on the passed parameters
+Block GetPlacedBlock(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDirection, int16_t id, int16_t damage) {
+	Block b = Block{(uint8_t)id,(uint8_t)damage,0,0};
+
+	// Handle items that place as blocks
+	if (id == ITEM_REDSTONE) {
+		b.type = BLOCK_REDSTONE_WIRE;
+		return b;
+	}
+	if (id == ITEM_SUGARCANE) {
+		b.type = BLOCK_SUGARCANE;
+		return b;
+	}
+	if (id == ITEM_REDSTONE_REPEATER ||
+		id == BLOCK_REDSTONE_REPEATER_OFF ||
+		id == BLOCK_REDSTONE_REPEATER_ON) {
+		b.type = BLOCK_REDSTONE_REPEATER_OFF;
+		switch(playerDirection) {
+			case zMinus:
+				b.meta = 0;
+				return b;
+			case xPlus:
+				b.meta = 1;
+				return b;
+			case zPlus:
+				b.meta = 2;
+				return b;
+			case xMinus:
+				b.meta = 3;
+				return b;
+		}
+		return b;
+	}
+
+	// If it hasn't been caught yet by any of the items
+	// its an invalid block, so we don't care.
+	if (id > BLOCK_MAX) {
+		b.type = 0;
+		return b;
+	}
+
+	// Handle placement of blocks
+    if (id == BLOCK_TRAPDOOR) {
+        switch(face) {
+            case zMinus:
+                b.meta = 0;
+                return b;
+            case zPlus:
+                b.meta = 1;
+                return b;
+            case xMinus:
+                b.meta = 2;
+                return b;
+            case xPlus:
+                b.meta = 3;
+                return b;
+        }
+    }
+	if (id == BLOCK_STAIRS_WOOD ||
+		id == BLOCK_STAIRS_COBBLESTONE
+	) {
+		switch(playerDirection) {
+			case xPlus:
+				b.meta = 0;
+				return b;
+			case xMinus:
+				b.meta = 1;
+				return b;
+			case zPlus:
+				b.meta = 2;
+				return b;
+			case zMinus:
+				b.meta = 3;
+				return b;
+		}
+	}
+	if (id == BLOCK_DISPENSER ||
+		id == BLOCK_FURNACE ||
+		id == BLOCK_FURNACE_LIT
+	) {
+		switch(playerDirection) {
+			case zPlus:
+				b.meta = 2;
+				return b;
+			case zMinus:
+				b.meta = 3;
+				return b;
+			case xPlus:
+				b.meta = 4;
+				return b;
+			case xMinus:
+				b.meta = 5;
+				return b;
+		}
+	}
+	if (id == BLOCK_PUMPKIN ||
+		id == BLOCK_PUMPKIN_LIT
+	) {
+		switch(playerDirection) {
+			case zMinus:
+				b.meta = 0;
+				return b;
+			case xPlus:
+				b.meta = 1;
+				return b;
+			case zPlus:
+				b.meta = 2;
+				return b;
+			case xMinus:
+				b.meta = 3;
+				return b;
+		}
+	}
+	if (id == BLOCK_TORCH ||
+		id == BLOCK_REDSTONE_TORCH_OFF||
+		id == BLOCK_REDSTONE_TORCH_ON
+	) {
+		switch(face) {
+			case yMinus:
+				b.type = SLOT_EMPTY;
+				return b;
+			case zPlus:
+				b.meta = 3;
+				return b;
+			case zMinus:
+				b.meta = 4;
+				return b;
+			case xPlus:
+				b.meta = 1;
+				return b;
+			case xMinus:
+				b.meta = 2;
+				return b;
+			default:
+				b.meta = 0;
+				return b;
+		}
+	}
+	if (id == BLOCK_LADDER) {
+		switch(face) {
+			case zMinus:
+				b.meta = 2;
+				return b;
+			case zPlus:
+				b.meta = 3;
+				return b;
+			case xMinus:
+				b.meta = 4;
+				return b;
+			case xPlus:
+				b.meta =  5;
+				return b;
+		}
+	}
+	return b;
 }

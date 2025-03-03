@@ -727,13 +727,20 @@ bool Client::HandlePlayerDigging(World* world) {
 	int8_t face = EntryToByte(message, offset);
 
 	Int3 pos = XyzToInt3(x,y,z);
-	Block brokenBlock = *world->GetBlock(pos);
-	// If the block is broken or instantly breakable
-	if (status == 2 || player->creativeMode || IsInstantlyBreakable(brokenBlock.type)) {
-		Respond::BlockChange(broadcastResponse,pos,0,0);
-		world->BreakBlock(pos);
+	Block* targetedBlock = world->GetBlock(pos);
 
-		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,brokenBlock.type);
+	// Check if the targeted block is interactable
+	if (IsInteractable(targetedBlock->type)) {
+		InteractWithBlock(targetedBlock);
+		Respond::BlockChange(broadcastResponse,pos,targetedBlock->type,targetedBlock->meta);
+		return true;
+	}
+
+	// If the block is broken or instantly breakable
+	if (status == 2 || player->creativeMode || IsInstantlyBreakable(targetedBlock->type)) {
+		Respond::BlockChange(broadcastResponse,pos,0,0);
+
+		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,targetedBlock->type);
 		if (doTileDrops && !player->creativeMode) {
 			// TODO: This works now,
 			// but results in entities piling up
@@ -749,12 +756,14 @@ bool Client::HandlePlayerDigging(World* world) {
 				0,0,0
 			);
 			*/
-			Item item = Item{brokenBlock.type,1,brokenBlock.meta};
+			Item item = Item{targetedBlock->type,1,targetedBlock->meta};
 			if (!player->creativeMode) {
 				item = GetDrop(item);
 			}
 			Give(response,item.id,item.amount,item.damage);
 		}
+		// Only get rid of the block here to avoid unreferenced pointers
+		world->BreakBlock(pos);
 	}
 	return true;
 }
@@ -807,8 +816,18 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		damage = EntryToShort(message, offset);
 	}
 
-	BlockToFace(x,y,z,face);
+
 	Int3 pos = XyzToInt3(x,y,z);
+	Block* targetedBlock = world->GetBlock(pos);
+
+	// Check if the targeted block is interactable
+	if (IsInteractable(targetedBlock->type)) {
+		InteractWithBlock(targetedBlock);
+		Respond::BlockChange(broadcastResponse,pos,targetedBlock->type,targetedBlock->meta);
+		return true;
+	}
+	BlockToFace(x,y,z,face);
+	pos = XyzToInt3(x,y,z);
 
 	// This packet has a special case where X, Y, Z, and Direction are all -1.
 	// This special packet indicates that the currently held item for the player should have
