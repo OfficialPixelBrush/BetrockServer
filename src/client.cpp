@@ -145,6 +145,7 @@ void Client::SendNewChunks() {
 	// Send chunks in batches of 5
 	int sentThisCycle = 5;
 	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
+	std::lock_guard<std::mutex> lock(newChunksMutex);
 	while(sentThisCycle > 0) {
 		if(!newChunks.empty()) {
 			auto nc = newChunks.begin();
@@ -176,7 +177,6 @@ void Client::SendNewChunks() {
 			}
 			// Better to remove the entry either way if compression fails,
 			// otherwise we may get an infinite build-up of failing chunks
-  			std::lock_guard<std::mutex> lock(newChunksMutex);
 			newChunks.erase(nc);
 		}
 		sentThisCycle--;
@@ -819,18 +819,18 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		return false;
 	}
 
-	if (id < BLOCK_MAX) {
-		damage = GetMetaData(x,y,z,face,GetPlayerOrientation(),id,damage);
-	}
 	// Place a block if we can
-	if (id > BLOCK_AIR && id < BLOCK_MAX && !BlockTooCloseToPosition(pos) && CanDecrementHotbar()) {
-		//std::cout << BlockTooCloseToPosition(pos) << ": " << pos << " - " << player->position << std::endl;
+	if (CanDecrementHotbar()) {
+		// Check if the server-side inventory item is valid
 		Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
-		// TODO: Make sure damage value is valid(?)
-		//damage = CheckIfValidDamage();
-		Respond::BlockChange(broadcastResponse,pos,(int8_t)i.id,(int8_t)damage);
-		world->PlaceBlock(pos,(int8_t)i.id,(int8_t)damage);
-		// Immediately give back item if we're in creative mode
+		// Get the block we need to place
+		Block b = GetPlacedBlock(x,y,z,face,GetPlayerOrientation(),i.id,i.damage);
+		if (b.type == SLOT_EMPTY) {
+			return false;
+		}
+		Respond::BlockChange(broadcastResponse,pos,b.type,b.meta);
+		world->PlaceBlock(pos,b.type,b.meta);
+		// Immediately give back the item if we're in creative mode
 		if (player->creativeMode) {
 			Item i = GetHeldItem();
 			id = i.id;

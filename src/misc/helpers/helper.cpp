@@ -324,20 +324,64 @@ int64_t SafeStringToLong(std::string in) {
 	}
 }
 
-// Get the metadata of a placed block based on the passed parameters
-int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDirection, int16_t id, int16_t damage) {
+// Figure out which block should be placed based on the passed parameters
+Block GetPlacedBlock(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDirection, int16_t id, int16_t damage) {
+	Block b = Block{(uint8_t)id,(uint8_t)damage,0,0};
+
+	// Handle items that place as blocks
+	if (id == ITEM_REDSTONE) {
+		b.type = BLOCK_REDSTONE_WIRE;
+		return b;
+	}
+	if (id == ITEM_SUGARCANE) {
+		b.type = BLOCK_SUGARCANE;
+		return b;
+	}
+	if (id == ITEM_REDSTONE_REPEATER ||
+		id == BLOCK_REDSTONE_REPEATER_OFF ||
+		id == BLOCK_REDSTONE_REPEATER_ON) {
+		b.type = BLOCK_REDSTONE_REPEATER_OFF;
+		switch(playerDirection) {
+			case zMinus:
+				b.meta = 0;
+				return b;
+			case xPlus:
+				b.meta = 1;
+				return b;
+			case zPlus:
+				b.meta = 2;
+				return b;
+			case xMinus:
+				b.meta = 3;
+				return b;
+		}
+		return b;
+	}
+
+	// If it hasn't been caught yet by any of the items
+	// its an invalid block, so we don't care.
+	if (id > BLOCK_MAX) {
+		b.type = 0;
+		return b;
+	}
+
+	// Handle placement of blocks
 	if (id == BLOCK_STAIRS_WOOD ||
 		id == BLOCK_STAIRS_COBBLESTONE
 	) {
 		switch(playerDirection) {
 			case xPlus:
-				return 0;
+				b.meta = 0;
+				return b;
 			case xMinus:
-				return 1;
+				b.meta = 1;
+				return b;
 			case zPlus:
-				return 2;
+				b.meta = 2;
+				return b;
 			case zMinus:
-				return 3;
+				b.meta = 3;
+				return b;
 		}
 	}
 	if (id == BLOCK_DISPENSER ||
@@ -346,13 +390,17 @@ int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDi
 	) {
 		switch(playerDirection) {
 			case zPlus:
-				return 2;
+				b.meta = 2;
+				return b;
 			case zMinus:
-				return 3;
+				b.meta = 3;
+				return b;
 			case xPlus:
-				return 4;
+				b.meta = 4;
+				return b;
 			case xMinus:
-				return 5;
+				b.meta = 5;
+				return b;
 		}
 	}
 	if (id == BLOCK_PUMPKIN ||
@@ -360,13 +408,17 @@ int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDi
 	) {
 		switch(playerDirection) {
 			case zMinus:
-				return 0;
+				b.meta = 0;
+				return b;
 			case xPlus:
-				return 1;
+				b.meta = 1;
+				return b;
 			case zPlus:
-				return 2;
+				b.meta = 2;
+				return b;
 			case xMinus:
-				return 3;
+				b.meta = 3;
+				return b;
 		}
 	}
 	if (id == BLOCK_TORCH ||
@@ -375,32 +427,42 @@ int16_t GetMetaData(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDi
 	) {
 		switch(face) {
 			case yMinus:
-				return SLOT_EMPTY;
+				b.type = SLOT_EMPTY;
+				return b;
 			case zPlus:
-				return 3;
+				b.meta = 3;
+				return b;
 			case zMinus:
-				return 4;
+				b.meta = 4;
+				return b;
 			case xPlus:
-				return 1;
+				b.meta = 1;
+				return b;
 			case xMinus:
-				return 2;
+				b.meta = 2;
+				return b;
 			default:
-				return 0;
+				b.meta = 0;
+				return b;
 		}
 	}
 	if (id == BLOCK_LADDER) {
 		switch(face) {
 			case zMinus:
-				return 2;
+				b.meta = 2;
+				return b;
 			case zPlus:
-				return 3;
+				b.meta = 3;
+				return b;
 			case xMinus:
-				return 4;
+				b.meta = 4;
+				return b;
 			case xPlus:
-				return 5;
+				b.meta =  5;
+				return b;
 		}
 	}
-	return damage;
+	return b;
 }
 
 // Get the current time as a string
