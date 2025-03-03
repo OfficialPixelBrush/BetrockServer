@@ -1,5 +1,6 @@
 #include "plugins.h"
 
+// Initialize a newly loaded plugin
 Plugin::Plugin(std::string path) {
 	logger = &Betrock::Logger::Instance();
     L = luaL_newstate();

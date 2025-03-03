@@ -1,5 +1,6 @@
 #include "style.h"
 
+// Translate Minecraft-style colors into ASCII Escape sequence colors
 std::string FormatToStyle(int8_t format) {
     switch(format) {
         // Colors
@@ -56,6 +57,7 @@ std::string FormatToStyle(int8_t format) {
     }
 }
 
+// Translate the passed string with Minecraft-style formatters into ASCII Escape sequence colors
 std::string HandleFormattingCodes(const std::string& input) {
     std::string output;
     for (size_t i = 0; i < input.size(); ++i) {

@@ -97,9 +97,9 @@ void Command::Time() {
 	}
 }
 
+// Teleport a Player
 void Command::Teleport(Client* client) {
 	std::vector<uint8_t> sourceResponse;
-	// Set the time
 	if (command.size() > 1) {
 		// client that is to-be teleported
 		std::string source = command[1];
@@ -216,6 +216,7 @@ void Command::Kill(Player* player) {
 	}
 }
 
+// Summon a player entity
 void Command::Summon(Client* client) {
 	auto &server = Betrock::Server::Instance();
 
@@ -247,6 +248,7 @@ void Command::Gamerule(Client* client) {
 	}
 }
 
+// Kick the passed player
 void Command::Kick(Client* client) {
 	if (command.size() > 0) {
 		std::string username = client->GetPlayer()->username;
@@ -265,23 +267,27 @@ void Command::Kick(Client* client) {
 	}
 }
 
+// Teleport to Spawn
 void Command::Spawn(Client* client) {
 	client->Teleport(response, Betrock::Server::Instance().GetSpawnPoint());
 	failureReason = "";
 }
 
+// Toggle Creative mode
 void Command::Creative(Player* player) {
 	player->creativeMode = !player->creativeMode;
 	Respond::ChatMessage(response, "§7Set Creative to " + std::to_string(player->creativeMode));
 	failureReason = "";
 }
 
+// Stop the Server
 void Command::Stop() {
 	Respond::ChatMessage(response, "§7Stopping server");
 	Betrock::Server::Instance().PrepareForShutdown();
 	failureReason = "";
 }
 
+// Save the Server
 void Command::Save() {
 	Respond::ChatMessage(response, "§7Saving...");
 	Betrock::Server::Instance().SaveAll();
@@ -289,12 +295,14 @@ void Command::Save() {
 	failureReason = "";
 }
 
+// Free unseen chunks
 void Command::Free() {
 	Respond::ChatMessage(response, "§7Freeing Chunks");
 	Betrock::Server::Instance().FreeAll();
 	failureReason = "";
 }
 
+// Grant a player an operator
 void Command::Op(Client* client) {
 	if (command.size() > 0) {
 		Respond::ChatMessage(response, "§7Opping " + client->GetPlayer()->username);
@@ -302,6 +310,7 @@ void Command::Op(Client* client) {
 	}
 }
 
+// Removed operator priviliges from a player
 void Command::Deop(Client* client) {
 	if (command.size() > 0) {
 		Respond::ChatMessage(response, "§7De-opping " + client->GetPlayer()->username);

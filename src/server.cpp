@@ -90,7 +90,7 @@ void Server::SaveAll() {
 		}
 	}
 	for (const auto &[key, wm] : worldManagers) {
-		wm->world.Save();
+		wm->FreeAndSave();
 	}
 	Betrock::Logger::Instance().Info("Saved");
 }
@@ -152,8 +152,6 @@ void Server::LoadConfig() {
 	AddWorldManager(0);
 	for (const auto &[key, wm] : worldManagers) {
 		wm->SetSeed(seed);
-		// TODO: Currently the extra part is not passed to the world!!
-		//wm->SetExtra(ConvertIndexIntoExtra(key));
 	}
 
 	GlobalConfig::Instance().SaveToDisk();

@@ -1,5 +1,7 @@
 #include "blocks.h"
 
+// Returns true for all translucent blocks
+// So blocks that aren't 100% transparent
 bool IsTranslucent(int16_t id) {
     if (id == BLOCK_WATER_FLOWING ||
         id == BLOCK_WATER_STILL ||
@@ -15,6 +17,7 @@ bool IsTranslucent(int16_t id) {
     return false;
 }
 
+// Returns how much the skylight is filtered by the specified block
 uint8_t GetTranslucency(int16_t id, uint8_t &skylight) {
     uint8_t subtractor = 0;
     // Water seems to drop the skylight brightness by 3 levels with each block
@@ -47,6 +50,7 @@ uint8_t GetTranslucency(int16_t id, uint8_t &skylight) {
     return skylight;
 }
 
+// Returns true for all blocks that are completely or partially transparent
 bool IsTransparent(int16_t id) {
     if (id == BLOCK_AIR ||
         id == BLOCK_SAPLING ||
@@ -87,6 +91,7 @@ bool IsTransparent(int16_t id) {
 }
 
 // TODO: Turn into int8_t for different light levels
+// Returns true for all blocks that are emissive
 bool IsEmissive(int16_t id) {
     if (id == BLOCK_LAVA_FLOWING ||
         id == BLOCK_LAVA_STILL ||
@@ -104,6 +109,7 @@ bool IsEmissive(int16_t id) {
     return false;
 }
 
+// Returns the level of emissiveness for each block
 uint8_t GetEmissiveness(int16_t id) {
     if (id == BLOCK_LAVA_FLOWING ||
         id == BLOCK_LAVA_STILL ||
@@ -128,6 +134,7 @@ uint8_t GetEmissiveness(int16_t id) {
     return 0;
 }
 
+// Returns true for all blocks that are instantly breakable
 bool IsInstantlyBreakable(int16_t id) {
     if (id == BLOCK_SAPLING ||
         id == BLOCK_DEADBUSH ||
@@ -152,6 +159,15 @@ bool IsInstantlyBreakable(int16_t id) {
     return false;
 }
 
+// Returns true if the destroyed item maintains its NBT data upon being dropped
+bool KeepDamageOnDrop(int8_t type) {
+    if (type == BLOCK_WOOL) {
+        return true;
+    }
+    return false;
+}
+
+// Returns true for all blocks that do not drop anything when they're destroyed
 bool NoDrop(Item item) {
     if (item.id == BLOCK_BEDROCK ||
         item.id == BLOCK_WATER_FLOWING ||
@@ -175,22 +191,23 @@ bool NoDrop(Item item) {
     return false;
 }
 
+// Returns the items that're dropped when a block is destroyed
 Item GetDrop(Item item) {
+    if (!KeepDamageOnDrop(item.id)) {
+        item.damage = 0;
+    }
     if (NoDrop(item)) {
         return Item{ -1, 0, 0 };
     }
     // By default, give back one of the same block
     if (item.id == BLOCK_STONE) {
         item.id = BLOCK_COBBLESTONE;
-        item.damage = 0;
     }
     if (item.id == BLOCK_GRASS) {
         item.id = BLOCK_DIRT;
-        item.damage = 0;
     }
     if (item.id == BLOCK_ORE_COAL) {
         item.id = ITEM_COAL;
-        item.damage = 0;
     }
     if (item.id == BLOCK_LEAVES) {
         item.id = BLOCK_SAPLING;
@@ -205,56 +222,45 @@ Item GetDrop(Item item) {
     }
     if (item.id == BLOCK_BED) {
         item.id = ITEM_BED;
-        item.damage = 0;
     }
     if (item.id == BLOCK_REDSTONE_WIRE) {
         item.id = ITEM_REDSTONE;
-        item.damage = 0;
     }
     if (item.id == BLOCK_ORE_DIAMOND) {
         item.id = ITEM_DIAMOND;
-        item.damage = 0;
     }
     if (item.id == BLOCK_CROP_WHEAT) {
         item.id = ITEM_WHEAT;
-        item.damage = 0;
     }
     if (item.id == BLOCK_SIGN_STANDING || item.id == BLOCK_SIGN_WALL) {
         item.id = ITEM_SIGN;
-        item.damage = 0;
     }
     if (item.id == BLOCK_DOOR_WOOD) {
         item.id = ITEM_DOOR_WOODEN;
-        item.damage = 0;
     }
     if (item.id == BLOCK_DOOR_IRON) {
         item.id = ITEM_DOOR_IRON;
-        item.damage = 0;
     }
     if (item.id == BLOCK_ORE_REDSTONE || item.id == BLOCK_ORE_REDSTONE_GLOWING) {
         item.id = ITEM_REDSTONE;
         // 4-5
         item.amount = 4;
-        item.damage = 0;
     }
     if (item.id == BLOCK_REDSTONE_TORCH_OFF || item.id == BLOCK_REDSTONE_TORCH_ON) {
         item.id = BLOCK_REDSTONE_TORCH_ON;
-        item.damage = 0;
     }
     if (item.id == BLOCK_CLAY) {
         item.id = ITEM_CLAY;
         // ???
         item.amount = 4;
-        item.damage = 0;
     }
     if (item.id == BLOCK_GLOWSTONE) {
         item.id = ITEM_GLOWSTONE_DUST;
         // 2-4
-        item.damage = 2;
+        item.amount = 2;
     }
     if (item.id == BLOCK_REDSTONE_REPEATER_ON || item.id == BLOCK_REDSTONE_REPEATER_OFF) {
         item.id = BLOCK_REDSTONE_REPEATER_OFF;
-        item.damage = 0;
     }
     return item;
 }

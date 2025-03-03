@@ -30,7 +30,7 @@ class World {
         std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkBlockLight(const Chunk* c);
         std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkSkyLight(const Chunk* c);
         void PlaceBlock(Int3 position, int8_t type, int8_t meta);
-        Block BreakBlock(Int3 position);
+        Block* BreakBlock(Int3 position);
         Block* GetBlock(Int3 position);
         Int3 FindSpawnableBlock(Int3 position);
         void AddChunk(int32_t x, int32_t z, Chunk c);

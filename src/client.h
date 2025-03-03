@@ -92,7 +92,7 @@ class Client : public std::enable_shared_from_this<Client> {
         bool BlockTooCloseToPosition(Int3 position);
         void HandlePacket();
         void ProcessChunk(const Int3& position, WorldManager* wm);
-        void SendChunksAroundPlayer(bool forcePlayerAsCenter = false);
+        void DetermineVisibleChunks(bool forcePlayerAsCenter = false);
         bool CheckIfNewChunksRequired();
         bool TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &damage);
         bool SpreadToSlots(int16_t item, int8_t amount, int16_t damage, int8_t preferredRange = 0);
@@ -124,5 +124,8 @@ class Client : public std::enable_shared_from_this<Client> {
         bool ChunkIsVisible(Int3 pos);
 
         std::mutex &GetNewChunksMutex() noexcept { return this->newChunksMutex; }
-        void AddNewChunk(Int3 pos) { newChunks.push_back(pos); }
+        void AddNewChunk(Int3 pos) { 
+            std::lock_guard<std::mutex> lock(newChunksMutex);
+            newChunks.push_back(pos);
+        }
 };

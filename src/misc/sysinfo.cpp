@@ -25,6 +25,7 @@ int GetUsedMemory() { //Note: this value is in KB!
     return result;
 }
 
+// Get the number of Megabytes used by BetrockServer
 double GetUsedMemoryMB() { //Note: this value is in KB!
     FILE* file = fopen("/proc/self/status", "r");
     int result = -1;

@@ -40,6 +40,7 @@ class Player : public Entity {
             spawnWorld(spawnWorld)
         {}
 
+        Vec3 GetVelocity();
         void SetHealth(std::vector<uint8_t> &response, int8_t health);
         void Hurt(std::vector<uint8_t> &response, int8_t damage);
         void Kill(std::vector<uint8_t> &response);

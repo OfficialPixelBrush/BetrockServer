@@ -2,6 +2,11 @@
 #include "client.h"
 #include <cstdint>
 
+// Get the players velocity
+Vec3 Player::GetVelocity() {
+    return previousPosition - position;
+}
+
 void Player::SetHealth(std::vector<uint8_t> &response, int8_t health) {
     if (health > HEALTH_MAX) { health = HEALTH_MAX; }
     if (health < 0) { health = 0; }
@@ -22,6 +27,7 @@ void Player::PrintStats() {
     std::cout << username << ": " << position << "; " << yaw << ", " << pitch << std::endl;
 }
 
+// Store the player data as an NBT-format file
 void Player::Save() {
     // Note: Right now this implements all tags that a Beta 1.7.3 player.nbt has
     // This does not mean we actually, properly implement all of these just yet
@@ -92,6 +98,7 @@ void Player::Save() {
 	NbtWriteToFile(entryPath,root);
 }
 
+// Load the players data from an NBT-format file
 bool Player::Load() {
     std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     dirPath += "/players/";

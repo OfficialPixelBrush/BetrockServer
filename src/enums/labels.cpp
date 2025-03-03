@@ -1,5 +1,6 @@
 #include "labels.h"
 
+// Get the appropriate Label for the passed id
 std::string GetLabel(int16_t id) {
     if (id > SLOT_EMPTY) {
         if (id < BLOCK_MAX) {

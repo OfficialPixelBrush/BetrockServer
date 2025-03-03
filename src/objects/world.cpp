@@ -2,10 +2,12 @@
 
 #include "server.h"
 
+// Returns the number of Chunks that're currently loaded into memory
 int World::GetNumberOfChunks() {
     return chunks.size();
 }
 
+// Checks if a file with a matching position and extension exists
 bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
@@ -22,10 +24,12 @@ bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
     return false;
 }
 
+// Checks if the Chunk exists in memory
 bool World::ChunkExists(int32_t x, int32_t z) {
     return chunks.contains(GetChunkHash(x,z));
 }
 
+// Sets the directory path of the world upon creation
 World::World(const std::string& extra) {
     dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
@@ -39,6 +43,7 @@ World::World(const std::string& extra) {
     }
 }
 
+// Saves all the Chunks that're currently loaded into Memory
 void World::Save() {
     uint savedChunks = 0;
     for (const auto& pair : chunks) {
@@ -52,6 +57,7 @@ void World::Save() {
     std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;
 }
 
+// Gets the Chunk Pointer from Memory
 Chunk* World::GetChunk(int32_t x, int32_t z) {
     auto it = chunks.find(GetChunkHash(x, z));
     if (it != chunks.end()) {
@@ -60,14 +66,17 @@ Chunk* World::GetChunk(int32_t x, int32_t z) {
     return nullptr; // Return nullptr if no valid object is found
 }
 
+// Adds a new Chunk to the world
 void World::AddChunk(int32_t x, int32_t z, Chunk c) {
     chunks[GetChunkHash(x,z)] = c;
 }
 
+// Removes a Chunk from the world
 void World::RemoveChunk(int32_t x, int32_t z) {
     chunks.erase(GetChunkHash(x,z));
 }
 
+// Removes any chunks that're not visible to any player
 void World::FreeUnseenChunks() {
     std::vector<Int3> chunksToRemove;
 
@@ -97,6 +106,7 @@ void World::FreeUnseenChunks() {
     }
 }
 
+// Load a Chunk into Memory from an NBT-Format file
 bool World::LoadChunk(int32_t x, int32_t z) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
@@ -160,6 +170,7 @@ bool World::LoadChunk(int32_t x, int32_t z) {
     }
 }
 
+// Save a Chunk as an NBT-format file
 void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
     if (!chunk) {
         //
@@ -190,6 +201,8 @@ void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
     NbtWriteToFile(filePath,root,NBT_ZLIB);
 }
 
+// Place a block at the passed position
+// This position must be within a currently loaded Chunk
 void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
     // Get Block Position within Chunk
     Block* b = GetBlock(position);
@@ -201,14 +214,19 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
     //CalculateColumnLight(position.x,position.z,GetChunk(position.x>>5,position.z>>5));
 }
 
-Block World::BreakBlock(Int3 position) {
+// Remove the block and turn it into air
+Block* World::BreakBlock(Int3 position) {
     // Break Block Position within Chunk
-    Block b = *GetBlock(position);
-    GetBlock(position)->type = 0;
-    //CalculateColumnLight(position.x,position.z);
+    Block* b = GetBlock(position);
+    if (!b) {
+        return nullptr;
+    }
+    b->type = 0;
+    b->meta = 0;
     return b;
 }
 
+// Get the Block at the passed position
 Block* World::GetBlock(Int3 position) {
     // Get Block Position within Chunk
     int32_t cX = position.x >> 4;
@@ -218,6 +236,7 @@ Block* World::GetBlock(Int3 position) {
     return &chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(XyzToInt3(bX,(int8_t)position.y,bZ))];
 }
 
+// Get all the block,meta,block light and sky light data of a Chunk in a Binary Format
 std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     auto bytes = std::make_unique<char[]>(CHUNK_DATA_SIZE);
     int index = 0;
@@ -275,6 +294,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     return bytes;
 }
 
+// Get all the Block Data of a Chunk as an array
 std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkBlocks(const Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
     if (!c) {
@@ -294,6 +314,7 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
     return data;
 }
 
+// Get all the Meta Data of a Chunk as an array
 std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkMeta(const Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
     if (!c) {
@@ -314,6 +335,7 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
     return data;
 }
 
+// Get all the Block Light Data of a Chunk as an array
 std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkBlockLight(const Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
     if (!c) {
@@ -334,6 +356,7 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     return data;
 }
 
+// Get all the Sky Light Data of a Chunk as an array
 std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkSkyLight(const Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
     if (!c) {
@@ -355,6 +378,7 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     return data;
 }
 
+// Find the highest possible non-solid block that can see the sky
 Int3 World::FindSpawnableBlock(Int3 position) {
     bool skyVisible = true;
     Int3 spawn = position;
@@ -372,6 +396,7 @@ Int3 World::FindSpawnableBlock(Int3 position) {
     return position;
 }
 
+// Load an old-format Chunk into Memory from a Binary File
 bool World::LoadOldChunk(int32_t x, int32_t z) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
