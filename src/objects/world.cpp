@@ -45,16 +45,13 @@ World::World(const std::string& extra) {
 
 // Saves all the Chunks that're currently loaded into Memory
 void World::Save() {
-    uint savedChunks = 0;
     for (const auto& pair : chunks) {
         const int64_t& hash = pair.first;
         const Chunk& chunk = pair.second;
     
         Int3 pos = DecodeChunkHash(hash);
         SaveChunk(pos.x, pos.z, &chunk);
-        savedChunks++;
     }
-    std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;
 }
 
 // Gets the Chunk Pointer from Memory
