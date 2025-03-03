@@ -11,3 +11,4 @@ extern bool debugNumberOfPacketBytes;
 extern bool debugPlayerStatus;
 
 extern bool debugDisableSaveLoad;
+extern bool debugDisablePrintChunk;

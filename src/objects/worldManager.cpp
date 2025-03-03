@@ -111,7 +111,6 @@ void WorldManager::WorkerThread() {
         std::scoped_lock lock(Betrock::Server::Instance().GetConnectedClientMutex());
         for (auto c : cq.requestedClients) {
             if (c) {
-                std::lock_guard<std::mutex> lock(c->GetNewChunksMutex());
                 c->AddNewChunk(cq.position);
             }
         }

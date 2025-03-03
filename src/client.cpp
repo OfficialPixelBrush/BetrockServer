@@ -78,7 +78,7 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
     if (!wm->world.ChunkExists(position.x,position.z)) {
 		// Otherwise queue chunk loading or generation
 		wm->AddChunkToQueue(position.x, position.z, this);
-		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
+		//Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
 		SendResponse(true);
         return;
     }
@@ -88,7 +88,7 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
 
 // Figure out what chunks the player can see and
 // add them to the NewChunks queue if any new ones are added
-void Client::SendChunksAroundPlayer(bool forcePlayerAsCenter) {
+void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
     auto &server = Betrock::Server::Instance();
 
     Int3 centerPos;
@@ -145,7 +145,6 @@ void Client::SendNewChunks() {
 	// Send chunks in batches of 5
 	int sentThisCycle = 5;
 	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
-  	std::lock_guard<std::mutex> lock(newChunksMutex);
 	while(sentThisCycle > 0) {
 		if(!newChunks.empty()) {
 			auto nc = newChunks.begin();
@@ -177,6 +176,7 @@ void Client::SendNewChunks() {
 			}
 			// Better to remove the entry either way if compression fails,
 			// otherwise we may get an infinite build-up of failing chunks
+  			std::lock_guard<std::mutex> lock(newChunksMutex);
 			newChunks.erase(nc);
 		}
 		sentThisCycle--;
@@ -642,7 +642,7 @@ bool Client::HandlePlayerPosition() {
 	UpdatePositionForOthers(false);
 
 	if (CheckIfNewChunksRequired()) {
-		SendChunksAroundPlayer();
+		DetermineVisibleChunks();
 	}
 	return true;
 }
@@ -672,7 +672,7 @@ bool Client::HandlePlayerPositionLook() {
 	UpdatePositionForOthers(true);
 
 	if (CheckIfNewChunksRequired()) {
-		SendChunksAroundPlayer();
+		DetermineVisibleChunks();
 	}
 	return true;
 }
@@ -727,12 +727,13 @@ bool Client::HandlePlayerDigging(World* world) {
 	int8_t face = EntryToByte(message, offset);
 
 	Int3 pos = XyzToInt3(x,y,z);
-	Block* b = world->GetBlock(pos);
+	Block brokenBlock = *world->GetBlock(pos);
 	// If the block is broken or instantly breakable
-	if (status == 2 || player->creativeMode || IsInstantlyBreakable(b->type)) {
+	if (status == 2 || player->creativeMode || IsInstantlyBreakable(brokenBlock.type)) {
 		Respond::BlockChange(broadcastResponse,pos,0,0);
-		Block* b = world->BreakBlock(pos);
-		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,b->type);
+		world->BreakBlock(pos);
+
+		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,brokenBlock.type);
 		if (doTileDrops && !player->creativeMode) {
 			// TODO: This works now,
 			// but results in entities piling up
@@ -748,7 +749,7 @@ bool Client::HandlePlayerDigging(World* world) {
 				0,0,0
 			);
 			*/
-			Item item = Item{b->type,1,b->meta};
+			Item item = Item{brokenBlock.type,1,brokenBlock.meta};
 			if (!player->creativeMode) {
 				item = GetDrop(item);
 			}
@@ -906,7 +907,11 @@ void Client::SendResponse(bool autoclear) {
 		debugMessage += "Sending " + PacketIdToLabel((Packet)response[0]) + " to " + player->username + "(" + std::to_string(player->entityId) + ") ! (" + std::to_string(response.size()) + " Bytes)";
 	}
 	if (debugSentBytes) {
-		debugMessage += "\n" + Uint8ArrayToHexDump(&response[0],response.size());
+		if (((Packet)response[0] == Packet::Chunk || (Packet)response[0] == Packet::PreChunk) && debugDisablePrintChunk) {
+			// Do nothing
+		} else {
+			debugMessage += "\n" + Uint8ArrayToHexDump(&response[0],response.size());
+		}
 	}
 	if (debugSentPacketType || debugSentBytes) {
 		Betrock::Logger::Instance().Debug(debugMessage);
@@ -930,7 +935,7 @@ void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
     player->stance = player->position.y + STANCE_OFFSET;
     newChunks.clear();
     Respond::PlayerPositionLook(response, player.get());
-    SendChunksAroundPlayer(true);
+    DetermineVisibleChunks(true);
 }
 
 // Respawn the Client by sending them back to spawn

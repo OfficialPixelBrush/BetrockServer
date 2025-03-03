@@ -218,6 +218,9 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
 Block* World::BreakBlock(Int3 position) {
     // Break Block Position within Chunk
     Block* b = GetBlock(position);
+    if (!b) {
+        return nullptr;
+    }
     b->type = 0;
     b->meta = 0;
     return b;
