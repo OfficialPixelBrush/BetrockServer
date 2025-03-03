@@ -206,6 +206,9 @@ Item GetDrop(Item item) {
     if (item.id == BLOCK_GRASS) {
         item.id = BLOCK_DIRT;
     }
+    if (item.id == BLOCK_SUGARCANE) {
+        item.id = ITEM_SUGARCANE;
+    }
     if (item.id == BLOCK_ORE_COAL) {
         item.id = ITEM_COAL;
     }
