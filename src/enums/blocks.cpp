@@ -184,8 +184,11 @@ bool InteractWithBlock(Block* b) {
 }
 
 // Returns true if the destroyed item maintains its NBT data upon being dropped
-bool KeepDamageOnDrop(int8_t type) {
-    if (type == BLOCK_WOOL) {
+bool KeepDamageOnDrop(int8_t id) {
+    if (id == BLOCK_WOOL ||
+        id == BLOCK_SLAB ||
+        id == BLOCK_DOUBLE_SLAB
+    ) {
         return true;
     }
     return false;
@@ -218,9 +221,13 @@ Item GetDrop(Item item) {
     if (NoDrop(item)) {
         return Item{ -1, 0, 0 };
     }
+    int16_t damage = item.damage;
+    if (!KeepDamageOnDrop(item.id)) {
+        item.damage = 0;
+    }
     // By default, give back one of the same block
     if (item.id == BLOCK_CROP_WHEAT) {
-        if (item.damage < MAX_CROP_SIZE) {
+        if (damage < MAX_CROP_SIZE) {
             item.id = ITEM_SEEDS_WHEAT;
         } else {
             item.id = ITEM_WHEAT;
@@ -291,8 +298,9 @@ Item GetDrop(Item item) {
     if (item.id == BLOCK_REDSTONE_REPEATER_ON || item.id == BLOCK_REDSTONE_REPEATER_OFF) {
         item.id = BLOCK_REDSTONE_REPEATER_OFF;
     }
-    if (!KeepDamageOnDrop(item.id)) {
-        item.damage = 0;
+    if (item.id == BLOCK_DOUBLE_SLAB) {
+        item.id = BLOCK_SLAB;
+        item.amount = 2;
     }
     return item;
 }
