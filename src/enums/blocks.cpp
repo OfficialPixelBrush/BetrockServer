@@ -175,9 +175,10 @@ bool IsInteractable(int16_t id) {
 }
 
 bool InteractWithBlock(Block* b) {
-    if (b->type == BLOCK_TRAPDOOR) {
+    if (b->type == BLOCK_TRAPDOOR ||
+        b->type == BLOCK_DOOR_WOOD
+    ) {
         b->meta = b->meta ^ 0b100;
-        std::cout << "Toggled block!" << std::endl;
     }
     return true;
 }
