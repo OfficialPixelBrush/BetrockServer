@@ -801,7 +801,6 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		damage = EntryToShort(message, offset);
 	}
 
-
 	Int3 pos = Int3{x,y,z};
 	Block* targetedBlock = world->GetBlock(pos);
 
@@ -811,7 +810,6 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		world->PlaceBlock(pos,targetedBlock->type,targetedBlock->meta);
 		return true;
 	}
-	BlockToFace(pos,face);
 
 	// This packet has a special case where X, Y, Z, and Direction are all -1.
 	// This special packet indicates that the currently held item for the player should have
@@ -823,24 +821,35 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	}
 
 	// Place a block if we can
-	if (CanDecrementHotbar()) {
-		// Check if the server-side inventory item is valid
-		Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
+	if (! CanDecrementHotbar()) {
+		DecrementHotbar(response);
+	}
+
+	// Check if the server-side inventory item is valid
+	Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
+	
+	// Special handling for Slabs
+	if (
+		targetedBlock->type == BLOCK_SLAB_STONE &&
+		targetedBlock->meta == i.damage &&
+		face == yPlus
+	) {
+		world->PlaceBlock(pos,BLOCK_DOUBLE_SLAB_STONE,i.damage);
+	} else {
 		// Get the block we need to place
+		BlockToFace(pos,face);
 		Block b = GetPlacedBlock(world,pos,face,GetPlayerOrientation(),i.id,i.damage);
 		if (b.type == SLOT_EMPTY) {
 			return false;
 		}
 		world->PlaceBlock(pos,b.type,b.meta);
-		// Immediately give back the item if we're in creative mode
-		if (player->creativeMode) {
-			Item i = GetHeldItem();
-			id = i.id;
-			amount = i.amount;
-			Respond::SetSlot(response,0,GetHotbarSlot(),id,amount,i.damage);
-		} else {
-			DecrementHotbar(response);
-		}
+	}
+	// Immediately give back the item if we're in creative mode
+	if (player->creativeMode) {
+		Item i = GetHeldItem();
+		id = i.id;
+		amount = i.amount;
+		Respond::SetSlot(response,0,GetHotbarSlot(),id,amount,i.damage);
 	}
 	return true;
 }
