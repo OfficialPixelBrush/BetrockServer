@@ -830,11 +830,11 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	
 	// Special handling for Slabs
 	if (
-		targetedBlock->type == BLOCK_SLAB_STONE &&
+		targetedBlock->type == BLOCK_SLAB &&
 		targetedBlock->meta == i.damage &&
 		face == yPlus
 	) {
-		world->PlaceBlock(pos,BLOCK_DOUBLE_SLAB_STONE,i.damage);
+		world->PlaceBlock(pos,BLOCK_DOUBLE_SLAB,i.damage);
 	} else {
 		// Get the block we need to place
 		BlockToFace(pos,face);
