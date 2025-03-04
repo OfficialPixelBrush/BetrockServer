@@ -16,9 +16,6 @@ bool Client::CheckPosition(Vec3 &newPosition, double &newStance) {
 // Set the client up to receive another packet
 ssize_t Client::Setup() {
 	// Set stuff up for the next batch of packets
-	response.clear();
-	broadcastResponse.clear();
-	broadcastOthersResponse.clear();
 	offset = 0;
 	previousOffset = 0;
 
@@ -38,19 +35,6 @@ void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
 	if (debugReceivedPacketType || debugReceivedBytes) {
 		Betrock::Logger::Instance().Debug(debugMessage);
 	}
-}
-
-// Print the remaining, to-be-read data
-void Client::PrintRead(Packet packetType) {
-	std::cout << "Read " << PacketIdToLabel(packetType) << " from " << player->username << "! (" << offset-previousOffset << " Bytes)" << std::endl;
-	for (uint i = previousOffset; i < offset; i++) {
-		std::cout << std::hex << (int)message[i];
-		if (i < offset-1) {
-			std::cout << ", ";
-		}
-	}
-	std::cout << std::dec << std::endl;
-	previousOffset = offset;
 }
 
 // Check if the player has moved far enough to warrant sending new chunk data
@@ -111,7 +95,6 @@ void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
         if (distanceX > chunkDistance || distanceZ > chunkDistance) {
             Respond::PreChunk(response, it->x, it->z, 0); // Tell client chunk is no longer visible
             it = visibleChunks.erase(it);
-			//std::cout << "Deleted " << it->x << ", " << it->z << std::endl;
         } else {
             ++it;
         }
@@ -124,14 +107,14 @@ void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
 		// Top and Bottom rows
 		for (int x = -r; x <= r; x++) {
 			for (int z : {-r, r}) {
-				Int3 position = XyzToInt3(x+pX, 0, z+pZ);
+				Int3 position = Int3{x+pX, 0, z+pZ};
 				ProcessChunk(position, wm);
 			}
 		}
 		// Left and Right columns (excluding corners to avoid duplicates)
 		for (int z = -r + 1; z <= r - 1; z++) {
 			for (int x : {-r, r}) {
-				Int3 position = XyzToInt3(x+pX, 0, z+pZ);
+				Int3 position = Int3{x+pX, 0, z+pZ};
 				ProcessChunk(position, wm);
 			}
 		}
@@ -161,7 +144,6 @@ void Client::SendNewChunks() {
 			auto chunk = CompressChunk(chunkData.get(), compressedSize);
 
 			if (chunk) {
-				//std::cout << "Sent " << nc->x << ", " << nc->z << std::endl;
 				Respond::PreChunk(response, nc->x, nc->z, 1);
 				visibleChunks.push_back(Int3{nc->x,0,nc->z});
 
@@ -275,7 +257,8 @@ void Client::HandlePacket() {
 			}
 		}
 
-		// Get the current Dimension
+		// Get the current Dimension#
+		// TODO: We probably don't need to run this on every single packet!
 		World* world = Betrock::Server::Instance().GetWorld(player->dimension);
 		
 		// Ensure proper packet order
@@ -362,9 +345,9 @@ void Client::HandlePacket() {
 	}
 	SendNewChunks();
 
-	SendResponse(true);
 	BroadcastToClients(broadcastResponse);
 	BroadcastToClients(broadcastOthersResponse, this);
+	SendResponse(true);
 	
 	if (debugNumberOfPacketBytes) {
 		Betrock::Logger::Instance().Debug("--- " + std::to_string(offset) + "/" + std::to_string(bytes_received) + " Bytes Read from Packet ---"); 
@@ -390,7 +373,7 @@ void Client::HandleClient() {
 	// While the player is connected, read packets from them
 	while (server.IsAlive() && GetConnectionStatus() > ConnectionStatus::Disconnected) {
 		HandlePacket();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED));
 	}
 	
 	close(clientFd);
@@ -726,14 +709,23 @@ bool Client::HandlePlayerDigging(World* world) {
 	int32_t z = EntryToInteger(message, offset);
 	int8_t face = EntryToByte(message, offset);
 
-	Int3 pos = XyzToInt3(x,y,z);
-	Block brokenBlock = *world->GetBlock(pos);
-	// If the block is broken or instantly breakable
-	if (status == 2 || player->creativeMode || IsInstantlyBreakable(brokenBlock.type)) {
-		Respond::BlockChange(broadcastResponse,pos,0,0);
-		world->BreakBlock(pos);
+	Int3 pos = Int3(x,y,z);
+	Block* targetedBlock = world->GetBlock(pos);
+	
+	if (debugPunchBlockInfo) {
+		Betrock::Logger::Instance().Debug(GetLabel((int)targetedBlock->type) + " (" + std::to_string((int)targetedBlock->type) + ":" + std::to_string((int)targetedBlock->meta) + ")");
+	}
 
-		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,brokenBlock.type);
+	// Check if the targeted block is interactable
+	if (IsInteractable(targetedBlock->type)) {
+		InteractWithBlock(targetedBlock);
+		world->PlaceBlock(pos,targetedBlock->type,targetedBlock->meta);
+		return true;
+	}
+
+	// If the block is broken or instantly breakable
+	if (status == 2 || player->creativeMode || IsInstantlyBreakable(targetedBlock->type)) {
+		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,targetedBlock->type);
 		if (doTileDrops && !player->creativeMode) {
 			// TODO: This works now,
 			// but results in entities piling up
@@ -749,12 +741,14 @@ bool Client::HandlePlayerDigging(World* world) {
 				0,0,0
 			);
 			*/
-			Item item = Item{brokenBlock.type,1,brokenBlock.meta};
+			Item item = Item{targetedBlock->type,1,targetedBlock->meta};
 			if (!player->creativeMode) {
 				item = GetDrop(item);
 			}
 			Give(response,item.id,item.amount,item.damage);
 		}
+		// Only get rid of the block here to avoid unreferenced pointers
+		world->BreakBlock(pos);
 	}
 	return true;
 }
@@ -807,8 +801,17 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		damage = EntryToShort(message, offset);
 	}
 
-	BlockToFace(x,y,z,face);
-	Int3 pos = XyzToInt3(x,y,z);
+
+	Int3 pos = Int3{x,y,z};
+	Block* targetedBlock = world->GetBlock(pos);
+
+	// Check if the targeted block is interactable
+	if (IsInteractable(targetedBlock->type)) {
+		InteractWithBlock(targetedBlock);
+		world->PlaceBlock(pos,targetedBlock->type,targetedBlock->meta);
+		return true;
+	}
+	BlockToFace(pos,face);
 
 	// This packet has a special case where X, Y, Z, and Direction are all -1.
 	// This special packet indicates that the currently held item for the player should have
@@ -824,11 +827,10 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		// Check if the server-side inventory item is valid
 		Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
 		// Get the block we need to place
-		Block b = GetPlacedBlock(x,y,z,face,GetPlayerOrientation(),i.id,i.damage);
+		Block b = GetPlacedBlock(world,pos,face,GetPlayerOrientation(),i.id,i.damage);
 		if (b.type == SLOT_EMPTY) {
 			return false;
 		}
-		Respond::BlockChange(broadcastResponse,pos,b.type,b.meta);
 		world->PlaceBlock(pos,b.type,b.meta);
 		// Immediately give back the item if we're in creative mode
 		if (player->creativeMode) {
@@ -891,15 +893,19 @@ void Client::DisconnectClient(std::string disconnectMessage) {
 // Add something to the current clients upcoming response packet
 void Client::AppendResponse(std::vector<uint8_t> &addition) {
 	if (!addition.empty()) {
+		std::lock_guard<std::mutex> lock(responseMutex);
 		response.insert(response.end(), addition.begin(), addition.end());
-		SendResponse(true);
 	}
 }
 
 // Send the contents of the response packet to the Client
 void Client::SendResponse(bool autoclear) {
-	if (response.empty() || GetConnectionStatus() <= ConnectionStatus::Disconnected) {
+	std::lock_guard<std::mutex> lock(responseMutex);
+	if (GetConnectionStatus() <= ConnectionStatus::Disconnected) {
 		return;
+	}
+	if (response.empty()) {
+		Respond::KeepAlive(response);
 	}
 
 	std::string debugMessage = "";

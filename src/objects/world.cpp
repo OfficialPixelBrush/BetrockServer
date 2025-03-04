@@ -45,16 +45,13 @@ World::World(const std::string& extra) {
 
 // Saves all the Chunks that're currently loaded into Memory
 void World::Save() {
-    uint savedChunks = 0;
     for (const auto& pair : chunks) {
         const int64_t& hash = pair.first;
         const Chunk& chunk = pair.second;
     
         Int3 pos = DecodeChunkHash(hash);
         SaveChunk(pos.x, pos.z, &chunk);
-        savedChunks++;
     }
-    std::cout << "Saved " << savedChunks << " Chunks to Disk" << std::endl;
 }
 
 // Gets the Chunk Pointer from Memory
@@ -211,6 +208,7 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
     b->lightBlock = GetEmissiveness(b->type);
     // This needs to be recalculated
     b->lightSky = (IsTranslucent(b->type) || IsTransparent(b->type))*0xF;
+    UpdateBlock(position,b);
     //CalculateColumnLight(position.x,position.z,GetChunk(position.x>>5,position.z>>5));
 }
 
@@ -223,7 +221,14 @@ Block* World::BreakBlock(Int3 position) {
     }
     b->type = 0;
     b->meta = 0;
+    UpdateBlock(position,b);
     return b;
+}
+
+void World::UpdateBlock(Int3 position, Block* b) {
+    std::vector<uint8_t> response;
+    Respond::BlockChange(response,position,b->type,b->meta);
+    BroadcastToClients(response);
 }
 
 // Get the Block at the passed position
@@ -233,7 +238,7 @@ Block* World::GetBlock(Int3 position) {
     int32_t cZ = position.z >> 4;
     int8_t bX = position.x & 0xF;
     int8_t bZ = position.z & 0xF;
-    return &chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(XyzToInt3(bX,(int8_t)position.y,bZ))];
+    return &chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(Int3{bX,(int8_t)position.y,bZ})];
 }
 
 // Get all the block,meta,block light and sky light data of a Chunk in a Binary Format
@@ -249,7 +254,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                Block b = c->blocks[GetBlockIndex(XyzToInt3(cX,cY,cZ))];
+                Block b = c->blocks[GetBlockIndex(Int3{cX,cY,cZ})];
                 bytes[index] = b.type;
                 index++;
             }
@@ -260,8 +265,8 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2  ,cZ))];
-                Block b2 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2+1,cZ))];
+                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
+                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
                 bytes[index] = (b2.meta << 4 | b1.meta);
                 index++;
             }
@@ -272,8 +277,8 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2  ,cZ))];
-                Block b2 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2+1,cZ))];
+                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
+                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
                 bytes[index] = (b2.lightBlock << 4 | b1.lightBlock);
                 index++;
             }
@@ -284,8 +289,8 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2  ,cZ))];
-                Block b2 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2+1,cZ))];
+                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
+                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
                 bytes[index] = (b2.lightSky << 4 | b1.lightSky);
                 index++;
             }
@@ -305,7 +310,7 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
     for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                Block b = c->blocks[GetBlockIndex(XyzToInt3(cX,cY,cZ))];
+                Block b = c->blocks[GetBlockIndex(Int3{cX,cY,cZ})];
                 data[index] = b.type;
                 index++;
             }
@@ -325,8 +330,8 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2  ,cZ))];
-                Block b2 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2+1,cZ))];
+                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
+                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
                 data[index] = (b2.meta << 4 | b1.meta);
                 index++;
             }
@@ -346,8 +351,8 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2  ,cZ))];
-                Block b2 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2+1,cZ))];
+                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
+                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
                 data[index] = (b2.lightBlock << 4 | b1.lightBlock);
                 index++;
             }
@@ -368,8 +373,8 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2  ,cZ))];
-                Block b2 = c->blocks[GetBlockIndex(XyzToInt3(cX,cY*2+1,cZ))];
+                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
+                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
                 data[index] = (b2.lightSky << 4 | b1.lightSky);
                 index++;
             }
@@ -472,4 +477,34 @@ bool World::LoadOldChunk(int32_t x, int32_t z) {
     // Delete the old chunk file
     remove(entryPath);
     return true;
+}
+
+// Tick all currently loaded chunks
+void World::TickChunks() {
+    std::mt19937 rng(dev());
+    for (auto& pair : chunks) {
+        int64_t hash = pair.first;
+        Chunk& chunk = pair.second;
+        std::uniform_int_distribution<std::mt19937::result_type> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
+        // Choose a batch of random blocks within a chunk to run RandomTick on
+        for (int i = 0; i < 16; i++) {
+            int blockIndex = dist6(rng);
+            Block* b = &chunk.blocks[blockIndex];
+            int8_t oldType = b->type;
+            int8_t oldMeta = b->meta;
+
+            Int3 chunkPos = DecodeChunkHash(hash);
+            Int3 blockPos = GetBlockPosition(blockIndex);
+            Int3 pos = {
+                chunkPos.x<<4 | blockPos.x,
+                blockPos.y,
+                chunkPos.z<<4 | blockPos.z
+            };
+            RandomTick(b,pos);
+            // If the block was changed, send this to the clients
+            if (oldType != b->type || oldMeta != b->meta) {
+                UpdateBlock(pos,b);
+            }
+        }
+    }
 }

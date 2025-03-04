@@ -26,6 +26,7 @@ class Command {
         static void Summon(Client* client);
         static void Teleport(Client* client);
         static void Time();
+        static void Uptime();
         
         static void Op(Client* client);
         static void Deop(Client* client);

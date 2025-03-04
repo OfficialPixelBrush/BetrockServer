@@ -47,6 +47,8 @@ class Server {
 
 	uint64_t GetServerTime() const noexcept;
 
+	uint64_t GetUpTime() const noexcept;
+
 	WorldManagerMap &GetWorldManagers() noexcept;
 
 	// get the world manager for the world with the coresponding world_id.
@@ -64,6 +66,8 @@ class Server {
 	std::mutex &GetEntityIdMutex() noexcept;
 
 	void SetServerTime(uint64_t serverTime);
+
+	void AddUpTime(uint64_t upTime);
 
 	void SetSpawnPoint(const Vec3 &spawnPoint) noexcept;
 
@@ -139,6 +143,7 @@ class Server {
 	int32_t latestEntityId = 0;
 	int chunkDistance = 10;
 	atomic_uint64_t serverTime = 0;
+	atomic_uint64_t upTime = 0;
 	WorldManagerMap worldManagers;
 	std::unordered_map<int8_t, std::jthread> worldManagerThreads;
 	std::vector<std::unique_ptr<Plugin>> plugins;

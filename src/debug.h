@@ -12,3 +12,5 @@ extern bool debugPlayerStatus;
 
 extern bool debugDisableSaveLoad;
 extern bool debugDisablePrintChunk;
+
+extern bool debugPunchBlockInfo;

@@ -50,6 +50,7 @@ class Client : public std::enable_shared_from_this<Client> {
         std::vector<Int3> visibleChunks;
         std::vector<Int3> newChunks;
         std::mutex newChunksMutex;  
+        std::mutex responseMutex;  
         Vec3 lastChunkUpdatePosition;
 
         // Server-side inventory
@@ -59,7 +60,6 @@ class Client : public std::enable_shared_from_this<Client> {
         
         ssize_t Setup();
         void PrintReceived(ssize_t bytes_received, Packet packetType = Packet::KeepAlive);
-        void PrintRead(Packet packetType);
 
         // Packets
         bool HandleKeepAlive();

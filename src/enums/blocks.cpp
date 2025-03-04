@@ -1,4 +1,5 @@
 #include "blocks.h"
+#include "world.h"
 
 // Returns true for all translucent blocks
 // So blocks that aren't 100% transparent
@@ -159,6 +160,29 @@ bool IsInstantlyBreakable(int16_t id) {
     return false;
 }
 
+// Returns true if the passed block is interactable, and should thus cancel any block-placements
+bool IsInteractable(int16_t id) {
+    if (id == BLOCK_BED ||
+        id == BLOCK_DOOR_IRON ||
+        id == BLOCK_DOOR_WOOD ||
+        id == BLOCK_TRAPDOOR ||
+        id == BLOCK_BUTTON_STONE ||
+        id == BLOCK_LEVER
+    ) {
+        return true;
+    }
+    return false;
+}
+
+bool InteractWithBlock(Block* b) {
+    if (b->type == BLOCK_TRAPDOOR ||
+        b->type == BLOCK_DOOR_WOOD
+    ) {
+        b->meta = b->meta ^ 0b100;
+    }
+    return true;
+}
+
 // Returns true if the destroyed item maintains its NBT data upon being dropped
 bool KeepDamageOnDrop(int8_t type) {
     if (type == BLOCK_WOOL) {
@@ -180,8 +204,6 @@ bool NoDrop(Item item) {
         item.id == BLOCK_TALLGRASS ||
         item.id == BLOCK_FIRE ||
         item.id == BLOCK_MOB_SPAWNER ||
-        // TODO: Figure out the max level of wheat!!
-        (item.id == BLOCK_CROP_WHEAT && item.damage < 7) || 
         item.id == BLOCK_ICE ||
         item.id == BLOCK_NETHER_PORTAL ||
         item.id == BLOCK_CAKE
@@ -193,18 +215,25 @@ bool NoDrop(Item item) {
 
 // Returns the items that're dropped when a block is destroyed
 Item GetDrop(Item item) {
-    if (!KeepDamageOnDrop(item.id)) {
-        item.damage = 0;
-    }
     if (NoDrop(item)) {
         return Item{ -1, 0, 0 };
     }
     // By default, give back one of the same block
+    if (item.id == BLOCK_CROP_WHEAT) {
+        if (item.damage < MAX_CROP_SIZE) {
+            item.id = ITEM_SEEDS_WHEAT;
+        } else {
+            item.id = ITEM_WHEAT;
+        }
+    }
     if (item.id == BLOCK_STONE) {
         item.id = BLOCK_COBBLESTONE;
     }
     if (item.id == BLOCK_GRASS) {
         item.id = BLOCK_DIRT;
+    }
+    if (item.id == BLOCK_SUGARCANE) {
+        item.id = ITEM_SUGARCANE;
     }
     if (item.id == BLOCK_ORE_COAL) {
         item.id = ITEM_COAL;
@@ -262,5 +291,246 @@ Item GetDrop(Item item) {
     if (item.id == BLOCK_REDSTONE_REPEATER_ON || item.id == BLOCK_REDSTONE_REPEATER_OFF) {
         item.id = BLOCK_REDSTONE_REPEATER_OFF;
     }
+    if (!KeepDamageOnDrop(item.id)) {
+        item.damage = 0;
+    }
     return item;
+}
+
+// Determine in which direction a block needs to be placed
+void BlockToFace(Int3& pos, int8_t& direction) {
+	switch(direction) {
+		case yMinus:
+			pos.y--;
+			break;
+		case yPlus:
+            pos.y++;
+			break;
+		case zMinus:
+            pos.z--;
+			break;
+		case zPlus:
+            pos.z++;
+			break;
+		case xMinus:
+            pos.x--;
+			break;
+		case xPlus:
+            pos.x++;
+			break;
+		default:
+			break;
+	}
+}
+
+// Figure out which block should be placed based on the passed parameters
+Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection, int16_t id, int16_t damage) {
+	Block b = Block{(int8_t)id,(int8_t)damage,0,0};
+
+	// Handle items that place as blocks
+	if (id == ITEM_REDSTONE) {
+		b.type = BLOCK_REDSTONE_WIRE;
+		return b;
+	}
+	if (id == ITEM_SUGARCANE) {
+		b.type = BLOCK_SUGARCANE;
+		return b;
+	}
+    if (id == ITEM_DOOR_WOODEN ||
+        id == ITEM_DOOR_IRON
+    ) {
+        // Check the block above this one
+        Block* aboveBlock = world->GetBlock(pos+Int3{0,1,0});
+        // TODO: Any non-solid block should work
+        if (aboveBlock->type != BLOCK_AIR ||
+            face != yPlus
+        ) {
+            b.type = SLOT_EMPTY;
+            return b;
+        }
+        // Determine the door type
+        switch(id) {
+            case ITEM_DOOR_WOODEN:
+                b.type = 64;
+                break;
+            case ITEM_DOOR_IRON:
+                b.type = 71;
+                break;
+        }
+        // Determine the direction
+        switch(playerDirection) {
+            case xPlus:
+                b.meta = 0;
+                break;
+            case zPlus:
+                b.meta = 1;
+                break;
+            case xMinus:
+                b.meta = 2;
+                break;
+            case zMinus:
+                b.meta = 3;
+                break;
+        }
+        world->PlaceBlock(pos+Int3{0,1,0},b.type,b.meta | 0b1000);
+        return b;
+    }
+	if (id == ITEM_REDSTONE_REPEATER ||
+		id == BLOCK_REDSTONE_REPEATER_OFF ||
+		id == BLOCK_REDSTONE_REPEATER_ON) {
+		b.type = BLOCK_REDSTONE_REPEATER_OFF;
+		switch(playerDirection) {
+			case zMinus:
+				b.meta = 0;
+				return b;
+			case xPlus:
+				b.meta = 1;
+				return b;
+			case zPlus:
+				b.meta = 2;
+				return b;
+			case xMinus:
+				b.meta = 3;
+				return b;
+		}
+		return b;
+	}
+
+	// If it hasn't been caught yet by any of the items
+	// its an invalid block, so we don't care.
+	if (id > BLOCK_MAX) {
+		b.type = 0;
+		return b;
+	}
+
+	// Handle placement of blocks
+    if (id == BLOCK_TRAPDOOR) {
+        switch(face) {
+            case zMinus:
+                b.meta = 0;
+                return b;
+            case zPlus:
+                b.meta = 1;
+                return b;
+            case xMinus:
+                b.meta = 2;
+                return b;
+            case xPlus:
+                b.meta = 3;
+                return b;
+        }
+    }
+	if (id == BLOCK_STAIRS_WOOD ||
+		id == BLOCK_STAIRS_COBBLESTONE
+	) {
+		switch(playerDirection) {
+			case xPlus:
+				b.meta = 0;
+				return b;
+			case xMinus:
+				b.meta = 1;
+				return b;
+			case zPlus:
+				b.meta = 2;
+				return b;
+			case zMinus:
+				b.meta = 3;
+				return b;
+		}
+	}
+	if (id == BLOCK_DISPENSER ||
+		id == BLOCK_FURNACE ||
+		id == BLOCK_FURNACE_LIT
+	) {
+		switch(playerDirection) {
+			case zPlus:
+				b.meta = 2;
+				return b;
+			case zMinus:
+				b.meta = 3;
+				return b;
+			case xPlus:
+				b.meta = 4;
+				return b;
+			case xMinus:
+				b.meta = 5;
+				return b;
+		}
+	}
+	if (id == BLOCK_PUMPKIN ||
+		id == BLOCK_PUMPKIN_LIT
+	) {
+		switch(playerDirection) {
+			case zMinus:
+				b.meta = 0;
+				return b;
+			case xPlus:
+				b.meta = 1;
+				return b;
+			case zPlus:
+				b.meta = 2;
+				return b;
+			case xMinus:
+				b.meta = 3;
+				return b;
+		}
+	}
+	if (id == BLOCK_TORCH ||
+		id == BLOCK_REDSTONE_TORCH_OFF||
+		id == BLOCK_REDSTONE_TORCH_ON
+	) {
+		switch(face) {
+			case yMinus:
+				b.type = SLOT_EMPTY;
+				return b;
+			case zPlus:
+				b.meta = 3;
+				return b;
+			case zMinus:
+				b.meta = 4;
+				return b;
+			case xPlus:
+				b.meta = 1;
+				return b;
+			case xMinus:
+				b.meta = 2;
+				return b;
+			default:
+				b.meta = 0;
+				return b;
+		}
+	}
+	if (id == BLOCK_LADDER) {
+		switch(face) {
+			case zMinus:
+				b.meta = 2;
+				return b;
+			case zPlus:
+				b.meta = 3;
+				return b;
+			case xMinus:
+				b.meta = 4;
+				return b;
+			case xPlus:
+				b.meta =  5;
+				return b;
+		}
+	}
+	return b;
+}
+
+// Tick the passed block
+void RandomTick(Block* b, Int3 pos) {
+    switch(b->type) {
+        /*
+        case BLOCK_DIRT:
+            b->type = BLOCK_GRASS;
+            return;
+        */
+        case BLOCK_CROP_WHEAT:
+            if (b->meta < MAX_CROP_SIZE) {
+                b->meta++;
+            }
+            return;
+    }
 }

@@ -19,6 +19,7 @@ class World {
         std::filesystem::path dirPath;
         Chunk* GetChunk(int32_t x, int32_t z);
         void RemoveChunk(int32_t x, int32_t z);
+        std::random_device dev;
     public:
         World(const std::string &extra = "");
         int64_t seed;
@@ -32,6 +33,7 @@ class World {
         void PlaceBlock(Int3 position, int8_t type, int8_t meta);
         Block* BreakBlock(Int3 position);
         Block* GetBlock(Int3 position);
+        void UpdateBlock(Int3 position, Block* b);
         Int3 FindSpawnableBlock(Int3 position);
         void AddChunk(int32_t x, int32_t z, Chunk c);
         void FreeUnseenChunks();
@@ -40,4 +42,5 @@ class World {
         bool LoadOldChunk(int32_t x, int32_t z);
         bool ChunkFileExists(int32_t x, int32_t z, std::string extension = std::string(CHUNK_FILE_EXTENSION));
         bool ChunkExists(int32_t x, int32_t z);
+        void TickChunks();
 };
