@@ -502,7 +502,6 @@ void World::TickChunks() {
             RandomTick(b,pos);
             if (oldType != b->type || oldMeta != b->meta) {
                 UpdateBlock(pos,b);
-                std::cout << "Block changed to grass! " << pos << std::endl;
             }
         }
     }

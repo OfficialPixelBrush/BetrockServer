@@ -203,8 +203,6 @@ bool NoDrop(Item item) {
         item.id == BLOCK_TALLGRASS ||
         item.id == BLOCK_FIRE ||
         item.id == BLOCK_MOB_SPAWNER ||
-        // TODO: Figure out the max level of wheat!!
-        (item.id == BLOCK_CROP_WHEAT && item.damage < 7) || 
         item.id == BLOCK_ICE ||
         item.id == BLOCK_NETHER_PORTAL ||
         item.id == BLOCK_CAKE
@@ -216,13 +214,17 @@ bool NoDrop(Item item) {
 
 // Returns the items that're dropped when a block is destroyed
 Item GetDrop(Item item) {
-    if (!KeepDamageOnDrop(item.id)) {
-        item.damage = 0;
-    }
     if (NoDrop(item)) {
         return Item{ -1, 0, 0 };
     }
     // By default, give back one of the same block
+    if (item.id == BLOCK_CROP_WHEAT) {
+        if (item.damage < MAX_CROP_SIZE) {
+            item.id = ITEM_SEEDS_WHEAT;
+        } else {
+            item.id = ITEM_WHEAT;
+        }
+    }
     if (item.id == BLOCK_STONE) {
         item.id = BLOCK_COBBLESTONE;
     }
@@ -287,6 +289,9 @@ Item GetDrop(Item item) {
     }
     if (item.id == BLOCK_REDSTONE_REPEATER_ON || item.id == BLOCK_REDSTONE_REPEATER_OFF) {
         item.id = BLOCK_REDSTONE_REPEATER_OFF;
+    }
+    if (!KeepDamageOnDrop(item.id)) {
+        item.damage = 0;
     }
     return item;
 }
@@ -515,8 +520,16 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
 
 // Tick the passed block
 void RandomTick(Block* b, Int3 pos) {
-    if (b->type == BLOCK_DIRT) {
-        b->type = BLOCK_GRASS;
-        return;
+    switch(b->type) {
+        /*
+        case BLOCK_DIRT:
+            b->type = BLOCK_GRASS;
+            return;
+        */
+        case BLOCK_CROP_WHEAT:
+            if (b->meta < MAX_CROP_SIZE) {
+                b->meta++;
+            }
+            return;
     }
 }

@@ -22,6 +22,8 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
 void BlockToFace(Int3& pos, int8_t& direction);
 void RandomTick(Block* b, Int3 pos);
 
+#define MAX_CROP_SIZE 7
+
 enum Blocks {
     BLOCK_AIR           = 0,
     BLOCK_STONE         = 1,
