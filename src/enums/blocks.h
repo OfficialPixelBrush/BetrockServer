@@ -18,6 +18,7 @@ bool NoDrop(Item item);
 Item GetDrop(Item item);
 Block GetPlacedBlock(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDirection, int16_t id, int16_t damage);
 void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction);
+void RandomTick(Block* b, Int3 pos);
 
 enum Blocks {
     BLOCK_AIR           = 0,

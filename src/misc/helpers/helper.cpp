@@ -180,6 +180,20 @@ int16_t GetBlockIndex(Int3 position) {
     return (int32_t)((int8_t)position.y + position.z*CHUNK_HEIGHT + (position.x*CHUNK_HEIGHT*CHUNK_WIDTH_Z));
 }
 
+// Get the Block position from the Index
+Int3 GetBlockPosition(int index) {
+    Int3 position;
+
+    position.x = index / (CHUNK_HEIGHT * CHUNK_WIDTH_Z);  // Get x-coordinate
+    index %= (CHUNK_HEIGHT * CHUNK_WIDTH_Z);               // Remainder after dividing by width
+
+    position.z = index / CHUNK_HEIGHT;                     // Get z-coordinate
+    position.y = index % CHUNK_HEIGHT;                     // Get y-coordinate
+
+    return position;
+}
+
+
 // Compress the passed binary Chunk data
 std::unique_ptr<char[]> CompressChunk(char* chunk, size_t &compressed_size) {
 

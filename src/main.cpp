@@ -4,8 +4,9 @@
 #include "server.h"
 
 // The Save interval in ticks
-// 1200 = 1 minute
-#define SAVE_INTERVAL 1200
+// This matches what Minecraft does
+// 6000 = 5 minutes
+#define SAVE_INTERVAL 6000 
 
 void HandleGracefulSignal(int) {
 	Betrock::Server::Instance().PrepareForShutdown();
@@ -54,25 +55,31 @@ int main() {
 	std::vector<uint8_t> response;
 
 	int64_t lastSave = 0;
+	int64_t lastTimeUpdate = 0;
 
 	while (server.IsAlive()) {
-		response.clear();
 		// Server is alive
+		server.AddUpTime(1);
 
-		if (doDaylightCycle) {
-			server.SetServerTime(server.GetServerTime() + TICK_SPEED);
-		}
-		server.AddUpTime(TICK_SPEED);
-
-		Respond::Time(response, server.GetServerTime());
-		BroadcastToClients(response);
 
 		if (server.GetUpTime() - lastSave >= SAVE_INTERVAL) {
 			server.SaveAll();
 			lastSave = server.GetUpTime();
 		}
+		if (server.GetUpTime() - lastTimeUpdate >= TICK_SPEED) {
+			if (doDaylightCycle) {
+				server.SetServerTime(server.GetServerTime() + TICK_SPEED);
+			}
+			Respond::Time(response, server.GetServerTime());
+			BroadcastToClients(response);
+			lastTimeUpdate = server.GetUpTime();
+		}
+		//???
+		//overworld->TickChunks();
+		response.clear();
 
-		sleep(1); // Send data every second
+		// Sleep for one tick
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED));
 	}
 
 	server.Stop();

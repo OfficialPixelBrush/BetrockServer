@@ -40,4 +40,5 @@ class World {
         bool LoadOldChunk(int32_t x, int32_t z);
         bool ChunkFileExists(int32_t x, int32_t z, std::string extension = std::string(CHUNK_FILE_EXTENSION));
         bool ChunkExists(int32_t x, int32_t z);
+        void TickChunks();
 };

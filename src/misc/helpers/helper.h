@@ -34,6 +34,7 @@ std::string PacketIdToLabel(Packet packet);
 
 // Handling of Chunk and Block Data
 int16_t GetBlockIndex(Int3 position);
+Int3 GetBlockPosition(int index);
 std::unique_ptr<char[]> CompressChunk(char* chunk, size_t &compressed_size);
 std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size);
 

@@ -390,7 +390,7 @@ void Client::HandleClient() {
 	// While the player is connected, read packets from them
 	while (server.IsAlive() && GetConnectionStatus() > ConnectionStatus::Disconnected) {
 		HandlePacket();
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED)); // Sleep for half a second
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED));
 	}
 	
 	close(clientFd);

@@ -472,3 +472,12 @@ Block GetPlacedBlock(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerD
 	}
 	return b;
 }
+
+// Tick the passed block
+void RandomTick(Block* b, Int3 pos) {
+    if (b->type == BLOCK_DIRT) {
+        std::cout << "Block changed to grass!" << std::endl;
+        b->type == BLOCK_GRASS;
+        return;
+    }
+}
