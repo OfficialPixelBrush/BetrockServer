@@ -83,7 +83,6 @@ typedef struct Int3 Int3;
 // Converting between these types
 Vec3 Int3ToVec3(Int3 i);
 Int3 Vec3ToInt3(Vec3 v);
-Int3 XyzToInt3(int32_t x, int32_t y, int32_t z);
 bool Between(int value, int a, int b);
 
 double GetDistance(Vec3 a, Vec3 b);

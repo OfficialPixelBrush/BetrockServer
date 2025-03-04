@@ -121,14 +121,14 @@ void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
 		// Top and Bottom rows
 		for (int x = -r; x <= r; x++) {
 			for (int z : {-r, r}) {
-				Int3 position = XyzToInt3(x+pX, 0, z+pZ);
+				Int3 position = Int3{x+pX, 0, z+pZ};
 				ProcessChunk(position, wm);
 			}
 		}
 		// Left and Right columns (excluding corners to avoid duplicates)
 		for (int z = -r + 1; z <= r - 1; z++) {
 			for (int x : {-r, r}) {
-				Int3 position = XyzToInt3(x+pX, 0, z+pZ);
+				Int3 position = Int3{x+pX, 0, z+pZ};
 				ProcessChunk(position, wm);
 			}
 		}
@@ -724,7 +724,7 @@ bool Client::HandlePlayerDigging(World* world) {
 	int32_t z = EntryToInteger(message, offset);
 	int8_t face = EntryToByte(message, offset);
 
-	Int3 pos = XyzToInt3(x,y,z);
+	Int3 pos = Int3(x,y,z);
 	Block* targetedBlock = world->GetBlock(pos);
 	
 	if (debugPunchBlockInfo) {
@@ -819,7 +819,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	}
 
 
-	Int3 pos = XyzToInt3(x,y,z);
+	Int3 pos = Int3{x,y,z};
 	Block* targetedBlock = world->GetBlock(pos);
 
 	// Check if the targeted block is interactable
@@ -828,8 +828,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		Respond::BlockChange(broadcastResponse,pos,targetedBlock->type,targetedBlock->meta);
 		return true;
 	}
-	BlockToFace(x,y,z,face);
-	pos = XyzToInt3(x,y,z);
+	BlockToFace(pos,face);
 
 	// This packet has a special case where X, Y, Z, and Direction are all -1.
 	// This special packet indicates that the currently held item for the player should have

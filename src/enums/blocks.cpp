@@ -292,25 +292,25 @@ Item GetDrop(Item item) {
 }
 
 // Determine in which direction a block needs to be placed
-void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction) {
+void BlockToFace(Int3& pos, int8_t& direction) {
 	switch(direction) {
 		case yMinus:
-			y--;
+			pos.y--;
 			break;
 		case yPlus:
-			y++;
+            pos.y++;
 			break;
 		case zMinus:
-			z--;
+            pos.z--;
 			break;
 		case zPlus:
-			z++;
+            pos.z++;
 			break;
 		case xMinus:
-			x--;
+            pos.x--;
 			break;
 		case xPlus:
-			x++;
+            pos.x++;
 			break;
 		default:
 			break;

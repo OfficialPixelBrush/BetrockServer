@@ -20,16 +20,6 @@ Int3 Vec3ToInt3(Vec3 v) {
 	return i;
 }
 
-// Convert 3 integers into an Int3
-Int3 XyzToInt3(int32_t x, int32_t y, int32_t z) {
-	Int3 i = {
-		x,
-		y,
-		z
-	};
-	return i;
-}
-
 // Check if the passed value is between a and b
 bool Between(int value, int a, int b) {
 	if (a < b) {
