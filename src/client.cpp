@@ -16,9 +16,6 @@ bool Client::CheckPosition(Vec3 &newPosition, double &newStance) {
 // Set the client up to receive another packet
 ssize_t Client::Setup() {
 	// Set stuff up for the next batch of packets
-	response.clear();
-	broadcastResponse.clear();
-	broadcastOthersResponse.clear();
 	offset = 0;
 	previousOffset = 0;
 
@@ -918,14 +915,13 @@ void Client::DisconnectClient(std::string disconnectMessage) {
 void Client::AppendResponse(std::vector<uint8_t> &addition) {
 	if (!addition.empty()) {
 		std::lock_guard<std::mutex> lock(responseMutex);
-		std::cout << player->username << " before" << std::endl << Uint8ArrayToHexDump(&response[0],response.size()) << std::endl;
 		response.insert(response.end(), addition.begin(), addition.end());
-		SendResponse(true);
 	}
 }
 
 // Send the contents of the response packet to the Client
 void Client::SendResponse(bool autoclear) {
+	std::lock_guard<std::mutex> lock(responseMutex);
 	if (GetConnectionStatus() <= ConnectionStatus::Disconnected) {
 		return;
 	}
