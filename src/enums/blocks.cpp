@@ -67,9 +67,9 @@ bool IsTransparent(int16_t id) {
         id == BLOCK_TORCH ||
         id == BLOCK_FIRE ||
         id == BLOCK_MOB_SPAWNER ||
-        id == BLOCK_REDSTONE_WIRE ||
+        id == BLOCK_REDSTONE ||
         id == BLOCK_CROP_WHEAT ||
-        id == BLOCK_SIGN_STANDING ||
+        id == BLOCK_SIGN ||
         id == BLOCK_LADDER ||
         id == BLOCK_RAIL ||
         id == BLOCK_SIGN_WALL ||
@@ -99,7 +99,7 @@ bool IsEmissive(int16_t id) {
         id == BLOCK_TORCH ||
         id == BLOCK_FIRE ||
         id == BLOCK_FURNACE_LIT ||
-        id == BLOCK_ORE_REDSTONE_GLOWING || 
+        id == BLOCK_ORE_REDSTONE_ON || 
         id == BLOCK_REDSTONE_TORCH_ON ||
         id == BLOCK_GLOWSTONE ||
         id == BLOCK_NETHER_PORTAL ||
@@ -125,7 +125,7 @@ uint8_t GetEmissiveness(int16_t id) {
         return 13;
     } else if (id == BLOCK_NETHER_PORTAL) {
         return 11;
-    } else if (id == BLOCK_ORE_REDSTONE_GLOWING) {
+    } else if (id == BLOCK_ORE_REDSTONE_ON) {
         return 9;
     } else if (id == BLOCK_REDSTONE_TORCH_ON) {
         return 7;
@@ -147,7 +147,7 @@ bool IsInstantlyBreakable(int16_t id) {
         id == BLOCK_TNT ||
         id == BLOCK_TORCH ||
         id == BLOCK_FIRE ||
-        id == BLOCK_REDSTONE_WIRE ||
+        id == BLOCK_REDSTONE ||
         id == BLOCK_CROP_WHEAT ||
         id == BLOCK_REDSTONE_TORCH_OFF ||
         id == BLOCK_REDSTONE_TORCH_ON ||
@@ -252,7 +252,7 @@ Item GetDrop(Item item) {
     if (item.id == BLOCK_BED) {
         item.id = ITEM_BED;
     }
-    if (item.id == BLOCK_REDSTONE_WIRE) {
+    if (item.id == BLOCK_REDSTONE) {
         item.id = ITEM_REDSTONE;
     }
     if (item.id == BLOCK_ORE_DIAMOND) {
@@ -261,16 +261,16 @@ Item GetDrop(Item item) {
     if (item.id == BLOCK_CROP_WHEAT) {
         item.id = ITEM_WHEAT;
     }
-    if (item.id == BLOCK_SIGN_STANDING || item.id == BLOCK_SIGN_WALL) {
+    if (item.id == BLOCK_SIGN || item.id == BLOCK_SIGN_WALL) {
         item.id = ITEM_SIGN;
     }
     if (item.id == BLOCK_DOOR_WOOD) {
-        item.id = ITEM_DOOR_WOODEN;
+        item.id = ITEM_DOOR_WOOD;
     }
     if (item.id == BLOCK_DOOR_IRON) {
         item.id = ITEM_DOOR_IRON;
     }
-    if (item.id == BLOCK_ORE_REDSTONE || item.id == BLOCK_ORE_REDSTONE_GLOWING) {
+    if (item.id == BLOCK_ORE_REDSTONE_OFF || item.id == BLOCK_ORE_REDSTONE_ON) {
         item.id = ITEM_REDSTONE;
         // 4-5
         item.amount = 4;
@@ -329,14 +329,14 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
 
 	// Handle items that place as blocks
 	if (id == ITEM_REDSTONE) {
-		b.type = BLOCK_REDSTONE_WIRE;
+		b.type = BLOCK_REDSTONE;
 		return b;
 	}
 	if (id == ITEM_SUGARCANE) {
 		b.type = BLOCK_SUGARCANE;
 		return b;
 	}
-    if (id == ITEM_DOOR_WOODEN ||
+    if (id == ITEM_DOOR_WOOD ||
         id == ITEM_DOOR_IRON
     ) {
         // Check the block above this one
@@ -350,7 +350,7 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
         }
         // Determine the door type
         switch(id) {
-            case ITEM_DOOR_WOODEN:
+            case ITEM_DOOR_WOOD:
                 b.type = 64;
                 break;
             case ITEM_DOOR_IRON:
