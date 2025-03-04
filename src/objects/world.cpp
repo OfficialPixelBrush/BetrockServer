@@ -208,6 +208,7 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
     b->lightBlock = GetEmissiveness(b->type);
     // This needs to be recalculated
     b->lightSky = (IsTranslucent(b->type) || IsTransparent(b->type))*0xF;
+    UpdateBlock(position,b);
     //CalculateColumnLight(position.x,position.z,GetChunk(position.x>>5,position.z>>5));
 }
 
@@ -220,7 +221,14 @@ Block* World::BreakBlock(Int3 position) {
     }
     b->type = 0;
     b->meta = 0;
+    UpdateBlock(position,b);
     return b;
+}
+
+void World::UpdateBlock(Int3 position, Block* b) {
+    std::vector<uint8_t> response;
+    Respond::BlockChange(response,position,b->type,b->meta);
+    BroadcastToClients(response);
 }
 
 // Get the Block at the passed position

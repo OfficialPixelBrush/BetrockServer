@@ -32,6 +32,7 @@ class World {
         void PlaceBlock(Int3 position, int8_t type, int8_t meta);
         Block* BreakBlock(Int3 position);
         Block* GetBlock(Int3 position);
+        void UpdateBlock(Int3 position, Block* b);
         Int3 FindSpawnableBlock(Int3 position);
         void AddChunk(int32_t x, int32_t z, Chunk c);
         void FreeUnseenChunks();

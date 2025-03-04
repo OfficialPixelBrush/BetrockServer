@@ -734,14 +734,12 @@ bool Client::HandlePlayerDigging(World* world) {
 	// Check if the targeted block is interactable
 	if (IsInteractable(targetedBlock->type)) {
 		InteractWithBlock(targetedBlock);
-		Respond::BlockChange(broadcastResponse,pos,targetedBlock->type,targetedBlock->meta);
+		world->PlaceBlock(pos,targetedBlock->type,targetedBlock->meta);
 		return true;
 	}
 
 	// If the block is broken or instantly breakable
 	if (status == 2 || player->creativeMode || IsInstantlyBreakable(targetedBlock->type)) {
-		Respond::BlockChange(broadcastResponse,pos,0,0);
-
 		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,targetedBlock->type);
 		if (doTileDrops && !player->creativeMode) {
 			// TODO: This works now,
@@ -825,7 +823,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	// Check if the targeted block is interactable
 	if (IsInteractable(targetedBlock->type)) {
 		InteractWithBlock(targetedBlock);
-		Respond::BlockChange(broadcastResponse,pos,targetedBlock->type,targetedBlock->meta);
+		world->PlaceBlock(pos,targetedBlock->type,targetedBlock->meta);
 		return true;
 	}
 	BlockToFace(pos,face);
@@ -850,9 +848,8 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		}
 		if (i.id == ITEM_DOOR_WOODEN || i.id == ITEM_DOOR_IRON) {
 			Block* aboveBlock = world->GetBlock(pos+Int3{0,1,0});
-			Respond::BlockChange(broadcastResponse,pos+Int3(0,1,0),aboveBlock->type,aboveBlock->meta);
+			world->PlaceBlock(pos+Int3{0,1,0},aboveBlock->type,aboveBlock->meta);
 		}
-		Respond::BlockChange(broadcastResponse,pos,b.type,b.meta);
 		world->PlaceBlock(pos,b.type,b.meta);
 		// Immediately give back the item if we're in creative mode
 		if (player->creativeMode) {
