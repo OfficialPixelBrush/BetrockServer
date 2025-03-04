@@ -821,8 +821,8 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	}
 
 	// Place a block if we can
-	if (! CanDecrementHotbar()) {
-		DecrementHotbar(response);
+	if (!CanDecrementHotbar()) {
+		return false;
 	}
 
 	// Check if the server-side inventory item is valid
@@ -850,6 +850,8 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		id = i.id;
 		amount = i.amount;
 		Respond::SetSlot(response,0,GetHotbarSlot(),id,amount,i.damage);
+	} else {
+		DecrementHotbar(response);
 	}
 	return true;
 }
