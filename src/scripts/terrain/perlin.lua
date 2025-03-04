@@ -41,14 +41,16 @@ function GenerateChunk(cx,cz)
         for z = 0, CHUNK_WIDTH_Z do
             local blocksSinceSkyVisible = 0;
             for y = CHUNK_HEIGHT, 0, -1 do
-                if (c[index(x, y, z)][1] == 0) then
-                    if (y < 64) then
-                        c[index(x, y, z)] = {9, 0}
+                if (blocksSinceSkyVisible < 6) then
+                    if (c[index(x, y, z)][1] == 0) then
+                        if (y < 64) then
+                            c[index(x, y, z)] = {9, 0}
+                            blocksSinceSkyVisible = blocksSinceSkyVisible+1
+                        end
+                    else
+                        c[index(x, y, z)] = {getNaturalGrass(cx*16+x,y,cz*16+z,blocksSinceSkyVisible),0};
                         blocksSinceSkyVisible = blocksSinceSkyVisible+1
                     end
-                else
-                    c[index(x, y, z)] = {getNaturalGrass(cx*16+x,y,cz*16+z,blocksSinceSkyVisible),0};
-                    blocksSinceSkyVisible = blocksSinceSkyVisible+1
                 end
             end
         end

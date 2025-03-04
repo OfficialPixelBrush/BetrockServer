@@ -727,7 +727,9 @@ bool Client::HandlePlayerDigging(World* world) {
 	Int3 pos = XyzToInt3(x,y,z);
 	Block* targetedBlock = world->GetBlock(pos);
 	
-	std::cout << GetLabel((int)targetedBlock->type) << " (" << (int)targetedBlock->type << ":" << (int)targetedBlock->meta << ")" << std::endl;
+	if (debugPunchBlockInfo) {
+		std::cout << GetLabel((int)targetedBlock->type) << " (" << (int)targetedBlock->type << ":" << (int)targetedBlock->meta << ")" << std::endl;
+	}
 
 	// Check if the targeted block is interactable
 	if (IsInteractable(targetedBlock->type)) {
