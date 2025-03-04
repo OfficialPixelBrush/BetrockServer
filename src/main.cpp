@@ -75,7 +75,7 @@ int main() {
 			lastTimeUpdate = server.GetUpTime();
 		}
 		//???
-		//overworld->TickChunks();
+		overworld->TickChunks();
 		response.clear();
 
 		// Sleep for one tick

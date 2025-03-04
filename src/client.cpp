@@ -846,10 +846,6 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		if (b.type == SLOT_EMPTY) {
 			return false;
 		}
-		if (i.id == ITEM_DOOR_WOODEN || i.id == ITEM_DOOR_IRON) {
-			Block* aboveBlock = world->GetBlock(pos+Int3{0,1,0});
-			world->PlaceBlock(pos+Int3{0,1,0},aboveBlock->type,aboveBlock->meta);
-		}
 		world->PlaceBlock(pos,b.type,b.meta);
 		// Immediately give back the item if we're in creative mode
 		if (player->creativeMode) {

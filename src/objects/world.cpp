@@ -480,29 +480,30 @@ bool World::LoadOldChunk(int32_t x, int32_t z) {
 }
 
 void World::TickChunks() {
-    /*
-    std::vector<uint8_t> response;
-    std::random_device dev;
     std::mt19937 rng(dev());
     for (auto& pair : chunks) {
         int64_t hash = pair.first;
         Chunk& chunk = pair.second;
         std::uniform_int_distribution<std::mt19937::result_type> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
-        int blockIndex = dist6(rng);
-        Block* b = &chunk.blocks[blockIndex];
-        RandomTick(b);
+        for (int i = 0; i < 16; i++) {
+            int blockIndex = dist6(rng);
+            Block* b = &chunk.blocks[blockIndex];
+            int8_t oldType = b->type;
+            int8_t oldMeta = b->meta;
 
-        Int3 chunkPos = DecodeChunkHash(hash);
-        Int3 blockPos = GetBlockPosition(blockIndex);
-        Int3 pos = {
-            chunkPos.x*16 + blockPos.x,
-            blockPos.y,
-            chunkPos.z*16 + blockPos.z
-        };
-        Respond::BlockChange(response,pos,b->type,b->meta);
+            Int3 chunkPos = DecodeChunkHash(hash);
+            Int3 blockPos = GetBlockPosition(blockIndex);
+            Int3 pos = {
+                chunkPos.x<<4 | blockPos.x,
+                blockPos.y,
+                chunkPos.z<<4 | blockPos.z
+            };
+            //std::cout << "Ticked " << pos << std::endl;
+            RandomTick(b,pos);
+            if (oldType != b->type || oldMeta != b->meta) {
+                UpdateBlock(pos,b);
+                std::cout << "Block changed to grass! " << pos << std::endl;
+            }
+        }
     }
-    std::cout << Uint8ArrayToHexDump(&response[0],response.size()) << std::endl;
-    BroadcastToClients(response);
-    response.clear();
-    */
 }

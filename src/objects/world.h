@@ -19,6 +19,7 @@ class World {
         std::filesystem::path dirPath;
         Chunk* GetChunk(int32_t x, int32_t z);
         void RemoveChunk(int32_t x, int32_t z);
+        std::random_device dev;
     public:
         World(const std::string &extra = "");
         int64_t seed;

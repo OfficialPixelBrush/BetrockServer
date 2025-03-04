@@ -319,7 +319,7 @@ void BlockToFace(Int3& pos, int8_t& direction) {
 
 // Figure out which block should be placed based on the passed parameters
 Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection, int16_t id, int16_t damage) {
-	Block b = Block{(uint8_t)id,(uint8_t)damage,0,0};
+	Block b = Block{(int8_t)id,(int8_t)damage,0,0};
 
 	// Handle items that place as blocks
 	if (id == ITEM_REDSTONE) {
@@ -336,11 +336,9 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
         // Check the block above this one
         Block* aboveBlock = world->GetBlock(pos+Int3{0,1,0});
         // TODO: Any non-solid block should work
-        if (aboveBlock->type != BLOCK_AIR) {
-            b.type = SLOT_EMPTY;
-            return b;
-        }
-        if (face != yPlus) {
+        if (aboveBlock->type != BLOCK_AIR ||
+            face != yPlus
+        ) {
             b.type = SLOT_EMPTY;
             return b;
         }
@@ -368,9 +366,7 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
                 b.meta = 3;
                 break;
         }
-        // Set above block
-        aboveBlock->type = b.type;
-        aboveBlock->meta = b.meta | 0b1000;
+        world->PlaceBlock(pos+Int3{0,1,0},b.type,b.meta | 0b1000);
         return b;
     }
 	if (id == ITEM_REDSTONE_REPEATER ||
@@ -520,8 +516,7 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
 // Tick the passed block
 void RandomTick(Block* b, Int3 pos) {
     if (b->type == BLOCK_DIRT) {
-        std::cout << "Block changed to grass!" << std::endl;
-        b->type == BLOCK_GRASS;
+        b->type = BLOCK_GRASS;
         return;
     }
 }
