@@ -479,12 +479,14 @@ bool World::LoadOldChunk(int32_t x, int32_t z) {
     return true;
 }
 
+// Tick all currently loaded chunks
 void World::TickChunks() {
     std::mt19937 rng(dev());
     for (auto& pair : chunks) {
         int64_t hash = pair.first;
         Chunk& chunk = pair.second;
         std::uniform_int_distribution<std::mt19937::result_type> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
+        // Choose a batch of random blocks within a chunk to run RandomTick on
         for (int i = 0; i < 16; i++) {
             int blockIndex = dist6(rng);
             Block* b = &chunk.blocks[blockIndex];
@@ -498,8 +500,8 @@ void World::TickChunks() {
                 blockPos.y,
                 chunkPos.z<<4 | blockPos.z
             };
-            //std::cout << "Ticked " << pos << std::endl;
             RandomTick(b,pos);
+            // If the block was changed, send this to the clients
             if (oldType != b->type || oldMeta != b->meta) {
                 UpdateBlock(pos,b);
             }

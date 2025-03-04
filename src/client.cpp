@@ -37,19 +37,6 @@ void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
 	}
 }
 
-// Print the remaining, to-be-read data
-void Client::PrintRead(Packet packetType) {
-	std::cout << "Read " << PacketIdToLabel(packetType) << " from " << player->username << "! (" << offset-previousOffset << " Bytes)" << std::endl;
-	for (uint i = previousOffset; i < offset; i++) {
-		std::cout << std::hex << (int)message[i];
-		if (i < offset-1) {
-			std::cout << ", ";
-		}
-	}
-	std::cout << std::dec << std::endl;
-	previousOffset = offset;
-}
-
 // Check if the player has moved far enough to warrant sending new chunk data
 bool Client::CheckIfNewChunksRequired() {
 	Vec3 lastPos = lastChunkUpdatePosition;
@@ -108,7 +95,6 @@ void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
         if (distanceX > chunkDistance || distanceZ > chunkDistance) {
             Respond::PreChunk(response, it->x, it->z, 0); // Tell client chunk is no longer visible
             it = visibleChunks.erase(it);
-			//std::cout << "Deleted " << it->x << ", " << it->z << std::endl;
         } else {
             ++it;
         }
@@ -158,7 +144,6 @@ void Client::SendNewChunks() {
 			auto chunk = CompressChunk(chunkData.get(), compressedSize);
 
 			if (chunk) {
-				//std::cout << "Sent " << nc->x << ", " << nc->z << std::endl;
 				Respond::PreChunk(response, nc->x, nc->z, 1);
 				visibleChunks.push_back(Int3{nc->x,0,nc->z});
 
@@ -728,7 +713,7 @@ bool Client::HandlePlayerDigging(World* world) {
 	Block* targetedBlock = world->GetBlock(pos);
 	
 	if (debugPunchBlockInfo) {
-		std::cout << GetLabel((int)targetedBlock->type) << " (" << (int)targetedBlock->type << ":" << (int)targetedBlock->meta << ")" << std::endl;
+		Betrock::Logger::Instance().Debug(GetLabel((int)targetedBlock->type) + " (" + std::to_string((int)targetedBlock->type) + ":" + std::to_string((int)targetedBlock->meta) + ")");
 	}
 
 	// Check if the targeted block is interactable

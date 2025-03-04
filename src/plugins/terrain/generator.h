@@ -41,6 +41,7 @@ double FindDistanceToPoint(int64_t seed, Int3 position, Vec3 scale);
 double SmoothStep(double edge0, double edge1, double x);
 double GetNoiseWorley(Int3 position, double threshold, Vec3 scale);
 double GetNoisePerlin2D(Vec3 position, double threshold);
+double GetNoisePerlin3D(Vec3 position, double threshold);
 Block GetNaturalGrass(int64_t seed, Int3 position, int32_t blocksSinceSkyVisible);
 
 // --- Lua Bindings Functions ---
@@ -49,4 +50,5 @@ int lua_Between(lua_State *L);
 int lua_SpatialPRNG(lua_State *L);
 int lua_GetNoiseWorley(lua_State *L);
 int lua_GetNoisePerlin2D(lua_State *L);
+int lua_GetNoisePerlin3D(lua_State *L);
 int lua_GetNaturalGrass(lua_State *L);
