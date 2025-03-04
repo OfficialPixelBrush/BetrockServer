@@ -1,4 +1,5 @@
 #include "blocks.h"
+#include "world.h"
 
 // Returns true for all translucent blocks
 // So blocks that aren't 100% transparent
@@ -317,7 +318,7 @@ void BlockToFace(int32_t& x, int8_t& y, int32_t& z, int8_t& direction) {
 }
 
 // Figure out which block should be placed based on the passed parameters
-Block GetPlacedBlock(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerDirection, int16_t id, int16_t damage) {
+Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection, int16_t id, int16_t damage) {
 	Block b = Block{(uint8_t)id,(uint8_t)damage,0,0};
 
 	// Handle items that place as blocks
@@ -329,6 +330,49 @@ Block GetPlacedBlock(int32_t x, int8_t y, int32_t z, int8_t face, int8_t playerD
 		b.type = BLOCK_SUGARCANE;
 		return b;
 	}
+    if (id == ITEM_DOOR_WOODEN ||
+        id == ITEM_DOOR_IRON
+    ) {
+        // Check the block above this one
+        Block* aboveBlock = world->GetBlock(pos+Int3{0,1,0});
+        // TODO: Any non-solid block should work
+        if (aboveBlock->type != BLOCK_AIR) {
+            b.type = SLOT_EMPTY;
+            return b;
+        }
+        if (face != yPlus) {
+            b.type = SLOT_EMPTY;
+            return b;
+        }
+        // Determine the door type
+        switch(id) {
+            case ITEM_DOOR_WOODEN:
+                b.type = 64;
+                break;
+            case ITEM_DOOR_IRON:
+                b.type = 71;
+                break;
+        }
+        // Determine the direction
+        switch(playerDirection) {
+            case xPlus:
+                b.meta = 0;
+                break;
+            case zPlus:
+                b.meta = 1;
+                break;
+            case xMinus:
+                b.meta = 2;
+                break;
+            case zMinus:
+                b.meta = 3;
+                break;
+        }
+        // Set above block
+        aboveBlock->type = b.type;
+        aboveBlock->meta = b.meta | 0b1000;
+        return b;
+    }
 	if (id == ITEM_REDSTONE_REPEATER ||
 		id == BLOCK_REDSTONE_REPEATER_OFF ||
 		id == BLOCK_REDSTONE_REPEATER_ON) {

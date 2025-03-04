@@ -728,6 +728,8 @@ bool Client::HandlePlayerDigging(World* world) {
 
 	Int3 pos = XyzToInt3(x,y,z);
 	Block* targetedBlock = world->GetBlock(pos);
+	
+	std::cout << GetLabel((int)targetedBlock->type) << " (" << (int)targetedBlock->type << ":" << (int)targetedBlock->meta << ")" << std::endl;
 
 	// Check if the targeted block is interactable
 	if (IsInteractable(targetedBlock->type)) {
@@ -843,9 +845,13 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		// Check if the server-side inventory item is valid
 		Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
 		// Get the block we need to place
-		Block b = GetPlacedBlock(x,y,z,face,GetPlayerOrientation(),i.id,i.damage);
+		Block b = GetPlacedBlock(world,pos,face,GetPlayerOrientation(),i.id,i.damage);
 		if (b.type == SLOT_EMPTY) {
 			return false;
+		}
+		if (i.id == ITEM_DOOR_WOODEN || i.id == ITEM_DOOR_IRON) {
+			Block* aboveBlock = world->GetBlock(pos+Int3{0,1,0});
+			Respond::BlockChange(broadcastResponse,pos+Int3(0,1,0),aboveBlock->type,aboveBlock->meta);
 		}
 		Respond::BlockChange(broadcastResponse,pos,b.type,b.meta);
 		world->PlaceBlock(pos,b.type,b.meta);
