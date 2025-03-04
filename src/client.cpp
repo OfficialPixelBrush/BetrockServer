@@ -275,7 +275,8 @@ void Client::HandlePacket() {
 			}
 		}
 
-		// Get the current Dimension
+		// Get the current Dimension#
+		// TODO: We probably don't need to run this on every single packet!
 		World* world = Betrock::Server::Instance().GetWorld(player->dimension);
 		
 		// Ensure proper packet order
@@ -362,9 +363,9 @@ void Client::HandlePacket() {
 	}
 	SendNewChunks();
 
-	SendResponse(true);
 	BroadcastToClients(broadcastResponse);
 	BroadcastToClients(broadcastOthersResponse, this);
+	SendResponse(true);
 	
 	if (debugNumberOfPacketBytes) {
 		Betrock::Logger::Instance().Debug("--- " + std::to_string(offset) + "/" + std::to_string(bytes_received) + " Bytes Read from Packet ---"); 
@@ -917,6 +918,7 @@ void Client::DisconnectClient(std::string disconnectMessage) {
 void Client::AppendResponse(std::vector<uint8_t> &addition) {
 	if (!addition.empty()) {
 		std::lock_guard<std::mutex> lock(responseMutex);
+		std::cout << player->username << " before" << std::endl << Uint8ArrayToHexDump(&response[0],response.size()) << std::endl;
 		response.insert(response.end(), addition.begin(), addition.end());
 		SendResponse(true);
 	}
@@ -924,8 +926,11 @@ void Client::AppendResponse(std::vector<uint8_t> &addition) {
 
 // Send the contents of the response packet to the Client
 void Client::SendResponse(bool autoclear) {
-	if (response.empty() || GetConnectionStatus() <= ConnectionStatus::Disconnected) {
+	if (GetConnectionStatus() <= ConnectionStatus::Disconnected) {
 		return;
+	}
+	if (response.empty()) {
+		Respond::KeepAlive(response);
 	}
 
 	std::string debugMessage = "";
