@@ -336,6 +336,28 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
 		b.type = BLOCK_REDSTONE;
 		return b;
 	}
+	if (id == ITEM_SIGN) {
+        b.type = BLOCK_SIGN_WALL;
+        switch(face) {
+		    case zMinus:
+                b.meta = 2;
+                return b;
+		    case zPlus:
+                b.meta = 3;
+                return b;
+		    case xMinus:
+                b.meta = 4;
+                return b;
+		    case xPlus:
+                b.meta = 5;
+                return b;
+            case yPlus:
+                b.type = BLOCK_SIGN;
+                // TODO: Handle sign rotation based on player rotation
+                return b;
+        }
+		return b;
+	}
 	if (id == ITEM_SUGARCANE) {
 		b.type = BLOCK_SUGARCANE;
 		return b;

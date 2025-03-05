@@ -320,6 +320,9 @@ void Client::HandlePacket() {
 				case Packet::WindowClick:
 					HandleWindowClick();
 					break;
+				case Packet::UpdateSign:
+					HandleUpdateSign();
+					break;
 				case Packet::Disconnect:
 					HandleDisconnect();
 					break;
@@ -877,6 +880,18 @@ bool Client::HandleWindowClick() {
 		itemUses		= EntryToShort(message,offset);
 	}
 	ClickedSlot(response,window,slot,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
+	return true;
+}
+
+bool Client::HandleUpdateSign() {
+	int32_t x 		= EntryToInteger(message, offset);
+	int16_t y 		= EntryToShort(message,offset);
+	int32_t z 	= EntryToInteger(message, offset);
+	std::string line1 = EntryToString16(message,offset);
+	std::string line2 = EntryToString16(message,offset);
+	std::string line3 = EntryToString16(message,offset);
+	std::string line4 = EntryToString16(message,offset);
+	Respond::UpdateSign(broadcastOthersResponse,Int3{x,y,z},line1,line2,line3,line4);
 	return true;
 }
 
