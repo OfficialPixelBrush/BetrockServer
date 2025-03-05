@@ -126,7 +126,8 @@ void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
 // Send the chunks from the newChunks queue to the player
 void Client::SendNewChunks() {
 	// Send chunks in batches of 5
-	int sentThisCycle = 1;
+	// TODO: Dynamically size this based on remaining space in response
+	int sentThisCycle = 5;
 	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
 	std::lock_guard<std::mutex> lock(newChunksMutex);
 	while(sentThisCycle > 0) {

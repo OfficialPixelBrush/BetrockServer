@@ -206,13 +206,15 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
 void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
     // Get Block Position within Chunk
     Block* b = GetBlock(position);
+    if (!b) {
+        return;
+    }
     b->type = type;
     b->meta = meta;
     b->lightBlock = GetEmissiveness(b->type);
     // This needs to be recalculated
     b->lightSky = (IsTranslucent(b->type) || IsTransparent(b->type))*0xF;
     UpdateBlock(position,b);
-    //CalculateColumnLight(position.x,position.z,GetChunk(position.x>>5,position.z>>5));
 }
 
 // Remove the block and turn it into air
@@ -229,6 +231,9 @@ Block* World::BreakBlock(Int3 position) {
 }
 
 void World::UpdateBlock(Int3 position, Block* b) {
+    if (!b) {
+        return;
+    }
     std::vector<uint8_t> response;
     Respond::BlockChange(response,position,b->type,b->meta);
     BroadcastToClients(response);
@@ -241,7 +246,10 @@ Block* World::GetBlock(Int3 position) {
     int32_t cZ = position.z >> 4;
     int8_t bX = position.x & 0xF;
     int8_t bZ = position.z & 0xF;
-    Chunk* c = &chunks[GetChunkHash(cX, cZ)];
+    Chunk* c = GetChunk(cX,cZ);
+    if (!c) {
+        return nullptr;
+    }
     c->modified = true;
     return &c->blocks[GetBlockIndex(Int3{bX,(int8_t)position.y,bZ})];
 }
@@ -554,7 +562,6 @@ void World::TickChunks() {
                 chunkPos.z<<4 | blockPos.z
             };
             // If the block was changed, send this to the clients
-            /*
             if (RandomTick(b,pos)) {
                 Block* nb = GetBlock(pos);
                 if (nb) {
@@ -562,7 +569,6 @@ void World::TickChunks() {
                     //std::cout << pos << std::endl;
                 }
             }
-            */
         }
     }
 }
@@ -583,6 +589,7 @@ bool World::RandomTick(Block* b, Int3& pos) {
                     return true;
                 }
             }
+            break;
         }
         case BLOCK_CROP_WHEAT:
         {
