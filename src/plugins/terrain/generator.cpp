@@ -92,6 +92,8 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
             lua_pop(L, 1);  // Pop the table itself
         }
     }
+    // For initial loading a chunk needs to be marked as modified
+    c.modified = true;
     CalculateChunkLight(&c);
     return c;
 }
@@ -170,7 +172,7 @@ double FindDistanceToPoint(int64_t seed, Int3 position, Vec3 scale) {
             Int3 goalBlockPos = GetPointPositionInChunk(seed, goalChunkPos, scale);
             Int3 goalGlobalPos = LocalToGlobalPosition(goalChunkPos, goalBlockPos);
             
-            double distance = GetDistance(position, goalGlobalPos);
+            double distance = GetEuclidianDistance(position, goalGlobalPos);
             smallestDistance = std::min(smallestDistance, distance);
         }
     }

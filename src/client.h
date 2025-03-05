@@ -79,6 +79,7 @@ class Client : public std::enable_shared_from_this<Client> {
         bool HandlePlayerBlockPlacement(World* world);
         bool HandleCloseWindow();
         bool HandleWindowClick();
+        bool HandleUpdateSign();
         void HandleLegacyPing();
         bool HandleDisconnect();
 

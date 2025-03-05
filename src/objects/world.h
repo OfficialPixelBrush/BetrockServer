@@ -7,6 +7,7 @@
 #include <memory>
 #include <cstdint>
 #include <filesystem>
+#include <random>
 
 #include "helper.h"
 #include "blocks.h"
@@ -20,6 +21,8 @@ class World {
         Chunk* GetChunk(int32_t x, int32_t z);
         void RemoveChunk(int32_t x, int32_t z);
         std::random_device dev;
+        std::mt19937 rng;
+        bool RandomTick(Block* b, Int3& pos);
     public:
         World(const std::string &extra = "");
         int64_t seed;
@@ -33,14 +36,17 @@ class World {
         void PlaceBlock(Int3 position, int8_t type, int8_t meta);
         Block* BreakBlock(Int3 position);
         Block* GetBlock(Int3 position);
+        int8_t GetSkyLight(Int3 position);
+        void SetSkyLight(Int3 position, int8_t level);
         void UpdateBlock(Int3 position, Block* b);
         Int3 FindSpawnableBlock(Int3 position);
         void AddChunk(int32_t x, int32_t z, Chunk c);
         void FreeUnseenChunks();
-        void SaveChunk(int32_t x, int32_t z, const Chunk* chunk);
+        void SaveChunk(int32_t x, int32_t z, Chunk* chunk);
         bool LoadChunk(int32_t x, int32_t z);
         bool LoadOldChunk(int32_t x, int32_t z);
         bool ChunkFileExists(int32_t x, int32_t z, std::string extension = std::string(CHUNK_FILE_EXTENSION));
         bool ChunkExists(int32_t x, int32_t z);
         void TickChunks();
+        bool InteractWithBlock(Int3 pos);
 };

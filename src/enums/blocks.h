@@ -14,13 +14,11 @@ bool IsEmissive(int16_t id);
 uint8_t GetEmissiveness(int16_t id);
 bool IsInstantlyBreakable(int16_t id);
 bool IsInteractable(int16_t id);
-bool InteractWithBlock(Block* b);
 bool KeepDamageOnDrop(int8_t type);
 bool NoDrop(Item item);
 Item GetDrop(Item item);
 Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection, int16_t id, int16_t damage);
 void BlockToFace(Int3& pos, int8_t& direction);
-void RandomTick(Block* b, Int3 pos);
 
 #define MAX_CROP_SIZE 7
 
@@ -67,8 +65,8 @@ enum Blocks {
     BLOCK_MUSHROOM_RED  = 40,
     BLOCK_GOLD          = 41,
     BLOCK_IRON          = 42,
-    BLOCK_DOUBLE_SLAB_STONE= 43,
-    BLOCK_SLAB_STONE    = 44,
+    BLOCK_DOUBLE_SLAB   = 43,
+    BLOCK_SLAB          = 44,
     BLOCK_BRICKS        = 45,
     BLOCK_TNT           = 46,
     BLOCK_BOOKSHELF     = 47,
@@ -79,7 +77,7 @@ enum Blocks {
     BLOCK_MOB_SPAWNER   = 52,
     BLOCK_STAIRS_WOOD   = 53,
     BLOCK_CHEST         = 54,
-    BLOCK_REDSTONE_WIRE = 55,
+    BLOCK_REDSTONE      = 55,
     BLOCK_ORE_DIAMOND   = 56,
     BLOCK_DIAMOND       = 57,
     BLOCK_CRAFTING_TABLE= 58,
@@ -87,7 +85,7 @@ enum Blocks {
     BLOCK_FARMLAND      = 60,
     BLOCK_FURNACE       = 61,
     BLOCK_FURNACE_LIT   = 62,
-    BLOCK_SIGN_STANDING = 63,
+    BLOCK_SIGN          = 63,
     BLOCK_DOOR_WOOD     = 64,
     BLOCK_LADDER        = 65,
     BLOCK_RAIL          = 66,
@@ -97,8 +95,8 @@ enum Blocks {
     BLOCK_PRESSURE_PLATE_STONE = 70,
     BLOCK_DOOR_IRON     = 71,
     BLOCK_PRESSURE_PLATE_WOOD = 72,
-    BLOCK_ORE_REDSTONE  = 73,
-    BLOCK_ORE_REDSTONE_GLOWING = 74,
+    BLOCK_ORE_REDSTONE_OFF  = 73,
+    BLOCK_ORE_REDSTONE_ON = 74,
     BLOCK_REDSTONE_TORCH_OFF    = 75,
     BLOCK_REDSTONE_TORCH_ON     = 76,
     BLOCK_BUTTON_STONE  = 77,
@@ -119,6 +117,7 @@ enum Blocks {
     BLOCK_CAKE          = 92,
     BLOCK_REDSTONE_REPEATER_OFF = 93,
     BLOCK_REDSTONE_REPEATER_ON  = 94,
+    BLOCK_CHEST_LOCKED  = 95,
     // 95 is stained glass, which did not exist until either
     // the April Fools 2.0 update or officially Release 1.7.2
     BLOCK_TRAPDOOR = 96,

@@ -30,7 +30,9 @@ bool World::ChunkExists(int32_t x, int32_t z) {
 }
 
 // Sets the directory path of the world upon creation
-World::World(const std::string& extra) {
+World::World(const std::string& extra)
+    : dev(), rng(dev())
+{
     dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
         dirPath += "/region";
@@ -45,9 +47,9 @@ World::World(const std::string& extra) {
 
 // Saves all the Chunks that're currently loaded into Memory
 void World::Save() {
-    for (const auto& pair : chunks) {
+    for (auto& pair : chunks) {
         const int64_t& hash = pair.first;
-        const Chunk& chunk = pair.second;
+        Chunk& chunk = pair.second;
     
         Int3 pos = DecodeChunkHash(hash);
         SaveChunk(pos.x, pos.z, &chunk);
@@ -77,9 +79,9 @@ void World::RemoveChunk(int32_t x, int32_t z) {
 void World::FreeUnseenChunks() {
     std::vector<Int3> chunksToRemove;
 
-    for (const auto& pair : chunks) {
+    for (auto& pair : chunks) {
         const int64_t& hash = pair.first;
-        const Chunk& chunk = pair.second;
+        Chunk& chunk = pair.second;
         Int3 pos = DecodeChunkHash(hash);
     
         // Check if any player has this chunk hash in their visibleChunks
@@ -168,8 +170,8 @@ bool World::LoadChunk(int32_t x, int32_t z) {
 }
 
 // Save a Chunk as an NBT-format file
-void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
-    if (!chunk) {
+void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
+    if (!chunk || !chunk->modified) {
         //
     }
     // Update Chunklight before saving
@@ -196,6 +198,7 @@ void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
     level->Put(std::make_shared<IntTag>("xPos",z));
     
     NbtWriteToFile(filePath,root,NBT_ZLIB);
+    chunk->modified = false;
 }
 
 // Place a block at the passed position
@@ -203,13 +206,20 @@ void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
 void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
     // Get Block Position within Chunk
     Block* b = GetBlock(position);
+    if (!b) {
+        return;
+    }
     b->type = type;
     b->meta = meta;
     b->lightBlock = GetEmissiveness(b->type);
     // This needs to be recalculated
     b->lightSky = (IsTranslucent(b->type) || IsTransparent(b->type))*0xF;
+    /*
+    if (IsEmissive(b->type)) {
+        PropagateLight(this,position,b->lightBlock,true);
+    }
+    */
     UpdateBlock(position,b);
-    //CalculateColumnLight(position.x,position.z,GetChunk(position.x>>5,position.z>>5));
 }
 
 // Remove the block and turn it into air
@@ -226,6 +236,9 @@ Block* World::BreakBlock(Int3 position) {
 }
 
 void World::UpdateBlock(Int3 position, Block* b) {
+    if (!b) {
+        return;
+    }
     std::vector<uint8_t> response;
     Respond::BlockChange(response,position,b->type,b->meta);
     BroadcastToClients(response);
@@ -238,7 +251,31 @@ Block* World::GetBlock(Int3 position) {
     int32_t cZ = position.z >> 4;
     int8_t bX = position.x & 0xF;
     int8_t bZ = position.z & 0xF;
-    return &chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(Int3{bX,(int8_t)position.y,bZ})];
+    Chunk* c = GetChunk(cX,cZ);
+    if (!c) {
+        return nullptr;
+    }
+    c->modified = true;
+    return &c->blocks[GetBlockIndex(Int3{bX,(int8_t)position.y,bZ})];
+}
+
+// Get the Skylight of a Block at the passed position
+int8_t World::GetSkyLight(Int3 position) {
+    // Get Block Position within Chunk
+    Block* b = GetBlock(position);
+    if (b) {
+        return b->lightSky;
+    }
+    return 0;
+}
+
+// Set the Skylight of a Block at the passed position
+void World::SetSkyLight(Int3 position, int8_t level) {
+    // Get Block Position within Chunk
+    Block* b = GetBlock(position);
+    if (b) {
+        b->lightSky = level;
+    }
 }
 
 // Get all the block,meta,block light and sky light data of a Chunk in a Binary Format
@@ -479,13 +516,42 @@ bool World::LoadOldChunk(int32_t x, int32_t z) {
     return true;
 }
 
+bool World::InteractWithBlock(Int3 pos) {
+    Block* b = GetBlock(pos);
+    if (!b) {
+        return false;
+    }
+    if (b->type == BLOCK_TRAPDOOR) {
+        b->meta ^= 0b100;
+    }
+    if (b->type == BLOCK_DOOR_WOOD) {
+        b->meta ^= 0b100;
+        Int3 nPos = pos;
+        if (b->meta & 0b1000) {
+            // Interacted with Top
+            // Update Bottom
+            nPos = pos + Int3{0,-1,0};
+        } else {
+            // Interacted with Bottom
+            // Update Top
+            nPos = pos + Int3{0,1,0};
+        }
+        Block* bb = GetBlock(nPos);
+        if (bb && bb->type==b->type) {
+            bb->meta ^= 0b100;
+            UpdateBlock(nPos,bb);
+        }
+    }
+    UpdateBlock(pos,b);
+    return true;
+}
+
 // Tick all currently loaded chunks
 void World::TickChunks() {
-    std::mt19937 rng(dev());
     for (auto& pair : chunks) {
         int64_t hash = pair.first;
         Chunk& chunk = pair.second;
-        std::uniform_int_distribution<std::mt19937::result_type> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
+        std::uniform_int_distribution<int32_t> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
         // Choose a batch of random blocks within a chunk to run RandomTick on
         for (int i = 0; i < 16; i++) {
             int blockIndex = dist6(rng);
@@ -500,11 +566,43 @@ void World::TickChunks() {
                 blockPos.y,
                 chunkPos.z<<4 | blockPos.z
             };
-            RandomTick(b,pos);
             // If the block was changed, send this to the clients
-            if (oldType != b->type || oldMeta != b->meta) {
-                UpdateBlock(pos,b);
+            if (RandomTick(b,pos)) {
+                Block* nb = GetBlock(pos);
+                if (nb) {
+                    UpdateBlock(pos,nb);
+                    //std::cout << pos << std::endl;
+                }
             }
         }
     }
+}
+
+// Tick the passed block
+bool World::RandomTick(Block* b, Int3& pos) {
+    switch(b->type) {
+        case BLOCK_GRASS:
+        {
+            std::uniform_int_distribution<int> dist(-2,2);
+            // Random offset
+            pos = pos + Int3{dist(rng),dist(rng),dist(rng)};
+            Block* nb = GetBlock(pos);
+            if (nb && nb->type == BLOCK_DIRT) {
+                Block* ab = GetBlock(pos+Int3{0,1,0});
+                if (ab && ab->type == BLOCK_AIR) {
+                    nb->type = BLOCK_GRASS;
+                    return true;
+                }
+            }
+            break;
+        }
+        case BLOCK_CROP_WHEAT:
+        {
+            if (b->meta < MAX_CROP_SIZE) {
+                b->meta++;
+            }
+            return true;
+        }
+    }
+    return false;
 }

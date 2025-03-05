@@ -55,6 +55,14 @@ if one isn't already present.
 cpack --config CPackConfig.cmake -G TGZ
 ```
 
+## Issues
+If you encounter **any** issues, inaccuracies to the base game or simply want to provide an idea that may make BetrockServer better,
+please report them on the [Issues tab](https://github.com/OfficialPixelBrush/BetrockServer/issues).
+
+Please check if the issue you've found has already been reported or even been solved already.
+
+If not, create a **new issue** and fill out all the necessary information according to the `Bug Report` template to the best of your abilities.
+
 ## Misc
 - [PixNBT](https://github.com/OfficialPixelBrush/pixnbt) - A C++ native NBT parsing library
 - [BetaPacketPlainTextifier](https://github.com/OfficialPixelBrush/BetaPacketPlainTextifier) - A utility for turning WireShark captures of Minecraft Client-Server data into Markdown files for easy decoding

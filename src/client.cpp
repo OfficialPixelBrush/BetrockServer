@@ -44,7 +44,7 @@ bool Client::CheckIfNewChunksRequired() {
 	// Remove vertical component
 	lastPos.y = 0;
 	newPos.y = 0;
-	if (GetDistance(lastPos,newPos) > 16) {
+	if (GetEuclidianDistance(lastPos,newPos) > 16) {
 		return true;
 	}
 	return false;
@@ -126,6 +126,7 @@ void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
 // Send the chunks from the newChunks queue to the player
 void Client::SendNewChunks() {
 	// Send chunks in batches of 5
+	// TODO: Dynamically size this based on remaining space in response
 	int sentThisCycle = 5;
 	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
 	std::lock_guard<std::mutex> lock(newChunksMutex);
@@ -319,6 +320,9 @@ void Client::HandlePacket() {
 				case Packet::WindowClick:
 					HandleWindowClick();
 					break;
+				case Packet::UpdateSign:
+					HandleUpdateSign();
+					break;
 				case Packet::Disconnect:
 					HandleDisconnect();
 					break;
@@ -441,7 +445,7 @@ bool Client::HandleLoginRequest() {
 
 	// Accept the Login
 	Respond::Login(response,player->entityId,1,0);
-	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
+	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at " + player->position.str());
 	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.");
 
   	const auto &spawnPoint = server.GetSpawnPoint();
@@ -583,7 +587,7 @@ bool Client::UpdatePositionForOthers(bool includeLook) {
 	);
 	player->previousPosition = player->position;
 	/*
-	if (GetDistance(player->position,player->lastTickPosition) > 4.0) {
+	if (GetEuclidianDistance(player->position,player->lastTickPosition) > 4.0) {
 		Respond::EntityTeleport(
 			broadcastOthersResponse,
 			player->entityId,
@@ -713,14 +717,7 @@ bool Client::HandlePlayerDigging(World* world) {
 	Block* targetedBlock = world->GetBlock(pos);
 	
 	if (debugPunchBlockInfo) {
-		Betrock::Logger::Instance().Debug(GetLabel((int)targetedBlock->type) + " (" + std::to_string((int)targetedBlock->type) + ":" + std::to_string((int)targetedBlock->meta) + ")");
-	}
-
-	// Check if the targeted block is interactable
-	if (IsInteractable(targetedBlock->type)) {
-		InteractWithBlock(targetedBlock);
-		world->PlaceBlock(pos,targetedBlock->type,targetedBlock->meta);
-		return true;
+		Betrock::Logger::Instance().Debug(GetLabel((int)targetedBlock->type) + " " + targetedBlock->str() + " at " + pos.str());
 	}
 
 	// If the block is broken or instantly breakable
@@ -747,8 +744,33 @@ bool Client::HandlePlayerDigging(World* world) {
 			}
 			Give(response,item.id,item.amount,item.damage);
 		}
+		// Special handling for multi-block blocks
+		if (targetedBlock->type == BLOCK_DOOR_WOOD ||
+			targetedBlock->type == BLOCK_DOOR_IRON)
+		{
+			Int3 nPos = pos;
+			if (targetedBlock->meta & 0b1000) {
+				// Interacted with Top
+				// Update Bottom
+				nPos = pos + Int3{0,-1,0};
+			} else {
+				// Interacted with Bottom
+				// Update Top
+				nPos = pos + Int3{0,1,0};
+			}
+			Block* bb = world->GetBlock(nPos);
+			if (bb && bb->type==targetedBlock->type) {
+				world->BreakBlock(nPos);
+			}
+		}
 		// Only get rid of the block here to avoid unreferenced pointers
 		world->BreakBlock(pos);
+	}
+
+	// Check if the targeted block is interactable
+	if (IsInteractable(targetedBlock->type)) {
+		world->InteractWithBlock(pos);
+		return true;
 	}
 	return true;
 }
@@ -801,17 +823,14 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		damage = EntryToShort(message, offset);
 	}
 
-
 	Int3 pos = Int3{x,y,z};
 	Block* targetedBlock = world->GetBlock(pos);
 
 	// Check if the targeted block is interactable
 	if (IsInteractable(targetedBlock->type)) {
-		InteractWithBlock(targetedBlock);
-		world->PlaceBlock(pos,targetedBlock->type,targetedBlock->meta);
+		world->InteractWithBlock(pos);
 		return true;
 	}
-	BlockToFace(pos,face);
 
 	// This packet has a special case where X, Y, Z, and Direction are all -1.
 	// This special packet indicates that the currently held item for the player should have
@@ -823,24 +842,37 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	}
 
 	// Place a block if we can
-	if (CanDecrementHotbar()) {
-		// Check if the server-side inventory item is valid
-		Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
+	if (!CanDecrementHotbar()) {
+		return false;
+	}
+
+	// Check if the server-side inventory item is valid
+	Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
+	
+	// Special handling for Slabs
+	if (
+		targetedBlock->type == BLOCK_SLAB &&
+		targetedBlock->meta == i.damage &&
+		face == yPlus
+	) {
+		world->PlaceBlock(pos,BLOCK_DOUBLE_SLAB,i.damage);
+	} else {
 		// Get the block we need to place
+		BlockToFace(pos,face);
 		Block b = GetPlacedBlock(world,pos,face,GetPlayerOrientation(),i.id,i.damage);
 		if (b.type == SLOT_EMPTY) {
 			return false;
 		}
 		world->PlaceBlock(pos,b.type,b.meta);
-		// Immediately give back the item if we're in creative mode
-		if (player->creativeMode) {
-			Item i = GetHeldItem();
-			id = i.id;
-			amount = i.amount;
-			Respond::SetSlot(response,0,GetHotbarSlot(),id,amount,i.damage);
-		} else {
-			DecrementHotbar(response);
-		}
+	}
+	// Immediately give back the item if we're in creative mode
+	if (player->creativeMode) {
+		Item i = GetHeldItem();
+		id = i.id;
+		amount = i.amount;
+		Respond::SetSlot(response,0,GetHotbarSlot(),id,amount,i.damage);
+	} else {
+		DecrementHotbar(response);
 	}
 	return true;
 }
@@ -867,6 +899,18 @@ bool Client::HandleWindowClick() {
 		itemUses		= EntryToShort(message,offset);
 	}
 	ClickedSlot(response,window,slot,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
+	return true;
+}
+
+bool Client::HandleUpdateSign() {
+	int32_t x 		= EntryToInteger(message, offset);
+	int16_t y 		= EntryToShort(message,offset);
+	int32_t z 	= EntryToInteger(message, offset);
+	std::string line1 = EntryToString16(message,offset);
+	std::string line2 = EntryToString16(message,offset);
+	std::string line3 = EntryToString16(message,offset);
+	std::string line4 = EntryToString16(message,offset);
+	Respond::UpdateSign(broadcastOthersResponse,Int3{x,y,z},line1,line2,line3,line4);
 	return true;
 }
 

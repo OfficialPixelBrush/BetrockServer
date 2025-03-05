@@ -264,6 +264,17 @@ void Respond::WindowItems(std::vector<uint8_t> &response, int8_t window, std::ve
     }
 }
 
+void Respond::UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::string line1, std::string line2, std::string line3, std::string line4) {
+    response.push_back((uint8_t)Packet::UpdateSign);
+    AppendIntegerToVector(response,pos.x);
+    AppendShortToVector(response,(int16_t)pos.y);
+    AppendIntegerToVector(response,pos.z);
+    AppendString16ToVector(response,line1);
+    AppendString16ToVector(response,line2);
+    AppendString16ToVector(response,line3);
+    AppendString16ToVector(response,line4);
+}
+
 void Respond::Disconnect(std::vector<uint8_t> &response, std::string message) {
 	std::vector<uint8_t> disconnectResponse;
 	disconnectResponse.push_back((uint8_t)Packet::Disconnect);
