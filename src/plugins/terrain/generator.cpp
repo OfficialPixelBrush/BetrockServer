@@ -82,6 +82,9 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
                     if (lua_isnumber(L, -2) && lua_isnumber(L, -1)) {
                         c.blocks[i-1].type = lua_tointeger(L, -2);
                         c.blocks[i-1].meta = lua_tointeger(L, -1);
+                        c.blocks[i-1].lightSky = 0xF;
+                    } else {
+                        std::cerr << "Invalid number" << std::endl;
                     }
     
                     lua_pop(L, 2);  // Pop both numbers
@@ -92,6 +95,8 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
             lua_pop(L, 1);  // Pop the table itself
         }
     }
+    // For initial loading a chunk needs to be marked as modified
+    c.modified = true;
     CalculateChunkLight(&c);
     return c;
 }
