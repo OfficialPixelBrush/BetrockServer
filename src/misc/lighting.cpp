@@ -81,9 +81,7 @@ void CalculateChunkLight(Chunk* c) {
         }
     }
     // Then we do a horizontal pass
-    /*
     for (int32_t y = unobstructedLayers; y >= 0; y--) {
         CalculateSpreadLight(y,c);
     }
-    */
 }

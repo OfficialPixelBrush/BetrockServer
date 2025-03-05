@@ -554,6 +554,7 @@ void World::TickChunks() {
                 chunkPos.z<<4 | blockPos.z
             };
             // If the block was changed, send this to the clients
+            /*
             if (RandomTick(b,pos)) {
                 Block* nb = GetBlock(pos);
                 if (nb) {
@@ -561,6 +562,7 @@ void World::TickChunks() {
                     //std::cout << pos << std::endl;
                 }
             }
+            */
         }
     }
 }
