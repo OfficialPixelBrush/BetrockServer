@@ -47,9 +47,9 @@ World::World(const std::string& extra)
 
 // Saves all the Chunks that're currently loaded into Memory
 void World::Save() {
-    for (const auto& pair : chunks) {
+    for (auto& pair : chunks) {
         const int64_t& hash = pair.first;
-        const Chunk& chunk = pair.second;
+        Chunk& chunk = pair.second;
     
         Int3 pos = DecodeChunkHash(hash);
         SaveChunk(pos.x, pos.z, &chunk);
@@ -79,9 +79,9 @@ void World::RemoveChunk(int32_t x, int32_t z) {
 void World::FreeUnseenChunks() {
     std::vector<Int3> chunksToRemove;
 
-    for (const auto& pair : chunks) {
+    for (auto& pair : chunks) {
         const int64_t& hash = pair.first;
-        const Chunk& chunk = pair.second;
+        Chunk& chunk = pair.second;
         Int3 pos = DecodeChunkHash(hash);
     
         // Check if any player has this chunk hash in their visibleChunks
@@ -170,8 +170,8 @@ bool World::LoadChunk(int32_t x, int32_t z) {
 }
 
 // Save a Chunk as an NBT-format file
-void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
-    if (!chunk) {
+void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
+    if (!chunk || !chunk->modified) {
         //
     }
     // Update Chunklight before saving
@@ -198,6 +198,7 @@ void World::SaveChunk(int32_t x, int32_t z, const Chunk* chunk) {
     level->Put(std::make_shared<IntTag>("xPos",z));
     
     NbtWriteToFile(filePath,root,NBT_ZLIB);
+    chunk->modified = false;
 }
 
 // Place a block at the passed position
@@ -240,7 +241,9 @@ Block* World::GetBlock(Int3 position) {
     int32_t cZ = position.z >> 4;
     int8_t bX = position.x & 0xF;
     int8_t bZ = position.z & 0xF;
-    return &chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(Int3{bX,(int8_t)position.y,bZ})];
+    Chunk* c = &chunks[GetChunkHash(cX, cZ)];
+    c->modified = true;
+    return &c->blocks[GetBlockIndex(Int3{bX,(int8_t)position.y,bZ})];
 }
 
 // Get the Skylight of a Block at the passed position

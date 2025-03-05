@@ -45,8 +45,10 @@ void CalculateSpreadLight(int32_t y, Chunk* c) {
                         if (!nb) {
                             return;
                         }
-                        if (nb->lightSky + 2 <= currentLight) { // Light diminishes
-                            nb->lightSky = currentLight-1; // Assume SetLight() updates light
+                        if (IsTransparent(nb->type)) {
+                            if (nb->lightSky + 2 <= currentLight) { // Light diminishes
+                                nb->lightSky = currentLight-1; // Assume SetLight() updates light
+                            }
                         }
                     }
                 };
@@ -75,8 +77,10 @@ void CalculateChunkLight(Chunk* c) {
             CalculateColumnLight(x,z,c,unobstructedLayers);
         }
     }
+    /*
     // Then we do a horizontal pass
     for (int32_t y = unobstructedLayers; y >= 0; y--) {
         CalculateSpreadLight(y,c);
     }
+    */
 }
