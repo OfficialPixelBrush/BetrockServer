@@ -44,7 +44,7 @@ bool Client::CheckIfNewChunksRequired() {
 	// Remove vertical component
 	lastPos.y = 0;
 	newPos.y = 0;
-	if (GetDistance(lastPos,newPos) > 16) {
+	if (GetEuclidianDistance(lastPos,newPos) > 16) {
 		return true;
 	}
 	return false;
@@ -583,7 +583,7 @@ bool Client::UpdatePositionForOthers(bool includeLook) {
 	);
 	player->previousPosition = player->position;
 	/*
-	if (GetDistance(player->position,player->lastTickPosition) > 4.0) {
+	if (GetEuclidianDistance(player->position,player->lastTickPosition) > 4.0) {
 		Respond::EntityTeleport(
 			broadcastOthersResponse,
 			player->entityId,

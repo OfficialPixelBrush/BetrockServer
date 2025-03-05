@@ -1,25 +1,5 @@
 #include "helper.h"
 
-// Convert an Int3 into a Vec3
-Vec3 Int3ToVec3(Int3 i) {
-	Vec3 v = {
-		(double)i.x+0.5,
-		(double)i.y,
-		(double)i.z+0.5
-	};
-	return v;
-}
-
-// Convert an Vec3 into a Int3
-Int3 Vec3ToInt3(Vec3 v) {
-	Int3 i = {
-		(int32_t)v.x,
-		(int32_t)v.y,
-		(int32_t)v.z
-	};
-	return i;
-}
-
 // Check if the passed value is between a and b
 bool Between(int value, int a, int b) {
 	if (a < b) {
@@ -34,20 +14,52 @@ bool Between(int value, int a, int b) {
 	return false;
 }
 
-// Get the distance between two Vec3s
-double GetDistance(Vec3 a, Vec3 b) {
+// Get the Euclidian distance between two Vec3s
+double GetEuclidianDistance(Vec3 a, Vec3 b) {
 	double x = (b.x-a.x)*(b.x-a.x);
 	double y = (b.y-a.y)*(b.y-a.y);
 	double z = (b.z-a.z)*(b.z-a.z);
 	return abs(std::sqrt(x+y+z));
 }
 
-// Get the distance between two Int3s
-double GetDistance(Int3 a, Int3 b) {
+// Get the Euclidian distance between two Int3s
+double GetEuclidianDistance(Int3 a, Int3 b) {
 	int32_t x = (b.x-a.x)*(b.x-a.x);
 	int32_t y = (b.y-a.y)*(b.y-a.y);
 	int32_t z = (b.z-a.z)*(b.z-a.z);
 	return abs(std::sqrt(double(x+y+z)));
+}
+
+// Get the Taxicab distance between two Vec3s
+double GetTaxicabDistance(Vec3 a, Vec3 b) {
+	double x = abs(a.x-b.x);
+	double y = abs(a.y-b.y);
+	double z = abs(a.z-b.z);
+	return x+y+z;
+}
+
+// Get the Taxicab distance between two Int3s
+double GetTaxicabDistance(Int3 a, Int3 b) {
+	int32_t x = abs(a.x-b.x);
+	int32_t y = abs(a.y-b.y);
+	int32_t z = abs(a.z-b.z);
+	return double(x+y+z);
+}
+
+// Get the Chebyshev distance between two Vec3s
+double GetChebyshevDistance(Vec3 a, Vec3 b) {
+	double x = abs(a.x-b.x);
+	double y = abs(a.y-b.y);
+	double z = abs(a.z-b.z);
+	return std::max(std::max(x,y),z);
+}
+
+// Get the Chebyshev distance between two Int3s
+double GetChebyshevDistance(Int3 a, Int3 b) {
+	int32_t x = abs(a.x-b.x);
+	int32_t y = abs(a.y-b.y);
+	int32_t z = abs(a.z-b.z);
+	return std::max(std::max(x,y),z);
 }
 
 // Turn an Int3 into a string
@@ -85,16 +97,6 @@ Int3 BlockToChunkPosition(Vec3 position) {
 // Turn a float value into a byte, mapping the range 0-255 to 0°-360°
 int8_t ConvertFloatToPackedByte(float value) {
 	return static_cast<int8_t>((value/360.0)*255.0);
-}
-
-// 
-Int3 Vec3ToRelativeInt3(Vec3 previousPosition, Vec3 currentPosition) {
-	Vec3 difference = previousPosition - currentPosition;
-	return Int3 {
-		static_cast<int8_t>(difference.x*32.0),
-		static_cast<int8_t>(difference.y*32.0),
-		static_cast<int8_t>(difference.z*32.0)
-	};
 }
 
 constexpr std::array<const char*, 256> packetLabels = [] {
@@ -255,32 +257,6 @@ Int3 DecodeChunkHash(int64_t hash) {
     };
 }
 
-// Translate a block space position to entity space
-Int3 Int3ToEntityInt3(Int3 pos) {
-	return Int3 {
-		pos.x << 5 | 16,
-		pos.y << 5 | 16,
-		pos.z << 5 | 16
-	};
-}
-
-// Translate a player space position to entity space
-Int3 Vec3ToEntityInt3(Vec3 pos) {
-	return Int3 {
-		int32_t(pos.x*32),
-		int32_t(pos.y*32),
-		int32_t(pos.z*32)
-	};
-}
-
-// Translate an entity space position to player space
-Vec3 EntityInt3ToVec3(Int3 pos) {
-	return Vec3 {
-		double(pos.x)/32,
-		double(pos.y)/32,
-		double(pos.z)/32
-	};
-}
 
 // Safely transform a string into an integer
 int32_t SafeStringToInt(std::string in) {

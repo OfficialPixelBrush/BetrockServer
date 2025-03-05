@@ -170,7 +170,7 @@ double FindDistanceToPoint(int64_t seed, Int3 position, Vec3 scale) {
             Int3 goalBlockPos = GetPointPositionInChunk(seed, goalChunkPos, scale);
             Int3 goalGlobalPos = LocalToGlobalPosition(goalChunkPos, goalBlockPos);
             
-            double distance = GetDistance(position, goalGlobalPos);
+            double distance = GetEuclidianDistance(position, goalGlobalPos);
             smallestDistance = std::min(smallestDistance, distance);
         }
     }

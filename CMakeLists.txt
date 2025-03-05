@@ -76,6 +76,7 @@ add_executable(
     src/logger/logger.cpp
     src/logger/style.cpp
 
+    src/misc/helpers/datatypes.cpp
     src/misc/helpers/helper.cpp
     src/misc/helpers/luahelper.cpp
 

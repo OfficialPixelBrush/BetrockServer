@@ -22,12 +22,15 @@ Int3 BlockToChunkPosition(Vec3 position);
 Int3 BlockToChunkPosition(Int3 position);
 
 int8_t ConvertFloatToPackedByte(float value);
-Vec3 SubtractVec3(Vec3 previousPosition, Vec3 currentPosition);
-Int3 Vec3ToRelativeInt3(Vec3 previousPosition, Vec3 currentPosition);
 
-Int3 Int3ToEntityInt3(Int3 pos);
-Int3 Vec3ToEntityInt3(Vec3 pos);
-Vec3 EntityInt3ToVec3(Int3 pos);
+bool Between(int value, int a, int b);
+
+double GetEuclidianDistance(Vec3 a, Vec3 b);
+double GetEuclidianDistance(Int3 a, Int3 b);
+double GetTaxicabDistance(Vec3 a, Vec3 b);
+double GetTaxicabDistance(Int3 a, Int3 b);
+double GetChebyshevDistance(Vec3 a, Vec3 b);
+double GetChebyshevDistance(Int3 a, Int3 b);
 
 // Packet Id Labels
 std::string PacketIdToLabel(Packet packet);

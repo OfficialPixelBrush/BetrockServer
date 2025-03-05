@@ -7,6 +7,9 @@
 
 #define CHUNK_DATA_SIZE static_cast<size_t>(CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z * 2.5)
 
+#define OLD_CHUNK_FILE_EXTENSION ".cnk"
+#define CHUNK_FILE_EXTENSION ".ncnk"
+
 // Item
 struct Item {
     int16_t id = 0;
@@ -32,14 +35,12 @@ struct Block {
     }
 };
 
-#define OLD_CHUNK_FILE_EXTENSION ".cnk"
-#define CHUNK_FILE_EXTENSION ".ncnk"
-
 // TODO: Add a "modified" tag to a chunk to see if we need to bother re-saving it(?)
 struct Chunk {
     struct Block blocks[CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT];
     // This describes the number of clients that can see this chunk.
     // If this hits 0, the chunk is invisible and can be removed
+    // TODO: Actually implement this value!
     uint16_t viewers = 0;
 
     // A non-populated chunk still needs to be popualated with foliage
@@ -90,10 +91,9 @@ struct Int3 {
 typedef struct Vec3 Vec3;
 typedef struct Int3 Int3;
 
-// Converting between these types
 Vec3 Int3ToVec3(Int3 i);
 Int3 Vec3ToInt3(Vec3 v);
-bool Between(int value, int a, int b);
 
-double GetDistance(Vec3 a, Vec3 b);
-double GetDistance(Int3 a, Int3 b);
+Int3 Int3ToEntityInt3(Int3 pos);
+Int3 Vec3ToEntityInt3(Vec3 pos);
+Vec3 EntityInt3ToVec3(Int3 pos);
