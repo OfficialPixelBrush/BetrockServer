@@ -9,7 +9,6 @@ bool IsTranslucent(int16_t id) {
         id == BLOCK_LAVA_FLOWING ||
         id == BLOCK_LAVA_STILL ||
         id == BLOCK_LEAVES ||
-        id == BLOCK_GLASS ||
         id == BLOCK_ICE ||
         id == BLOCK_MOB_SPAWNER)
     {
@@ -58,6 +57,7 @@ bool IsTransparent(int16_t id) {
         id == BLOCK_RAIL_POWERED ||
         id == BLOCK_RAIL_DETECTOR ||
         id == BLOCK_COBWEB ||
+        id == BLOCK_GLASS ||
         id == BLOCK_TALLGRASS ||
         id == BLOCK_DEADBUSH ||
         id == BLOCK_DANDELION ||
@@ -83,7 +83,10 @@ bool IsTransparent(int16_t id) {
         id == BLOCK_SUGARCANE ||
         id == BLOCK_FENCE ||
         id == BLOCK_REDSTONE_REPEATER_OFF ||
-        id == BLOCK_REDSTONE_REPEATER_ON
+        id == BLOCK_REDSTONE_REPEATER_ON ||
+        id == BLOCK_DOOR_IRON ||
+        id == BLOCK_DOOR_WOOD ||
+        id == BLOCK_TRAPDOOR
         )
     {
         return true;

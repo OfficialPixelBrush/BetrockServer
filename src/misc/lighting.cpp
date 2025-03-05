@@ -12,8 +12,7 @@ void CalculateColumnLight(int8_t x, int8_t z, Chunk* c, int8_t& unobstructedLaye
         if (!b) {
             continue;
         }
-        GetTranslucency(b->type, skyVisible);
-        if (!(IsTransparent(b->type) || IsTranslucent(b->type))) {
+        if (!IsTransparent(b->type)) {
             // We remember the first layer of blocks that obstructs the sky
             if (unobstructedLayers < y) {
                 unobstructedLayers = y;
@@ -47,11 +46,13 @@ void CalculateSpreadLight(int8_t y, Chunk* c) {
                         if (!nb) {
                             return;
                         }
-                        if (IsTransparent(nb->type)) {
-                            if (nb->lightSky + 2 <= currentLight) {
-                                // Light diminishes
-                                nb->lightSky = currentLight-1;
-                            }
+                        //GetTranslucency(b->type, currentLight);
+                        if (!IsTransparent(b->type)) {
+                            currentLight = 0x0;
+                        }
+                        if (nb->lightSky + 2 <= currentLight) {
+                            // Light diminishes
+                            nb->lightSky = currentLight-1;
                         }
                     }
                 };
@@ -64,6 +65,25 @@ void CalculateSpreadLight(int8_t y, Chunk* c) {
         }
     }
 }
+
+void PropagateLight(World* world, Int3 position, int8_t lightLevel, bool source) {
+    if (lightLevel <= 0) return;
+
+    Block* b = world->GetBlock(position);
+    if (!IsTransparent(b->type)) return;
+
+    if (b->lightBlock >= lightLevel && !source) return;
+
+    b->lightBlock = lightLevel; // Assign before recursion
+
+    PropagateLight(world, position + Int3{ 1, 0, 0 }, lightLevel - 1, false);
+    PropagateLight(world, position + Int3{-1, 0, 0 }, lightLevel - 1, false);
+    PropagateLight(world, position + Int3{ 0, 1, 0 }, lightLevel - 1, false);
+    PropagateLight(world, position + Int3{ 0,-1, 0 }, lightLevel - 1, false);
+    PropagateLight(world, position + Int3{ 0, 0, 1 }, lightLevel - 1, false);
+    PropagateLight(world, position + Int3{ 0, 0,-1 }, lightLevel - 1, false);
+}
+
 
 // Recalculates all the light in the chunk the block position is found in
 void CalculateChunkLight(Chunk* c) {

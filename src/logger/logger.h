@@ -13,7 +13,11 @@ namespace Betrock {
 class Logger {
     private:
         std::ofstream logFile;
+        #ifndef NDEBUG
+        int8_t logLevelText = LOG_NONE;
+        #else
         int8_t logLevelText = LOG_ALL;
+        #endif
         int8_t logLevelTerminal = LOG_ALL;
 
         Logger();

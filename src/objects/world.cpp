@@ -214,6 +214,9 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
     b->lightBlock = GetEmissiveness(b->type);
     // This needs to be recalculated
     b->lightSky = (IsTranslucent(b->type) || IsTransparent(b->type))*0xF;
+    if (IsEmissive(b->type)) {
+        PropagateLight(this,position,b->lightBlock,true);
+    }
     UpdateBlock(position,b);
 }
 
