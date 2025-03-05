@@ -720,12 +720,6 @@ bool Client::HandlePlayerDigging(World* world) {
 		Betrock::Logger::Instance().Debug(GetLabel((int)targetedBlock->type) + " " + targetedBlock->str() + " at " + pos.str());
 	}
 
-	// Check if the targeted block is interactable
-	if (IsInteractable(targetedBlock->type)) {
-		world->InteractWithBlock(pos);
-		return true;
-	}
-
 	// If the block is broken or instantly breakable
 	if (status == 2 || player->creativeMode || IsInstantlyBreakable(targetedBlock->type)) {
 		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,targetedBlock->type);
@@ -752,6 +746,12 @@ bool Client::HandlePlayerDigging(World* world) {
 		}
 		// Only get rid of the block here to avoid unreferenced pointers
 		world->BreakBlock(pos);
+	}
+
+	// Check if the targeted block is interactable
+	if (IsInteractable(targetedBlock->type)) {
+		world->InteractWithBlock(pos);
+		return true;
 	}
 	return true;
 }
