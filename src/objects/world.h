@@ -36,6 +36,8 @@ class World {
         void PlaceBlock(Int3 position, int8_t type, int8_t meta);
         Block* BreakBlock(Int3 position);
         Block* GetBlock(Int3 position);
+        int8_t GetSkyLight(Int3 position);
+        void SetSkyLight(Int3 position, int8_t level);
         void UpdateBlock(Int3 position, Block* b);
         Int3 FindSpawnableBlock(Int3 position);
         void AddChunk(int32_t x, int32_t z, Chunk c);

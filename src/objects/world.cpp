@@ -243,6 +243,25 @@ Block* World::GetBlock(Int3 position) {
     return &chunks[GetChunkHash(cX, cZ)].blocks[GetBlockIndex(Int3{bX,(int8_t)position.y,bZ})];
 }
 
+// Get the Skylight of a Block at the passed position
+int8_t World::GetSkyLight(Int3 position) {
+    // Get Block Position within Chunk
+    Block* b = GetBlock(position);
+    if (b) {
+        return b->lightSky;
+    }
+    return 0;
+}
+
+// Set the Skylight of a Block at the passed position
+void World::SetSkyLight(Int3 position, int8_t level) {
+    // Get Block Position within Chunk
+    Block* b = GetBlock(position);
+    if (b) {
+        b->lightSky = level;
+    }
+}
+
 // Get all the block,meta,block light and sky light data of a Chunk in a Binary Format
 std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     auto bytes = std::make_unique<char[]>(CHUNK_DATA_SIZE);
