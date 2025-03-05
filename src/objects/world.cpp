@@ -481,6 +481,36 @@ bool World::LoadOldChunk(int32_t x, int32_t z) {
     return true;
 }
 
+bool World::InteractWithBlock(Int3 pos) {
+    Block* b = GetBlock(pos);
+    if (!b) {
+        return false;
+    }
+    if (b->type == BLOCK_TRAPDOOR) {
+        b->meta ^= 0b100;
+    }
+    if (b->type == BLOCK_DOOR_WOOD) {
+        b->meta ^= 0b100;
+        Int3 nPos = pos;
+        if (b->meta & 0b1000) {
+            // Interacted with Top
+            // Update Bottom
+            nPos = pos + Int3{0,-1,0};
+        } else {
+            // Interacted with Bottom
+            // Update Top
+            nPos = pos + Int3{0,1,0};
+        }
+        Block* bb = GetBlock(nPos);
+        if (bb && bb->type==b->type) {
+            bb->meta ^= 0b100;
+            UpdateBlock(nPos,bb);
+        }
+    }
+    UpdateBlock(pos,b);
+    return true;
+}
+
 // Tick all currently loaded chunks
 void World::TickChunks() {
     for (auto& pair : chunks) {
@@ -506,7 +536,7 @@ void World::TickChunks() {
                 Block* nb = GetBlock(pos);
                 if (nb) {
                     UpdateBlock(pos,nb);
-                    std::cout << pos << std::endl;
+                    //std::cout << pos << std::endl;
                 }
             }
         }

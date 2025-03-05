@@ -14,7 +14,6 @@ bool IsEmissive(int16_t id);
 uint8_t GetEmissiveness(int16_t id);
 bool IsInstantlyBreakable(int16_t id);
 bool IsInteractable(int16_t id);
-bool InteractWithBlock(Block* b);
 bool KeepDamageOnDrop(int8_t type);
 bool NoDrop(Item item);
 Item GetDrop(Item item);

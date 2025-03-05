@@ -46,4 +46,5 @@ class World {
         bool ChunkFileExists(int32_t x, int32_t z, std::string extension = std::string(CHUNK_FILE_EXTENSION));
         bool ChunkExists(int32_t x, int32_t z);
         void TickChunks();
+        bool InteractWithBlock(Int3 pos);
 };

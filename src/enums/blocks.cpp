@@ -176,15 +176,6 @@ bool IsInteractable(int16_t id) {
     return false;
 }
 
-bool InteractWithBlock(Block* b) {
-    if (b->type == BLOCK_TRAPDOOR ||
-        b->type == BLOCK_DOOR_WOOD
-    ) {
-        b->meta = b->meta ^ 0b100;
-    }
-    return true;
-}
-
 // Returns true if the destroyed item maintains its NBT data upon being dropped
 bool KeepDamageOnDrop(int8_t id) {
     if (id == BLOCK_WOOL ||

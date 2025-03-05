@@ -718,8 +718,7 @@ bool Client::HandlePlayerDigging(World* world) {
 
 	// Check if the targeted block is interactable
 	if (IsInteractable(targetedBlock->type)) {
-		InteractWithBlock(targetedBlock);
-		world->PlaceBlock(pos,targetedBlock->type,targetedBlock->meta);
+		world->InteractWithBlock(pos);
 		return true;
 	}
 
@@ -806,8 +805,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 
 	// Check if the targeted block is interactable
 	if (IsInteractable(targetedBlock->type)) {
-		InteractWithBlock(targetedBlock);
-		world->PlaceBlock(pos,targetedBlock->type,targetedBlock->meta);
+		world->InteractWithBlock(pos);
 		return true;
 	}
 
