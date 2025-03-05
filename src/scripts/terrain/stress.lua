@@ -1,5 +1,5 @@
 -- Based on glitched terrain gen I got while remaking the worley generator in lua
-GenName = "Mica"
+GenName = "Stress"
 GenApiVersion = 2
 
 function GenerateChunk(cx, cz)
