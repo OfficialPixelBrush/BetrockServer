@@ -5,20 +5,12 @@ Please, rebase to the latest commit and squash all your changes into a single co
 
 The [SerenityOS](https://github.com/SerenityOS/serenity) folks do this as well :p
 
-## Issues
-If you encounter **any** issues, inaccuracies to the base game or simply want to provide an idea that may make BetrockServer better,
-please report them on the [Issues tab](https://github.com/OfficialPixelBrush/BetrockServer/issues).
-
-Please check if the issue you've found has already been reported or even been solved already.
-
-If not, create a **new issue** and fill out all the necessary information according to the `Bug Report` template to the best of your abilities.
-
 ## Development
 Grab the `latest` branch for the most up-to-date, albeit unstable, repository.
 ```bash
-git pull
+git fetch
 git branch -r
-git checkout origin/latest
+git checkout -b latest origin/latest
 ```
 If any of the submodules have been updated, grab their latest version.
 ```bash
