@@ -7,6 +7,7 @@
 #include <memory>
 #include <cstdint>
 #include <filesystem>
+#include <random>
 
 #include "helper.h"
 #include "blocks.h"
@@ -20,6 +21,8 @@ class World {
         Chunk* GetChunk(int32_t x, int32_t z);
         void RemoveChunk(int32_t x, int32_t z);
         std::random_device dev;
+        std::mt19937 rng;
+        bool RandomTick(Block* b, Int3& pos);
     public:
         World(const std::string &extra = "");
         int64_t seed;

@@ -129,9 +129,11 @@ uint8_t GetEmissiveness(int16_t id) {
         return 9;
     } else if (id == BLOCK_REDSTONE_TORCH_ON) {
         return 7;
+    // Apparently brown mushrooms glow,
+    // They have maintained this since Indev 0.31
+    } else if (id == BLOCK_MUSHROOM_BROWN) {
+        return 1;
     }
-    // TODO: Apparently brown mushrooms glow, but I don't know if that's the case for Beta 1.7.3
-    // Test this!
     return 0;
 }
 
@@ -525,20 +527,4 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
 		}
 	}
 	return b;
-}
-
-// Tick the passed block
-void RandomTick(Block* b, Int3 pos) {
-    switch(b->type) {
-        /*
-        case BLOCK_DIRT:
-            b->type = BLOCK_GRASS;
-            return;
-        */
-        case BLOCK_CROP_WHEAT:
-            if (b->meta < MAX_CROP_SIZE) {
-                b->meta++;
-            }
-            return;
-    }
 }

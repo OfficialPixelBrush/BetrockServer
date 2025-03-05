@@ -30,7 +30,9 @@ bool World::ChunkExists(int32_t x, int32_t z) {
 }
 
 // Sets the directory path of the world upon creation
-World::World(const std::string& extra) {
+World::World(const std::string& extra)
+    : dev(), rng(dev())
+{
     dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     if (extra.empty()) {
         dirPath += "/region";
@@ -481,11 +483,10 @@ bool World::LoadOldChunk(int32_t x, int32_t z) {
 
 // Tick all currently loaded chunks
 void World::TickChunks() {
-    std::mt19937 rng(dev());
     for (auto& pair : chunks) {
         int64_t hash = pair.first;
         Chunk& chunk = pair.second;
-        std::uniform_int_distribution<std::mt19937::result_type> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
+        std::uniform_int_distribution<int32_t> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
         // Choose a batch of random blocks within a chunk to run RandomTick on
         for (int i = 0; i < 16; i++) {
             int blockIndex = dist6(rng);
@@ -500,11 +501,42 @@ void World::TickChunks() {
                 blockPos.y,
                 chunkPos.z<<4 | blockPos.z
             };
-            RandomTick(b,pos);
             // If the block was changed, send this to the clients
-            if (oldType != b->type || oldMeta != b->meta) {
-                UpdateBlock(pos,b);
+            if (RandomTick(b,pos)) {
+                Block* nb = GetBlock(pos);
+                if (nb) {
+                    UpdateBlock(pos,nb);
+                    std::cout << pos << std::endl;
+                }
             }
         }
     }
+}
+
+// Tick the passed block
+bool World::RandomTick(Block* b, Int3& pos) {
+    switch(b->type) {
+        case BLOCK_GRASS:
+        {
+            std::uniform_int_distribution<int> dist(-2,2);
+            // Random offset
+            pos = pos + Int3{dist(rng),dist(rng),dist(rng)};
+            Block* nb = GetBlock(pos);
+            if (nb && nb->type == BLOCK_DIRT) {
+                Block* ab = GetBlock(pos+Int3{0,1,0});
+                if (ab && ab->type == BLOCK_AIR) {
+                    nb->type = BLOCK_GRASS;
+                    return true;
+                }
+            }
+        }
+        case BLOCK_CROP_WHEAT:
+        {
+            if (b->meta < MAX_CROP_SIZE) {
+                b->meta++;
+            }
+            return true;
+        }
+    }
+    return false;
 }

@@ -1,5 +1,7 @@
 #pragma once
 #include <iostream>
+#include <string>
+#include <sstream>
 
 #define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH_X 16
@@ -20,6 +22,12 @@ struct Item {
         os << "(" << (int)i.id << ":" << (int)i.damage << "x" << (int)i.amount << ")";
         return os;
     }
+    
+    std::string str() const {
+        std::ostringstream oss;
+        oss << *this; // Use the overloaded << operator
+        return oss.str();
+    }
 };
 
 // Building blocks
@@ -32,6 +40,12 @@ struct Block {
     friend std::ostream& operator<<(std::ostream& os, const Block& b) {
         os << "(" << (int)b.type << ":" << (int)b.meta << ")";
         return os;
+    }
+    
+    std::string str() const {
+        std::ostringstream oss;
+        oss << *this; // Use the overloaded << operator
+        return oss.str();
     }
 };
 
@@ -66,6 +80,12 @@ struct Vec3 {
         os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
         return os;
     }
+    
+    std::string str() const {
+        std::ostringstream oss;
+        oss << *this; // Use the overloaded << operator
+        return oss.str();
+    }
 };
 
 struct Int3 {
@@ -85,6 +105,12 @@ struct Int3 {
     friend std::ostream& operator<<(std::ostream& os, const Int3& i) {
         os << "(" << i.x << ", " << i.y << ", " << i.z << ")";
         return os;
+    }
+    
+    std::string str() const {
+        std::ostringstream oss;
+        oss << *this; // Use the overloaded << operator
+        return oss.str();
     }
 };
 

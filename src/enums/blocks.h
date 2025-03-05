@@ -20,7 +20,6 @@ bool NoDrop(Item item);
 Item GetDrop(Item item);
 Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection, int16_t id, int16_t damage);
 void BlockToFace(Int3& pos, int8_t& direction);
-void RandomTick(Block* b, Int3 pos);
 
 #define MAX_CROP_SIZE 7
 

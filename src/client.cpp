@@ -441,7 +441,7 @@ bool Client::HandleLoginRequest() {
 
 	// Accept the Login
 	Respond::Login(response,player->entityId,1,0);
-	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at (" + std::to_string(player->position.x) + ", " + std::to_string(player->position.y) + ", " + std::to_string(player->position.z) + ")");
+	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at " + player->position.str());
 	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.");
 
   	const auto &spawnPoint = server.GetSpawnPoint();
@@ -713,7 +713,7 @@ bool Client::HandlePlayerDigging(World* world) {
 	Block* targetedBlock = world->GetBlock(pos);
 	
 	if (debugPunchBlockInfo) {
-		Betrock::Logger::Instance().Debug(GetLabel((int)targetedBlock->type) + " (" + std::to_string((int)targetedBlock->type) + ":" + std::to_string((int)targetedBlock->meta) + ")");
+		Betrock::Logger::Instance().Debug(GetLabel((int)targetedBlock->type) + " " + targetedBlock->str() + " at " + pos.str());
 	}
 
 	// Check if the targeted block is interactable
