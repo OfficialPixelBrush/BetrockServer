@@ -744,6 +744,25 @@ bool Client::HandlePlayerDigging(World* world) {
 			}
 			Give(response,item.id,item.amount,item.damage);
 		}
+		// Special handling for multi-block blocks
+		if (targetedBlock->type == BLOCK_DOOR_WOOD ||
+			targetedBlock->type == BLOCK_DOOR_IRON)
+		{
+			Int3 nPos = pos;
+			if (targetedBlock->meta & 0b1000) {
+				// Interacted with Top
+				// Update Bottom
+				nPos = pos + Int3{0,-1,0};
+			} else {
+				// Interacted with Bottom
+				// Update Top
+				nPos = pos + Int3{0,1,0};
+			}
+			Block* bb = world->GetBlock(nPos);
+			if (bb && bb->type==targetedBlock->type) {
+				world->BreakBlock(nPos);
+			}
+		}
 		// Only get rid of the block here to avoid unreferenced pointers
 		world->BreakBlock(pos);
 	}
