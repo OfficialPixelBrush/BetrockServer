@@ -37,7 +37,7 @@ Plugin::Plugin(std::string path) {
     // Init Function
     lua_getglobal(L, "Init");
     if (!lua_isfunction(L,-1)) {
-        logger->Warning("OnStart was not found!");
+        logger->Warning("Init was not found!");
         //throw std::runtime_error("OnStart was not found!");
     } else {
         CheckLua(L,lua_pcall(L,0,0,0));
