@@ -14,6 +14,7 @@
 
 #define PROTOCOL_VERSION 14
 #define TICK_SPEED 20
+#define OPERATOR_FILE "ops.txt"
 
 namespace Betrock {
 
@@ -54,6 +55,13 @@ class Server {
 	// get the world manager for the world with the coresponding world_id.
 	// !! returns a valid pointer or a nullptr on failure !!
 	WorldManager *GetWorldManager(int8_t world_id) const;
+
+	// This is used for managing operators
+	void ReadOperators();
+	void WriteOperators();
+	bool AddOperator(std::string username);
+	bool IsOperator(std::string username);
+	bool RemoveOperator(std::string username);
 
 	// get the world with the coresponding world_id.
 	// !! returns a valid pointer or a nullptr on failure !!
@@ -150,6 +158,7 @@ class Server {
 	Vec3 spawnPoint;
 	std::int8_t spawnDimension;
 	std::string spawnWorld;
+	std::vector<std::string> operators;
 
 	std::mutex connectedClientsMutex;
 	std::mutex entityIdMutex;
