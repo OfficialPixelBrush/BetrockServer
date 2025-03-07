@@ -9,7 +9,7 @@ bool Client::CheckPosition(Vec3 &newPosition, double &newStance) {
 	player->previousPosition = player->position;
 
 	player->position = newPosition;
-	player->stance = newStance + 1.62;
+	player->stance = newStance;
 	return true;
 }
 
@@ -62,7 +62,7 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
     if (!wm->world.ChunkExists(position.x,position.z)) {
 		// Otherwise queue chunk loading or generation
 		wm->AddChunkToQueue(position.x, position.z, this);
-		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
+		//Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
         return;
     }
     // If the chunk is already available, send it over
@@ -145,6 +145,7 @@ void Client::SendNewChunks() {
 
 			if (chunk) {
 				visibleChunks.push_back(Int3{nc->x,0,nc->z});
+				Respond::PreChunk(response, nc->x, nc->z, 1);
 
 				Respond::Chunk(
 					response, 

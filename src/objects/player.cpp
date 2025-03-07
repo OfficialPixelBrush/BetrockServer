@@ -24,7 +24,7 @@ void Player::Kill(std::vector<uint8_t> &response) {
 }
 
 void Player::PrintStats() {
-    std::cout << username << ": " << position << "; " << yaw << ", " << pitch << std::endl;
+    std::cout << username << ": " << position << ";" << stance <<  "; " << yaw << ", " << pitch << std::endl;
 }
 
 // Store the player data as an NBT-format file
