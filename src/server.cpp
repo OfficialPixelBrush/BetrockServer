@@ -174,6 +174,59 @@ void Server::InitPlugins() {
     }
 }
 
+void Server::ReadOperators() {
+	std::ifstream file(OPERATOR_FILE);
+    if (!file) {
+        std::ofstream createFile(OPERATOR_FILE);
+        createFile.close();
+        return;
+    }
+	for( std::string username; getline( file, username ); )
+	{
+		AddOperator(username);
+	}
+	file.close();
+}
+
+void Server::WriteOperators() {
+	std::ofstream file(OPERATOR_FILE);
+	for (auto op : operators) {
+		file << op << std::endl;
+	}
+	file.close();
+}
+
+bool Server::AddOperator(std::string username) {
+	auto itr = std::find(operators.begin(), operators.end(), username);
+	// Only add if the operator doesn't already exist
+	if (itr == operators.end())	{
+		operators.push_back(username);
+		WriteOperators();
+		return true;
+	}
+	return false;
+}
+
+bool Server::RemoveOperator(std::string username) {
+	auto itr = std::find(operators.begin(), operators.end(), username);
+	// Only remove if the operator does exist
+	if (itr != operators.end()) {
+		operators.erase(itr);
+		WriteOperators();
+		return true;
+	}
+	return false;
+}
+
+bool Server::IsOperator(std::string username) {
+	auto itr = std::find(operators.begin(), operators.end(), username);
+	// Only add if the passed player is an operator
+	if (itr != operators.end())	{
+		return true;
+	}
+	return false;
+}
+
 bool Server::SocketBootstrap(uint16_t port) {
 	// TODO: remove perror in future with cooler betrock custom error stuff
 	struct sockaddr_in address;
