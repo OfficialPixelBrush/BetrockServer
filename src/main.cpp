@@ -29,6 +29,9 @@ int main() {
 	if (!server.SocketBootstrap(port)) {
 		return EXIT_FAILURE;
 	}
+
+	// Read in the usernames of all operators
+	server.ReadOperators();
 	
 	// Init the plugins
 	server.InitPlugins();

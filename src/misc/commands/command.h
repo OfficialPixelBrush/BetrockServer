@@ -10,6 +10,8 @@
 #include "labels.h"
 #include "sysinfo.h"
 
+#define ERROR_OPERATOR "Only operators can use this command!"
+
 class Client;
 
 class Command {
@@ -18,18 +20,18 @@ class Command {
     private:
         // Operator
         static void Creative(Player* player);
-        static void Free();
+        static void Free(Player* player);
         static void Gamerule(Client* client);
         static void Kick(Client* client);
-        static void Save();
-        static void Stop();
+        static void Save(Player* player);
+        static void Stop(Player* player);
         static void Summon(Client* client);
         static void Teleport(Client* client);
-        static void Time();
-        static void Uptime();
+        static void Time(Player* player);
+        static void Uptime(Player* player);
         
-        static void Op(Client* client);
-        static void Deop(Client* client);
+        static void Op(Player* player);
+        static void Deop(Player* player);
 
         // Creative Player
         static void Give(Client* client);
