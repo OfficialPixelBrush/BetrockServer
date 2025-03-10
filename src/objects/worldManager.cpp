@@ -101,17 +101,21 @@ void WorldManager::WorkerThread() {
             chunkQueue.pop();
         }
 
-        int64_t key = GetChunkHash(cq.position.x, cq.position.z);
-        chunkPositions.erase(key);  // Remove from tracking set
+
+        std::scoped_lock lock(queueMutex);
+        {
+            int64_t key = GetChunkHash(cq.position.x, cq.position.z);
+            chunkPositions.erase(key);  // Remove from tracking set
 
 
-		// Try to load chunk
-        GetChunk(cq.position.x, cq.position.z,generator);
+            // Try to load chunk
+            GetChunk(cq.position.x, cq.position.z,generator);
 
-        std::scoped_lock lock(Betrock::Server::Instance().GetConnectedClientMutex());
-        for (auto c : cq.requestedClients) {
-            if (c) {
-                c->AddNewChunk(cq.position);
+            std::scoped_lock lock(Betrock::Server::Instance().GetConnectedClientMutex());
+            for (auto c : cq.requestedClients) {
+                if (c) {
+                    c->AddNewChunk(cq.position);
+                }
             }
         }
     }
