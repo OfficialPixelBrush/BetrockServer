@@ -3,6 +3,8 @@
 #include "entity.h"
 #include <cstdint>
 
+#define CHAT_MESSAGE_MAX_LENGTH 119
+
 void Respond::KeepAlive(std::vector<uint8_t> &response) {
     response.push_back((uint8_t)Packet::KeepAlive);
 }
@@ -22,6 +24,10 @@ void Respond::Handshake(std::vector<uint8_t> &response) {
 }
 
 void Respond::ChatMessage(std::vector<uint8_t> &response, std::string message) {
+    if (message.size() > CHAT_MESSAGE_MAX_LENGTH) {
+        Betrock::Logger::Instance().Warning("Tried to send a chat message that was too long! (" + std::to_string(message.size()) + "/" + std::to_string(CHAT_MESSAGE_MAX_LENGTH) + ")");
+        message.resize(CHAT_MESSAGE_MAX_LENGTH);
+    }
     response.push_back((uint8_t)Packet::ChatMessage);
     AppendString16ToVector(response,message);
 }
