@@ -2,11 +2,6 @@
 #include "client.h"
 #include <cstdint>
 
-// Get the players velocity
-Vec3 Player::GetVelocity() {
-    return previousPosition - position;
-}
-
 void Player::SetHealth(std::vector<uint8_t> &response, int8_t health) {
     if (health > HEALTH_MAX) { health = HEALTH_MAX; }
     if (health < 0) { health = 0; }
