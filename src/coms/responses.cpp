@@ -140,6 +140,12 @@ void Respond::PickupSpawn(std::vector<uint8_t> &response, int32_t& entityId, int
     response.push_back(roll);
 }
 
+void Respond::CollectItem(std::vector<uint8_t> &response, int32_t& entityIdCollected,  int32_t& entityIdCollector) {
+    response.push_back((uint8_t)Packet::CollectItem);
+    AppendIntegerToVector(response, entityIdCollected);
+    AppendIntegerToVector(response, entityIdCollector);
+}
+
 void Respond::MobSpawn(std::vector<uint8_t> &response, int32_t& entityId, int8_t type, Int3 position, int8_t yaw, int8_t pitch) {
     response.push_back((uint8_t)Packet::MobSpawn);
     AppendIntegerToVector(response, entityId);
