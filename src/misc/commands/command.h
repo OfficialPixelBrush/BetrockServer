@@ -29,6 +29,7 @@ class Command {
         static void Teleport(Client* client);
         static void Time(Player* player);
         static void Uptime(Player* player);
+        static void Entities(Client* client);
         
         static void Op(Player* player);
         static void Deop(Player* player);
@@ -41,5 +42,6 @@ class Command {
         static void Pose(Player* player);
         static void Sound(Player* player);
         static void Spawn(Client* client);
+        static void List(Client* client);
         static void Version();
 };

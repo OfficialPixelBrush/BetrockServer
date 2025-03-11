@@ -8,6 +8,7 @@
 #include <stdexcept>
 
 #include "client.h"
+#include "entity.h"
 #include "world.h"
 #include "worldManager.h"
 #include "plugins.h"
@@ -41,6 +42,14 @@ class Server {
 	int GetServerFd() const noexcept;
 
 	std::vector<std::shared_ptr<Client>> &GetConnectedClients() noexcept;
+
+	std::unordered_map<int32_t,std::shared_ptr<Entity>> &GetEntities() noexcept;
+
+	std::shared_ptr<Entity> GetEntity(int32_t id) noexcept;
+	
+	void AddEntity(int32_t id, const Entity& e) noexcept;
+	
+	void RemoveEntity(int32_t id) noexcept;
 
 	int32_t &GetLatestEntityId() noexcept;
 
@@ -148,6 +157,7 @@ class Server {
 	bool alive = true; // server alive
 	int serverFd = -1;
 	std::vector<std::shared_ptr<Client>> connectedClients;
+	std::unordered_map<int32_t, std::shared_ptr<Entity>> entities;
 	int32_t latestEntityId = 0;
 	int chunkDistance = 10;
 	atomic_uint64_t serverTime = 0;

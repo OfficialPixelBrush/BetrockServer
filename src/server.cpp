@@ -15,6 +15,21 @@ int Server::GetServerFd() const noexcept { return this->serverFd; }
 
 std::vector<std::shared_ptr<Client>> &Server::GetConnectedClients() noexcept { return this->connectedClients; }
 
+std::unordered_map<int32_t, std::shared_ptr<Entity>>& Server::GetEntities() noexcept { return entities; }
+
+std::shared_ptr<Entity> Server::GetEntity(int32_t id) noexcept { 
+	auto it = entities.find(id);
+	return (it != entities.end()) ? it->second : nullptr;
+}
+
+void Server::AddEntity(int32_t id, const Entity& e) noexcept { 
+	entities[id] = std::make_shared<Entity>(e);
+}
+
+void Server::RemoveEntity(int32_t id) noexcept { 
+	entities.erase(id);
+}
+
 int32_t &Server::GetLatestEntityId() noexcept { return this->latestEntityId; }
 
 int Server::GetChunkDistance() const noexcept { return this->chunkDistance; }

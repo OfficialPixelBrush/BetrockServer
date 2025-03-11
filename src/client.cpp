@@ -364,6 +364,7 @@ void Client::HandleClient() {
   	auto &server = Betrock::Server::Instance();
 	player = std::make_unique<Player>(
 		server.GetLatestEntityId(),
+		EntityType::Player,
 		server.GetSpawnPoint(),
 		server.GetSpawnDimension(),
 		server.GetSpawnWorld(),
@@ -723,25 +724,36 @@ bool Client::HandlePlayerDigging(World* world) {
 	if (status == 2 || player->creativeMode || IsInstantlyBreakable(targetedBlock->type)) {
 		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,targetedBlock->type);
 		if (doTileDrops && !player->creativeMode) {
-			// TODO: This works now,
-			// but results in entities piling up
-			// We need server-side managed entities
-			/*
-			Respond::PickupSpawn(
-				broadcastResponse,
-				Betrock::Server::Instance().GetLatestEntityId(),
-				b.type,
-				1,
-				b.meta,
-				Int3ToEntityInt3(pos),
-				0,0,0
-			);
-			*/
 			Item item = Item{targetedBlock->type,1,targetedBlock->meta};
 			if (!player->creativeMode) {
 				item = GetDrop(item);
+
+				// TODO: This works now,
+				// but results in entities piling up
+				// We need server-side managed entities
+				if (item.id > SLOT_EMPTY) {
+					DroppedItem dp(
+						Betrock::Server::Instance().GetLatestEntityId(),
+						EntityType::DroppedItem,
+						Int3ToVec3(pos),
+						0,
+						"world",
+						item
+					);
+					Respond::PickupSpawn(
+						broadcastResponse,
+						dp.entityId,
+						dp.item.id,
+						dp.item.amount,
+						dp.item.damage,
+						Int3ToEntityInt3(pos),
+						0,0,0
+					);
+					Betrock::Server::Instance().AddEntity(dp.entityId,dp);
+				}
+			} else {
+				Give(response,item.id,item.amount,item.damage);
 			}
-			Give(response,item.id,item.amount,item.damage);
 		}
 		// Special handling for multi-block blocks
 		if (targetedBlock->type == BLOCK_DOOR_WOOD ||

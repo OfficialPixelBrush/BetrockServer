@@ -9,6 +9,7 @@
 #include <thread>
 
 #include "player.h"
+#include "droppedItem.h"
 #include "command.h"
 #include "worldManager.h"
 #include "version.h"

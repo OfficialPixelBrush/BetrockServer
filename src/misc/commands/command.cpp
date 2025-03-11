@@ -87,6 +87,34 @@ void Command::Uptime(Player* player) {
 	failureReason = "";
 }
 
+// Get all connected players
+void Command::List(Client* client) {
+	Respond::ChatMessage(response, "§7-- Connected Players --");
+	std::string msg = "§7";
+	auto clients = Betrock::Server::Instance().GetConnectedClients();
+	for (int i = 0; i < clients.size(); i++) {
+		msg += clients[i]->GetPlayer()->username;
+		if (i < clients.size()-1) {
+			msg += ", ";
+		}
+		if (msg.size() > 40 || i == clients.size()-1) {
+			Respond::ChatMessage(response, msg);
+			msg = "§7";
+		}
+	}
+	failureReason = "";
+}
+
+// Get the number of entities
+void Command::Entities(Client* client) {
+	if (!Betrock::Server::Instance().IsOperator(client->GetPlayer()->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
+	Respond::ChatMessage(response, "§7There are " + std::to_string(Betrock::Server::Instance().GetEntities().size()) + " Entities");
+	failureReason = "";
+}
+
 // Get and Set the time
 void Command::Time(Player* player) {
 	if (!Betrock::Server::Instance().IsOperator(player->username)) {
@@ -402,6 +430,10 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 			Time(player);
 		} else if (command[0] == "uptime") {
 			Uptime(player);
+		} else if (command[0] == "entities") {
+			Entities(client);
+		} else if (command[0] == "list") {
+			List(client);
 		} else if (command[0] == "help") {
 			Help();
 		} else if (command[0] == "version") {

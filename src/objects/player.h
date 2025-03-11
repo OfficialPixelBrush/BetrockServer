@@ -7,6 +7,7 @@
 #include "coms.h"
 #include "inventory.h"
 #include "nbt.h"
+#include "entityType.h"
 
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62
@@ -33,14 +34,12 @@ class Player : public Entity {
         // Inventory
         Item inventory[INVENTORY_MAX_SLOTS];
 
-        Player(int &entityId, Vec3 position, int8_t dimension, std::string world, Vec3 spawnPosition, int8_t spawnDimension, std::string spawnWorld)
-            : Entity(entityId++, position, dimension, world),
+        Player(int &entityId, EntityType entityType, Vec3 position, int8_t dimension, std::string world, Vec3 spawnPosition, int8_t spawnDimension, std::string spawnWorld)
+            : Entity(entityId++, entityType, position, dimension, world),
             spawnPosition(spawnPosition),
             spawnDimension(spawnDimension),
             spawnWorld(spawnWorld)
         {}
-
-        Vec3 GetVelocity();
         void SetHealth(std::vector<uint8_t> &response, int8_t health);
         void Hurt(std::vector<uint8_t> &response, int8_t damage);
         void Kill(std::vector<uint8_t> &response);
