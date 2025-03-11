@@ -720,6 +720,11 @@ bool Client::HandlePlayerDigging(World* world) {
 		Betrock::Logger::Instance().Debug(GetLabel((int)targetedBlock->type) + " " + targetedBlock->str() + " at " + pos.str());
 	}
 
+	// If the player is trying to drop an item
+	if (status == 4) {
+		// From here we should spawn a dropped item, etc.
+	}
+
 	// If the block is broken or instantly breakable
 	if (status == 2 || player->creativeMode || IsInstantlyBreakable(targetedBlock->type)) {
 		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,targetedBlock->type);
