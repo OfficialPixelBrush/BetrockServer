@@ -30,6 +30,7 @@ class Respond {
         static void EntityAction(std::vector<uint8_t> &response, int32_t entityId, uint8_t action);
         static void NamedEntitySpawn(std::vector<uint8_t> &response, int32_t& entityId, std::string username, Int3 position, int8_t yaw, int8_t pitch, int16_t currentItem);
         static void PickupSpawn(std::vector<uint8_t> &response, int32_t& entityId, int16_t id, int8_t count, int16_t damage, Int3 position, int8_t yaw, int8_t pitch, int8_t roll);
+        static void CollectItem(std::vector<uint8_t> &response, int32_t& entityIdCollected,  int32_t& entityIdCollector);
         static void MobSpawn(std::vector<uint8_t> &response, int32_t& entityId, int8_t type, Int3 position, int8_t yaw, int8_t pitch);
         static void DestroyEntity(std::vector<uint8_t> &response, int32_t& entityId);
         static void EntityRelativeMove(std::vector<uint8_t> &response, int32_t& entityId, Int3 relativeMovement);
