@@ -99,3 +99,7 @@ though the one hosted on [grahamedgecombe.com](https://minecraft-ids.grahamedgec
 | - | - |
 | main | ![Commits (main)](https://img.shields.io/github/commit-activity/t/OfficialPixelBrush/BetrockServer/main) |
 | latest | ![Commits (latest)](https://img.shields.io/github/commit-activity/t/OfficialPixelBrush/BetrockServer/latest) |
+                        
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=OfficialPixelBrush/BetrockServer&type=Date)](https://www.star-history.com/#OfficialPixelBrush/BetrockServer&Date)
