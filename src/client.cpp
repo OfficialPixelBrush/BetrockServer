@@ -9,7 +9,7 @@ bool Client::CheckPosition(Vec3 &newPosition, double &newStance) {
 	player->previousPosition = player->position;
 
 	player->position = newPosition;
-	player->stance = newStance + 1.62;
+	player->stance = newStance;
 	return true;
 }
 
@@ -63,7 +63,6 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
 		// Otherwise queue chunk loading or generation
 		wm->AddChunkToQueue(position.x, position.z, this);
 		//Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
-		SendResponse(true);
         return;
     }
     // If the chunk is already available, send it over
@@ -145,8 +144,8 @@ void Client::SendNewChunks() {
 			auto chunk = CompressChunk(chunkData.get(), compressedSize);
 
 			if (chunk) {
-				Respond::PreChunk(response, nc->x, nc->z, 1);
 				visibleChunks.push_back(Int3{nc->x,0,nc->z});
+				Respond::PreChunk(response, nc->x, nc->z, 1);
 
 				Respond::Chunk(
 					response, 
@@ -474,7 +473,7 @@ bool Client::HandleLoginRequest() {
 	}
 
 	// TODO: This hack seems stupid
-	player->position.y += 0.1;
+	//player->position.y += 0.1;
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
 	Teleport(response,player->position, player->yaw, player->pitch);

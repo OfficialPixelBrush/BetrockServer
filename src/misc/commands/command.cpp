@@ -78,13 +78,21 @@ void Command::Sound(Player* player) {
 }
 
 // Get the uptime
-void Command::Uptime() {
+void Command::Uptime(Player* player) {
+	if (!Betrock::Server::Instance().IsOperator(player->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	Respond::ChatMessage(response, "§7Uptime is " + std::to_string(Betrock::Server::Instance().GetUpTime()) + " Ticks");
 	failureReason = "";
 }
 
 // Get and Set the time
-void Command::Time() {
+void Command::Time(Player* player) {
+	if (!Betrock::Server::Instance().IsOperator(player->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	auto &server = Betrock::Server::Instance();
 	
 	// Set the time
@@ -204,6 +212,10 @@ void Command::Health(Player* player) {
 
 // Kill the current client
 void Command::Kill(Player* player) {
+	if (!Betrock::Server::Instance().IsOperator(player->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	if (command.size() > 0) {
 		std::string username = player->username;
 		if (command.size() > 1) {
@@ -223,6 +235,10 @@ void Command::Kill(Player* player) {
 
 // Summon a player entity
 void Command::Summon(Client* client) {
+	if (!Betrock::Server::Instance().IsOperator(client->GetPlayer()->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	auto &server = Betrock::Server::Instance();
 
 	if (command.size() > 1) {
@@ -238,6 +254,10 @@ void Command::Summon(Client* client) {
 
 // Set gamerules
 void Command::Gamerule(Client* client) {
+	if (!Betrock::Server::Instance().IsOperator(client->GetPlayer()->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	if (command.size() > 1) {
 		if (command[1] == "doDaylightCycle") {
 			doDaylightCycle = !doDaylightCycle;
@@ -255,6 +275,10 @@ void Command::Gamerule(Client* client) {
 
 // Kick the passed player
 void Command::Kick(Client* client) {
+	if (!Betrock::Server::Instance().IsOperator(client->GetPlayer()->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	if (command.size() > 0) {
 		std::string username = client->GetPlayer()->username;
 		if (command.size() > 1) {
@@ -286,14 +310,22 @@ void Command::Creative(Player* player) {
 }
 
 // Stop the Server
-void Command::Stop() {
+void Command::Stop(Player* player) {
+	if (!Betrock::Server::Instance().IsOperator(player->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	Respond::ChatMessage(response, "§7Stopping server");
 	Betrock::Server::Instance().PrepareForShutdown();
 	failureReason = "";
 }
 
 // Save the Server
-void Command::Save() {
+void Command::Save(Player* player) {
+	if (!Betrock::Server::Instance().IsOperator(player->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	Respond::ChatMessage(response, "§7Saving...");
 	Betrock::Server::Instance().SaveAll();
 	Respond::ChatMessage(response, "§7Saved");
@@ -301,25 +333,51 @@ void Command::Save() {
 }
 
 // Free unseen chunks
-void Command::Free() {
+void Command::Free(Player* player) {
+	if (!Betrock::Server::Instance().IsOperator(player->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	Respond::ChatMessage(response, "§7Freeing Chunks");
 	Betrock::Server::Instance().FreeAll();
 	failureReason = "";
 }
 
 // Grant a player an operator
-void Command::Op(Client* client) {
+void Command::Op(Player* player) {
+	if (!Betrock::Server::Instance().IsOperator(player->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	if (command.size() > 0) {
-		Respond::ChatMessage(response, "§7Opping " + client->GetPlayer()->username);
+		std::string username = player->username;
+		if (command.size() > 1) {
+			// Search for the client by username
+			username = command[1];
+		}
+		Betrock::Server::Instance().AddOperator(username);
+		Respond::ChatMessage(response, "§7Opping " + username);
 		failureReason = "";
+		return;
 	}
 }
 
 // Removed operator priviliges from a player
-void Command::Deop(Client* client) {
+void Command::Deop(Player* player) {
+	if (!Betrock::Server::Instance().IsOperator(player->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
 	if (command.size() > 0) {
-		Respond::ChatMessage(response, "§7De-opping " + client->GetPlayer()->username);
+		std::string username = player->username;
+		if (command.size() > 1) {
+			// Search for the client by username
+			username = command[1];
+		}
+		Betrock::Server::Instance().RemoveOperator(username);
+		Respond::ChatMessage(response, "§7De-opping " + username);
 		failureReason = "";
+		return;
 	}
 }
 
@@ -341,9 +399,9 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 
 	try {
 		if (command[0] == "time") {
-			Time();
+			Time(player);
 		} else if (command[0] == "uptime") {
-			Uptime();
+			Uptime(player);
 		} else if (command[0] == "help") {
 			Help();
 		} else if (command[0] == "version") {
@@ -351,9 +409,9 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 		} else if (command[0] == "help") {
 			Help();
 		} else if (command[0] == "op") {
-			Op(client);
+			Op(player);
 		} else if (command[0] == "deop") {
-			Deop(client);
+			Deop(player);
 		} else if (command[0] == "tp") {
 			Teleport(client);
 		} else if (command[0] == "pose") {
@@ -377,11 +435,11 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 		} else if (command[0] == "creative") {
 			Creative(player);
 		} else if (command[0] == "save") {
-			Save();
+			Save(player);
 		} else if (command[0] == "stop") {
-			Stop();
+			Stop(player);
 		} else if (command[0] == "free") {
-			Free();
+			Free(player);
 		} else if (command[0] == "loaded") {
 			failureReason = std::to_string(Betrock::Server::Instance().GetWorldManager(player->dimension)->world.GetNumberOfChunks());
 		} else if (command[0] == "used") {

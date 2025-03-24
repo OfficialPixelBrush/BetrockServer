@@ -6,22 +6,27 @@ void CalculateColumnLight(int8_t x, int8_t z, Chunk* c, int8_t& unobstructedLaye
     if (!c) {
         return;
     }
-    uint8_t skyVisible = 0xF;
+    uint8_t skyLight = 0xF;
     for (int8_t y = CHUNK_HEIGHT-1; y > 0; y--) {
         Block* b = &c->blocks[GetBlockIndex(Int3{x,y,z})];
         if (!b) {
             continue;
         }
+        b->lightBlock = 0x0;
+        // If the skylight is already 0, we can skip all further math and set skylight to 0 directly
+        if (skyLight == 0x0) {
+            b->lightSky = 0x0;
+        }
+        // First we set the blocklight
+        //b->lightBlock = GetEmissiveness(b->type);
         if (!IsTransparent(b->type)) {
             // We remember the first layer of blocks that obstructs the sky
             if (unobstructedLayers < y) {
                 unobstructedLayers = y;
             }
-            b->lightBlock = 0x0;
-            skyVisible = 0x0;
+            skyLight-=1;
         }
-        b->lightBlock = GetEmissiveness(b->type);
-        b->lightSky = skyVisible;
+        b->lightSky = skyLight;
     }
 }
 
@@ -48,7 +53,8 @@ void CalculateSpreadLight(int8_t y, Chunk* c) {
                         }
                         //GetTranslucency(b->type, currentLight);
                         if (!IsTransparent(b->type)) {
-                            currentLight = 0x0;
+                            nb->lightSky = 0x0;
+                            return;
                         }
                         if (nb->lightSky + 2 <= currentLight) {
                             // Light diminishes
@@ -100,8 +106,10 @@ void CalculateChunkLight(Chunk* c) {
             CalculateColumnLight(x,z,c,unobstructedLayers);
         }
     }
+    /*
     // Then we do a horizontal pass
     for (int32_t y = unobstructedLayers; y >= 0; y--) {
         CalculateSpreadLight(y,c);
     }
+        */
 }

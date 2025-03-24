@@ -44,7 +44,7 @@ class Player : public Entity {
         void SetHealth(std::vector<uint8_t> &response, int8_t health);
         void Hurt(std::vector<uint8_t> &response, int8_t damage);
         void Kill(std::vector<uint8_t> &response);
-        void PrintStats();
+        void PrintStats() override;
         void Save();
         bool Load();
 };

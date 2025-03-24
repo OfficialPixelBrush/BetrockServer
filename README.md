@@ -11,10 +11,12 @@ A Server-Engine written in C++, made to work with Minecraft Beta 1.7.3. The goal
 ## Getting Started
 How do you run your own BetrockServer instance?
 
+If you're on Linux, simply follow the steps listed below. If you're on Windows, please follow these same steps only after installing [Windows Subsystem for Linux (WSL2)](https://learn.microsoft.com/en-us/windows/wsl/install).
+
 ## Option 1 - Download
 Check the releases page for the latest binary of BetrockServer. Then simply run the executable.
 
-If it complains about lacking a `scripts` folder, download the `scripts` folder from the repository and place it alongside the executable.
+If it complains about lacking a `scripts` folder, download the `src/scripts` folder from the repository and place it alongside the executable.
 
 ## Option 2 - Compiling
 This section is written to be as accessible as possible, so anyone can compile BetrockServer.
