@@ -138,6 +138,17 @@ class Server {
 			}
 
 			// Create new Client
+			// if player slots are available
+			if (server.maximumPlayers != NO_LIMIT && server.connectedClients.size() >= server.maximumPlayers) {
+				// Optionally send a rejection message to client
+				unsigned char rejectionCode = 0xFF;
+				send(client_fd, &rejectionCode, 1, 0);
+
+				// Reject the client by closing the socket
+				close(client_fd);
+				continue;
+			}
+
 			{
 				std::scoped_lock lockEntityId(server.entityIdMutex);
 				auto client = std::make_shared<Client>(client_fd);

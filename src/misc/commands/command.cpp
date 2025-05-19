@@ -28,6 +28,25 @@ void Command::Help() {
 	return;
 }
 
+void Command::List() {
+	Respond::ChatMessage(response, "§7-- All players --");
+	Betrock::Server::Instance().GetConnectedClientMutex();
+	auto clients = Betrock::Server::Instance().GetConnectedClients();
+	std::string msg = "§7";
+	for (int i = 0; i < clients.size(); i++) {
+		msg += clients[i]->GetPlayer()->username;
+		if (i < clients.size()-1) {
+			msg += ", ";
+		}
+		if (msg.size() > 40 || i == clients.size()-1) {
+			Respond::ChatMessage(response, msg);
+			msg = "§7";
+		}
+	}
+	failureReason = "";
+	return;
+}
+
 // Send the client the current server version
 void Command::Version() {
 	Respond::ChatMessage(response, "§7Current " + std::string(PROJECT_NAME) + " version is "  + std::string(PROJECT_VERSION_FULL_STRING));
@@ -453,6 +472,8 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 			Health(player);
 		} else if (command[0] == "kill") {
 			Kill(player);
+		} else if (command[0] == "list") {
+			List();
 		} else if (command[0] == "summon") {
 			Summon(client);
 		} else if (command[0] == "gamerule") {
