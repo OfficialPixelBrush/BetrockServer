@@ -395,19 +395,17 @@ void Command::Whitelist(Player* player) {
 	- whitelist remove
 	- whitelist list
 	*/
-	/*
 	if (command.size() > 0) {
 		std::string username = player->username;
 		if (command.size() > 1) {
 			// Search for the client by username
 			username = command[1];
 		}
-		Betrock::Server::Instance().AddOperator(username);
-		Respond::ChatMessage(response, "§7Opping " + username);
+		Betrock::Server::Instance().AddWhitelist(username);
+		Respond::ChatMessage(response, "§7Whitelisting " + username);
 		failureReason = "";
 		return;
 	}
-	*/
 }
 
 // Parses commands and executes them

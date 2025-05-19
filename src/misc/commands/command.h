@@ -11,6 +11,7 @@
 #include "sysinfo.h"
 
 #define ERROR_OPERATOR "Only operators can use this command!"
+#define ERROR_WHITELIST "Only whitelisted players can use this command!"
 
 class Client;
 

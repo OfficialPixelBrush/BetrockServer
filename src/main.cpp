@@ -32,6 +32,7 @@ int main() {
 
 	// Read in the usernames of all operators
 	server.ReadOperators();
+	server.ReadWhitelist();
 	
 	// Init the plugins
 	server.InitPlugins();

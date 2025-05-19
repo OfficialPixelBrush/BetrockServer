@@ -15,6 +15,16 @@
 #define PROTOCOL_VERSION 14
 #define TICK_SPEED 20
 #define OPERATOR_FILE "ops.txt"
+#define WHITELIST_FILE "whitelist.txt"
+#define FALLBACK_FILE "fail.txt"
+
+enum AccessTypes {
+	NONE,
+	OPERATOR_TYPE,
+	WHITELIST_TYPE
+};
+
+#define NO_LIMIT -1
 
 namespace Betrock {
 
@@ -56,12 +66,28 @@ class Server {
 	// !! returns a valid pointer or a nullptr on failure !!
 	WorldManager *GetWorldManager(int8_t world_id) const;
 
-	// This is used for managing operators
+	// This is used for managing players
+	void ReadGeneric(uint8_t type);
+	void WriteGeneric(uint8_t type);
+	bool AddGeneric(uint8_t type, std::string username);
+	bool IsGeneric(uint8_t type, std::string username);
+	bool RemoveGeneric(uint8_t type, std::string username);
+
+	// Thin wrapper around Generics
 	void ReadOperators();
 	void WriteOperators();
 	bool AddOperator(std::string username);
 	bool IsOperator(std::string username);
 	bool RemoveOperator(std::string username);
+
+	void ReadWhitelist();
+	void WriteWhitelist();
+	bool AddWhitelist(std::string username);
+	bool IsWhitelist(std::string username);
+	bool RemoveWhitelist(std::string username);
+
+	std::vector<std::string>& GetServerVector(uint8_t type);
+	std::string GetGenericFilePath(uint8_t type);
 
 	// get the world with the coresponding world_id.
 	// !! returns a valid pointer or a nullptr on failure !!
@@ -149,6 +175,7 @@ class Server {
 	int serverFd = -1;
 	std::vector<std::shared_ptr<Client>> connectedClients;
 	int32_t latestEntityId = 0;
+	int32_t maximumPlayers = NO_LIMIT;
 	int chunkDistance = 10;
 	atomic_uint64_t serverTime = 0;
 	atomic_uint64_t upTime = 0;
@@ -159,6 +186,7 @@ class Server {
 	std::int8_t spawnDimension;
 	std::string spawnWorld;
 	std::vector<std::string> operators;
+	std::vector<std::string> whitelist;
 
 	std::mutex connectedClientsMutex;
 	std::mutex entityIdMutex;
