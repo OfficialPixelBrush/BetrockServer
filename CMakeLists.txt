@@ -39,12 +39,6 @@ configure_file(
     ${CMAKE_SOURCE_DIR}/src/misc/version.h
 )
 
-configure_file(
-    ${CMAKE_SOURCE_DIR}/.github/ISSUE_TEMPLATE/bug_report.md.in
-    ${CMAKE_SOURCE_DIR}/.github/ISSUE_TEMPLATE/bug_report.md
-    @ONLY
-)
-
 include_directories(
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/include/pixnbt"
