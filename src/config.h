@@ -1,6 +1,7 @@
 #pragma once
 
 #include <shared_mutex>
+#include <iostream>
 
 #include <string>
 #include <unordered_map>
@@ -31,6 +32,23 @@ class GlobalConfig {
 	// get the value at key as number
 	template <std::integral num_type> num_type GetAsNumber(const std::string &key) {
 		return std::stoll(std::string(this->Get(key)));
+	}
+
+	// get the value at key as boolean
+	bool GetAsBoolean(const std::string& key) {
+		std::string val = std::string(this->Get(key));
+		try {
+			if (val == "true" || val == "1")
+				return true;
+			// All other cases default to false
+			/*
+			if (val == "false" || val == "0")
+				return false;
+			*/
+		} catch (const std::exception &e) {
+			std::cerr << "Error while writing: " << e.what() << "\n";
+		}
+		return false;
 	}
 
 	// set value at key.

@@ -44,6 +44,8 @@ class Server {
 
 	bool IsAlive() const noexcept;
 
+	bool IsWhitelistEnabled() const noexcept;
+
 	int8_t GetSpawnDimension() const noexcept;
 
 	std::string GetSpawnWorld() const noexcept;
@@ -51,6 +53,8 @@ class Server {
 	int GetServerFd() const noexcept;
 
 	std::vector<std::shared_ptr<Client>> &GetConnectedClients() noexcept;
+
+	std::vector<std::string> &GetWhitelist() noexcept;
 
 	int32_t &GetLatestEntityId() noexcept;
 
@@ -198,6 +202,7 @@ class Server {
 	std::string spawnWorld;
 	std::vector<std::string> operators;
 	std::vector<std::string> whitelist;
+	bool whitelistEnabled = false;
 
 	std::mutex connectedClientsMutex;
 	std::mutex entityIdMutex;

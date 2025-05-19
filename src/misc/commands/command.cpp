@@ -412,18 +412,50 @@ void Command::Whitelist(Player* player) {
 	- whitelist on
 	- whitelist add
 	- whitelist remove
-	- whitelist list
+	- whitelist list o
+	- whitelist reload
 	*/
-	if (command.size() > 0) {
-		std::string username = player->username;
-		if (command.size() > 1) {
-			// Search for the client by username
-			username = command[1];
+	if (command.size() > 1) {
+		if (command.size() > 2) {
+			std::string username = command[2];
+			if (command[1] == "add") {
+				Betrock::Server::Instance().AddWhitelist(username);
+				Respond::ChatMessage(response, "§7Whitelisted " + username);
+				failureReason = "";
+				return;
+			}
+			if (command[1] == "remove") {
+				Betrock::Server::Instance().RemoveWhitelist(username);
+				Respond::ChatMessage(response, "§7Unwhitelisted " + username);
+				failureReason = "";
+				return;
+			}
 		}
-		Betrock::Server::Instance().AddWhitelist(username);
-		Respond::ChatMessage(response, "§7Whitelisting " + username);
-		failureReason = "";
-		return;
+		if (command[1] == "reload") {
+			auto& server = Betrock::Server::Instance();
+			server.ReadWhitelist();
+			Respond::ChatMessage(response, "§7Reloaded Whitelist");
+			failureReason = "";
+			return;
+		}
+		if (command[1] == "list") {
+			auto& server = Betrock::Server::Instance();
+			Respond::ChatMessage(response, "§7-- Whitelisted Players --");
+			std::string msg = "§7";
+			auto& whitelist = server.GetWhitelist();
+			for (int i = 0; i < whitelist.size(); i++) {
+				msg += whitelist[i];
+				if (i < whitelist.size()-1) {
+					msg += ", ";
+				}
+				if (msg.size() > 40 || i == whitelist.size()-1) {
+					Respond::ChatMessage(response, msg);
+					msg = "§7";
+				}
+			}
+			failureReason = "";
+			return;
+		}
 	}
 }
 

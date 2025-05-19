@@ -406,6 +406,11 @@ bool Client::HandleKeepAlive() {
 // Engage with the handshake packet
 bool Client::HandleHandshake() {
 	player->username = EntryToString16(message, offset);
+	auto &server = Betrock::Server::Instance();
+	if (server.IsWhitelistEnabled() && !server.IsWhitelist(player->username)) {
+		DisconnectClient("Not on whitelist!");
+		return false;
+	}
 	Respond::Handshake(response);
 	SetConnectionStatus(ConnectionStatus::LoggingIn);
 	return true;
@@ -916,20 +921,22 @@ bool Client::HandleUpdateSign() {
 // Handle the Client attempting to disconnect
 bool Client::HandleDisconnect() {
 	std::string disconnectMessage = EntryToString16(message, offset);
-	DisconnectClient(disconnectMessage);
+	DisconnectClient(disconnectMessage,true);
 	return true;
 }
 
 // This should be used for disconnecting clients
 // Disconnect the current client from the server
-void Client::DisconnectClient(std::string disconnectMessage) {
+void Client::DisconnectClient(std::string disconnectMessage, bool tellOthers) {
 	SetConnectionStatus(ConnectionStatus::Disconnected);
 	Respond::Disconnect(response, disconnectMessage);
 	SendResponse(true);
 	// Inform other clients
-	Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
+	if (tellOthers) {
+		Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
+		Respond::ChatMessage(broadcastOthersResponse, "§e" + player->username + " left the game.");
+	}
 	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
-	Respond::ChatMessage(broadcastOthersResponse, "§e" + player->username + " left the game.");
 	BroadcastToClients(broadcastOthersResponse,this);
 }
 

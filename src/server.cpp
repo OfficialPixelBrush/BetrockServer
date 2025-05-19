@@ -7,6 +7,8 @@ namespace Betrock {
 
 bool Server::IsAlive() const noexcept { return this->alive; }
 
+bool Server::IsWhitelistEnabled() const noexcept { return this->whitelistEnabled; }
+
 int8_t Server::GetSpawnDimension() const noexcept { return this->spawnDimension; }
 
 std::string Server::GetSpawnWorld() const noexcept { return this->spawnWorld; }
@@ -14,6 +16,8 @@ std::string Server::GetSpawnWorld() const noexcept { return this->spawnWorld; }
 int Server::GetServerFd() const noexcept { return this->serverFd; }
 
 std::vector<std::shared_ptr<Client>> &Server::GetConnectedClients() noexcept { return this->connectedClients; }
+
+std::vector<std::string> &Server::GetWhitelist() noexcept { return this->whitelist; }
 
 int32_t &Server::GetLatestEntityId() noexcept { return this->latestEntityId; }
 
@@ -131,7 +135,7 @@ void Server::LoadConfig() {
 	if (!std::filesystem::exists(GlobalConfig::Instance().GetPath())) {
 		GlobalConfig::Instance().Overwrite({{"level-name", "world"},
 											{"view-distance", "5"},
-											// {"white-list","false"},
+											{"white-list","true"},
 											{"server-ip", ""},
 											//{"pvp","true"},
 											// use a random device to seed another prng that gives us our seed
@@ -140,7 +144,7 @@ void Server::LoadConfig() {
 											{"server-port", "25565"},
 											//{"allow-nether",true},
 											//{"spawn-monsters","true"},
-											//{"max-players","20"},
+											{"max-players","-1"},
 											//{"online-mode","false"},
 											//{"allow-flight","false"}
 											{"generator", "terrain/worley.lua"}});
@@ -149,6 +153,8 @@ void Server::LoadConfig() {
 		GlobalConfig::Instance().LoadFromDisk();
 		chunkDistance = GlobalConfig::Instance().GetAsNumber<int>("view-distance");
 		seed = GlobalConfig::Instance().GetAsNumber<int>("level-seed");
+		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int>("max-players");
+		whitelistEnabled = GlobalConfig::Instance().GetAsBoolean("white-list");
 	}
 
 	// Load all defined worlds
