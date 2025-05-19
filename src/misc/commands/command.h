@@ -32,6 +32,7 @@ class Command {
         
         static void Op(Player* player);
         static void Deop(Player* player);
+        static void Whitelist(Player* player);
 
         // Creative Player
         static void Give(Client* client);

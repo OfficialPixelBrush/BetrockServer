@@ -381,6 +381,35 @@ void Command::Deop(Player* player) {
 	}
 }
 
+// Adjust a Players Whitelist settings
+void Command::Whitelist(Player* player) {
+	if (!Betrock::Server::Instance().IsOperator(player->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
+	// TODO:
+	/*
+	- whitelist off
+	- whitelist on
+	- whitelist add
+	- whitelist remove
+	- whitelist list
+	*/
+	/*
+	if (command.size() > 0) {
+		std::string username = player->username;
+		if (command.size() > 1) {
+			// Search for the client by username
+			username = command[1];
+		}
+		Betrock::Server::Instance().AddOperator(username);
+		Respond::ChatMessage(response, "§7Opping " + username);
+		failureReason = "";
+		return;
+	}
+	*/
+}
+
 // Parses commands and executes them
 void Command::Parse(std::string &rawCommand, Client* client) {
 	auto player = client->GetPlayer();
@@ -410,6 +439,8 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 			Help();
 		} else if (command[0] == "op") {
 			Op(player);
+		} else if (command[0] == "whitelist") {
+			Whitelist(player);
 		} else if (command[0] == "deop") {
 			Deop(player);
 		} else if (command[0] == "tp") {
