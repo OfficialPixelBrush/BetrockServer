@@ -28,6 +28,25 @@ void Command::Help() {
 	return;
 }
 
+void Command::List() {
+	Respond::ChatMessage(response, "§7-- All players --");
+	Betrock::Server::Instance().GetConnectedClientMutex();
+	auto clients = Betrock::Server::Instance().GetConnectedClients();
+	std::string msg = "§7";
+	for (int i = 0; i < clients.size(); i++) {
+		msg += clients[i]->GetPlayer()->username;
+		if (i < clients.size()-1) {
+			msg += ", ";
+		}
+		if (msg.size() > 40 || i == clients.size()-1) {
+			Respond::ChatMessage(response, msg);
+			msg = "§7";
+		}
+	}
+	failureReason = "";
+	return;
+}
+
 // Send the client the current server version
 void Command::Version() {
 	Respond::ChatMessage(response, "§7Current " + std::string(PROJECT_NAME) + " version is "  + std::string(PROJECT_VERSION_FULL_STRING));
@@ -381,6 +400,65 @@ void Command::Deop(Player* player) {
 	}
 }
 
+// Adjust a Players Whitelist settings
+void Command::Whitelist(Player* player) {
+	if (!Betrock::Server::Instance().IsOperator(player->username)) {
+		failureReason = ERROR_OPERATOR;
+		return;
+	}
+	// TODO:
+	/*
+	- whitelist off
+	- whitelist on
+	- whitelist add
+	- whitelist remove
+	- whitelist list o
+	- whitelist reload
+	*/
+	if (command.size() > 1) {
+		if (command.size() > 2) {
+			std::string username = command[2];
+			if (command[1] == "add") {
+				Betrock::Server::Instance().AddWhitelist(username);
+				Respond::ChatMessage(response, "§7Whitelisted " + username);
+				failureReason = "";
+				return;
+			}
+			if (command[1] == "remove") {
+				Betrock::Server::Instance().RemoveWhitelist(username);
+				Respond::ChatMessage(response, "§7Unwhitelisted " + username);
+				failureReason = "";
+				return;
+			}
+		}
+		if (command[1] == "reload") {
+			auto& server = Betrock::Server::Instance();
+			server.ReadWhitelist();
+			Respond::ChatMessage(response, "§7Reloaded Whitelist");
+			failureReason = "";
+			return;
+		}
+		if (command[1] == "list") {
+			auto& server = Betrock::Server::Instance();
+			Respond::ChatMessage(response, "§7-- Whitelisted Players --");
+			std::string msg = "§7";
+			auto& whitelist = server.GetWhitelist();
+			for (int i = 0; i < whitelist.size(); i++) {
+				msg += whitelist[i];
+				if (i < whitelist.size()-1) {
+					msg += ", ";
+				}
+				if (msg.size() > 40 || i == whitelist.size()-1) {
+					Respond::ChatMessage(response, msg);
+					msg = "§7";
+				}
+			}
+			failureReason = "";
+			return;
+		}
+	}
+}
+
 // Parses commands and executes them
 void Command::Parse(std::string &rawCommand, Client* client) {
 	auto player = client->GetPlayer();
@@ -410,6 +488,8 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 			Help();
 		} else if (command[0] == "op") {
 			Op(player);
+		} else if (command[0] == "whitelist") {
+			Whitelist(player);
 		} else if (command[0] == "deop") {
 			Deop(player);
 		} else if (command[0] == "tp") {
@@ -424,6 +504,8 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 			Health(player);
 		} else if (command[0] == "kill") {
 			Kill(player);
+		} else if (command[0] == "list") {
+			List();
 		} else if (command[0] == "summon") {
 			Summon(client);
 		} else if (command[0] == "gamerule") {

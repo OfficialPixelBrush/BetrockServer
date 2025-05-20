@@ -15,6 +15,16 @@
 #define PROTOCOL_VERSION 14
 #define TICK_SPEED 20
 #define OPERATOR_FILE "ops.txt"
+#define WHITELIST_FILE "whitelist.txt"
+#define FALLBACK_FILE "fail.txt"
+
+enum AccessTypes {
+	NONE,
+	OPERATOR_TYPE,
+	WHITELIST_TYPE
+};
+
+#define NO_LIMIT -1
 
 namespace Betrock {
 
@@ -34,6 +44,8 @@ class Server {
 
 	bool IsAlive() const noexcept;
 
+	bool IsWhitelistEnabled() const noexcept;
+
 	int8_t GetSpawnDimension() const noexcept;
 
 	std::string GetSpawnWorld() const noexcept;
@@ -41,6 +53,8 @@ class Server {
 	int GetServerFd() const noexcept;
 
 	std::vector<std::shared_ptr<Client>> &GetConnectedClients() noexcept;
+
+	std::vector<std::string> &GetWhitelist() noexcept;
 
 	int32_t &GetLatestEntityId() noexcept;
 
@@ -56,12 +70,28 @@ class Server {
 	// !! returns a valid pointer or a nullptr on failure !!
 	WorldManager *GetWorldManager(int8_t world_id) const;
 
-	// This is used for managing operators
+	// This is used for managing players
+	void ReadGeneric(uint8_t type);
+	void WriteGeneric(uint8_t type);
+	bool AddGeneric(uint8_t type, std::string username);
+	bool IsGeneric(uint8_t type, std::string username);
+	bool RemoveGeneric(uint8_t type, std::string username);
+
+	// Thin wrapper around Generics
 	void ReadOperators();
 	void WriteOperators();
 	bool AddOperator(std::string username);
 	bool IsOperator(std::string username);
 	bool RemoveOperator(std::string username);
+
+	void ReadWhitelist();
+	void WriteWhitelist();
+	bool AddWhitelist(std::string username);
+	bool IsWhitelist(std::string username);
+	bool RemoveWhitelist(std::string username);
+
+	std::vector<std::string>& GetServerVector(uint8_t type);
+	std::string GetGenericFilePath(uint8_t type);
 
 	// get the world with the coresponding world_id.
 	// !! returns a valid pointer or a nullptr on failure !!
@@ -112,6 +142,17 @@ class Server {
 			}
 
 			// Create new Client
+			// if player slots are available
+			if (server.maximumPlayers != NO_LIMIT && server.connectedClients.size() >= server.maximumPlayers) {
+				// Optionally send a rejection message to client
+				unsigned char rejectionCode = 0xFF;
+				send(client_fd, &rejectionCode, 1, 0);
+
+				// Reject the client by closing the socket
+				close(client_fd);
+				continue;
+			}
+
 			{
 				std::scoped_lock lockEntityId(server.entityIdMutex);
 				auto client = std::make_shared<Client>(client_fd);
@@ -149,6 +190,7 @@ class Server {
 	int serverFd = -1;
 	std::vector<std::shared_ptr<Client>> connectedClients;
 	int32_t latestEntityId = 0;
+	int32_t maximumPlayers = NO_LIMIT;
 	int chunkDistance = 10;
 	atomic_uint64_t serverTime = 0;
 	atomic_uint64_t upTime = 0;
@@ -159,6 +201,8 @@ class Server {
 	std::int8_t spawnDimension;
 	std::string spawnWorld;
 	std::vector<std::string> operators;
+	std::vector<std::string> whitelist;
+	bool whitelistEnabled = false;
 
 	std::mutex connectedClientsMutex;
 	std::mutex entityIdMutex;

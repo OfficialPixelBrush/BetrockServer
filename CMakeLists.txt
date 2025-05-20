@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.2.8)
+project(BetrockServer VERSION 0.2.9)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -37,12 +37,6 @@ execute_process(
 configure_file(
     ${CMAKE_SOURCE_DIR}/src/misc/version.h.in
     ${CMAKE_SOURCE_DIR}/src/misc/version.h
-)
-
-configure_file(
-    ${CMAKE_SOURCE_DIR}/.github/ISSUE_TEMPLATE/bug_report.md.in
-    ${CMAKE_SOURCE_DIR}/.github/ISSUE_TEMPLATE/bug_report.md
-    @ONLY
 )
 
 include_directories(

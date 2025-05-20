@@ -108,7 +108,7 @@ class Client : public std::enable_shared_from_this<Client> {
 
         Client(int clientFd) : clientFd(clientFd) {}
         void HandleClient();
-        void DisconnectClient(std::string disconnectMessage = "");
+        void DisconnectClient(std::string disconnectMessage = "", bool tellOthers = false);
 
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
         bool UpdateInventory(std::vector<uint8_t> &response);

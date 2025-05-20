@@ -11,6 +11,7 @@
 #include "sysinfo.h"
 
 #define ERROR_OPERATOR "Only operators can use this command!"
+#define ERROR_WHITELIST "Only whitelisted players can use this command!"
 
 class Client;
 
@@ -32,8 +33,10 @@ class Command {
         
         static void Op(Player* player);
         static void Deop(Player* player);
+        static void Whitelist(Player* player);
 
         // Creative Player
+        static void List();
         static void Give(Client* client);
         static void Health(Player* player);
         static void Help();

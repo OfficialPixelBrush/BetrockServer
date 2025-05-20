@@ -7,6 +7,8 @@ namespace Betrock {
 
 bool Server::IsAlive() const noexcept { return this->alive; }
 
+bool Server::IsWhitelistEnabled() const noexcept { return this->whitelistEnabled; }
+
 int8_t Server::GetSpawnDimension() const noexcept { return this->spawnDimension; }
 
 std::string Server::GetSpawnWorld() const noexcept { return this->spawnWorld; }
@@ -14,6 +16,8 @@ std::string Server::GetSpawnWorld() const noexcept { return this->spawnWorld; }
 int Server::GetServerFd() const noexcept { return this->serverFd; }
 
 std::vector<std::shared_ptr<Client>> &Server::GetConnectedClients() noexcept { return this->connectedClients; }
+
+std::vector<std::string> &Server::GetWhitelist() noexcept { return this->whitelist; }
 
 int32_t &Server::GetLatestEntityId() noexcept { return this->latestEntityId; }
 
@@ -131,7 +135,7 @@ void Server::LoadConfig() {
 	if (!std::filesystem::exists(GlobalConfig::Instance().GetPath())) {
 		GlobalConfig::Instance().Overwrite({{"level-name", "world"},
 											{"view-distance", "5"},
-											// {"white-list","false"},
+											{"white-list","true"},
 											{"server-ip", ""},
 											//{"pvp","true"},
 											// use a random device to seed another prng that gives us our seed
@@ -140,7 +144,7 @@ void Server::LoadConfig() {
 											{"server-port", "25565"},
 											//{"allow-nether",true},
 											//{"spawn-monsters","true"},
-											//{"max-players","20"},
+											{"max-players","-1"},
 											//{"online-mode","false"},
 											//{"allow-flight","false"}
 											{"generator", "terrain/worley.lua"}});
@@ -149,6 +153,8 @@ void Server::LoadConfig() {
 		GlobalConfig::Instance().LoadFromDisk();
 		chunkDistance = GlobalConfig::Instance().GetAsNumber<int>("view-distance");
 		seed = GlobalConfig::Instance().GetAsNumber<int>("level-seed");
+		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int>("max-players");
+		whitelistEnabled = GlobalConfig::Instance().GetAsBoolean("white-list");
 	}
 
 	// Load all defined worlds
@@ -174,54 +180,95 @@ void Server::InitPlugins() {
     }
 }
 
-void Server::ReadOperators() {
-	std::ifstream file(OPERATOR_FILE);
+void Server::ReadOperators() { ReadGeneric(OPERATOR_TYPE); }
+void Server::WriteOperators() { WriteGeneric(OPERATOR_TYPE); }
+bool Server::AddOperator(std::string username) { return AddGeneric(OPERATOR_TYPE, username); }
+bool Server::RemoveOperator(std::string username) { return RemoveGeneric(OPERATOR_TYPE, username); }
+bool Server::IsOperator(std::string username) { return IsGeneric(OPERATOR_TYPE, username); }
+
+void Server::ReadWhitelist() { ReadGeneric(WHITELIST_TYPE); }
+void Server::WriteWhitelist() { WriteGeneric(WHITELIST_TYPE); }
+bool Server::AddWhitelist(std::string username) { return AddGeneric(WHITELIST_TYPE, username); }
+bool Server::RemoveWhitelist(std::string username) { return RemoveGeneric(WHITELIST_TYPE, username); }
+bool Server::IsWhitelist(std::string username) { return IsGeneric(WHITELIST_TYPE, username); }
+
+// Generic File reads, writes etc.
+std::vector<std::string>& Server::GetServerVector(uint8_t type) {
+	switch(type) {
+		case OPERATOR_TYPE:
+			return operators;
+		case WHITELIST_TYPE:
+			return whitelist;
+		default:
+			return whitelist;
+	}
+}
+
+std::string Server::GetGenericFilePath(uint8_t type) {
+	switch(type) {
+		case OPERATOR_TYPE:
+			return OPERATOR_FILE;
+		case WHITELIST_TYPE:
+			return WHITELIST_FILE;
+		default:
+			return FALLBACK_FILE;
+	}
+}
+
+void Server::ReadGeneric(uint8_t type) {
+	std::string path = GetGenericFilePath(type);
+	std::ifstream file(path);
     if (!file) {
-        std::ofstream createFile(OPERATOR_FILE);
+		std::cout << "File doesn't exist!" << std::endl;
+        std::ofstream createFile(path);
         createFile.close();
         return;
     }
 	for( std::string username; getline( file, username ); )
 	{
-		AddOperator(username);
+		AddGeneric(type, username);
 	}
 	file.close();
 }
 
-void Server::WriteOperators() {
-	std::ofstream file(OPERATOR_FILE);
-	for (auto op : operators) {
-		file << op << std::endl;
+void Server::WriteGeneric(uint8_t type) {
+	std::ofstream file(GetGenericFilePath(type));
+	auto& list = GetServerVector(type);
+	for (auto entry : list) {
+		file << entry << std::endl;
 	}
 	file.close();
 }
 
-bool Server::AddOperator(std::string username) {
-	auto itr = std::find(operators.begin(), operators.end(), username);
+bool Server::AddGeneric(uint8_t type, std::string username) {
+	auto& list = GetServerVector(type);
+	auto itr = std::find(list.begin(), list.end(), username);
 	// Only add if the operator doesn't already exist
-	if (itr == operators.end())	{
-		operators.push_back(username);
-		WriteOperators();
+	if (itr == list.end()) {
+		list.push_back(username);
+		WriteGeneric(type);
 		return true;
 	}
 	return false;
 }
 
-bool Server::RemoveOperator(std::string username) {
-	auto itr = std::find(operators.begin(), operators.end(), username);
+bool Server::RemoveGeneric(uint8_t type, std::string username) {
+	auto& list = GetServerVector(type);
+	auto itr = std::find(list.begin(), list.end(), username);
 	// Only remove if the operator does exist
-	if (itr != operators.end()) {
-		operators.erase(itr);
-		WriteOperators();
+	if (itr != list.end()) {
+		list.erase(itr);
+		WriteGeneric(type);
 		return true;
 	}
 	return false;
 }
 
-bool Server::IsOperator(std::string username) {
-	auto itr = std::find(operators.begin(), operators.end(), username);
+bool Server::IsGeneric(uint8_t type, std::string username) {
+	auto& list = GetServerVector(type);
+	auto itr = std::find(list.begin(), list.end(), username);
 	// Only add if the passed player is an operator
-	if (itr != operators.end())	{
+	if (itr != list.end())	{
 		return true;
 	}
 	return false;
