@@ -29,6 +29,11 @@ bool World::ChunkExists(int32_t x, int32_t z) {
     return chunks.contains(GetChunkHash(x,z));
 }
 
+// Checks if the Chunk is populated
+bool World::IsChunkPopulated(int32_t x, int32_t z) {
+    return this->GetChunk(x,z)->populated;
+}
+
 // Sets the directory path of the world upon creation
 World::World(const std::string& extra)
     : dev(), rng(dev())
@@ -60,6 +65,7 @@ void World::Save() {
 Chunk* World::GetChunk(int32_t x, int32_t z) {
     auto it = chunks.find(GetChunkHash(x, z));
     if (it != chunks.end()) {
+        //std::cout << x << ", " << z << std::endl;
         return &it->second; // Return a pointer to the found chunk
     }
     return nullptr; // Return nullptr if no valid object is found
@@ -203,7 +209,7 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
 
 // Place a block at the passed position
 // This position must be within a currently loaded Chunk
-void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
+void World::PlaceBlock(Int3 position, int8_t type, int8_t meta, bool sendUpdate) {
     // Get Block Position within Chunk
     Block* b = GetBlock(position);
     if (!b) {
@@ -219,11 +225,11 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
         PropagateLight(this,position,b->lightBlock,true);
     }
     */
-    UpdateBlock(position,b);
+    if (sendUpdate) UpdateBlock(position,b);
 }
 
 // Remove the block and turn it into air
-Block* World::BreakBlock(Int3 position) {
+Block* World::BreakBlock(Int3 position, bool sendUpdate) {
     // Break Block Position within Chunk
     Block* b = GetBlock(position);
     if (!b) {
@@ -231,7 +237,7 @@ Block* World::BreakBlock(Int3 position) {
     }
     b->type = 0;
     b->meta = 0;
-    UpdateBlock(position,b);
+    if (sendUpdate) UpdateBlock(position,b);
     return b;
 }
 

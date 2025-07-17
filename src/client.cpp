@@ -62,9 +62,13 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
     if (!wm->world.ChunkExists(position.x,position.z)) {
 		// Otherwise queue chunk loading or generation
 		wm->AddChunkToQueue(position.x, position.z, this);
-		//Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
         return;
     }
+	// If the chunk is not yet populated, wait on it
+	if (!wm->world.IsChunkPopulated(position.x, position.z)) {
+		//Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
+		return;
+	}
     // If the chunk is already available, send it over
     newChunks.push_back(position);
 }
@@ -991,6 +995,7 @@ void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
     player->stance = player->position.y + STANCE_OFFSET;
     newChunks.clear();
     Respond::PlayerPositionLook(response, player.get());
+	SendResponse(true);
     DetermineVisibleChunks(true);
 }
 

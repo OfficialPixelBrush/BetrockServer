@@ -1,14 +1,18 @@
 #include "generator.h"
 
 // Prepare the Generator to utilize some preset numbers and functions
-void Generator::PrepareGenerator(int64_t seed) {
+void Generator::PrepareGenerator(int64_t seed, World* world) {
 	logger = &Betrock::Logger::Instance();
     this->seed = seed;
+    this->world = world;
     L = luaL_newstate();
     luaL_openlibs(L);
 
     lua_pushnumber(L, seed);
     lua_setglobal(L, "seed");
+
+    lua_pushlightuserdata(L, this);
+    lua_setglobal(L, "generator_instance");
 
     lua_pushnumber(L, CHUNK_WIDTH_X-1);
     lua_setglobal(L, "CHUNK_WIDTH_X");
@@ -18,13 +22,16 @@ void Generator::PrepareGenerator(int64_t seed) {
     lua_setglobal(L, "CHUNK_HEIGHT");
 
     // Add helper functions
-    lua_register(L,"index", lua_Index);
-    lua_register(L,"between", lua_Between);
-    lua_register(L,"spatialPrng", lua_SpatialPRNG);
-    lua_register(L,"getNoiseWorley", lua_GetNoiseWorley);
-    lua_register(L,"getNoisePerlin2d", lua_GetNoisePerlin2D);
-    lua_register(L,"getNoisePerlin3d", lua_GetNoisePerlin3D);
-    lua_register(L,"getNaturalGrass", lua_GetNaturalGrass);
+    lua_register(L,"index", Generator::lua_Index);
+    lua_register(L,"between", Generator::lua_Between);
+    lua_register(L,"spatialPrng", Generator::lua_SpatialPRNG);
+    lua_register(L,"getNoiseWorley", Generator::lua_GetNoiseWorley);
+    lua_register(L,"getNoisePerlin2d", Generator::lua_GetNoisePerlin2D);
+    lua_register(L,"getNoisePerlin3d", Generator::lua_GetNoisePerlin3D);
+    lua_register(L,"getNaturalGrass", Generator::lua_GetNaturalGrass);
+    lua_register(L,"checkChunk", lua_CheckChunk);
+    lua_register(L,"placeBlock", lua_PlaceBlock);
+    lua_register(L,"getBlock", lua_GetBlock);
     
     // Execute a Lua script
     auto &cfg = Betrock::GlobalConfig::Instance();
@@ -57,8 +64,25 @@ void Generator::PrepareGenerator(int64_t seed) {
     }
 }
 
+Block Generator::DecodeBlock() {
+    Block b;
+    if (lua_istable(L, -1)) {
+        lua_rawgeti(L, -1, 1);
+        lua_rawgeti(L, -2, 2);
+
+        if (lua_isnumber(L, -2) && lua_isnumber(L, -1)) {
+            b.type = lua_tointeger(L, -2);
+            b.meta = lua_tointeger(L, -1);
+        }
+
+        lua_pop(L, 2);  // Pop both numbers
+    }
+    return b;
+}
+
 // Run the GenerateChunk function and pass its execution onto lua
 // Then retrieve the generated Chunk data
+// This step is for ma
 Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
     Chunk c = Chunk();
     
@@ -75,17 +99,7 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
         if (lua_istable(L, -1)) {    
             for (int i = 1; i <= CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z; i++) {
                 lua_rawgeti(L, -1, i);
-                if (lua_istable(L, -1)) {
-                    lua_rawgeti(L, -1, 1);
-                    lua_rawgeti(L, -2, 2);
-    
-                    if (lua_isnumber(L, -2) && lua_isnumber(L, -1)) {
-                        c.blocks[i-1].type = lua_tointeger(L, -2);
-                        c.blocks[i-1].meta = lua_tointeger(L, -1);
-                    }
-    
-                    lua_pop(L, 2);  // Pop both numbers
-                }
+                c.blocks[i-1] = DecodeBlock();
                 lua_pop(L, 1);  // Pop table[i]
             }
     
@@ -94,131 +108,31 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
     }
     // For initial loading a chunk needs to be marked as modified
     c.modified = true;
-    CalculateChunkLight(&c);
     return c;
 }
 
-// --- Helper Functions ---
-// Large prime numbers for mixing
-const int64_t PRIME1 = 0x85297A4D;
-const int64_t PRIME2 = 0x68E31DA4;
-const int64_t PRIME3 = 0xB5297A4D;
-const int64_t PRIME4 = 0x45D9F3B3;
-
-// Bit mixing function
-int64_t Mix(int64_t a , int64_t b) {
-	return ((a ^ b) * PRIME1) & 0xFFFFFFFFFFFFFFFF;
-}
-
-int32_t SpatialPrng(int64_t seed, Int3 position) {
-	int32_t x = position.x;
-	int32_t y = position.y;
-	int32_t z = position.z;
-	// Initial hash
-	int64_t h = seed & 0xFFFFFFFF;
-	
-	// Mix X coordinate
-	h = Mix(h, x * PRIME1);
-	h = ((h << 13) | (h >> 19)) & 0xFFFFFFFF;
-	
-	// Mix Y coordinate
-	h = Mix(h, y * PRIME2);
-	h = ((h << 17) | (h >> 15)) & 0xFFFFFFFF;
-	
-	// Mix Z coordinate
-	h = Mix(h, z * PRIME3);
-	h = ((h << 11) | (h >> 21)) & 0xFFFFFFFF;
-	
-	// Final mixing
-	h = Mix(h, h >> 16);
-	h = Mix(h, h >> 8);
-	h *= PRIME4;
-	h ^= h >> 11;
-	h *= PRIME1;
-	
-	return h & 0x7FFFFFFF; //Ensure positive number
-}
-
-Int3 GetPointPositionInChunk(int64_t seed, Int3 position, Vec3 scale) {
-    // Use different seeds for x, y, z to ensure unique coordinates
-    int32_t randomized = SpatialPrng(seed, position);
-
-    int32_t x = ((randomized ^ position.x) % CHUNK_WIDTH_X + CHUNK_WIDTH_X) % CHUNK_WIDTH_X;
-    int32_t y = ((randomized ^ position.y) % CHUNK_HEIGHT  + CHUNK_HEIGHT ) % CHUNK_HEIGHT;
-    int32_t z = ((randomized ^ position.z) % CHUNK_WIDTH_Z + CHUNK_WIDTH_Z) % CHUNK_WIDTH_Z;
-    x = x*scale.x;
-    y = y*scale.y;
-    z = x*scale.z;
-    
-    return Int3{x, y, z};
-}
-
-double FindDistanceToPoint(int64_t seed, Int3 position, Vec3 scale) {
-    Int3 chunkPos = {
-        position.x >> 4,
-        0,
-        position.z >> 4
-    };
-    
-    double smallestDistance = std::numeric_limits<double>::max();
-    
-    // Check neighboring chunks horizontally
-    for (int cX = -1; cX < 2; cX++) {
-        for (int cZ = -1; cZ < 2; cZ++) {
-            Int3 goalChunkPos = chunkPos;
-            goalChunkPos.x += cX;
-            goalChunkPos.z += cZ;
-            
-            Int3 goalBlockPos = GetPointPositionInChunk(seed, goalChunkPos, scale);
-            Int3 goalGlobalPos = LocalToGlobalPosition(goalChunkPos, goalBlockPos);
-            
-            double distance = GetEuclidianDistance(position, goalGlobalPos);
-            smallestDistance = std::min(smallestDistance, distance);
-        }
+bool Generator::PopulateChunk(int32_t cX, int32_t cZ) {
+    if (!L) {
+        return false;
     }
-    
-    return smallestDistance;
-}
-
-double SmoothStep(double edge0, double edge1, double x) {
-    // Clamp x between 0 and 1
-    double t = std::max(0.0, std::min(1.0, (x - edge0) / (edge1 - edge0)));
-    // Cubic interpolation for smoother transition
-    return t * t * (3.0 - 2.0 * t);
-}
-
-double GetNoiseWorley(int64_t seed, Int3 position, double threshold, Vec3 scale) {
-    double distance = FindDistanceToPoint(seed, position, scale);
-    
-    // Use smoothstep for more natural falloff
-    return 1.0 - SmoothStep(0.0, threshold, distance);
-}
-
-double GetNoisePerlin2D(int64_t seed, Vec3 position, int octaves) {
-    return perlin.octave2D_01(position.x, position.z, octaves);
-}
-
-double GetNoisePerlin3D(int64_t seed, Vec3 position, int octaves) {
-    return perlin.octave3D_01(position.x, position.y, position.z, octaves);
-}
-
-Block GetNaturalGrass(int64_t seed, Int3 position, int32_t blocksSinceSkyVisible) {
-    Block b;
-    if (blocksSinceSkyVisible == 0) {
-        b.type = BLOCK_GRASS;
-    } else if (Between(blocksSinceSkyVisible,0,3 + (SpatialPrng(seed,position)%2))) {
-        b.type = BLOCK_DIRT;
-    } else {
-        b.type = BLOCK_STONE;
+    lua_getglobal(L, "PopulateChunk");
+    if (!lua_isfunction(L,-1)) {
+        throw std::runtime_error("PopulateChunk was not found!");
+        return false;
     }
-    return b;
+    lua_pushnumber(L,cX);
+    lua_pushnumber(L,cZ);
+    CheckLua(L, lua_pcall(L, 2, 1, 0));
+    
+    //CalculateChunkLight(c);
+    return true;
 }
 
 // --- Lua Bindings Functions ---
-int lua_Index(lua_State *L) {
+int Generator::lua_Index(lua_State *L) {
     // Check if all arguments are numbers
     if (!CheckNum3(L)) {
-        return 0;
+        return 1;
     }
 
     int x = (int)lua_tonumber(L, 1);
@@ -251,10 +165,10 @@ int lua_Index(lua_State *L) {
     return 1; // One return value on the Lua stack
 }
 
-int lua_Between(lua_State *L) {
+int Generator::lua_Between(lua_State *L) {
     // Check if all arguments are numbers
     if (!CheckNum3(L)) {
-        return 0;
+        return 1;
     }
 
     int i = (int)lua_tonumber(L, 1);
@@ -268,16 +182,16 @@ int lua_Between(lua_State *L) {
     return 1; // One return value on the Lua stack
 }
 
-int lua_SpatialPRNG(lua_State *L) {
+int Generator::lua_SpatialPRNG(lua_State *L) {
     lua_getglobal(L, "seed"); // This sets the global 'seed' variable in Lua
     if (!lua_isnumber(L,1)) {
         std::cerr << "Invalid seed value!" << std::endl;
-        return 0;
+        return 1;
     }
     int64_t seed = (int64_t)lua_tonumber(L, 1);
 
     if (!CheckNum3(L)) {
-        return 0;
+        return 1;
     }
 
     int x = (int)lua_tonumber(L, 1);
@@ -289,12 +203,12 @@ int lua_SpatialPRNG(lua_State *L) {
     return 1;
 }
 
-int lua_GetNoiseWorley(lua_State *L) {
+int Generator::lua_GetNoiseWorley(lua_State *L) {
     // Check for global 'seed'
     lua_getglobal(L, "seed");
     if (!lua_isnumber(L, -1)) {
         luaL_error(L, "Global 'seed' must be a number");
-        return 0;
+        return 1;
     }
     int64_t seed = (int64_t)lua_tonumber(L, -1);
     lua_pop(L, 1); // Pop 'seed'
@@ -302,12 +216,12 @@ int lua_GetNoiseWorley(lua_State *L) {
     // Validate number of arguments
     if (lua_gettop(L) != 7) {
         luaL_error(L, "Expected exactly 5 arguments (x, y, z, threshold, scaleX, scaleY, scaleZ)");
-        return 0;
+        return 1;
     }
 
     // Validate and extract x, y, z
     if (!CheckNum3(L)) {
-        return 0;
+        return 1;
     }
     int x = (int)lua_tonumber(L, 1);
     int y = (int)lua_tonumber(L, 2);
@@ -317,14 +231,14 @@ int lua_GetNoiseWorley(lua_State *L) {
     // Validate and extract threshold
     if (!lua_isnumber(L, 4)) {
         luaL_error(L, "Threshold must be a numeric value");
-        return 0;
+        return 1;
     }
     double threshold = (double)lua_tonumber(L, 4);
 
     // Validate and extract verticalScale
     if (!CheckNum3(L,5)) {
         luaL_error(L, "Scale must be a numeric values");
-        return 0;
+        return 1;
     }
     double scaleX = (float)lua_tonumber(L, 5);
     double scaleY = (float)lua_tonumber(L, 6);
@@ -337,18 +251,18 @@ int lua_GetNoiseWorley(lua_State *L) {
     return 1;
 }
 
-int lua_GetNoisePerlin2D(lua_State *L) {
+int Generator::lua_GetNoisePerlin2D(lua_State *L) {
     // Get the seed
     lua_getglobal(L, "seed");
     if (!lua_isnumber(L,1)) {
         std::cerr << "Invalid seed value!" << std::endl;
-        return 0;
+        return 1;
     }
     int64_t seed = (int64_t)lua_tonumber(L, 1);
 
     // Validate and extract x, y, z
     if (!CheckNum3(L)) {
-        return 0;
+        return 1;
     }
     double x = (double)lua_tonumber(L, 1);
     double y = (double)lua_tonumber(L, 2);
@@ -358,7 +272,7 @@ int lua_GetNoisePerlin2D(lua_State *L) {
     // Validate and extract octaves
     if (!lua_isnumber(L, 4)) {
         luaL_error(L, "Octaves must be a numeric value");
-        return 0;
+        return 1;
     }
     int octaves = (int)lua_tonumber(L, 4);
 
@@ -368,18 +282,18 @@ int lua_GetNoisePerlin2D(lua_State *L) {
     return 1;
 }
 
-int lua_GetNoisePerlin3D(lua_State *L) {
+int Generator::lua_GetNoisePerlin3D(lua_State *L) {
     // Get the seed
     lua_getglobal(L, "seed");
     if (!lua_isnumber(L,1)) {
         std::cerr << "Invalid seed value!" << std::endl;
-        return 0;
+        return 1;
     }
     int64_t seed = (int64_t)lua_tonumber(L, 1);
 
     // Validate and extract x, y, z
     if (!CheckNum3(L)) {
-        return 0;
+        return 1;
     }
     double x = (double)lua_tonumber(L, 1);
     double y = (double)lua_tonumber(L, 2);
@@ -389,7 +303,7 @@ int lua_GetNoisePerlin3D(lua_State *L) {
     // Validate and extract octaves
     if (!lua_isnumber(L, 4)) {
         luaL_error(L, "Octaves must be a numeric value");
-        return 0;
+        return 1;
     }
     int octaves = (int)lua_tonumber(L, 4);
 
@@ -399,17 +313,17 @@ int lua_GetNoisePerlin3D(lua_State *L) {
     return 1;
 }
 
-int lua_GetNaturalGrass(lua_State *L) {
+int Generator::lua_GetNaturalGrass(lua_State *L) {
     // Get the seed
     lua_getglobal(L, "seed");
     if (!lua_isnumber(L,1)) {
         std::cerr << "Invalid seed value!" << std::endl;
-        return 0;
+        return 1;
     }
     int64_t seed = (int64_t)lua_tonumber(L, 1);
 
     if (!CheckNum3(L)) {
-        return 0;
+        return 1;
     }
     int x = (int)lua_tonumber(L, 1);
     int y = (int)lua_tonumber(L, 2);
@@ -419,12 +333,87 @@ int lua_GetNaturalGrass(lua_State *L) {
     // Validate and extract threshold
     if (!lua_isnumber(L, 4)) {
         luaL_error(L, "Blocks since the Sky was visible must be a numeric value");
-        return 0;
+        return 1;
     }
     int bs = (int)lua_tonumber(L, 4);
 
     // Call the function
     Block result = GetNaturalGrass(seed, position, bs);
     lua_pushnumber(L, result.type);
+    return 1;
+}
+
+// Note: This is not needed for avoiding placing blocks in unloaded areas,
+// since the world already checks if a chunk is actually there
+int Generator::lua_CheckChunk(lua_State *L) {
+    // Get the Generator* from Lua global
+    lua_getglobal(L, "generator_instance");
+    Generator* gen = static_cast<Generator*>(lua_touserdata(L, -1));
+    lua_pop(L, 1); // remove from stack
+    if (!gen) return luaL_error(L, "Generator instance not set");
+
+    int x = (int)lua_tonumber(L, 1);
+    int z = (int)lua_tonumber(L, 2);
+    
+    lua_pushboolean(L, gen->world->ChunkExists(x,z));
+    return 1;
+}
+
+int Generator::lua_PlaceBlock(lua_State *L) {
+    // Get the Generator* from Lua global
+    lua_getglobal(L, "generator_instance");
+    Generator* gen = static_cast<Generator*>(lua_touserdata(L, -1));
+    lua_pop(L, 1); // remove from stack
+    if (!gen) return luaL_error(L, "Generator instance not set");
+
+    if (!CheckNum3(L)) {
+        return 0;
+    }
+    int x = (int)lua_tonumber(L, 1);
+    int y = (int)lua_tonumber(L, 2);
+    int z = (int)lua_tonumber(L, 3);
+    Int3 position = Int3{x, y, z};
+    
+    Block b = gen->DecodeBlock();
+    
+    gen->world->PlaceBlock(position,b.type,b.meta,false);
+    return 0;
+}
+
+int Generator::lua_GetBlock(lua_State *L) {
+    // Get the Generator* from Lua global
+    lua_getglobal(L, "generator_instance");
+    Generator* gen = static_cast<Generator*>(lua_touserdata(L, -1));
+    lua_pop(L, 1); // remove from stack
+    if (!gen) return luaL_error(L, "Generator instance not set");
+
+    if (!CheckNum3(L)) {
+        lua_pushnil(L);
+        return 1;
+    }
+    int x = (int)lua_tonumber(L, 1);
+    int y = (int)lua_tonumber(L, 2);
+    int z = (int)lua_tonumber(L, 3);
+    Int3 position = Int3{x, y, z};
+
+    // Get the block at the given position
+    Chunk* c = gen->world->GetChunk(x/16,z/16);
+    if (!c) {
+        lua_pushnil(L);
+        return 1;
+    }
+    Block* b = gen->world->GetBlock(position);
+    if (!b) {
+        lua_pushnil(L);
+        return 1;
+    }
+
+    // Create a table and push it to Lua stack
+    lua_newtable(L);
+    lua_pushnumber(L, b->type);
+    lua_rawseti(L, -2, 1);
+    lua_pushnumber(L, b->meta);
+    lua_rawseti(L, -2, 2);
+
     return 1;
 }

@@ -3,6 +3,8 @@
 #include <iostream>
 
 #include "logger.h"
+#include "datatypes.h"
+#include "helper.h"
 
 bool CheckLua(lua_State *L, int r);
 bool CheckNum3(lua_State *L, int startIndex = 1);

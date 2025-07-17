@@ -49,6 +49,7 @@ int main() {
 			}
 		}
 	}
+
 	Int3 spawnBlock = overworld->FindSpawnableBlock(Int3{0, 128, 0});
 	auto spawnPoint = Int3ToVec3(spawnBlock);
 	spawnPoint.y += STANCE_OFFSET;

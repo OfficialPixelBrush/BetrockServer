@@ -18,7 +18,6 @@ class World {
     private:
         std::unordered_map<int64_t, Chunk> chunks;
         std::filesystem::path dirPath;
-        Chunk* GetChunk(int32_t x, int32_t z);
         void RemoveChunk(int32_t x, int32_t z);
         std::random_device dev;
         std::mt19937 rng;
@@ -33,9 +32,11 @@ class World {
         std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkMeta(const Chunk* c);
         std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkBlockLight(const Chunk* c);
         std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkSkyLight(const Chunk* c);
-        void PlaceBlock(Int3 position, int8_t type, int8_t meta);
-        Block* BreakBlock(Int3 position);
+        void PlaceBlock(Int3 position, int8_t type, int8_t meta, bool sendUpdate = true);
+        Block* BreakBlock(Int3 position, bool sendUpdate = true);
         Block* GetBlock(Int3 position);
+        Chunk* GetChunk(int32_t x, int32_t z);
+        bool IsChunkPopulated(int32_t x, int32_t z);
         int8_t GetSkyLight(Int3 position);
         void SetSkyLight(Int3 position, int8_t level);
         void UpdateBlock(Int3 position, Block* b);

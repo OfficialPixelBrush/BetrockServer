@@ -36,6 +36,7 @@ class Command {
         static void Whitelist(Player* player);
 
         // Creative Player
+        static void Populated(Player* player);
         static void List();
         static void Give(Client* client);
         static void Health(Player* player);
