@@ -5,8 +5,8 @@
 #include "helper.h"
 #include "blocks.h"
 #include "config.h"
-#include "lighting.h"
 #include "luahelper.h"
+#include "world.h"
 
 #define GENERATOR_DEFAULT_NAME "Generator"
 #define GENERATOR_LATEST_VERSION 3

@@ -9,6 +9,7 @@
 #include "generator.h"
 #include "coms.h"
 #include "client.h"
+#include "lighting.h"
 
 class Client;  // Forward declaration
 
@@ -41,8 +42,6 @@ class WorldManager {
         void SetSeed(int64_t seed);
         int64_t GetSeed();
         void Run();
-        void CalculateColumnLight(int32_t x, int32_t z);
-        void CalculateChunkLight(int32_t cX, int32_t cZ);
         void SetName(std::string name);
         std::string GetName();
         bool QueueIsEmpty();

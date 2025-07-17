@@ -43,8 +43,8 @@ int main() {
 	// Generate spawn area
 	if (overworld->GetNumberOfChunks() == 0) {
 		logger.Info("Preparing level \"" + std::string(Betrock::GlobalConfig::Instance().Get("level-name")) + "\"");
-		for (int x = -1; x < 2; x++) {
-			for (int z = -1; z < 2; z++) {
+		for (int x = -1; x <= 1; x++) {
+			for (int z = -1; z <= 1; z++) {
 				wm->ForceGenerateChunk(x, z);
 			}
 		}

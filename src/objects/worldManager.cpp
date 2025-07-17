@@ -140,12 +140,12 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator &generator) {
     if (!c) {
         if (world.ChunkFileExists(x,z)) {
             // Chunk exists as a file
-            world.LoadChunk(x,z);
+            c = world.LoadChunk(x,z);
         } else if (world.ChunkFileExists(x,z,OLD_CHUNK_FILE_EXTENSION)) {
             // Chunk exists as a file (old format)
-            world.LoadOldChunk(x,z);
+            c = world.LoadOldChunk(x,z);
         } else {
-            world.AddChunk(x, z, generator.GenerateChunk(x,z));
+            c = world.AddChunk(x, z, generator.GenerateChunk(x,z));
         }
     }
 
@@ -153,15 +153,14 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator &generator) {
     if (c && c->populated) {
         return true;
     } else {
-        //std::cout << "Chunk " << x << ", " << z << " hasn't been populated yet" << std::endl;
-        bool canBePopulated = true;
-        for (int xOffset = -1; xOffset <= 1; xOffset++) {
-            for (int zOffset = -1; zOffset <= 1; zOffset++) {
+        int canBePopulated = true;
+        for (int xOffset = 0; xOffset <= 1; xOffset++) {
+            for (int zOffset = 0; zOffset <= 1; zOffset++) {
                 // We don't need to check the current chunk
-                if (xOffset & zOffset == 0) continue;
+                if (xOffset == 0 && zOffset == 0) continue;
                 // If any surrounding chunk doesn't exist, we can't populate it
-                if (!world.ChunkExists(x+xOffset,z+zOffset)) {
-                    //std::cout << "Chunk " << x+xOffset << ", " << z+zOffset << " doesn't exist yet!" << std::endl;
+                Chunk* tc = world.GetChunk(x+xOffset,z+zOffset);
+                if (!tc) {
                     canBePopulated = false;
                 }
             }
@@ -169,8 +168,9 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator &generator) {
         // Chunk is in memory but hasn't been populated yet
         if (canBePopulated) {
             if (generator.PopulateChunk(x,z)) {
-                //std::cout << "Populated Chunk " << x << ", " << z << std::endl;
                 c->populated = true;
+                // Do lighting math
+                CalculateChunkLight(c);
                 return true;
             }
         }

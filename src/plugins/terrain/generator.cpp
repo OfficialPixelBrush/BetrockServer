@@ -117,14 +117,12 @@ bool Generator::PopulateChunk(int32_t cX, int32_t cZ) {
     }
     lua_getglobal(L, "PopulateChunk");
     if (!lua_isfunction(L,-1)) {
-        throw std::runtime_error("PopulateChunk was not found!");
-        return false;
+        logger->Warning("PopulateChunk was not found! Skipping...");
+        return true;
     }
     lua_pushnumber(L,cX);
     lua_pushnumber(L,cZ);
     CheckLua(L, lua_pcall(L, 2, 1, 0));
-    
-    //CalculateChunkLight(c);
     return true;
 }
 
