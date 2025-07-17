@@ -132,7 +132,11 @@ void Client::SendNewChunks() {
 	// TODO: Dynamically size this based on remaining space in response
 	int sentThisCycle = 5;
 	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
-	std::lock_guard<std::mutex> lock(newChunksMutex);
+	std::unique_lock<std::mutex> lock(newChunksMutex, std::try_to_lock);
+	if (!lock.owns_lock()) {
+		return;
+	}
+
 	while(sentThisCycle > 0) {
 		if(!newChunks.empty()) {
 			auto nc = newChunks.begin();
