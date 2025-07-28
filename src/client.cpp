@@ -62,9 +62,13 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
     if (!wm->world.ChunkExists(position.x,position.z)) {
 		// Otherwise queue chunk loading or generation
 		wm->AddChunkToQueue(position.x, position.z, this);
-		//Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
         return;
     }
+	// If the chunk is not yet populated, wait on it
+	if (!wm->world.IsChunkPopulated(position.x, position.z)) {
+		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
+		return;
+	}
     // If the chunk is already available, send it over
     newChunks.push_back(position);
 }
@@ -128,7 +132,11 @@ void Client::SendNewChunks() {
 	// TODO: Dynamically size this based on remaining space in response
 	int sentThisCycle = 5;
 	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
-	std::lock_guard<std::mutex> lock(newChunksMutex);
+	std::unique_lock<std::mutex> lock(newChunksMutex, std::try_to_lock);
+	if (!lock.owns_lock()) {
+		return;
+	}
+
 	while(sentThisCycle > 0) {
 		if(!newChunks.empty()) {
 			auto nc = newChunks.begin();
@@ -477,8 +485,9 @@ bool Client::HandleLoginRequest() {
 		UpdateInventory(response);
 	}
 
-	// TODO: This hack seems stupid
-	//player->position.y += 0.1;
+	// TODO: Players still fall through the ground when loading in...
+	// Maybe figure out something to snap them to the top of the nearest block?
+	// Keep them frozen until we know the chunks have been loaded??? Idk...
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
 	Teleport(response,player->position, player->yaw, player->pitch);
@@ -991,6 +1000,7 @@ void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
     player->stance = player->position.y + STANCE_OFFSET;
     newChunks.clear();
     Respond::PlayerPositionLook(response, player.get());
+	SendResponse(true);
     DetermineVisibleChunks(true);
 }
 

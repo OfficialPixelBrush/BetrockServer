@@ -18,12 +18,19 @@ Check the releases page for the latest binary of BetrockServer. Then simply run 
 
 If it complains about lacking a `scripts` folder, download the `src/scripts` folder from the repository and place it alongside the executable.
 
+Downloading can be unreliable, since certain libraries, such as `libdeflate`, may not necessarily be installed. Compiling is honestly the easier and more robust option.
+
 ## Option 2 - Compiling
 This section is written to be as accessible as possible, so anyone can compile BetrockServer.
 
 ### Install Dependencies
+**Debian/Ubuntu**
 ```bash
-sudo apt install build-essential git libdeflate-dev liblua5.4-dev
+sudo apt install git cmake build-essential libdeflate-dev liblua5.4-dev
+```
+**Arch**
+```bash
+sudo pacman -Syu git cmake make gcc lua libdeflate
 ```
 This installs all the necessary libraries that BetrockServer needs.
 

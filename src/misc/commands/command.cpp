@@ -78,6 +78,18 @@ void Command::Pose(Player* player) {
 	}
 }
 
+// Check if a chunk has been populated
+void Command::Populated(Player* player) {	
+	// TODO: Add support for non-zero worlds
+	World* w = Betrock::Server::Instance().GetWorld(0);
+	if (!w) failureReason = "World does not exist!";
+	Chunk* c = w->GetChunk(int(player->position.x/16.0),int(player->position.z/16.0));
+	if (!c) failureReason = "Chunk does not exist!";
+	if (!c->populated) failureReason = "Chunk is not populated";
+	if (c->populated) failureReason = "Chunk is populated";
+	return;
+}
+
 // Play a sound at the clients location
 void Command::Sound(Player* player) {	
 	// Set the time
@@ -261,6 +273,7 @@ void Command::Summon(Client* client) {
 	auto &server = Betrock::Server::Instance();
 
 	if (command.size() > 1) {
+		// TODO: Actually implement entities that *exist*
 		std::scoped_lock lock(server.GetEntityIdMutex());
 		std::string username = command[1];
 		std::vector<uint8_t> broadcastResponse;
@@ -411,8 +424,6 @@ void Command::Whitelist(Player* player) {
 	- whitelist off
 	- whitelist on
 	- whitelist add
-	- whitelist remove
-	- whitelist list o
 	- whitelist reload
 	*/
 	if (command.size() > 1) {
@@ -510,6 +521,8 @@ void Command::Parse(std::string &rawCommand, Client* client) {
 			Summon(client);
 		} else if (command[0] == "gamerule") {
 			Gamerule(client);
+		} else if (command[0] == "populated") {
+			Populated(player);
 		} else if (command[0] == "kick") {
 			Kick(client);
 		} else if (command[0] == "spawn") {

@@ -9,6 +9,7 @@
 #include "generator.h"
 #include "coms.h"
 #include "client.h"
+#include "lighting.h"
 
 class Client;  // Forward declaration
 
@@ -32,7 +33,7 @@ class WorldManager {
         std::vector<std::thread> workers;
         const int workerCount = std::thread::hardware_concurrency();  // Use number of CPU cores
         void WorkerThread();
-        void GetChunk(int32_t x, int32_t z, Generator &generator);
+        bool GetChunk(int32_t x, int32_t z, Generator &generator);
     public:
         World world;
         void AddChunkToQueue(int32_t x, int32_t z, Client* requestClient = nullptr);
@@ -41,8 +42,6 @@ class WorldManager {
         void SetSeed(int64_t seed);
         int64_t GetSeed();
         void Run();
-        void CalculateColumnLight(int32_t x, int32_t z);
-        void CalculateChunkLight(int32_t cX, int32_t cZ);
         void SetName(std::string name);
         std::string GetName();
         bool QueueIsEmpty();

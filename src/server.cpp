@@ -135,7 +135,7 @@ void Server::LoadConfig() {
 	if (!std::filesystem::exists(GlobalConfig::Instance().GetPath())) {
 		GlobalConfig::Instance().Overwrite({{"level-name", "world"},
 											{"view-distance", "5"},
-											{"white-list","true"},
+											{"white-list","false"},
 											{"server-ip", ""},
 											//{"pvp","true"},
 											// use a random device to seed another prng that gives us our seed

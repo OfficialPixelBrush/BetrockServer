@@ -1,5 +1,5 @@
 GenName = "Debug"
-GenApiVersion = 2
+GenApiVersion = 3
 
 function GenerateBlock(x,y,z)
     local type = 0
@@ -37,4 +37,8 @@ function GenerateChunk(cx,cz)
         end
     end
     return c
+end
+
+function PopulateChunk(cx,cz)
+    -- Nothing
 end

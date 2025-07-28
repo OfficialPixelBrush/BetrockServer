@@ -29,6 +29,11 @@ bool World::ChunkExists(int32_t x, int32_t z) {
     return chunks.contains(GetChunkHash(x,z));
 }
 
+// Checks if the Chunk is populated
+bool World::IsChunkPopulated(int32_t x, int32_t z) {
+    return this->GetChunk(x,z)->populated;
+}
+
 // Sets the directory path of the world upon creation
 World::World(const std::string& extra)
     : dev(), rng(dev())
@@ -60,14 +65,16 @@ void World::Save() {
 Chunk* World::GetChunk(int32_t x, int32_t z) {
     auto it = chunks.find(GetChunkHash(x, z));
     if (it != chunks.end()) {
+        //std::cout << x << ", " << z << std::endl;
         return &it->second; // Return a pointer to the found chunk
     }
     return nullptr; // Return nullptr if no valid object is found
 }
 
 // Adds a new Chunk to the world
-void World::AddChunk(int32_t x, int32_t z, Chunk c) {
+Chunk* World::AddChunk(int32_t x, int32_t z, Chunk c) {
     chunks[GetChunkHash(x,z)] = c;
+    return &chunks[GetChunkHash(x,z)];
 }
 
 // Removes a Chunk from the world
@@ -106,10 +113,10 @@ void World::FreeUnseenChunks() {
 }
 
 // Load a Chunk into Memory from an NBT-Format file
-bool World::LoadChunk(int32_t x, int32_t z) {
+Chunk* World::LoadChunk(int32_t x, int32_t z) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
-        return false;
+        return nullptr;
     }
 
     // Create the chunk entry file path based on x and z coordinates
@@ -118,7 +125,7 @@ bool World::LoadChunk(int32_t x, int32_t z) {
     // Check if the entry file exists and has a .cnk extension
     if (!ChunkFileExists(x,z)) {
         std::cout << "File doesn't exist!" << std::endl;
-        return false;
+        return nullptr;
     }
 
     try {
@@ -161,11 +168,10 @@ bool World::LoadChunk(int32_t x, int32_t z) {
             c.blocks[i*2+1].lightSky = (skyLight[i] >> 4)&0xF;
         }
         c.populated = (bool)terrainPopulated;
-        AddChunk(x,z,c);
-        return true;
+        return AddChunk(x,z,c);
     } catch (const std::exception& e) {
         Betrock::Logger::Instance().Error(e.what());
-        return false;
+        return nullptr;
     }
 }
 
@@ -203,7 +209,8 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
 
 // Place a block at the passed position
 // This position must be within a currently loaded Chunk
-void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
+void World::PlaceBlock(Int3 position, int8_t type, int8_t meta, bool sendUpdate) {
+    LimitBlockCoordinates(position);
     // Get Block Position within Chunk
     Block* b = GetBlock(position);
     if (!b) {
@@ -219,11 +226,12 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
         PropagateLight(this,position,b->lightBlock,true);
     }
     */
-    UpdateBlock(position,b);
+    if (sendUpdate) UpdateBlock(position,b);
 }
 
 // Remove the block and turn it into air
-Block* World::BreakBlock(Int3 position) {
+Block* World::BreakBlock(Int3 position, bool sendUpdate) {
+    LimitBlockCoordinates(position);
     // Break Block Position within Chunk
     Block* b = GetBlock(position);
     if (!b) {
@@ -231,7 +239,7 @@ Block* World::BreakBlock(Int3 position) {
     }
     b->type = 0;
     b->meta = 0;
-    UpdateBlock(position,b);
+    if (sendUpdate) UpdateBlock(position,b);
     return b;
 }
 
@@ -246,6 +254,7 @@ void World::UpdateBlock(Int3 position, Block* b) {
 
 // Get the Block at the passed position
 Block* World::GetBlock(Int3 position) {
+    LimitBlockCoordinates(position);
     // Get Block Position within Chunk
     int32_t cX = position.x >> 4;
     int32_t cZ = position.z >> 4;
@@ -439,10 +448,10 @@ Int3 World::FindSpawnableBlock(Int3 position) {
 }
 
 // Load an old-format Chunk into Memory from a Binary File
-bool World::LoadOldChunk(int32_t x, int32_t z) {
+Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
-        return false;
+        return nullptr;
     }
 
     // Create the chunk entry file path based on x and z coordinates
@@ -450,13 +459,13 @@ bool World::LoadOldChunk(int32_t x, int32_t z) {
 
     // Check if the entry file exists and has a .cnk extension
     if (!ChunkFileExists(x,z,OLD_CHUNK_FILE_EXTENSION)) {
-        return false;
+        return nullptr;
     }
 
     std::ifstream chunkFile (entryPath);
     if (!chunkFile.is_open()) {
         Betrock::Logger::Instance().Warning("Failed to load chunk " + std::string(entryPath));
-        return false;
+        return nullptr;
     }      
 
     // Get the length of the file
@@ -475,7 +484,7 @@ bool World::LoadOldChunk(int32_t x, int32_t z) {
 
     if (!chunkData) {
         Betrock::Logger::Instance().Warning("Failed to decompress " + std::string(entryPath));
-        return false;
+        return nullptr;
     }
 
     Chunk c;
@@ -508,12 +517,11 @@ bool World::LoadOldChunk(int32_t x, int32_t z) {
             c.blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
         }
     }
-    AddChunk(x,z,c);
     chunkFile.close();
     Betrock::Logger::Instance().Info("Updated " + std::string(entryPath));
     // Delete the old chunk file
     remove(entryPath);
-    return true;
+    return AddChunk(x,z,c);
 }
 
 bool World::InteractWithBlock(Int3 pos) {
