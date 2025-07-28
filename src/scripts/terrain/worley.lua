@@ -62,8 +62,8 @@ function PopulateChunk(cx,cz)
     -- Secondly, trees
     for x = 0, CHUNK_WIDTH_X do
         for z = 0, CHUNK_WIDTH_Z do
-            fx = cx*16 + x + 8
-            fz = cz*16 + z + 8
+            fx = cx*16 + x
+            fz = cz*16 + z
             -- Iterate from sky to bottom
             for y = CHUNK_HEIGHT, 0, -1 do
                 block = getBlock(fx,y,fz)

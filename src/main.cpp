@@ -41,16 +41,27 @@ int main() {
 	World *overworld = server.GetWorld(0);
 
 	// Generate spawn area
+	// TODO: Figure this shit out!!!
 	if (overworld->GetNumberOfChunks() == 0) {
 		logger.Info("Preparing level \"" + std::string(Betrock::GlobalConfig::Instance().Get("level-name")) + "\"");
+		wm->ForceGenerateChunk(0, 0);
+		/*
 		for (int x = -1; x <= 1; x++) {
 			for (int z = -1; z <= 1; z++) {
 				wm->ForceGenerateChunk(x, z);
 			}
 		}
+		*/
+	}
+	while (true) {
+		// Wait for chunks to be generated
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+		if (wm->QueueIsEmpty()) {
+			break;
+		}
 	}
 
-	Int3 spawnBlock = overworld->FindSpawnableBlock(Int3{0, 128, 0});
+	Int3 spawnBlock = overworld->FindSpawnableBlock(Int3{8, 128, 8});
 	auto spawnPoint = Int3ToVec3(spawnBlock);
 	spawnPoint.y += STANCE_OFFSET;
 	server.SetSpawnPoint(spawnPoint);

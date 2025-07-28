@@ -78,9 +78,7 @@ void WorldManager::GenerateQueuedChunks() {
 // Forces the generation of the passed Chunk Position,
 // independent of any Worker Thread
 void WorldManager::ForceGenerateChunk(int32_t x, int32_t z) {
-    Generator generator;
-    generator.PrepareGenerator(seed, &this->world);
-    GetChunk(x,z,generator);
+    AddChunkToQueue(x,z,nullptr);
 }
 
 // This is run by all the available Worker Threads

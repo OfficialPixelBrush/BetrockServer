@@ -66,7 +66,7 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
     }
 	// If the chunk is not yet populated, wait on it
 	if (!wm->world.IsChunkPopulated(position.x, position.z)) {
-		//Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
+		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
 		return;
 	}
     // If the chunk is already available, send it over
@@ -485,8 +485,9 @@ bool Client::HandleLoginRequest() {
 		UpdateInventory(response);
 	}
 
-	// TODO: This hack seems stupid
-	//player->position.y += 0.1;
+	// TODO: Players still fall through the ground when loading in...
+	// Maybe figure out something to snap them to the top of the nearest block?
+	// Keep them frozen until we know the chunks have been loaded??? Idk...
 	// Note: Teleporting automatically loads surrounding chunks,
 	// so no further loading is necessary
 	Teleport(response,player->position, player->yaw, player->pitch);
