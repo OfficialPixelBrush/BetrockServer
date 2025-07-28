@@ -330,6 +330,10 @@ std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size) {
     return oss.str();
 }
 
+void LimitBlockCoordinates(Int3 &position) {
+    position.y = std::max(std::min(position.y,127),0);
+}
+
 
 // --- TERRAIN GEN RELATED ---
 

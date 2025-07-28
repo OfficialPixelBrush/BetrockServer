@@ -7,6 +7,7 @@
 #include "config.h"
 #include "luahelper.h"
 #include "world.h"
+#include "generatorVersionCheck.h"
 
 #define GENERATOR_DEFAULT_NAME "Generator"
 #define GENERATOR_LATEST_VERSION 3

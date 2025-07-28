@@ -210,6 +210,7 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
 // Place a block at the passed position
 // This position must be within a currently loaded Chunk
 void World::PlaceBlock(Int3 position, int8_t type, int8_t meta, bool sendUpdate) {
+    LimitBlockCoordinates(position);
     // Get Block Position within Chunk
     Block* b = GetBlock(position);
     if (!b) {
@@ -230,6 +231,7 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta, bool sendUpdate)
 
 // Remove the block and turn it into air
 Block* World::BreakBlock(Int3 position, bool sendUpdate) {
+    LimitBlockCoordinates(position);
     // Break Block Position within Chunk
     Block* b = GetBlock(position);
     if (!b) {
@@ -252,6 +254,7 @@ void World::UpdateBlock(Int3 position, Block* b) {
 
 // Get the Block at the passed position
 Block* World::GetBlock(Int3 position) {
+    LimitBlockCoordinates(position);
     // Get Block Position within Chunk
     int32_t cX = position.x >> 4;
     int32_t cZ = position.z >> 4;

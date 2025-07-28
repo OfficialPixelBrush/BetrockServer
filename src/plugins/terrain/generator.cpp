@@ -112,6 +112,9 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
 }
 
 bool Generator::PopulateChunk(int32_t cX, int32_t cZ) {
+    if (apiVersion < API_GENERATOR_POPULATECHUNK) {
+        return true;
+    }
     if (!L) {
         return false;
     }

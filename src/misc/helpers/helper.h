@@ -54,6 +54,8 @@ std::string GetRealTimeFileFormat();
 
 std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size);
 
+void LimitBlockCoordinates(Int3 &position);
+
 const siv::PerlinNoise::seed_type seedp = 0;
 const siv::PerlinNoise perlin{ seedp };
 

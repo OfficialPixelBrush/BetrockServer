@@ -1,5 +1,5 @@
 GenName = "Sine"
-GenApiVersion = 2
+GenApiVersion = 3
 
 function GenerateChunk(cx,cz)
     local c = {}
@@ -15,4 +15,8 @@ function GenerateChunk(cx,cz)
         end
     end
     return c
+end
+
+function PopulateChunk(cx,cz)
+    -- Nothing
 end
