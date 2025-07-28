@@ -1,2 +1,2 @@
 // Feature name + Version it was added in
-#define API_POPULATECHUNK 3
+#define API_GENERATOR_POPULATECHUNK 3
