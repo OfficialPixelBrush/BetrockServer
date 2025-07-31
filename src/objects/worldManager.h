@@ -16,10 +16,10 @@ class Client;  // Forward declaration
 class QueueChunk {
     public:
         Int3 position;
-        std::vector<Client*> requestedClients;
+        std::vector<std::weak_ptr<Client>> requestedClients;
         QueueChunk() : position(Int3()), requestedClients() {}
-        QueueChunk(Int3 position, Client* requestClient = nullptr);
-        void AddClient(Client* requestClient);
+        QueueChunk(Int3 position, const std::shared_ptr<Client>& requestClient = nullptr);
+        void AddClient(const std::shared_ptr<Client>& requestClient);
 };
 
 class WorldManager {
@@ -36,7 +36,7 @@ class WorldManager {
         bool GetChunk(int32_t x, int32_t z, Generator &generator);
     public:
         World world;
-        void AddChunkToQueue(int32_t x, int32_t z, Client* requestClient = nullptr);
+        void AddChunkToQueue(int32_t x, int32_t z, const std::shared_ptr<Client>& requestClient = nullptr);
         void GenerateQueuedChunks();
         void ForceGenerateChunk(int32_t x, int32_t z);
         void SetSeed(int64_t seed);
@@ -44,7 +44,8 @@ class WorldManager {
         void Run();
         void SetName(std::string name);
         std::string GetName();
-        bool QueueIsEmpty();
+        bool IsQueueEmpty();
+        int QueueSize();
         void SaveNbt();
         void LoadNbt();
         void FreeAndSave();

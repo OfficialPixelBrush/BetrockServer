@@ -3,18 +3,18 @@
 #include "server.h"
 
 // This creates a new QueueChunk with a pre-filled Client
-QueueChunk::QueueChunk(Int3 position, Client* requestClient) {
+QueueChunk::QueueChunk(Int3 position, const std::shared_ptr<Client>& requestClient) {
     this->position = position;
     AddClient(requestClient);
 }
 
 // This adds a new Client to the Queued Chunk
-void QueueChunk::AddClient(Client* requestClient) {
+void QueueChunk::AddClient(const std::shared_ptr<Client>& requestClient) {
     requestedClients.push_back(requestClient);
 }
 
 // This adds a Chunk to the ChunkQueue
-void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Client* requestClient) {
+void WorldManager::AddChunkToQueue(int32_t x, int32_t z, const std::shared_ptr<Client>& requestClient) {
     std::lock_guard<std::mutex> lock(queueMutex);  // Ensure thread safety
 
     auto hash = GetChunkHash(x, z);  // Compute hash
@@ -31,8 +31,13 @@ void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Client* requestClient) 
 }
 
 // Returns if the ChunkQueue is empty
-bool WorldManager::QueueIsEmpty() {
+bool WorldManager::IsQueueEmpty() {
     return chunkQueue.empty();
+}
+
+// Returns how many entries are in the Queue
+int WorldManager::QueueSize() {
+    return chunkQueue.size();
 }
 
 // Sets the seed of both the WorldManager and the world
@@ -115,9 +120,9 @@ void WorldManager::WorkerThread() {
             chunkPositions.erase(hash);  // Remove from tracking set
 
             std::scoped_lock lock(Betrock::Server::Instance().GetConnectedClientMutex());
-            for (auto c : cq.requestedClients) {
+            for (auto& weak : cq.requestedClients) {
                 // Only send populated chunks
-                if (c) {
+                if (auto c = weak.lock()) {
                     c->AddNewChunk(cq.position);
                 }
             }
@@ -151,7 +156,7 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator &generator) {
     if (c && c->populated) {
         return true;
     } else {
-        int canBePopulated = true;
+        // This offset should be calculated based on the direction of which chunks already exist
         for (int xOffset = 0; xOffset <= 1; xOffset++) {
             for (int zOffset = 0; zOffset <= 1; zOffset++) {
                 // We don't need to check the current chunk
@@ -159,20 +164,20 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator &generator) {
                 // If any surrounding chunk doesn't exist, we can't populate it
                 Chunk* tc = world.GetChunk(x+xOffset,z+zOffset);
                 if (!tc) {
-                    canBePopulated = false;
+                    return false;
                 }
             }
         }
+        
+        // We won't reach this if there's an unloaded chunk around us
+
         // Chunk is in memory but hasn't been populated yet
-        if (canBePopulated) {
-            if (generator.PopulateChunk(x,z)) {
-                c->populated = true;
-                // Do lighting math
-                CalculateChunkLight(c);
-                return true;
-            }
+        if (generator.PopulateChunk(x,z)) {
+            c->populated = true;
+            // Do lighting math
+            CalculateChunkLight(c);
+            return true;
         }
-        //std::cout << "No population took place for Chunk " << x << ", " << z << std::endl;
     }
     return false;
 }

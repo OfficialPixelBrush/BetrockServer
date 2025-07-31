@@ -61,7 +61,7 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
     // Check if the chunk has already been loaded
     if (!wm->world.ChunkExists(position.x,position.z)) {
 		// Otherwise queue chunk loading or generation
-		wm->AddChunkToQueue(position.x, position.z, this);
+		wm->AddChunkToQueue(position.x, position.z, shared_from_this());
         return;
     }
 	// If the chunk is not yet populated, wait on it
@@ -485,13 +485,6 @@ bool Client::HandleLoginRequest() {
 		UpdateInventory(response);
 	}
 
-	// TODO: Players still fall through the ground when loading in...
-	// Maybe figure out something to snap them to the top of the nearest block?
-	// Keep them frozen until we know the chunks have been loaded??? Idk...
-	// Note: Teleporting automatically loads surrounding chunks,
-	// so no further loading is necessary
-	Teleport(response,player->position, player->yaw, player->pitch);
-
 	// Create the player for other players
 	Respond::NamedEntitySpawn(
 		broadcastOthersResponse,
@@ -548,6 +541,11 @@ bool Client::HandleLoginRequest() {
     }
 	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION_FULL));
 	SendResponse(true);
+
+	// Note: Teleporting automatically loads surrounding chunks,
+	// so no further loading is necessary
+	player->position.y += 1.0;
+	Teleport(response,player->position, player->yaw, player->pitch);
 	// ONLY SET THIS AFTER LOGIN HAS FINISHED
 	SetConnectionStatus(ConnectionStatus::Connected);
 	return true;
@@ -1000,7 +998,7 @@ void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
     player->stance = player->position.y + STANCE_OFFSET;
     newChunks.clear();
     Respond::PlayerPositionLook(response, player.get());
-	SendResponse(true);
+	//SendResponse(true);
     DetermineVisibleChunks(true);
 }
 

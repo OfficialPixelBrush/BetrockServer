@@ -431,12 +431,16 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
 
 // Find the highest possible non-solid block that can see the sky
 Int3 World::FindSpawnableBlock(Int3 position) {
-    bool skyVisible = true;
     Int3 spawn = position;
 
     for (int y = CHUNK_HEIGHT-1; y >= 0; --y) {
         spawn.y = y;
-        int16_t type = GetBlock(spawn)->type;
+        Block* b = GetBlock(spawn);
+        if (!b) {
+            // There is no chunk to check for blocks
+            return position;
+        }
+        int8_t type = b->type;
         if (type != BLOCK_AIR) {
             // The position above this block is air
             return spawn;
