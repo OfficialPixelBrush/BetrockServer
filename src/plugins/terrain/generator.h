@@ -6,6 +6,7 @@
 #include "blocks.h"
 #include "config.h"
 #include "luahelper.h"
+#include "terrainhelper.h"
 #include "world.h"
 #include "generatorVersionCheck.h"
 

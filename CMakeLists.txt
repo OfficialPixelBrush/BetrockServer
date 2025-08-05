@@ -73,6 +73,7 @@ add_executable(
     src/misc/helpers/datatypes.cpp
     src/misc/helpers/helper.cpp
     src/misc/helpers/luahelper.cpp
+    src/misc/helpers/terrainhelper.cpp
 
     src/misc/commands/command.cpp
     src/misc/gamerules.cpp
@@ -86,6 +87,7 @@ add_executable(
 
     src/plugins/plugins.cpp
     src/plugins/terrain/generator.cpp
+    src/plugins/terrain/infdevperlin.cpp
 
     src/client.cpp
     src/config.cpp
