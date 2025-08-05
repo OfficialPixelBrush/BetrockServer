@@ -993,13 +993,15 @@ void Client::SendResponse(bool autoclear) {
 // Teleport the client to the requested coordinate
 void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, float pitch) {
     player->position = position;
+	player->position.y += STANCE_OFFSET;
+	std::cout << player->position << std::endl;
     player->yaw = yaw;
     player->pitch = pitch;
-    player->stance = player->position.y + STANCE_OFFSET;
+    player->stance = position.y;
     newChunks.clear();
-    Respond::PlayerPositionLook(response, player.get());
 	//SendResponse(true);
     DetermineVisibleChunks(true);
+    Respond::PlayerPositionLook(response, player.get());
 }
 
 // Respawn the Client by sending them back to spawn

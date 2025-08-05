@@ -53,11 +53,11 @@ World::World(const std::string& extra)
 // Saves all the Chunks that're currently loaded into Memory
 void World::Save() {
     for (auto& pair : chunks) {
-        const int64_t& hash = pair.first;
-        Chunk& chunk = pair.second;
-    
+        int64_t hash = pair.first;
+        Chunk* chunk = pair.second.get();
+
         Int3 pos = DecodeChunkHash(hash);
-        SaveChunk(pos.x, pos.z, &chunk);
+        SaveChunk(pos.x, pos.z, chunk);
     }
 }
 
@@ -66,15 +66,16 @@ Chunk* World::GetChunk(int32_t x, int32_t z) {
     auto it = chunks.find(GetChunkHash(x, z));
     if (it != chunks.end()) {
         //std::cout << x << ", " << z << std::endl;
-        return &it->second; // Return a pointer to the found chunk
+        return it->second.get(); // Return a pointer to the found chunk
     }
     return nullptr; // Return nullptr if no valid object is found
 }
 
 // Adds a new Chunk to the world
 Chunk* World::AddChunk(int32_t x, int32_t z, Chunk c) {
-    chunks[GetChunkHash(x,z)] = c;
-    return &chunks[GetChunkHash(x,z)];
+    auto hash = GetChunkHash(x, z);
+    chunks[hash] = std::make_unique<Chunk>(std::move(c));
+    return chunks[hash].get();
 }
 
 // Removes a Chunk from the world
@@ -88,7 +89,7 @@ void World::FreeUnseenChunks() {
 
     for (auto& pair : chunks) {
         const int64_t& hash = pair.first;
-        Chunk& chunk = pair.second;
+        Chunk* chunk = pair.second.get();
         Int3 pos = DecodeChunkHash(hash);
     
         // Check if any player has this chunk hash in their visibleChunks
@@ -101,7 +102,7 @@ void World::FreeUnseenChunks() {
         }
     
         if (!isVisible) {
-            SaveChunk(pos.x, pos.z, &chunk);
+            SaveChunk(pos.x, pos.z, chunk);
             chunksToRemove.push_back(pos);
         }
     }    
@@ -562,12 +563,12 @@ bool World::InteractWithBlock(Int3 pos) {
 void World::TickChunks() {
     for (auto& pair : chunks) {
         int64_t hash = pair.first;
-        Chunk& chunk = pair.second;
+        Chunk* chunk = pair.second.get();
         std::uniform_int_distribution<int32_t> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
         // Choose a batch of random blocks within a chunk to run RandomTick on
         for (int i = 0; i < 16; i++) {
             int blockIndex = dist6(rng);
-            Block* b = &chunk.blocks[blockIndex];
+            Block* b = &chunk->blocks[blockIndex];
             int8_t oldType = b->type;
             int8_t oldMeta = b->meta;
 

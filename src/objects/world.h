@@ -16,7 +16,7 @@
 
 class World {
     private:
-        std::unordered_map<int64_t, Chunk> chunks;
+        std::unordered_map<long, std::unique_ptr<Chunk>> chunks;
         std::filesystem::path dirPath;
         void RemoveChunk(int32_t x, int32_t z);
         std::random_device dev;
