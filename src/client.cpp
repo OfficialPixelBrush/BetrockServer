@@ -836,6 +836,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 
 	Int3 pos = Int3{x,y,z};
 	Block* targetedBlock = world->GetBlock(pos);
+	if (!targetedBlock) { return false; }
 
 	// Check if the targeted block is interactable
 	if (IsInteractable(targetedBlock->type)) {

@@ -148,7 +148,10 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator &generator) {
             // Chunk exists as a file (old format)
             c = world.LoadOldChunk(x,z);
         } else {
-            c = world.AddChunk(x, z, generator.GenerateChunk(x,z));
+            c = world.AddChunk(x, z, generator.GenerateChunkInfdev(x,z));
+            // TODO: This *can* be unnecessary...
+            // kinda just there for Infdev chunks rn, since they don't get populated...
+            CalculateChunkLight(c);
         }
     }
 

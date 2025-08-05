@@ -9,6 +9,11 @@
 #include "terrainhelper.h"
 #include "world.h"
 #include "generatorVersionCheck.h"
+#include "historic/javarandom.h"
+#include "historic/infdevoctaves.h"
+
+#include <cstdlib>
+#include <ctime>
 
 #define GENERATOR_DEFAULT_NAME "Generator"
 #define GENERATOR_LATEST_VERSION 3
@@ -16,6 +21,7 @@
 class Generator {
     public:
         virtual Chunk GenerateChunk(int32_t cX, int32_t cZ);
+        virtual Chunk GenerateChunkInfdev(int32_t cX, int32_t cZ);
         virtual bool PopulateChunk(int32_t cX, int32_t cZ);
         void PrepareGenerator(int64_t seed, World* world);
         ~Generator() {
@@ -24,6 +30,14 @@ class Generator {
             }
         }
     private:
+        // TODO: Figure out how to multi-thread this!!!
+        JavaRandom rand;
+        InfdevOctaves noiseGen1 = InfdevOctaves(16);
+        InfdevOctaves noiseGen2 = InfdevOctaves(16);
+        InfdevOctaves noiseGen3 = InfdevOctaves(8);
+        InfdevOctaves noiseGen4 = InfdevOctaves(4);
+        InfdevOctaves noiseGen5 = InfdevOctaves(4);
+        InfdevOctaves noiseGen6 = InfdevOctaves(5);
         Betrock::Logger* logger;
         std::string name = GENERATOR_DEFAULT_NAME;
         int32_t apiVersion = GENERATOR_LATEST_VERSION;
