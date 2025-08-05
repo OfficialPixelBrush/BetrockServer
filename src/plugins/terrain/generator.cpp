@@ -62,6 +62,14 @@ void Generator::PrepareGenerator(int64_t seed, World* world) {
         lua_close(L);
         throw std::runtime_error("\"" + name + "\" was made for a newer version of BetrockServer!");
     }
+
+    rand = JavaRandom(this->seed);
+    noiseGen1 = std::make_unique<InfdevOctaves>(rand, 16);
+    noiseGen2 = std::make_unique<InfdevOctaves>(rand, 16);
+    noiseGen3 = std::make_unique<InfdevOctaves>(rand, 8);
+    noiseGen4 = std::make_unique<InfdevOctaves>(rand, 4);
+    noiseGen5 = std::make_unique<InfdevOctaves>(rand, 4);
+    noiseGen6 = std::make_unique<InfdevOctaves>(rand, 5);
 }
 
 Block Generator::DecodeBlock() {
@@ -91,14 +99,14 @@ Chunk Generator::GenerateChunkInfdev(int32_t cX, int32_t cZ) {
         for(int var6 = var14; var6 < var14 + 16; ++var6) {
             int var7 = var5 / 1024;
             int var8 = var6 / 1024;
-            float var9 = (float)(this->noiseGen1.generateNoise((double)((float)var5 / 0.03125F), 0.0D, (double)((float)var6 / 0.03125F)) - this->noiseGen2.generateNoise((double)((float)var5 / 0.015625F), 0.0D, (double)((float)var6 / 0.015625F))) / 512.0F / 4.0F;
-            float var10 = (float)this->noiseGen5.generateNoise((double)((float)var5 / 4.0F), (double)((float)var6 / 4.0F));
-            float var11 = (float)this->noiseGen6.generateNoise((double)((float)var5 / 8.0F), (double)((float)var6 / 8.0F)) / 8.0F;
-            var10 = var10 > 0.0F ? (float)(this->noiseGen3.generateNoise((double)((float)var5 * 0.25714284F * 2.0F), (double)((float)var6 * 0.25714284F * 2.0F)) * (double)var11 / 4.0D) : (float)(this->noiseGen4.generateNoise((double)((float)var5 * 0.25714284F), (double)((float)var6 * 0.25714284F)) * (double)var11);
+            float var9 = (float)(this->noiseGen1.get()->generateNoise((double)((float)var5 / 0.03125F), 0.0D, (double)((float)var6 / 0.03125F)) - this->noiseGen2.get()->generateNoise((double)((float)var5 / 0.015625F), 0.0D, (double)((float)var6 / 0.015625F))) / 512.0F / 4.0F;
+            float var10 = (float)this->noiseGen5.get()->generateNoise((double)((float)var5 / 4.0F), (double)((float)var6 / 4.0F));
+            float var11 = (float)this->noiseGen6.get()->generateNoise((double)((float)var5 / 8.0F), (double)((float)var6 / 8.0F)) / 8.0F;
+            var10 = var10 > 0.0F ? (float)(this->noiseGen3.get()->generateNoise((double)((float)var5 * 0.25714284F * 2.0F), (double)((float)var6 * 0.25714284F * 2.0F)) * (double)var11 / 4.0D) : (float)(this->noiseGen4.get()->generateNoise((double)((float)var5 * 0.25714284F), (double)((float)var6 * 0.25714284F)) * (double)var11);
             int var15 = (int)(var9 + 64.0F + var10);
-            if((float)this->noiseGen5.generateNoise((double)var5, (double)var6) < 0.0F) {
+            if((float)this->noiseGen5.get()->generateNoise((double)var5, (double)var6) < 0.0F) {
                 var15 = var15 / 2 << 1;
-                if((float)this->noiseGen5.generateNoise((double)(var5 / 5), (double)(var6 / 5)) < 0.0F) {
+                if((float)this->noiseGen5.get()->generateNoise((double)(var5 / 5), (double)(var6 / 5)) < 0.0F) {
                     ++var15;
                 }
             }

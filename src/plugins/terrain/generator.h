@@ -32,12 +32,12 @@ class Generator {
     private:
         // TODO: Figure out how to multi-thread this!!!
         JavaRandom rand;
-        InfdevOctaves noiseGen1 = InfdevOctaves(16);
-        InfdevOctaves noiseGen2 = InfdevOctaves(16);
-        InfdevOctaves noiseGen3 = InfdevOctaves(8);
-        InfdevOctaves noiseGen4 = InfdevOctaves(4);
-        InfdevOctaves noiseGen5 = InfdevOctaves(4);
-        InfdevOctaves noiseGen6 = InfdevOctaves(5);
+        std::unique_ptr<InfdevOctaves> noiseGen1;
+        std::unique_ptr<InfdevOctaves> noiseGen2;
+        std::unique_ptr<InfdevOctaves> noiseGen3;
+        std::unique_ptr<InfdevOctaves> noiseGen4;
+        std::unique_ptr<InfdevOctaves> noiseGen5;
+        std::unique_ptr<InfdevOctaves> noiseGen6;
         Betrock::Logger* logger;
         std::string name = GENERATOR_DEFAULT_NAME;
         int32_t apiVersion = GENERATOR_LATEST_VERSION;

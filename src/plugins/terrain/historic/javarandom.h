@@ -1,6 +1,9 @@
 // A reimplemtnation of the random function that Java provides
 // https://docs.oracle.com/javase/8/docs/api/java/util/Random.html
 
+// For more info, cross-reference with JDK source
+// https://github.com/openjdk/jdk8u-dev/blob/master/jdk/src/share/classes/java/util/Random.java
+
 #pragma once
 
 #include <cstdint>

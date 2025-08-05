@@ -31,7 +31,7 @@ class WorldManager {
         int64_t seed;
         std::condition_variable queueCV;
         std::vector<std::thread> workers;
-        const int workerCount = 1; //std::thread::hardware_concurrency();  // Use number of CPU cores
+        const int workerCount = std::thread::hardware_concurrency();  // Use number of CPU cores
         void WorkerThread();
         bool GetChunk(int32_t x, int32_t z, Generator &generator);
     public:
