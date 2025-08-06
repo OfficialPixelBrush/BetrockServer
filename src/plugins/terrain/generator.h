@@ -11,6 +11,7 @@
 #include "generatorVersionCheck.h"
 #include "historic/javarandom.h"
 #include "historic/infdevoctaves.h"
+#include "lighting.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -21,29 +22,21 @@
 class Generator {
     public:
         virtual Chunk GenerateChunk(int32_t cX, int32_t cZ);
-        virtual Chunk GenerateChunkInfdev(int32_t cX, int32_t cZ);
         virtual bool PopulateChunk(int32_t cX, int32_t cZ);
         void PrepareGenerator(int64_t seed, World* world);
-        ~Generator() {
+        virtual ~Generator() {
             if (L) {
                 lua_close(L);
             }
         }
-    private:
-        // TODO: Figure out how to multi-thread this!!!
-        JavaRandom rand;
-        std::unique_ptr<InfdevOctaves> noiseGen1;
-        std::unique_ptr<InfdevOctaves> noiseGen2;
-        std::unique_ptr<InfdevOctaves> noiseGen3;
-        std::unique_ptr<InfdevOctaves> noiseGen4;
-        std::unique_ptr<InfdevOctaves> noiseGen5;
-        std::unique_ptr<InfdevOctaves> noiseGen6;
+    protected:
         Betrock::Logger* logger;
+        int64_t seed;
+        World* world;
+    private:
         std::string name = GENERATOR_DEFAULT_NAME;
         int32_t apiVersion = GENERATOR_LATEST_VERSION;
         lua_State* L;
-        int64_t seed;
-        World* world;
         
         Block DecodeBlock();
         

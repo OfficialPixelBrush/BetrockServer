@@ -87,6 +87,7 @@ add_executable(
 
     src/plugins/plugins.cpp
     src/plugins/terrain/generator.cpp
+    src/plugins/terrain/generatorInfdev.cpp
     src/plugins/terrain/historic/infdevperlin.cpp
     src/plugins/terrain/historic/infdevoctaves.cpp
 

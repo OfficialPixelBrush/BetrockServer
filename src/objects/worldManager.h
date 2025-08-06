@@ -7,6 +7,7 @@
 
 #include "world.h"
 #include "generator.h"
+#include "generatorInfdev.h"
 #include "coms.h"
 #include "client.h"
 #include "lighting.h"
@@ -33,7 +34,7 @@ class WorldManager {
         std::vector<std::thread> workers;
         const int workerCount = std::thread::hardware_concurrency();  // Use number of CPU cores
         void WorkerThread();
-        bool GetChunk(int32_t x, int32_t z, Generator &generator);
+        bool GetChunk(int32_t x, int32_t z, Generator* generator);
     public:
         World world;
         void AddChunkToQueue(int32_t x, int32_t z, const std::shared_ptr<Client>& requestClient = nullptr);

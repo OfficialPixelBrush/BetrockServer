@@ -30,7 +30,7 @@ double InfdevOctaves::generateNoise(double xOffset, double yOffset, double zOffs
     double var9 = 1.0D;
 
     for(int i = 0; i < this->octaves; ++i) {
-        var7 += this->generatorCollection[i]->generateNoiseD(xOffset / var9, 0.0D / var9, zOffset / var9) * var9;
+        var7 += this->generatorCollection[i]->generateNoiseD(xOffset / var9, yOffset / var9, zOffset / var9) * var9;
         var9 *= 2.0D;
     }
 
