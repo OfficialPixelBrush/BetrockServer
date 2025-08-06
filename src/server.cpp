@@ -152,7 +152,7 @@ void Server::LoadConfig() {
 	} else {
 		GlobalConfig::Instance().LoadFromDisk();
 		chunkDistance = GlobalConfig::Instance().GetAsNumber<int>("view-distance");
-		seed = GlobalConfig::Instance().GetAsNumber<int>("level-seed");
+		seed = GlobalConfig::Instance().GetAsNumber<int64_t>("level-seed");
 		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int>("max-players");
 		whitelistEnabled = GlobalConfig::Instance().GetAsBoolean("white-list");
 	}

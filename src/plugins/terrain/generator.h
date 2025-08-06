@@ -12,6 +12,7 @@
 #include "historic/javaRandom.h"
 #include "historic/infdevoctaves.h"
 #include "lighting.h"
+#include "chunk.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -23,7 +24,7 @@ class Generator {
     public:
         virtual Chunk GenerateChunk(int32_t cX, int32_t cZ);
         virtual bool PopulateChunk(int32_t cX, int32_t cZ);
-        void PrepareGenerator(int64_t seed, World* world);
+        Generator(int64_t seed, World* world);
         virtual ~Generator() {
             if (L) {
                 lua_close(L);

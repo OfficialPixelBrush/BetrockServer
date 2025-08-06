@@ -13,7 +13,7 @@ class InfdevPerlin {
         double generateNoise(double xOffset, double yOffset, double zOffset);
     public:
         InfdevPerlin();
-        InfdevPerlin(JavaRandom rand);
+        InfdevPerlin(JavaRandom* rand);
         double generateNoise(double xOffset, double yOffset);
         double generateNoiseD(double xOffset, double yOffset, double zOffset);
 };

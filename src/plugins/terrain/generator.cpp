@@ -1,7 +1,7 @@
 #include "generator.h"
 
 // Prepare the Generator to utilize some preset numbers and functions
-void Generator::PrepareGenerator(int64_t seed, World* world) {
+Generator::Generator(int64_t seed, World* world) {
 	logger = &Betrock::Logger::Instance();
     this->seed = seed;
     this->world = world;
@@ -157,10 +157,9 @@ int Generator::lua_Index(lua_State *L) {
     if (y >= CHUNK_HEIGHT) {
         y = CHUNK_HEIGHT-1;
     }
-    Int3 pos = Int3{x,y,z};
 
     // Call Between and push the result
-    int32_t result = GetBlockIndex(pos)+1;
+    int32_t result = ((int32_t)(y + z*CHUNK_HEIGHT + (x*CHUNK_HEIGHT*CHUNK_WIDTH_Z)))+1;
     lua_pushnumber(L, result);
 
     return 1; // One return value on the Lua stack

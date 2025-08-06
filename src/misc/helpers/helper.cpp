@@ -167,11 +167,6 @@ std::string PacketIdToLabel(Packet packet) {
     return packetLabels[(uint8_t)packet];
 }
 
-// Get the Index of a Block within a chunk
-int16_t GetBlockIndex(Int3 position) {
-    return (int32_t)((int8_t)position.y + position.z*CHUNK_HEIGHT + (position.x*CHUNK_HEIGHT*CHUNK_WIDTH_Z));
-}
-
 // Get the Block position from the Index
 Int3 GetBlockPosition(int index) {
     Int3 position;

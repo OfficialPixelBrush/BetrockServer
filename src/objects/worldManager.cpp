@@ -89,8 +89,7 @@ void WorldManager::ForceGenerateChunk(int32_t x, int32_t z) {
 // This is run by all the available Worker Threads
 // To generate a chunk, if some are queued
 void WorldManager::WorkerThread() {
-    std::unique_ptr<Generator> generator = std::make_unique<GeneratorInfdev20100227>();
-    generator->PrepareGenerator(seed, &this->world);
+    std::unique_ptr<Generator> generator = std::make_unique<GeneratorInfdev20100327>(seed, &this->world);
 
     while (Betrock::Server::Instance().IsAlive()) {
         QueueChunk cq;
@@ -156,6 +155,25 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator* generator) {
     if (c && c->populated) {
         return true;
     } else {
+        if(world.ChunkExists(x + 1, z + 1) && world.ChunkExists(x, z + 1) && world.ChunkExists(x + 1, z)) {
+            generator->PopulateChunk(x, z);
+        }
+
+        if(world.ChunkExists(x - 1, z + 1) && world.ChunkExists(x, z + 1) && world.ChunkExists(x - 1, z)) {
+            generator->PopulateChunk(x - 1, z);
+        }
+
+        if(world.ChunkExists(x + 1, z - 1) && world.ChunkExists(x, z - 1) && world.ChunkExists(x + 1, z)) {
+            generator->PopulateChunk(x, z - 1);
+        }
+
+        if(world.ChunkExists(x - 1, z - 1) && world.ChunkExists(x, z - 1) && world.ChunkExists(x - 1, z)) {
+            generator->PopulateChunk(x - 1, z - 1);
+        }
+        c->populated = true;
+        CalculateChunkLight(c);
+        return true;
+        /*
         // This offset should be calculated based on the direction of which chunks already exist
         for (int xOffset = 0; xOffset <= 1; xOffset++) {
             for (int zOffset = 0; zOffset <= 1; zOffset++) {
@@ -177,7 +195,7 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator* generator) {
             // Do lighting math
             CalculateChunkLight(c);
             return true;
-        }
+        }*/
     }
     return false;
 }

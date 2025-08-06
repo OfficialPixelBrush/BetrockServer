@@ -27,12 +27,13 @@ class World {
         int64_t seed;
         void Save();
         int GetNumberOfChunks();
+        int8_t GetHeightValue(int32_t x, int32_t z);
         std::unique_ptr<char[]> GetChunkData(Int3 position);
-        std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkBlocks(const Chunk* c);
-        std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkMeta(const Chunk* c);
-        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkBlockLight(const Chunk* c);
-        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkSkyLight(const Chunk* c);
-        void PlaceBlock(Int3 position, int8_t type, int8_t meta, bool sendUpdate = true);
+        std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkBlocks(Chunk* c);
+        std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkMeta(Chunk* c);
+        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkBlockLight(Chunk* c);
+        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkSkyLight(Chunk* c);
+        void PlaceBlock(Int3 position, int8_t type = 0, int8_t meta = 0, bool sendUpdate = true);
         Block* BreakBlock(Int3 position, bool sendUpdate = true);
         Block* GetBlock(Int3 position);
         Chunk* GetChunk(int32_t x, int32_t z);

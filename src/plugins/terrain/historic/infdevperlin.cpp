@@ -1,20 +1,20 @@
 #include "infdevperlin.h"
 
 InfdevPerlin::InfdevPerlin()
-    : InfdevPerlin(JavaRandom()) {}
+    : InfdevPerlin(new JavaRandom()) {}
 
-InfdevPerlin::InfdevPerlin(JavaRandom rand) {
+InfdevPerlin::InfdevPerlin(JavaRandom* rand) {
     //this->permutations = new int[512];
-    this->xCoord = rand.nextDouble() * 256.0D;
-    this->yCoord = rand.nextDouble() * 256.0D;
-    this->zCoord = rand.nextDouble() * 256.0D;
+    this->xCoord = rand->nextDouble() * 256.0D;
+    this->yCoord = rand->nextDouble() * 256.0D;
+    this->zCoord = rand->nextDouble() * 256.0D;
 
     for (int i = 0; i < 256; ++i) {
         this->permutations[i] = i;
     }
 
     for (int i = 0; i < 256; ++i) {
-        int j = rand.nextInt(256 - i) + i;
+        int j = rand->nextInt(256 - i) + i;
         std::swap(this->permutations[i], this->permutations[j]);
         this->permutations[i + 256] = this->permutations[i];
     }

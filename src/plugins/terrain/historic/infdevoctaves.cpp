@@ -1,20 +1,20 @@
 #include "infdevoctaves.h"
 
 InfdevOctaves::InfdevOctaves(int octaves) : octaves(octaves) {
-    JavaRandom rand;
+    JavaRandom* rand = new JavaRandom();
     for (int i = 0; i < octaves; ++i) {
         generatorCollection.push_back(std::make_unique<InfdevPerlin>(rand));
     }
 }
 
-InfdevOctaves::InfdevOctaves(JavaRandom& rand, int octaves) {
+InfdevOctaves::InfdevOctaves(JavaRandom* rand, int octaves) {
     this->octaves = octaves;
     for(int i = 0; i < octaves; ++i) {
         generatorCollection.push_back(std::make_unique<InfdevPerlin>(rand));
     }
 }
 
-double InfdevOctaves::generateNoise(double xOffset, double yOffset) {
+double InfdevOctaves::noiseGenerator(double xOffset, double yOffset) {
     double var5 = 0.0D;
     double var7 = 1.0D;
 
@@ -25,7 +25,8 @@ double InfdevOctaves::generateNoise(double xOffset, double yOffset) {
 
     return var5;
 }
-double InfdevOctaves::generateNoise(double xOffset, double yOffset, double zOffset) {
+
+double InfdevOctaves::generateNoiseOctaves(double xOffset, double yOffset, double zOffset) {
     double var7 = 0.0D;
     double var9 = 1.0D;
 

@@ -2,6 +2,7 @@
 #include <cstdint>
 #include "helper.h"
 #include "blocks.h"
+#include "chunk.h"
 #include "world.h"
 #include "datatypes.h"
 

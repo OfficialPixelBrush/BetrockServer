@@ -3,15 +3,6 @@
 #include <string>
 #include <sstream>
 
-#define CHUNK_HEIGHT 128
-#define CHUNK_WIDTH_X 16
-#define CHUNK_WIDTH_Z 16
-
-#define CHUNK_DATA_SIZE static_cast<size_t>(CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z * 2.5)
-
-#define OLD_CHUNK_FILE_EXTENSION ".cnk"
-#define CHUNK_FILE_EXTENSION ".ncnk"
-
 // Item
 struct Item {
     int16_t id = 0;
@@ -47,20 +38,6 @@ struct Block {
         oss << *this; // Use the overloaded << operator
         return oss.str();
     }
-};
-
-struct Chunk {
-    struct Block blocks[CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT];
-    // This describes the number of clients that can see this chunk.
-    // If this hits 0, the chunk is invisible and can be removed
-    // TODO: Actually implement this value!
-    uint16_t viewers = 0;
-
-    // A non-populated chunk still needs to be popualated with foliage
-    bool populated = false;
-
-    // Set if a chunk was been modified and needs to be re-saved
-    bool modified = false;
 };
 
 // Custom Types

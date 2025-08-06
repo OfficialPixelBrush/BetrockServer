@@ -16,6 +16,7 @@
 #include "blocks.h"
 #include "items.h"
 #include "datatypes.h"
+#include "chunk.h"
 
 Int3 LocalToGlobalPosition(Int3 chunkPos, Int3 blockPos);
 Int3 BlockToChunkPosition(Vec3 position);
@@ -36,7 +37,6 @@ double GetChebyshevDistance(Int3 a, Int3 b);
 std::string PacketIdToLabel(Packet packet);
 
 // Handling of Chunk and Block Data
-int16_t GetBlockIndex(Int3 position);
 Int3 GetBlockPosition(int index);
 std::unique_ptr<char[]> CompressChunk(char* chunk, size_t &compressed_size);
 std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size);

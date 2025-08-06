@@ -7,6 +7,12 @@ int World::GetNumberOfChunks() {
     return chunks.size();
 }
 
+int8_t World::GetHeightValue(int32_t x, int32_t z) {
+    Chunk* c = GetChunk(x >> 4, z >> 4);
+    if (!c) return 0;
+    return c->GetHeightValue(x & 15, z & 15);
+}
+
 // Checks if a file with a matching position and extension exists
 bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
@@ -266,7 +272,7 @@ Block* World::GetBlock(Int3 position) {
         return nullptr;
     }
     c->modified = true;
-    return &c->blocks[GetBlockIndex(Int3{bX,(int8_t)position.y,bZ})];
+    return c->GetBlock(bX,position.y,bZ);
 }
 
 // Get the Skylight of a Block at the passed position
@@ -301,8 +307,9 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                Block b = c->blocks[GetBlockIndex(Int3{cX,cY,cZ})];
-                bytes[index] = b.type;
+                Block* b = c->GetBlock(cX,cY,cZ);
+                if (!b) continue;
+                bytes[index] = b->type;
                 index++;
             }
         }
@@ -312,9 +319,10 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                bytes[index] = (b2.meta << 4 | b1.meta);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                bytes[index] = (b2->meta << 4 | b1->meta);
                 index++;
             }
         }
@@ -324,9 +332,10 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                bytes[index] = (b2.lightBlock << 4 | b1.lightBlock);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                bytes[index] = (b2->lightBlock << 4 | b1->lightBlock);
                 index++;
             }
         }
@@ -336,9 +345,10 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                bytes[index] = (b2.lightSky << 4 | b1.lightSky);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                bytes[index] = (b2->lightSky << 4 | b1->lightSky);
                 index++;
             }
         }
@@ -347,7 +357,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
 }
 
 // Get all the Block Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkBlocks(const Chunk* c) {
+std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkBlocks(Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
@@ -357,8 +367,9 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
     for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                Block b = c->blocks[GetBlockIndex(Int3{cX,cY,cZ})];
-                data[index] = b.type;
+                Block* b = c->GetBlock(cX,cY,cZ);
+                if (!b) continue;
+                data[index] = b->type;
                 index++;
             }
         }
@@ -367,7 +378,7 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
 }
 
 // Get all the Meta Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkMeta(const Chunk* c) {
+std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkMeta(Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
@@ -377,9 +388,10 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                data[index] = (b2.meta << 4 | b1.meta);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                data[index] = (b2->meta << 4 | b1->meta);
                 index++;
             }
         }
@@ -388,7 +400,7 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
 }
 
 // Get all the Block Light Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkBlockLight(const Chunk* c) {
+std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkBlockLight(Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
@@ -398,9 +410,10 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                data[index] = (b2.lightBlock << 4 | b1.lightBlock);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                data[index] = (b2->lightBlock << 4 | b1->lightBlock);
                 index++;
             }
         }
@@ -409,7 +422,7 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
 }
 
 // Get all the Sky Light Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkSkyLight(const Chunk* c) {
+std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkSkyLight(Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
@@ -420,9 +433,10 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                data[index] = (b2.lightSky << 4 | b1.lightSky);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                data[index] = (b2->lightSky << 4 | b1->lightSky);
                 index++;
             }
         }

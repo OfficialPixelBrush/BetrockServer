@@ -9,6 +9,7 @@
 #include <cstdint>
 #include <chrono>
 #include <limits>
+#include <iostream>
 
 class JavaRandom {
 private:
@@ -16,7 +17,7 @@ private:
     static constexpr uint64_t addend     = 0xBULL;
     static constexpr uint64_t mask       = (1ULL << 48) - 1;
 
-    uint64_t seed;
+    int64_t seed;
 
     int32_t next(int bits) {
         seed = (seed * multiplier + addend) & mask;
@@ -24,18 +25,18 @@ private:
     }
 
 public:
-    JavaRandom(uint64_t initialSeed) {
+    JavaRandom(int64_t initialSeed) {
         setSeed(initialSeed);
     }
 
     JavaRandom() {
         // Default seed: current time
-        setSeed(static_cast<uint64_t>(
+        setSeed(static_cast<int64_t>(
             std::chrono::steady_clock::now().time_since_epoch().count()
         ));
     }
 
-    void setSeed(uint64_t s) {
+    void setSeed(int64_t s) {
         seed = (s ^ multiplier) & mask;
     }
 

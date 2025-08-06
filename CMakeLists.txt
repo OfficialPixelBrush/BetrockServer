@@ -80,16 +80,18 @@ add_executable(
     src/misc/lighting.cpp
     src/misc/sysinfo.cpp
 
+    src/objects/chunk.cpp
     src/objects/entity.cpp
     src/objects/player.cpp
     src/objects/world.cpp
     src/objects/worldManager.cpp
 
-    src/plugins/plugins.cpp
-    src/plugins/terrain/generator.cpp
-    src/plugins/terrain/generatorInfdev20100227.cpp
-    src/plugins/terrain/historic/infdevperlin.cpp
+    src/plugins/terrain/historic/generatorInfdev20100227.cpp
+    src/plugins/terrain/historic/generatorInfdev20100327.cpp
     src/plugins/terrain/historic/infdevoctaves.cpp
+    src/plugins/terrain/historic/infdevperlin.cpp
+    src/plugins/terrain/generator.cpp
+    src/plugins/plugins.cpp
 
     src/client.cpp
     src/config.cpp
