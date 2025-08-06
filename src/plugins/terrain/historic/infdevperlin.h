@@ -1,7 +1,7 @@
 // A recreation of the the Infdev 20100227-1433 Perlin noise function
 #pragma once
 
-#include "javarandom.h"
+#include "javaRandom.h"
 #include <cmath>
 
 class InfdevPerlin {

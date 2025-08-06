@@ -9,7 +9,7 @@
 #include "terrainhelper.h"
 #include "world.h"
 #include "generatorVersionCheck.h"
-#include "historic/javarandom.h"
+#include "historic/javaRandom.h"
 #include "historic/infdevoctaves.h"
 #include "lighting.h"
 

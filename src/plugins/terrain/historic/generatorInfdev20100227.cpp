@@ -1,6 +1,6 @@
-#include "generatorInfdev.h"
+#include "generatorInfdev20100227.h"
 
-GeneratorInfdev::GeneratorInfdev() {
+GeneratorInfdev20100227::GeneratorInfdev20100227() {
 	logger = &Betrock::Logger::Instance();
     this->seed = seed;
     this->world = world;
@@ -14,8 +14,7 @@ GeneratorInfdev::GeneratorInfdev() {
     noiseGen6 = std::make_unique<InfdevOctaves>(rand, 5);
 }
 
-// Implements Infdev 20100227-1433 Generation very closely
-Chunk GeneratorInfdev::GenerateChunk(int32_t cX, int32_t cZ) {
+Chunk GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
     Chunk c = Chunk();
     int var3 = cX << 4;
     int var14 = cZ << 4;

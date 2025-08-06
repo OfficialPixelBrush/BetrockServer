@@ -7,7 +7,8 @@
 
 #include "world.h"
 #include "generator.h"
-#include "generatorInfdev.h"
+#include "historic/generatorInfdev20100227.h"
+#include "historic/generatorInfdev20100327.h"
 #include "coms.h"
 #include "client.h"
 #include "lighting.h"

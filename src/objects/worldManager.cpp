@@ -89,7 +89,7 @@ void WorldManager::ForceGenerateChunk(int32_t x, int32_t z) {
 // This is run by all the available Worker Threads
 // To generate a chunk, if some are queued
 void WorldManager::WorkerThread() {
-    std::unique_ptr<Generator> generator = std::make_unique<GeneratorInfdev>();
+    std::unique_ptr<Generator> generator = std::make_unique<GeneratorInfdev20100227>();
     generator->PrepareGenerator(seed, &this->world);
 
     while (Betrock::Server::Instance().IsAlive()) {
