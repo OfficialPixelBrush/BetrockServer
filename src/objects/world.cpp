@@ -83,11 +83,9 @@ void World::Save() {
 Chunk* World::GetChunk(int32_t x, int32_t z) {
     std::unique_lock lock(chunkMutex);
     auto it = chunks.find(GetChunkHash(x, z));
-    if (it != chunks.end()) {
-        //std::cout << x << ", " << z << std::endl;
-        return it->second.get(); // Return a pointer to the found chunk
-    }
-    return nullptr; // Return nullptr if no valid object is found
+    if (it != chunks.end() && it->second != nullptr)
+        return it->second.get();
+    return nullptr;
 }
 
 // Adds a new Chunk to the world

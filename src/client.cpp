@@ -58,25 +58,26 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
         return;
     }
 
-    // Check if the chunk has already been loaded
+    // Check if the chunk has already been put onto the queue
     if (!wm->world.ChunkExists(position.x,position.z)) {
 		// Otherwise queue chunk loading or generation
 		wm->AddChunkToQueue(position.x, position.z, shared_from_this());
         return;
     }
 
+	// This is redundant. The world manager SHOULD send me populated chunks
+	
+    // Check if the chunk has already been populated
 	/*
-
-    // Check if the chunk has already been loaded
-    if (!wm->world.ChunkExists(position.x,position.z)) {
+    if (wm->world.IsChunkPopulated(position.x,position.z)) {
 		// Otherwise queue chunk loading or generation
-		wm->AddChunkToQueue(position.x, position.z, shared_from_this());
+		//wm->AddChunkToQueue(position.x, position.z, shared_from_this());
         return;
     }
-	*/
 
     // If the chunk is already available, send it over
-    //newChunks.push_back(position);
+	AddNewChunk(position);
+	*/
 }
 
 // Figure out what chunks the player can see and
@@ -144,7 +145,9 @@ void Client::SendNewChunks() {
 	}
 
 	while(sentThisCycle > 0) {
-		if(!newChunks.empty()) {
+		if(newChunks.empty()) {
+			break;
+		} else {
 			auto nc = newChunks.begin();
 			auto chunkData = wm->world.GetChunkData(*nc);
 			if (!chunkData) {
@@ -1005,7 +1008,6 @@ void Client::SendResponse(bool autoclear) {
 void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, float pitch) {
     player->position = position;
 	player->position.y += STANCE_OFFSET;
-	std::cout << player->position << std::endl;
     player->yaw = yaw;
     player->pitch = pitch;
     player->stance = position.y;
