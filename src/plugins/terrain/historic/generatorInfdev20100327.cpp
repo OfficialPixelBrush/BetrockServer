@@ -108,8 +108,8 @@ std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
         }
     }
     
-    c->generated = true;
     c->GenerateHeightMap();
+    c->state = ChunkState::Generated;
     c->modified = true;
     return c;
 }
@@ -332,5 +332,8 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 			cX3 = false;
 		}
 	}
+    Chunk* c = world->GetChunk(cX,cZ);
+    if (!c) return false;
+    c->state = ChunkState::Populated;
     return true;
 }

@@ -97,7 +97,7 @@ class Server {
 	// !! returns a valid pointer or a nullptr on failure !!
 	World *GetWorld(int8_t world_id) const;
 
-	const Vec3 &GetSpawnPoint() const noexcept;
+	const Int3 &GetSpawnPoint() const noexcept;
 
 	std::mutex &GetConnectedClientMutex() noexcept;
 
@@ -107,7 +107,7 @@ class Server {
 
 	void AddUpTime(uint64_t upTime);
 
-	void SetSpawnPoint(const Vec3 &spawnPoint) noexcept;
+	void SetSpawnPoint(const Int3 &spawnPoint) noexcept;
 
 	Client *FindClientByUsername(std::string_view username) const;
 
@@ -197,7 +197,7 @@ class Server {
 	WorldManagerMap worldManagers;
 	std::unordered_map<int8_t, std::jthread> worldManagerThreads;
 	std::vector<std::unique_ptr<Plugin>> plugins;
-	Vec3 spawnPoint;
+	Int3 spawnPoint;
 	std::int8_t spawnDimension;
 	std::string spawnWorld;
 	std::vector<std::string> operators;

@@ -37,13 +37,13 @@ void Chunk::RelightBlock(int x, int y, int z) {
     }
 
     // We decrement var5 until we hit a fully opaque block
-    while(var5 > 0 && GetTranslucency(this->GetBlockType(Int3{x, var5 - 1, z})) > 0) {
+    while(var5 > 0 && GetTranslucency(this->GetBlockType(Int3{x, var5 - 1, z})) == 0) {
         //int bType = this->GetBlockType(Int3{x, var5 - 1, z});
         //std::cout << Int3{x, var5 - 1, z} << GetLabel(bType) << ": " << (int)GetTranslucency(bType) << std::endl;
         --var5;
     }
     
-    std::cout << y << ": " << (int)var5 << std::endl;
+    //std::cout << y << ": " << (int)var5 << std::endl;
 
     // If var5 and var4 aren't equal, we recalculate lighting
     if(var5 != var4) {
@@ -86,7 +86,7 @@ void Chunk::RelightBlock(int x, int y, int z) {
 
         while(var5 > 0 && iz > 0) {
             --var5;
-            var4 = 15-GetTranslucency(
+            var4 = GetTranslucency(
                 this->GetBlockType(Int3{x, var5, z})
             );
             if(var4 == 0) {

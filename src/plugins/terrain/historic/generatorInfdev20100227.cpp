@@ -95,9 +95,8 @@ std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_
         }
     }
     // To prevent population
-    c->populated = true;
-    CalculateChunkLight(c.get());
+    c->GenerateHeightMap();
+    c->state = ChunkState::Populated;
     c->modified = true;
-    c->generated = true;
     return c;
 }

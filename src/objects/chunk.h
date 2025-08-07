@@ -6,6 +6,12 @@
 
 class World;
 
+enum ChunkState : int8_t {
+    Invalid,
+    Generated,
+    Populated
+};
+
 class Chunk {
     private:
         int16_t heightMap[256];
@@ -16,17 +22,13 @@ class Chunk {
         void CheckSkylightNeighborHeight(int x, int z, int height);
         int32_t xPos, zPos;
     public:
+        int8_t state = ChunkState::Invalid;
         Chunk(World* world, int32_t cX, int32_t cZ) : world(world), xPos(cX), zPos(cZ) {}
         struct Block blocks[CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT];
         // This describes the number of clients that can see this chunk.
         // If this hits 0, the chunk is invisible and can be removed
         // TODO: Actually implement this value!
         uint16_t viewers = 0;
-
-        bool generated = false;
-
-        // A non-populated chunk still needs to be popualated with foliage
-        bool populated = false;
 
         // Set if a chunk was been modified and needs to be re-saved
         bool modified = false;

@@ -47,7 +47,7 @@ uint8_t GetTranslucency(int16_t id) {
         id == BLOCK_GLASS ||
         id == BLOCK_TORCH
     ) {
-        return 255;
+        return 0;
     }
     
     // Water seems to drop the skylight brightness by 3 levels with each block
@@ -62,7 +62,7 @@ uint8_t GetTranslucency(int16_t id) {
     }
 
     // All other blocks let no light through
-    return 0;
+    return 255;
 }
 
 // Returns true for all blocks that are completely or partially transparent

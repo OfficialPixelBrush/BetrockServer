@@ -31,6 +31,7 @@ bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
 }
 
 bool World::ChunkExists(int32_t x, int32_t z) {
+    std::unique_lock lock(chunkMutex);
     return chunks.contains(GetChunkHash(x,z));
 }
 
@@ -41,14 +42,14 @@ bool World::BlockExists(Int3 pos) {
 bool World::IsChunkGenerated(int32_t x, int32_t z) {
     Chunk* c = this->GetChunk(x,z);
     if (!c) return false;
-    return c->generated;
+    return c->state == ChunkState::Generated;
 }
 
 // Checks if the Chunk is populated
 bool World::IsChunkPopulated(int32_t x, int32_t z) {
     Chunk* c = this->GetChunk(x,z);
     if (!c) return false;
-    return c->populated;
+    return c->state == ChunkState::Populated;
 }
 
 // Sets the directory path of the world upon creation
@@ -188,7 +189,7 @@ Chunk* World::LoadChunk(int32_t x, int32_t z) {
             c->blocks[i*2  ].lightSky = (skyLight[i]     )&0xF;
             c->blocks[i*2+1].lightSky = (skyLight[i] >> 4)&0xF;
         }
-        c->populated = (bool)terrainPopulated;
+        if (terrainPopulated) c->state = ChunkState::Populated;
         return AddChunk(x,z,std::move(c));
     } catch (const std::exception& e) {
         Betrock::Logger::Instance().Error(e.what());
@@ -220,7 +221,7 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     level->Put(std::make_shared<ByteArrayTag>("Data", meta));
     level->Put(std::make_shared<ByteArrayTag>("BlockLight", blockLight));
     level->Put(std::make_shared<ByteArrayTag>("SkyLight", skyLight));
-    level->Put(std::make_shared<ByteTag>("TerrainPopulated", chunk->populated));
+    level->Put(std::make_shared<ByteTag>("TerrainPopulated", chunk->state == ChunkState::Populated));
     level->Put(std::make_shared<IntTag>("zPos",x));
     level->Put(std::make_shared<IntTag>("xPos",z));
     

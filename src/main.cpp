@@ -46,12 +46,14 @@ int main() {
 	if (overworld->GetNumberOfChunks() == 0) {
 		logger.Info("Preparing level \"" + std::string(Betrock::GlobalConfig::Instance().Get("level-name")) + "\"");
 		//wm->ForceGenerateChunk(0, 0);
+		/*
 		for (int x = -1; x <= 1; x++) {
 			for (int z = -1; z <= 1; z++) {
 				wm->ForceGenerateChunk(x, z);
 				issuedChunks++;
 			}
 		}
+		*/
 	}
 	logger.Info("Preparing start region");
 	while (true) {
@@ -65,9 +67,9 @@ int main() {
 		}
 	}
 
-	Int3 spawnBlock = overworld->FindSpawnableBlock(Int3{8, 127, 8});
-	auto spawnPoint = Int3ToVec3(spawnBlock);
-	spawnPoint.y += STANCE_OFFSET;
+	//Int3 spawnBlock = overworld->FindSpawnableBlock(Int3{8, 127, 8});
+	auto spawnPoint = Int3{0,200,0};
+	//spawnPoint.y += STANCE_OFFSET;
 	server.SetSpawnPoint(spawnPoint);
 
 	// Create threads for sending and receiving data

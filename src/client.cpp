@@ -64,13 +64,19 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
 		wm->AddChunkToQueue(position.x, position.z, shared_from_this());
         return;
     }
-	// If the chunk is not yet populated, wait on it
-	if (!wm->world.IsChunkPopulated(position.x, position.z)) {
-		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
-		return;
-	}
+
+	/*
+
+    // Check if the chunk has already been loaded
+    if (!wm->world.ChunkExists(position.x,position.z)) {
+		// Otherwise queue chunk loading or generation
+		wm->AddChunkToQueue(position.x, position.z, shared_from_this());
+        return;
+    }
+	*/
+
     // If the chunk is already available, send it over
-    newChunks.push_back(position);
+    //newChunks.push_back(position);
 }
 
 // Figure out what chunks the player can see and
@@ -265,7 +271,7 @@ void Client::HandlePacket() {
 			}
 		}
 
-		// Get the current Dimension#
+		// Get the current Dimension
 		// TODO: We probably don't need to run this on every single packet!
 		World* world = Betrock::Server::Instance().GetWorld(player->dimension);
 		
@@ -372,10 +378,11 @@ void Client::HandleClient() {
   	auto &server = Betrock::Server::Instance();
 	player = std::make_unique<Player>(
 		server.GetLatestEntityId(),
-		server.GetSpawnPoint(),
+		Int3ToVec3(server.GetSpawnPoint()),
 		server.GetSpawnDimension(),
+		// TODO: Maybe set these later?
 		server.GetSpawnWorld(),
-		server.GetSpawnPoint(),
+		Int3ToVec3(server.GetSpawnPoint()),
 		server.GetSpawnDimension(),
 		server.GetSpawnWorld()
 	);
@@ -435,9 +442,6 @@ bool Client::HandleLoginRequest() {
 
 	// Login response
 	int protocolVersion = EntryToInteger(message,offset);
-	std::string username = EntryToString16(message,offset);
-	EntryToLong(message,offset); // Get map seed
-	EntryToByte(message,offset); // Get dimension
 
 	if (protocolVersion != PROTOCOL_VERSION) {
 		// If client has wrong protocol, close
@@ -445,10 +449,15 @@ bool Client::HandleLoginRequest() {
 		return false;
 	}
 
+	std::string username = EntryToString16(message,offset);
+
 	if (username != player->username) {
 		DisconnectClient("Client has mismatched username.");
 		return false;
 	} 
+	
+	EntryToLong(message,offset); // Get map seed
+	EntryToByte(message,offset); // Get dimension
 
 	// Fill the players inventory
 	if (player->Load()) {
@@ -463,7 +472,7 @@ bool Client::HandleLoginRequest() {
   	const auto &spawnPoint = server.GetSpawnPoint();
 
 	// Set the Respawn Point, Time and Player Health
-	Respond::SpawnPoint(response,Vec3ToInt3(spawnPoint));
+	Respond::SpawnPoint(response,spawnPoint);
 	Respond::Time(response,server.GetServerTime());
 	// This is usually only done if the players health isn't full upon joining
 	if (player->health != HEALTH_MAX) {
@@ -472,7 +481,8 @@ bool Client::HandleLoginRequest() {
 
 	if (firstJoin) {
 		// Place the player at spawn
-		player->position = spawnPoint;
+		// TODO: Search for a block for the player to spawn on
+		player->position = Int3ToVec3(spawnPoint);
 
 		// Give starter items
 		Give(response,ITEM_PICKAXE_DIAMOND);
