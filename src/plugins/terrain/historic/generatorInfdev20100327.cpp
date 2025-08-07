@@ -108,12 +108,9 @@ std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
         }
     }
     
-    c->GenerateHeightMap();
-    // To prevent population
-    //c.populated = true;
-    //CalculateChunkLight(&c);
-    c->modified = true;
     c->generated = true;
+    c->GenerateHeightMap();
+    c->modified = true;
     return c;
 }
 

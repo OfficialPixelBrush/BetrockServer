@@ -39,12 +39,20 @@ bool IsTranslucent(int16_t id) {
 
 // Returns how much the skylight is filtered by the specified block
 uint8_t GetTranslucency(int16_t id) {
-    //uint8_t subtractor = 0;
+    // Let all light through
+    if (id == BLOCK_AIR ||
+        id == BLOCK_LAVA_FLOWING ||
+        id == BLOCK_LAVA_STILL ||
+        id == BLOCK_FARMLAND ||
+        id == BLOCK_GLASS ||
+        id == BLOCK_TORCH
+    ) {
+        return 255;
+    }
+    
     // Water seems to drop the skylight brightness by 3 levels with each block
     if (id == BLOCK_WATER_FLOWING ||
-        id == BLOCK_WATER_STILL ||
-        id == BLOCK_LAVA_FLOWING ||
-        id == BLOCK_LAVA_STILL) {
+        id == BLOCK_WATER_STILL) {
         return 3;
     }
 
@@ -53,21 +61,7 @@ uint8_t GetTranslucency(int16_t id) {
         return 1;
     }
 
-    if (
-        id == BLOCK_GLASS ||
-        id == BLOCK_ICE ||
-        id == BLOCK_MOB_SPAWNER
-    ) {
-        return 1;
-    }
-
-    // Do this check to prevent a potential overflow
-    /*
-    if (skylight < subtractor) {
-        skylight = 0;
-    } else {
-        skylight -= subtractor;
-    }*/
+    // All other blocks let no light through
     return 0;
 }
 

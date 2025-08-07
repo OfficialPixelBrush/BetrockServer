@@ -8,7 +8,7 @@ class World;
 
 class Chunk {
     private:
-        int8_t heightMap[256];
+        int16_t heightMap[256];
         uint8_t lowestBlockHeight;
         World* world;
         void RelightBlock(int var1, int var2, int var3);

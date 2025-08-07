@@ -27,71 +27,79 @@ void Chunk::GenerateHeightMap() {
     this->modified = true;
 }
 
-void Chunk::RelightBlock(int var1, int var2, int var3) {
-    int var4 = this->heightMap[var3 << 4 | var1] & 255;
+#include "labels.h"
+
+void Chunk::RelightBlock(int x, int y, int z) {
+    int var4 = this->heightMap[z << 4 | x] & 255;
     int var5 = var4;
-    if(var2 > var4) {
-        var5 = var2;
+    if(y > var4) {
+        var5 = y;
     }
 
-    while(var5 > 0 && GetTranslucency(this->GetBlockType(Int3{var1, var5 - 1, var3})) == 0) {
+    // We decrement var5 until we hit a fully opaque block
+    while(var5 > 0 && GetTranslucency(this->GetBlockType(Int3{x, var5 - 1, z})) > 0) {
+        //int bType = this->GetBlockType(Int3{x, var5 - 1, z});
+        //std::cout << Int3{x, var5 - 1, z} << GetLabel(bType) << ": " << (int)GetTranslucency(bType) << std::endl;
         --var5;
     }
+    
+    std::cout << y << ": " << (int)var5 << std::endl;
 
+    // If var5 and var4 aren't equal, we recalculate lighting
     if(var5 != var4) {
         // This is purely for the Infdev Singleplayer client to update stuff visually
-        //this->world->MarkBlocksDirtyVertical(var1, var3, var5, var4);
-        this->heightMap[var3 << 4 | var1] = (int8_t)var5;
-        int var6;
-        int var7;
+        //this->world->MarkBlocksDirtyVertical(x, z, var5, var4);
+        this->heightMap[z << 4 | x] = (int8_t)var5;
+        int ix;
+        int iz;
         if(var5 < this->lowestBlockHeight) {
             this->lowestBlockHeight = var5;
         } else {
-            var2 = 127;
+            y = 127;
 
-            for(var6 = 0; var6 < 16; ++var6) {
-                for(var7 = 0; var7 < 16; ++var7) {
-                    if((this->heightMap[var7 << 4 | var6] & 255) < var2) {
-                        var2 = this->heightMap[var7 << 4 | var6] & 255;
+            for(ix = 0; ix < 16; ++ix) {
+                for(iz = 0; iz < 16; ++iz) {
+                    if((this->heightMap[iz << 4 | ix] & 255) < y) {
+                        y = this->heightMap[iz << 4 | ix] & 255;
                     }
                 }
             }
 
-            this->lowestBlockHeight = var2;
+            this->lowestBlockHeight = y;
         }
 
-        var2 = (this->xPos << 4) + var1;
-        var6 = (this->zPos << 4) + var3;
+        y = (this->xPos << 4) + x;
+        ix = (this->zPos << 4) + z;
         if(var5 < var4) {
-            for(var7 = var5; var7 < var4; ++var7) {
-                this->SetLight(true,Int3{var1, var7, var3}, 15);
+            for(iz = var5; iz < var4; ++iz) {
+                this->SetLight(true,Int3{x, iz, z}, 15);
             }
         } else {
-            this->world->AddToLightQueue(true, Int3{var2, var4, var6}, Int3{var2, var5, var6});
+            this->world->AddToLightQueue(true, Int3{y, var4, ix}, Int3{y, var5, ix});
 
-            for(var7 = var4; var7 < var5; ++var7) {
-                this->SetLight(true,Int3{var1, var7, var3}, 0);
+            for(iz = var4; iz < var5; ++iz) {
+                this->SetLight(true,Int3{x, iz, z}, 0);
             }
         }
 
-        var7 = 15;
+        iz = 15;
 
-        while(var5 > 0 && var7 > 0) {
+        while(var5 > 0 && iz > 0) {
             --var5;
-            var4 = GetTranslucency(
-                this->GetBlockType(Int3{var1, var5, var3})
+            var4 = 15-GetTranslucency(
+                this->GetBlockType(Int3{x, var5, z})
             );
             if(var4 == 0) {
                 var4 = 1;
             }
 
-            var7 -= var4;
-            if(var7 < 0) {
-                var7 = 0;
+            iz -= var4;
+            if(iz < 0) {
+                iz = 0;
             }
 
-            this->SetLight(true,Int3{var1, var5, var3}, var7);
-            this->world->SpreadLight(true, Int3{var2, var5, var6}, -1);
+            this->SetLight(true,Int3{x, var5, z}, iz);
+            this->world->SpreadLight(true, Int3{y, var5, ix}, -1);
         }
 
         this->modified = true;
@@ -153,7 +161,10 @@ void Chunk::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
 
 int8_t Chunk::GetBlockType(Int3 pos) {
     Block* b = this->GetBlock(pos);
-    if (!b) return 0;
+    if (!b) {
+        //std::cout << "NO BLOCK AT " << pos << std::endl;
+        return BLOCK_AIR;
+    }
     return b->type;
 }
 
