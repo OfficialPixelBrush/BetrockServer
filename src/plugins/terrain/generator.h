@@ -13,6 +13,7 @@
 #include "historic/infdevoctaves.h"
 #include "lighting.h"
 #include "chunk.h"
+#include "PerlinNoise.hpp"
 
 #include <cstdlib>
 #include <ctime>
@@ -20,9 +21,11 @@
 #define GENERATOR_DEFAULT_NAME "Generator"
 #define GENERATOR_LATEST_VERSION 3
 
+class Chunk;
+
 class Generator {
     public:
-        virtual Chunk GenerateChunk(int32_t cX, int32_t cZ);
+        virtual std::unique_ptr<Chunk> GenerateChunk(int32_t cX, int32_t cZ);
         virtual bool PopulateChunk(int32_t cX, int32_t cZ);
         Generator(int64_t seed, World* world);
         virtual ~Generator() {

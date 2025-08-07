@@ -15,10 +15,10 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t seed, World* world) : G
     mobSpawnerNoise = std::make_unique<InfdevOctaves>(rand.get(), 5);
 }
 
-Chunk GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
-    Chunk c = Chunk();
+std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
     this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
-    std::memset(c.blocks, 0, sizeof(c.blocks));
+    std::memset(c->blocks, 0, sizeof(c->blocks));
 
     int var5;
     int var6;
@@ -72,7 +72,7 @@ Chunk GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
                                 var52 = BLOCK_STONE;
                             }
 
-                            c.blocks[var27].type = (char)var52;
+                            c->blocks[var27].type = (char)var52;
                             var27 += 128;
                         }
                     }
@@ -87,19 +87,19 @@ Chunk GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
             var8 = -1;
 
             for(var9 = 127; var9 >= 0; --var9) {
-                if(c.blocks[var49].type == BLOCK_AIR) {
+                if(c->blocks[var49].type == BLOCK_AIR) {
                     var8 = -1;
-                } else if(c.blocks[var49].type == BLOCK_STONE) {
+                } else if(c->blocks[var49].type == BLOCK_STONE) {
                     if(var8 == -1) {
                         var8 = 3;
                         if(var9 >= 63) {
-                            c.blocks[var49].type = BLOCK_GRASS;
+                            c->blocks[var49].type = BLOCK_GRASS;
                         } else {
-                            c.blocks[var49].type = BLOCK_DIRT;
+                            c->blocks[var49].type = BLOCK_DIRT;
                         }
                     } else if(var8 > 0) {
                         --var8;
-                        c.blocks[var49].type = BLOCK_DIRT;
+                        c->blocks[var49].type = BLOCK_DIRT;
                     }
                 }
 
@@ -108,12 +108,12 @@ Chunk GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
         }
     }
     
-    c.GenerateHeightMap();
+    c->GenerateHeightMap();
     // To prevent population
     //c.populated = true;
     //CalculateChunkLight(&c);
-    c.modified = true;
-    c.generated = true;
+    c->modified = true;
+    c->generated = true;
     return c;
 }
 

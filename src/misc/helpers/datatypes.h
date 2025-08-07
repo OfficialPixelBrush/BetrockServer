@@ -3,6 +3,15 @@
 #include <string>
 #include <sstream>
 
+#define CHUNK_HEIGHT 128
+#define CHUNK_WIDTH_X 16
+#define CHUNK_WIDTH_Z 16
+
+#define CHUNK_DATA_SIZE static_cast<size_t>(CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z * 2.5)
+
+#define OLD_CHUNK_FILE_EXTENSION ".cnk"
+#define CHUNK_FILE_EXTENSION ".ncnk"
+
 // Item
 struct Item {
     int16_t id = 0;

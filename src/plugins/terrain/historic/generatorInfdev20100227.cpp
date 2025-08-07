@@ -14,8 +14,8 @@ GeneratorInfdev20100227::GeneratorInfdev20100227(int64_t seed, World* world) : G
     noiseGen6 = std::make_unique<InfdevOctaves>(rand.get(), 5);
 }
 
-Chunk GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
-    Chunk c = Chunk();
+std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
     int var3 = cX << 4;
     int var14 = cZ << 4;
     int var4 = 0;
@@ -90,14 +90,14 @@ Chunk GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
 
                 Block b;
                 b.type = var17;
-                c.blocks[var4++] = b;
+                c->blocks[var4++] = b;
             }
         }
     }
     // To prevent population
-    c.populated = true;
-    CalculateChunkLight(&c);
-    c.modified = true;
-    c.generated = true;
+    c->populated = true;
+    CalculateChunkLight(c.get());
+    c->modified = true;
+    c->generated = true;
     return c;
 }

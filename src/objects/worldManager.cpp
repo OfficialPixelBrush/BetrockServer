@@ -63,6 +63,7 @@ void WorldManager::Run() {
     // TODO: Add clean-up thread to remove unseen chunks
     while (Betrock::Server::Instance().IsAlive()) {
         GenerateQueuedChunks();
+        world.UpdateLighting();
         std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Sleep for half a second
     }
 
@@ -171,7 +172,7 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator* generator) {
             generator->PopulateChunk(x - 1, z - 1);
         }
         c->populated = true;
-        CalculateChunkLight(c);
+        //CalculateChunkLight(c);
         return true;
         /*
         // This offset should be calculated based on the direction of which chunks already exist

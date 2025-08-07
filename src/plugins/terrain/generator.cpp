@@ -83,8 +83,8 @@ Block Generator::DecodeBlock() {
 // Run the GenerateChunk function and pass its execution onto lua
 // Then retrieve the generated Chunk data
 // This step is for ma
-Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
-    Chunk c = Chunk();
+std::unique_ptr<Chunk> Generator::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
     
     if (!L) {
         return c;
@@ -99,7 +99,7 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
         if (lua_istable(L, -1)) {    
             for (int i = 1; i <= CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z; i++) {
                 lua_rawgeti(L, -1, i);
-                c.blocks[i-1] = DecodeBlock();
+                c->blocks[i-1] = DecodeBlock();
                 lua_pop(L, 1);  // Pop table[i]
             }
     
@@ -107,8 +107,8 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
         }
     }
     // For initial loading a chunk needs to be marked as modified
-    c.modified = true;
-    c.generated = true;
+    c->modified = true;
+    c->generated = true;
     return c;
 }
 
