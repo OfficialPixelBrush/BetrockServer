@@ -24,6 +24,8 @@ class Chunk {
         // TODO: Actually implement this value!
         uint16_t viewers = 0;
 
+        bool generated = false;
+
         // A non-populated chunk still needs to be popualated with foliage
         bool populated = false;
 

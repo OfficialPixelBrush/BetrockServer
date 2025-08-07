@@ -155,19 +155,19 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator* generator) {
     if (c && c->populated) {
         return true;
     } else {
-        if(world.ChunkExists(x + 1, z + 1) && world.ChunkExists(x, z + 1) && world.ChunkExists(x + 1, z)) {
+        if(world.IsChunkGenerated(x + 1, z + 1) && world.IsChunkGenerated(x, z + 1) && world.IsChunkGenerated(x + 1, z)) {
             generator->PopulateChunk(x, z);
         }
 
-        if(world.ChunkExists(x - 1, z + 1) && world.ChunkExists(x, z + 1) && world.ChunkExists(x - 1, z)) {
+        if(world.IsChunkGenerated(x - 1, z + 1) && world.IsChunkGenerated(x, z + 1) && world.IsChunkGenerated(x - 1, z)) {
             generator->PopulateChunk(x - 1, z);
         }
 
-        if(world.ChunkExists(x + 1, z - 1) && world.ChunkExists(x, z - 1) && world.ChunkExists(x + 1, z)) {
+        if(world.IsChunkGenerated(x + 1, z - 1) && world.IsChunkGenerated(x, z - 1) && world.IsChunkGenerated(x + 1, z)) {
             generator->PopulateChunk(x, z - 1);
         }
 
-        if(world.ChunkExists(x - 1, z - 1) && world.ChunkExists(x, z - 1) && world.ChunkExists(x - 1, z)) {
+        if(world.IsChunkGenerated(x - 1, z - 1) && world.IsChunkGenerated(x, z - 1) && world.IsChunkGenerated(x - 1, z)) {
             generator->PopulateChunk(x - 1, z - 1);
         }
         c->populated = true;

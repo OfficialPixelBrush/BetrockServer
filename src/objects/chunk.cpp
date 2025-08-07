@@ -14,7 +14,7 @@ void Chunk::GenerateHeightMap() {
                 Block* b = this->GetBlock(var2,y,var3);
                 if (!b) continue;
                 if (b->type != BLOCK_AIR) {
-                    this->heightMap[var3 << 4 | var2] = y;
+                    this->heightMap[var3 << 4 | var2] = y+1;
                     break;
                 }
             }

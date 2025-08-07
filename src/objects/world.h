@@ -38,6 +38,7 @@ class World {
         Block* GetBlock(Int3 position);
         Chunk* GetChunk(int32_t x, int32_t z);
         bool IsChunkPopulated(int32_t x, int32_t z);
+        bool IsChunkGenerated(int32_t x, int32_t z);
         int8_t GetSkyLight(Int3 position);
         void SetSkyLight(Int3 position, int8_t level);
         void UpdateBlock(Int3 position, Block* b);

@@ -30,14 +30,22 @@ bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
     return false;
 }
 
-// Checks if the Chunk exists in memory
+
 bool World::ChunkExists(int32_t x, int32_t z) {
     return chunks.contains(GetChunkHash(x,z));
 }
 
+bool World::IsChunkGenerated(int32_t x, int32_t z) {
+    Chunk* c = this->GetChunk(x,z);
+    if (!c) return false;
+    return c->generated;
+}
+
 // Checks if the Chunk is populated
 bool World::IsChunkPopulated(int32_t x, int32_t z) {
-    return this->GetChunk(x,z)->populated;
+    Chunk* c = this->GetChunk(x,z);
+    if (!c) return false;
+    return c->populated;
 }
 
 // Sets the directory path of the world upon creation

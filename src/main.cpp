@@ -46,22 +46,22 @@ int main() {
 	if (overworld->GetNumberOfChunks() == 0) {
 		logger.Info("Preparing level \"" + std::string(Betrock::GlobalConfig::Instance().Get("level-name")) + "\"");
 		//wm->ForceGenerateChunk(0, 0);
-		for (int x = -2; x <= 2; x++) {
-			for (int z = -2; z <= 2; z++) {
+		auto chunkDistance = server.GetChunkDistance();
+		for (int x = -chunkDistance; x <= chunkDistance; x++) {
+			for (int z = -chunkDistance; z <= chunkDistance; z++) {
 				wm->ForceGenerateChunk(x, z);
 				issuedChunks++;
 			}
 		}
 	}
-	logger.Info(std::to_string(issuedChunks));
 	logger.Info("Preparing start region");
 	while (true) {
 		// Wait for chunks to be generated
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
 		logger.Info("Preparing spawn area: " + std::to_string(
 			int((float(issuedChunks-wm->QueueSize())/float(issuedChunks))*100.0f)
 		) + "%");
-		if (wm->QueueSize() < issuedChunks/3) {
+		if (wm->QueueSize() < 1) {
 			break;
 		}
 	}

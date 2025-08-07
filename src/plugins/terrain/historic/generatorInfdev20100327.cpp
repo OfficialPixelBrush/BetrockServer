@@ -9,9 +9,9 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t seed, World* world) : G
     noiseGen1 = std::make_unique<InfdevOctaves>(rand.get(), 16);
     noiseGen2 = std::make_unique<InfdevOctaves>(rand.get(), 16);
     noiseGen3 = std::make_unique<InfdevOctaves>(rand.get(), 8);
-    //noiseGen4 = std::make_unique<InfdevOctaves>(rand.get(), 4);
-    //noiseGen5 = std::make_unique<InfdevOctaves>(rand.get(), 4);
-    //noiseGen6 = std::make_unique<InfdevOctaves>(rand.get(), 5);
+    noiseGen4 = std::make_unique<InfdevOctaves>(rand.get(), 4);
+    noiseGen5 = std::make_unique<InfdevOctaves>(rand.get(), 4);
+    noiseGen6 = std::make_unique<InfdevOctaves>(rand.get(), 5);
     mobSpawnerNoise = std::make_unique<InfdevOctaves>(rand.get(), 5);
 }
 
@@ -113,6 +113,7 @@ Chunk GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
     //c.populated = true;
     //CalculateChunkLight(&c);
     c.modified = true;
+    c.generated = true;
     return c;
 }
 
@@ -308,7 +309,7 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 								int var17 = treeY - var9;
                                 Block* b = world->GetBlock(Int3{blockId, cX2, treeY});
                                 if (!b) continue;
-								if(b->type == BLOCK_AIR && (std::abs(cX1) != var15 || std::abs(var17) != var15 || this->rand->nextInt(2) != 0 && var14 != 0)) {
+								if((std::abs(cX1) != var15 || std::abs(var17) != var15 || this->rand->nextInt(2) != 0 && var14 != 0) && !IsOpaque(b->type)) {
                                     b->type = BLOCK_LEAVES;
                                     b->meta = 0;
 								}
@@ -319,8 +320,7 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 					for(cX2 = 0; cX2 < var10; ++cX2) {
                         Block* b = world->GetBlock(Int3{var7, heightValue + cX2, var9});
                         if (!b) continue;
-						if(b->type == BLOCK_AIR) {
-                            //std::cout << "Placed Log at " << Int3{var7, heightValue + cX2, var9} << std::endl;
+						if(!IsOpaque(b->type)) {
                             b->type = BLOCK_LOG;
                             b->meta = 0;
 						}

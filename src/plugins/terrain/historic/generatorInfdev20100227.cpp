@@ -98,5 +98,6 @@ Chunk GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
     c.populated = true;
     CalculateChunkLight(&c);
     c.modified = true;
+    c.generated = true;
     return c;
 }

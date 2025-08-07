@@ -7,6 +7,7 @@
 
 class World;
 
+bool IsOpaque(int16_t id);
 bool IsTranslucent(int16_t id);
 uint8_t GetTranslucency(int16_t id, uint8_t &skylight);
 bool IsTransparent(int16_t id);

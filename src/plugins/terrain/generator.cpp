@@ -108,6 +108,7 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
     }
     // For initial loading a chunk needs to be marked as modified
     c.modified = true;
+    c.generated = true;
     return c;
 }
 

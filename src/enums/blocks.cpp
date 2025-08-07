@@ -1,6 +1,26 @@
 #include "blocks.h"
 #include "world.h"
 
+// Roughly based on how they're defined in Infdev 20100327
+bool IsOpaque(int16_t id) {
+    if (id == BLOCK_AIR ||
+        id == BLOCK_LEAVES ||
+        id == BLOCK_TALLGRASS ||
+        id == BLOCK_TORCH ||
+        id == BLOCK_WATER_FLOWING ||
+        id == BLOCK_WATER_STILL ||
+        id == BLOCK_LAVA_FLOWING ||
+        id == BLOCK_LAVA_STILL ||
+        id == BLOCK_DANDELION ||
+        id == BLOCK_ROSE ||
+        id == BLOCK_FIRE ||
+        id == BLOCK_FARMLAND
+    ) {
+        return false;
+    }
+    return true;
+}
+
 // Returns true for all translucent blocks
 // So blocks that aren't 100% transparent
 bool IsTranslucent(int16_t id) {
