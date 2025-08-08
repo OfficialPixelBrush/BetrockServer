@@ -6,29 +6,41 @@
 #include "blocks.h"
 #include "config.h"
 #include "luahelper.h"
+#include "terrainhelper.h"
 #include "world.h"
 #include "generatorVersionCheck.h"
+#include "historic/javaRandom.h"
+#include "historic/infdevoctaves.h"
+#include "lighting.h"
+#include "chunk.h"
+#include "PerlinNoise.hpp"
+
+#include <cstdlib>
+#include <ctime>
 
 #define GENERATOR_DEFAULT_NAME "Generator"
 #define GENERATOR_LATEST_VERSION 3
 
+class Chunk;
+
 class Generator {
     public:
-        virtual Chunk GenerateChunk(int32_t cX, int32_t cZ);
+        virtual std::unique_ptr<Chunk> GenerateChunk(int32_t cX, int32_t cZ);
         virtual bool PopulateChunk(int32_t cX, int32_t cZ);
-        void PrepareGenerator(int64_t seed, World* world);
-        ~Generator() {
+        Generator(int64_t seed, World* world);
+        virtual ~Generator() {
             if (L) {
                 lua_close(L);
             }
         }
-    private:
+    protected:
         Betrock::Logger* logger;
+        int64_t seed;
+        World* world;
+    private:
         std::string name = GENERATOR_DEFAULT_NAME;
         int32_t apiVersion = GENERATOR_LATEST_VERSION;
         lua_State* L;
-        int64_t seed;
-        World* world;
         
         Block DecodeBlock();
         

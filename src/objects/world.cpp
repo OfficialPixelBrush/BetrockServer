@@ -7,6 +7,12 @@ int World::GetNumberOfChunks() {
     return chunks.size();
 }
 
+int8_t World::GetHeightValue(int32_t x, int32_t z) {
+    Chunk* c = GetChunk(x >> 4, z >> 4);
+    if (!c) return 0;
+    return c->GetHeightValue(x & 15, z & 15);
+}
+
 // Checks if a file with a matching position and extension exists
 bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
@@ -24,14 +30,26 @@ bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
     return false;
 }
 
-// Checks if the Chunk exists in memory
 bool World::ChunkExists(int32_t x, int32_t z) {
+    std::unique_lock lock(chunkMutex);
     return chunks.contains(GetChunkHash(x,z));
+}
+
+bool World::BlockExists(Int3 pos) {
+    return pos.y >= 0 && pos.y < 128 ? ChunkExists(pos.x >> 4, pos.z >> 4) : false;
+}
+
+bool World::IsChunkGenerated(int32_t x, int32_t z) {
+    Chunk* c = this->GetChunk(x,z);
+    if (!c) return false;
+    return c->state == ChunkState::Generated;
 }
 
 // Checks if the Chunk is populated
 bool World::IsChunkPopulated(int32_t x, int32_t z) {
-    return this->GetChunk(x,z)->populated;
+    Chunk* c = this->GetChunk(x,z);
+    if (!c) return false;
+    return c->state == ChunkState::Populated;
 }
 
 // Sets the directory path of the world upon creation
@@ -53,32 +71,34 @@ World::World(const std::string& extra)
 // Saves all the Chunks that're currently loaded into Memory
 void World::Save() {
     for (auto& pair : chunks) {
-        const int64_t& hash = pair.first;
-        Chunk& chunk = pair.second;
-    
+        int64_t hash = pair.first;
+        Chunk* chunk = pair.second.get();
+
         Int3 pos = DecodeChunkHash(hash);
-        SaveChunk(pos.x, pos.z, &chunk);
+        SaveChunk(pos.x, pos.z, chunk);
     }
 }
 
 // Gets the Chunk Pointer from Memory
 Chunk* World::GetChunk(int32_t x, int32_t z) {
+    std::unique_lock lock(chunkMutex);
     auto it = chunks.find(GetChunkHash(x, z));
-    if (it != chunks.end()) {
-        //std::cout << x << ", " << z << std::endl;
-        return &it->second; // Return a pointer to the found chunk
-    }
-    return nullptr; // Return nullptr if no valid object is found
+    if (it != chunks.end() && it->second != nullptr)
+        return it->second.get();
+    return nullptr;
 }
 
 // Adds a new Chunk to the world
-Chunk* World::AddChunk(int32_t x, int32_t z, Chunk c) {
-    chunks[GetChunkHash(x,z)] = c;
-    return &chunks[GetChunkHash(x,z)];
+Chunk* World::AddChunk(int32_t x, int32_t z, std::unique_ptr<Chunk> c) {
+    std::unique_lock lock(chunkMutex);
+    auto hash = GetChunkHash(x, z);
+    chunks[hash] = std::move(c);
+    return chunks[hash].get();
 }
 
 // Removes a Chunk from the world
 void World::RemoveChunk(int32_t x, int32_t z) {
+    std::unique_lock lock(chunkMutex);
     chunks.erase(GetChunkHash(x,z));
 }
 
@@ -88,7 +108,7 @@ void World::FreeUnseenChunks() {
 
     for (auto& pair : chunks) {
         const int64_t& hash = pair.first;
-        Chunk& chunk = pair.second;
+        Chunk* chunk = pair.second.get();
         Int3 pos = DecodeChunkHash(hash);
     
         // Check if any player has this chunk hash in their visibleChunks
@@ -101,7 +121,7 @@ void World::FreeUnseenChunks() {
         }
     
         if (!isVisible) {
-            SaveChunk(pos.x, pos.z, &chunk);
+            SaveChunk(pos.x, pos.z, chunk);
             chunksToRemove.push_back(pos);
         }
     }    
@@ -145,30 +165,30 @@ Chunk* World::LoadChunk(int32_t x, int32_t z) {
 
         auto terrainPopulated = std::dynamic_pointer_cast<ByteTag>(level->Get("TerrainPopulated"))->GetData();
 
-        Chunk c;
+        std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,x,z);
         size_t blockDataSize  = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z *  CHUNK_HEIGHT   );
         size_t nibbleDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT/2));
         // Block Data
         for (size_t i = 0; i < blockDataSize; i++) {
-            c.blocks[i].type = blocks[i];
+            c->blocks[i].type = blocks[i];
         }
         // Block Metadata
         for (size_t i = 0; i < nibbleDataSize; i++) {
-            c.blocks[i*2  ].meta = (meta[i]     )&0xF;
-            c.blocks[i*2+1].meta = (meta[i] >> 4)&0xF;
+            c->blocks[i*2  ].meta = (meta[i]     )&0xF;
+            c->blocks[i*2+1].meta = (meta[i] >> 4)&0xF;
         }
         // Block Light
         for (size_t i = 0; i < nibbleDataSize; i++) {
-            c.blocks[i*2  ].lightBlock = (blockLight[i]     )&0xF;
-            c.blocks[i*2+1].lightBlock = (blockLight[i] >> 4)&0xF;
+            c->blocks[i*2  ].lightBlock = (blockLight[i]     )&0xF;
+            c->blocks[i*2+1].lightBlock = (blockLight[i] >> 4)&0xF;
         }
         // Sky Light
         for (size_t i = 0; i < nibbleDataSize; i++) {
-            c.blocks[i*2  ].lightSky = (skyLight[i]     )&0xF;
-            c.blocks[i*2+1].lightSky = (skyLight[i] >> 4)&0xF;
+            c->blocks[i*2  ].lightSky = (skyLight[i]     )&0xF;
+            c->blocks[i*2+1].lightSky = (skyLight[i] >> 4)&0xF;
         }
-        c.populated = (bool)terrainPopulated;
-        return AddChunk(x,z,c);
+        if (terrainPopulated) c->state = ChunkState::Populated;
+        return AddChunk(x,z,std::move(c));
     } catch (const std::exception& e) {
         Betrock::Logger::Instance().Error(e.what());
         return nullptr;
@@ -181,7 +201,7 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
         //
     }
     // Update Chunklight before saving
-    CalculateChunkLight(GetChunk(x,z));
+    //CalculateChunkLight(GetChunk(x,z));
     Int3 pos = Int3{x,0,z};
 
     std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + CHUNK_FILE_EXTENSION);
@@ -199,7 +219,7 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     level->Put(std::make_shared<ByteArrayTag>("Data", meta));
     level->Put(std::make_shared<ByteArrayTag>("BlockLight", blockLight));
     level->Put(std::make_shared<ByteArrayTag>("SkyLight", skyLight));
-    level->Put(std::make_shared<ByteTag>("TerrainPopulated", chunk->populated));
+    level->Put(std::make_shared<ByteTag>("TerrainPopulated", chunk->state == ChunkState::Populated));
     level->Put(std::make_shared<IntTag>("zPos",x));
     level->Put(std::make_shared<IntTag>("xPos",z));
     
@@ -228,6 +248,149 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta, bool sendUpdate)
     */
     if (sendUpdate) UpdateBlock(position,b);
 }
+
+// This is just called "a" in the Source Code
+void World::SpreadLight(bool skyLight, Int3 pos, int limit) {
+    if(this->BlockExists(pos) && this->GetLight(skyLight, pos) != limit) {
+        this->AddToLightQueue(skyLight, pos, pos);
+    }
+}
+
+// This is just called "a" in the Source Code
+void World::AddToLightQueue(bool skyLight, Int3 posA, Int3 posB) {
+    std::lock_guard<std::mutex> lock(stackMutex);  // Ensure thread safety
+    this->lightingToUpdate.emplace(LightUpdate(skyLight,posA,posB));
+}
+
+void World::UpdateLighting() {
+    while(true) {
+        LightUpdate currentUpdate;
+        {
+            std::lock_guard<std::mutex> lock(stackMutex);
+            if (lightingToUpdate.empty()) break;
+            currentUpdate = lightingToUpdate.top();
+            lightingToUpdate.pop();
+        }
+
+        for(int var3 = currentUpdate.posA.x; var3 <= currentUpdate.posB.x; ++var3) {
+            for(int var4 = currentUpdate.posA.z; var4 <= currentUpdate.posB.z; ++var4) {
+                if(this->BlockExists(Int3{var3, 0, var4})) {
+                    for(int var5 = currentUpdate.posA.y; var5 <= currentUpdate.posB.y; ++var5) {
+                        if(var5 >= 0 && var5 < 128) {
+                            int var6 = this->GetLight(currentUpdate.skyLight, Int3{var3, var5, var4});
+                            int var7 = this->GetBlockType(Int3{var3, var5, var4});
+                            int var8 = GetTranslucency(var7);
+                            if(var8 == 0) {
+                                var8 = 1;
+                            }
+
+                            int var9 = 0;
+                            int var11;
+                            int var13;
+                            if(currentUpdate.skyLight) {
+                                bool var19;
+                                if(var3 >= -32000000 && var4 >= -32000000 && var3 < 32000000 && var4 <= 32000000) {
+                                    if(var5 < 0) {
+                                        var19 = false;
+                                    } else if(var5 >= 128) {
+                                        var19 = true;
+                                    } else if(!this->ChunkExists(var3 >> 4, var4 >> 4)) {
+                                        var19 = false;
+                                    } else {
+                                        Chunk* var14 = this->GetChunk(var3 >> 4, var4 >> 4);
+                                        var11 = var3 & 15;
+                                        var13 = var4 & 15;
+                                        var19 = var14->CanBlockSeeTheSky(var11, var5, var13);
+                                    }
+                                } else {
+                                    var19 = false;
+                                }
+
+                                if(var19) {
+                                    var9 = 15;
+                                }
+                            } else {
+                                var9 = GetEmissiveness(var7);
+                            }
+
+                            int var12;
+                            int var18;
+                            if(var8 >= 15 && var9 == 0) {
+                                var7 = 0;
+                            } else {
+                                var7 = this->GetLight(currentUpdate.skyLight, Int3{var3 - 1, var5, var4});
+                                int var10 = this->GetLight(currentUpdate.skyLight, Int3{var3 + 1, var5, var4});
+                                var11 = this->GetLight(currentUpdate.skyLight, Int3{var3, var5 - 1, var4});
+                                var12 = this->GetLight(currentUpdate.skyLight, Int3{var3, var5 + 1, var4});
+                                var13 = this->GetLight(currentUpdate.skyLight, Int3{var3, var5, var4 - 1});
+                                var18 = this->GetLight(currentUpdate.skyLight, Int3{var3, var5, var4 + 1});
+                                var7 = var7;
+                                if(var10 > var7) {
+                                    var7 = var10;
+                                }
+
+                                if(var11 > var7) {
+                                    var7 = var11;
+                                }
+
+                                if(var12 > var7) {
+                                    var7 = var12;
+                                }
+
+                                if(var13 > var7) {
+                                    var7 = var13;
+                                }
+
+                                if(var18 > var7) {
+                                    var7 = var18;
+                                }
+
+                                var7 -= var8;
+                                if(var7 < 0) {
+                                    var7 = 0;
+                                }
+
+                                if(var9 > var7) {
+                                    var7 = var9;
+                                }
+                            }
+
+                            if(var6 != var7) {
+                                var18 = var4;
+                                var13 = var5;
+                                var12 = var3;
+                                bool var17 = currentUpdate.skyLight;
+                                //World var16 = var2;
+                                if(var3 >= -32000000 && var4 >= -32000000 && var3 < 32000000 && var4 <= 32000000 && var5 >= 0 && var5 < 128 && this->ChunkExists(var3 >> 4, var4 >> 4)) {
+                                    Chunk* c = this->GetChunk(var3 >> 4, var4 >> 4);
+                                    if (!c) continue;
+                                    c->SetLight(var17, Int3{var3 & 15, var5, var4 & 15}, var7);
+
+                                    //for(var6 = 0; var6 < var16.worldAccesses.size(); ++var6) {
+                                    //    ((IWorldAccess)var16.worldAccesses.get(var6)).markBlockAndNeighborsNeedsUpdate(var12, var13, var18);
+                                    //}
+                                }
+
+                                --var7;
+                                if(var7 < 0) {
+                                    var7 = 0;
+                                }
+
+                                this->SpreadLight(currentUpdate.skyLight, Int3{var3 - 1, var5, var4}, var7);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{var3 + 1, var5, var4}, var7);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{var3, var5 - 1, var4}, var7);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{var3, var5 + 1, var4}, var7);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{var3, var5, var4 - 1}, var7);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{var3, var5, var4 + 1}, var7);
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 
 // Remove the block and turn it into air
 Block* World::BreakBlock(Int3 position, bool sendUpdate) {
@@ -265,7 +428,7 @@ Block* World::GetBlock(Int3 position) {
         return nullptr;
     }
     c->modified = true;
-    return &c->blocks[GetBlockIndex(Int3{bX,(int8_t)position.y,bZ})];
+    return c->GetBlock(bX,position.y,bZ);
 }
 
 // Get the Skylight of a Block at the passed position
@@ -300,8 +463,9 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                Block b = c->blocks[GetBlockIndex(Int3{cX,cY,cZ})];
-                bytes[index] = b.type;
+                Block* b = c->GetBlock(cX,cY,cZ);
+                if (!b) continue;
+                bytes[index] = b->type;
                 index++;
             }
         }
@@ -311,9 +475,10 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                bytes[index] = (b2.meta << 4 | b1.meta);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                bytes[index] = (b2->meta << 4 | b1->meta);
                 index++;
             }
         }
@@ -323,9 +488,10 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                bytes[index] = (b2.lightBlock << 4 | b1.lightBlock);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                bytes[index] = (b2->lightBlock << 4 | b1->lightBlock);
                 index++;
             }
         }
@@ -335,9 +501,10 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                bytes[index] = (b2.lightSky << 4 | b1.lightSky);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                bytes[index] = (b2->lightSky << 4 | b1->lightSky);
                 index++;
             }
         }
@@ -346,7 +513,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
 }
 
 // Get all the Block Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkBlocks(const Chunk* c) {
+std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkBlocks(Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
@@ -356,8 +523,9 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
     for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                Block b = c->blocks[GetBlockIndex(Int3{cX,cY,cZ})];
-                data[index] = b.type;
+                Block* b = c->GetBlock(cX,cY,cZ);
+                if (!b) continue;
+                data[index] = b->type;
                 index++;
             }
         }
@@ -366,7 +534,7 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
 }
 
 // Get all the Meta Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkMeta(const Chunk* c) {
+std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkMeta(Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
@@ -376,9 +544,10 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                data[index] = (b2.meta << 4 | b1.meta);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                data[index] = (b2->meta << 4 | b1->meta);
                 index++;
             }
         }
@@ -387,7 +556,7 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
 }
 
 // Get all the Block Light Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkBlockLight(const Chunk* c) {
+std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkBlockLight(Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
@@ -397,9 +566,10 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                data[index] = (b2.lightBlock << 4 | b1.lightBlock);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                data[index] = (b2->lightBlock << 4 | b1->lightBlock);
                 index++;
             }
         }
@@ -408,7 +578,7 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
 }
 
 // Get all the Sky Light Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkSkyLight(const Chunk* c) {
+std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkSkyLight(Chunk* c) {
     std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
@@ -419,9 +589,10 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block b1 = c->blocks[GetBlockIndex(Int3{cX,cY*2  ,cZ})];
-                Block b2 = c->blocks[GetBlockIndex(Int3{cX,cY*2+1,cZ})];
-                data[index] = (b2.lightSky << 4 | b1.lightSky);
+                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
+                if (!b1 || !b2) continue;
+                data[index] = (b2->lightSky << 4 | b1->lightSky);
                 index++;
             }
         }
@@ -431,12 +602,16 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
 
 // Find the highest possible non-solid block that can see the sky
 Int3 World::FindSpawnableBlock(Int3 position) {
-    bool skyVisible = true;
     Int3 spawn = position;
 
     for (int y = CHUNK_HEIGHT-1; y >= 0; --y) {
         spawn.y = y;
-        int16_t type = GetBlock(spawn)->type;
+        Block* b = GetBlock(spawn);
+        if (!b) {
+            // There is no chunk to check for blocks
+            return position;
+        }
+        int8_t type = b->type;
         if (type != BLOCK_AIR) {
             // The position above this block is air
             return spawn;
@@ -487,41 +662,41 @@ Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
         return nullptr;
     }
 
-    Chunk c;
+    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,x,z);
     size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;
     size_t nibbleDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*(CHUNK_HEIGHT/2);
     for (size_t i = 0; i < decompressedSize; i++) {
         if (i < blockDataSize) {
             // Block Data
-            c.blocks[i].type = chunkData[i];
+            c->blocks[i].type = chunkData[i];
         } else if (
             // Metadata
             i >= blockDataSize &&
             i <  blockDataSize+nibbleDataSize)
         {
-            c.blocks[(i%nibbleDataSize)*2  ].meta = (chunkData[i]     )&0xF;
-            c.blocks[(i%nibbleDataSize)*2+1].meta = (chunkData[i] >> 4)&0xF;
+            c->blocks[(i%nibbleDataSize)*2  ].meta = (chunkData[i]     )&0xF;
+            c->blocks[(i%nibbleDataSize)*2+1].meta = (chunkData[i] >> 4)&0xF;
         } else if (
             // Block Light
             i >= blockDataSize+nibbleDataSize &&
             i <  blockDataSize+(nibbleDataSize*2))
         {
-            c.blocks[(i%nibbleDataSize)*2  ].lightBlock = (chunkData[i]     )&0xF;
-            c.blocks[(i%nibbleDataSize)*2+1].lightBlock = (chunkData[i] >> 4)&0xF;
+            c->blocks[(i%nibbleDataSize)*2  ].lightBlock = (chunkData[i]     )&0xF;
+            c->blocks[(i%nibbleDataSize)*2+1].lightBlock = (chunkData[i] >> 4)&0xF;
         } else if (
             // Sky Light
             i >= blockDataSize+(nibbleDataSize*2) &&
             i <  blockDataSize+(nibbleDataSize*3))
         {
-            c.blocks[(i%nibbleDataSize)*2  ].lightSky = (chunkData[i]     )&0xF;
-            c.blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
+            c->blocks[(i%nibbleDataSize)*2  ].lightSky = (chunkData[i]     )&0xF;
+            c->blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
         }
     }
     chunkFile.close();
     Betrock::Logger::Instance().Info("Updated " + std::string(entryPath));
     // Delete the old chunk file
     remove(entryPath);
-    return AddChunk(x,z,c);
+    return AddChunk(x,z,std::move(c));
 }
 
 bool World::InteractWithBlock(Int3 pos) {
@@ -558,12 +733,12 @@ bool World::InteractWithBlock(Int3 pos) {
 void World::TickChunks() {
     for (auto& pair : chunks) {
         int64_t hash = pair.first;
-        Chunk& chunk = pair.second;
+        Chunk* chunk = pair.second.get();
         std::uniform_int_distribution<int32_t> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
         // Choose a batch of random blocks within a chunk to run RandomTick on
         for (int i = 0; i < 16; i++) {
             int blockIndex = dist6(rng);
-            Block* b = &chunk.blocks[blockIndex];
+            Block* b = &chunk->blocks[blockIndex];
             int8_t oldType = b->type;
             int8_t oldMeta = b->meta;
 
@@ -613,4 +788,60 @@ bool World::RandomTick(Block* b, Int3& pos) {
         }
     }
     return false;
+}
+
+int8_t World::GetLight(bool skyLight, Int3 pos) {
+    if(pos.y < 0) {
+        return 15;
+    } else if(pos.y >= 128) {
+        return 15;
+    } else {
+        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        if (!c) return 0;
+        pos.x &= 15;
+        pos.z &= 15;
+        return c->GetLight(skyLight, pos);
+    }
+}
+
+void World::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
+    if(pos.y < 0) {
+        return;
+    } else if(pos.y >= 128) {
+        return;
+    } else {
+        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        if (!c) return;
+        pos.x &= 15;
+        pos.z &= 15;
+        return c->SetLight(skyLight, pos, newLight);
+    }
+}
+
+void World::SetBlockType(int8_t blockType, Int3 pos) {
+    if(pos.y < 0) {
+        return;
+    } else if(pos.y >= 128) {
+        return;
+    } else {
+        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        if (!c) return;
+        pos.x &= 15;
+        pos.z &= 15;
+        return c->SetBlockType(blockType, pos);
+    }
+}
+
+int8_t World::GetBlockType(Int3 pos) {
+    if(pos.y < 0) {
+        return 15;
+    } else if(pos.y >= 128) {
+        return 15;
+    } else {
+        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        if (!c) return 0;
+        pos.x &= 15;
+        pos.z &= 15;
+        return c->GetBlockType(pos);
+    }
 }

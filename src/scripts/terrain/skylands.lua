@@ -29,7 +29,7 @@ function GenerateChunk(cx,cz)
                     if (temperature < 0.4) then
                         c[index(x, y, z)] = {24,0};
                     else
-                        c[index(x, y, z)] = {getNaturalGrass(cx*16+x,y,cz*16+z,blocksSinceSkyVisible),0};
+                        c[index(x, y, z)] = {3,0};
                     end
                     blocksSinceSkyVisible = blocksSinceSkyVisible+1
                 end

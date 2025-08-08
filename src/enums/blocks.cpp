@@ -1,6 +1,26 @@
 #include "blocks.h"
 #include "world.h"
 
+// Roughly based on how they're defined in Infdev 20100327
+bool IsOpaque(int16_t id) {
+    if (id == BLOCK_AIR ||
+        id == BLOCK_LEAVES ||
+        id == BLOCK_TALLGRASS ||
+        id == BLOCK_TORCH ||
+        id == BLOCK_WATER_FLOWING ||
+        id == BLOCK_WATER_STILL ||
+        id == BLOCK_LAVA_FLOWING ||
+        id == BLOCK_LAVA_STILL ||
+        id == BLOCK_DANDELION ||
+        id == BLOCK_ROSE ||
+        id == BLOCK_FIRE ||
+        id == BLOCK_FARMLAND
+    ) {
+        return false;
+    }
+    return true;
+}
+
 // Returns true for all translucent blocks
 // So blocks that aren't 100% transparent
 bool IsTranslucent(int16_t id) {
@@ -18,36 +38,31 @@ bool IsTranslucent(int16_t id) {
 }
 
 // Returns how much the skylight is filtered by the specified block
-uint8_t GetTranslucency(int16_t id, uint8_t &skylight) {
-    uint8_t subtractor = 0;
+uint8_t GetTranslucency(int16_t id) {
+    // Let all light through
+    if (id == BLOCK_AIR ||
+        id == BLOCK_LAVA_FLOWING ||
+        id == BLOCK_LAVA_STILL ||
+        id == BLOCK_FARMLAND ||
+        id == BLOCK_GLASS ||
+        id == BLOCK_TORCH
+    ) {
+        return 0;
+    }
+    
     // Water seems to drop the skylight brightness by 3 levels with each block
     if (id == BLOCK_WATER_FLOWING ||
-        id == BLOCK_WATER_STILL ||
-        id == BLOCK_LAVA_FLOWING ||
-        id == BLOCK_LAVA_STILL) {
-        subtractor = 3;
+        id == BLOCK_WATER_STILL) {
+        return 3;
     }
 
     // Meanwhile, leaves seem to drop the skylight by 1 with each block, until reaching 12
-    if (id == BLOCK_LEAVES && skylight > 12) {
-        subtractor = 1;
+    if (id == BLOCK_LEAVES) {
+        return 1;
     }
 
-    if (
-        id == BLOCK_GLASS ||
-        id == BLOCK_ICE ||
-        id == BLOCK_MOB_SPAWNER
-    ) {
-        subtractor = 1;
-    }
-
-    // Do this check to prevent a potential overflow
-    if (skylight < subtractor) {
-        skylight = 0;
-    } else {
-        skylight -= subtractor;
-    }
-    return skylight;
+    // All other blocks let no light through
+    return 255;
 }
 
 // Returns true for all blocks that are completely or partially transparent

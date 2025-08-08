@@ -58,19 +58,21 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
         return;
     }
 
-    // Check if the chunk has already been loaded
-    if (!wm->world.ChunkExists(position.x,position.z)) {
-		// Otherwise queue chunk loading or generation
-		wm->AddChunkToQueue(position.x, position.z, this);
-        return;
-    }
-	// If the chunk is not yet populated, wait on it
-	if (!wm->world.IsChunkPopulated(position.x, position.z)) {
-		Respond::PreChunk(response, position.x, position.z, 1); // Tell client chunk is being worked on
-		return;
+    // Check if the chunk has already been put into the queue
+	if (!wm->world.ChunkExists(position.x, position.z) || 
+		!wm->world.IsChunkPopulated(position.x, position.z)) {
+		wm->AddChunkToQueue(position.x, position.z, shared_from_this());
+	} else {
+		AddNewChunk(position);
 	}
-    // If the chunk is already available, send it over
-    newChunks.push_back(position);
+	
+    // Check if the chunk has already been populated
+	/*
+    if (wm->world.IsChunkPopulated(position.x,position.z)) {
+		// Otherwise queue chunk loading or generation
+		AddNewChunk(position);
+    }
+		*/
 }
 
 // Figure out what chunks the player can see and
@@ -138,37 +140,40 @@ void Client::SendNewChunks() {
 	}
 
 	while(sentThisCycle > 0) {
-		if(!newChunks.empty()) {
-			auto nc = newChunks.begin();
-			auto chunkData = wm->world.GetChunkData(*nc);
-			if (!chunkData) {
-				// We'll just drop this chunk
-				newChunks.erase(nc);
-				return;
-			}
-
-			// Send chunk to player
-			size_t compressedSize = 0;
-			auto chunk = CompressChunk(chunkData.get(), compressedSize);
-
-			if (chunk) {
-				visibleChunks.push_back(Int3{nc->x,0,nc->z});
-				Respond::PreChunk(response, nc->x, nc->z, 1);
-
-				Respond::Chunk(
-					response, 
-					Int3{nc->x<<4,0,nc->z<<4}, 
-					CHUNK_WIDTH_X - 1, 
-					CHUNK_HEIGHT - 1, 
-					CHUNK_WIDTH_Z - 1, 
-					compressedSize, 
-					chunk.get()
-				);
-			}
-			// Better to remove the entry either way if compression fails,
-			// otherwise we may get an infinite build-up of failing chunks
-			newChunks.erase(nc);
+		if(newChunks.empty()) {
+			break;
 		}
+		auto nc = newChunks.begin();
+		if (!wm->world.IsChunkPopulated(nc->x, nc->z)) {
+			//++nc;
+			break;
+		}
+		auto chunkData = wm->world.GetChunkData(*nc);
+		if (!chunkData) {
+			// We'll just drop this chunk
+			newChunks.erase(nc);
+			continue;
+		}
+
+		// Send chunk to player
+		size_t compressedSize = 0;
+		auto chunk = CompressChunk(chunkData.get(), compressedSize);
+
+		if (chunk) {
+			visibleChunks.push_back(Int3{nc->x,0,nc->z});
+			Respond::PreChunk(response, nc->x, nc->z, 1);
+
+			Respond::Chunk(
+				response, 
+				Int3{nc->x<<4,0,nc->z<<4}, 
+				CHUNK_WIDTH_X - 1, 
+				CHUNK_HEIGHT - 1, 
+				CHUNK_WIDTH_Z - 1, 
+				compressedSize, 
+				chunk.get()
+			);
+		}
+		newChunks.erase(nc);
 		sentThisCycle--;
 	}
 }
@@ -265,7 +270,7 @@ void Client::HandlePacket() {
 			}
 		}
 
-		// Get the current Dimension#
+		// Get the current Dimension
 		// TODO: We probably don't need to run this on every single packet!
 		World* world = Betrock::Server::Instance().GetWorld(player->dimension);
 		
@@ -372,10 +377,11 @@ void Client::HandleClient() {
   	auto &server = Betrock::Server::Instance();
 	player = std::make_unique<Player>(
 		server.GetLatestEntityId(),
-		server.GetSpawnPoint(),
+		Int3ToVec3(server.GetSpawnPoint()),
 		server.GetSpawnDimension(),
+		// TODO: Maybe set these later?
 		server.GetSpawnWorld(),
-		server.GetSpawnPoint(),
+		Int3ToVec3(server.GetSpawnPoint()),
 		server.GetSpawnDimension(),
 		server.GetSpawnWorld()
 	);
@@ -435,9 +441,6 @@ bool Client::HandleLoginRequest() {
 
 	// Login response
 	int protocolVersion = EntryToInteger(message,offset);
-	std::string username = EntryToString16(message,offset);
-	EntryToLong(message,offset); // Get map seed
-	EntryToByte(message,offset); // Get dimension
 
 	if (protocolVersion != PROTOCOL_VERSION) {
 		// If client has wrong protocol, close
@@ -445,10 +448,15 @@ bool Client::HandleLoginRequest() {
 		return false;
 	}
 
+	std::string username = EntryToString16(message,offset);
+
 	if (username != player->username) {
 		DisconnectClient("Client has mismatched username.");
 		return false;
 	} 
+	
+	EntryToLong(message,offset); // Get map seed
+	EntryToByte(message,offset); // Get dimension
 
 	// Fill the players inventory
 	if (player->Load()) {
@@ -463,7 +471,7 @@ bool Client::HandleLoginRequest() {
   	const auto &spawnPoint = server.GetSpawnPoint();
 
 	// Set the Respawn Point, Time and Player Health
-	Respond::SpawnPoint(response,Vec3ToInt3(spawnPoint));
+	Respond::SpawnPoint(response,spawnPoint);
 	Respond::Time(response,server.GetServerTime());
 	// This is usually only done if the players health isn't full upon joining
 	if (player->health != HEALTH_MAX) {
@@ -472,7 +480,8 @@ bool Client::HandleLoginRequest() {
 
 	if (firstJoin) {
 		// Place the player at spawn
-		player->position = spawnPoint;
+		// TODO: Search for a block for the player to spawn on
+		player->position = Int3ToVec3(spawnPoint);
 
 		// Give starter items
 		Give(response,ITEM_PICKAXE_DIAMOND);
@@ -484,13 +493,6 @@ bool Client::HandleLoginRequest() {
 	} else {
 		UpdateInventory(response);
 	}
-
-	// TODO: Players still fall through the ground when loading in...
-	// Maybe figure out something to snap them to the top of the nearest block?
-	// Keep them frozen until we know the chunks have been loaded??? Idk...
-	// Note: Teleporting automatically loads surrounding chunks,
-	// so no further loading is necessary
-	Teleport(response,player->position, player->yaw, player->pitch);
 
 	// Create the player for other players
 	Respond::NamedEntitySpawn(
@@ -548,6 +550,11 @@ bool Client::HandleLoginRequest() {
     }
 	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION_FULL));
 	SendResponse(true);
+
+	// Note: Teleporting automatically loads surrounding chunks,
+	// so no further loading is necessary
+	player->position.y += 1.0;
+	Teleport(response,player->position, player->yaw, player->pitch);
 	// ONLY SET THIS AFTER LOGIN HAS FINISHED
 	SetConnectionStatus(ConnectionStatus::Connected);
 	return true;
@@ -838,6 +845,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 
 	Int3 pos = Int3{x,y,z};
 	Block* targetedBlock = world->GetBlock(pos);
+	if (!targetedBlock) { return false; }
 
 	// Check if the targeted block is interactable
 	if (IsInteractable(targetedBlock->type)) {
@@ -995,13 +1003,14 @@ void Client::SendResponse(bool autoclear) {
 // Teleport the client to the requested coordinate
 void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, float pitch) {
     player->position = position;
+	player->position.y += STANCE_OFFSET;
     player->yaw = yaw;
     player->pitch = pitch;
-    player->stance = player->position.y + STANCE_OFFSET;
+    player->stance = position.y;
     newChunks.clear();
-    Respond::PlayerPositionLook(response, player.get());
-	SendResponse(true);
+	//SendResponse(true);
     DetermineVisibleChunks(true);
+    Respond::PlayerPositionLook(response, player.get());
 }
 
 // Respawn the Client by sending them back to spawn

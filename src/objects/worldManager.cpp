@@ -3,36 +3,47 @@
 #include "server.h"
 
 // This creates a new QueueChunk with a pre-filled Client
-QueueChunk::QueueChunk(Int3 position, Client* requestClient) {
+QueueChunk::QueueChunk(Int3 position, const std::shared_ptr<Client>& requestClient) {
     this->position = position;
     AddClient(requestClient);
 }
 
 // This adds a new Client to the Queued Chunk
-void QueueChunk::AddClient(Client* requestClient) {
+void QueueChunk::AddClient(const std::shared_ptr<Client>& requestClient) {
     requestedClients.push_back(requestClient);
 }
 
 // This adds a Chunk to the ChunkQueue
-void WorldManager::AddChunkToQueue(int32_t x, int32_t z, Client* requestClient) {
-    std::lock_guard<std::mutex> lock(queueMutex);  // Ensure thread safety
+void WorldManager::AddChunkToQueue(int32_t x, int32_t z, const std::shared_ptr<Client>& requestClient) {
 
     auto hash = GetChunkHash(x, z);  // Compute hash
 
+    std::lock_guard<std::mutex> lock(queueMutex);  // Ensure thread safety
     if (chunkPositions.find(hash) != chunkPositions.end()) {
         // Chunk is already in the queue, no need to add it again
-        // TODO: Add other requestClient to chunk!!
+        for (QueueChunk& qc : chunkQueue) {
+            if (qc.position.x == x && qc.position.z == z) {
+                qc.requestedClients.push_back(requestClient);
+                break;
+            }
+        }
         return;
     }
 
     // Add to queue and track position
-    chunkQueue.emplace(Int3{x, 0, z}, requestClient);
+    chunkQueue.emplace_back(Int3{x, 0, z}, requestClient);
     chunkPositions.insert(hash);
+    queueCV.notify_one();
 }
 
 // Returns if the ChunkQueue is empty
-bool WorldManager::QueueIsEmpty() {
+bool WorldManager::IsQueueEmpty() {
     return chunkQueue.empty();
+}
+
+// Returns how many entries are in the Queue
+int WorldManager::QueueSize() {
+    return chunkQueue.size();
 }
 
 // Sets the seed of both the WorldManager and the world
@@ -57,7 +68,8 @@ void WorldManager::Run() {
 
     // TODO: Add clean-up thread to remove unseen chunks
     while (Betrock::Server::Instance().IsAlive()) {
-        GenerateQueuedChunks();
+        //GenerateQueuedChunks();
+        world.UpdateLighting();
         std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Sleep for half a second
     }
 
@@ -72,7 +84,8 @@ void WorldManager::Run() {
 // This wakes up a worker thread so it starts generating a chunk
 void WorldManager::GenerateQueuedChunks() {
     std::lock_guard<std::mutex> lock(queueMutex);
-    queueCV.notify_one();  // Wake up a worker thread if it's sleeping
+    // Wake up a worker thread if it's sleeping
+    if (!chunkQueue.empty()) queueCV.notify_one();
 }
 
 // Forces the generation of the passed Chunk Position,
@@ -84,8 +97,7 @@ void WorldManager::ForceGenerateChunk(int32_t x, int32_t z) {
 // This is run by all the available Worker Threads
 // To generate a chunk, if some are queued
 void WorldManager::WorkerThread() {
-    Generator generator;
-    generator.PrepareGenerator(seed, &this->world);
+    std::unique_ptr<Generator> generator = std::make_unique<Generator>(seed, &this->world);
 
     while (Betrock::Server::Instance().IsAlive()) {
         QueueChunk cq;
@@ -96,29 +108,30 @@ void WorldManager::WorkerThread() {
             if (!Betrock::Server::Instance().IsAlive()) return; // Exit thread when stopping
 
             cq = chunkQueue.front();
-            chunkQueue.pop();
+            chunkQueue.pop_front();
+            chunkPositions.erase(GetChunkHash(cq.position.x, cq.position.z));
         }
 
 
-        std::scoped_lock lock(queueMutex);
-        {
-            int64_t hash = GetChunkHash(cq.position.x, cq.position.z);
+        Chunk* c = GetChunk(cq.position.x, cq.position.z, generator.get());
 
-            // Try to load chunk
-            // If this fails or the chunk isn't populated yet,
-            // leave it in the queue in hopes we can figure it out later
-            if (!GetChunk(cq.position.x, cq.position.z,generator)) {
-                chunkQueue.push(cq);
-                continue;
-            }
+        if (!c) {
+            continue; // Something went wrong; skip this one
+        }
 
-            chunkPositions.erase(hash);  // Remove from tracking set
+        if (c->state != ChunkState::Populated) {
+            std::scoped_lock lock(queueMutex);
+            chunkQueue.push_back(cq);
+            chunkPositions.insert(GetChunkHash(cq.position.x, cq.position.z));
+            queueCV.notify_one();
+            continue;
+        }
 
+        if (c) {
             std::scoped_lock lock(Betrock::Server::Instance().GetConnectedClientMutex());
-            for (auto c : cq.requestedClients) {
-                // Only send populated chunks
-                if (c) {
-                    c->AddNewChunk(cq.position);
+            for (auto& weak : cq.requestedClients) {
+                if (auto client = weak.lock()) {
+                    client->AddNewChunk(cq.position);
                 }
             }
         }
@@ -130,11 +143,11 @@ void WorldManager::WorkerThread() {
 // If a chunk file already exists for it, the file is just loaded into memory
 // If the file is an old-format chunk, its loaded into memory and saved as a new-format chunk on the next save-cycle
 // If the chunk doesn't yet exist on-disk, its generated by one of the worker threads.
-bool WorldManager::GetChunk(int32_t x, int32_t z, Generator &generator) {
+Chunk* WorldManager::GetChunk(int32_t x, int32_t z, Generator* generator) {
     // ChunkExists is a function, but if we're gonna be using the chunk anyways, may as well do this
     Chunk* c = world.GetChunk(x,z);
 
-    // Load the chunk file
+    // If the chunk already exists, return right away
     if (!c) {
         if (world.ChunkFileExists(x,z)) {
             // Chunk exists as a file
@@ -143,38 +156,30 @@ bool WorldManager::GetChunk(int32_t x, int32_t z, Generator &generator) {
             // Chunk exists as a file (old format)
             c = world.LoadOldChunk(x,z);
         } else {
-            c = world.AddChunk(x, z, generator.GenerateChunk(x,z));
-        }
-    }
+            c = world.AddChunk(x, z, generator->GenerateChunk(x,z));
 
-    // If the chunk exists but isn't populated, attempt to populate it
-    if (c && c->populated) {
-        return true;
-    } else {
-        int canBePopulated = true;
-        for (int xOffset = 0; xOffset <= 1; xOffset++) {
-            for (int zOffset = 0; zOffset <= 1; zOffset++) {
-                // We don't need to check the current chunk
-                if (xOffset == 0 && zOffset == 0) continue;
-                // If any surrounding chunk doesn't exist, we can't populate it
-                Chunk* tc = world.GetChunk(x+xOffset,z+zOffset);
-                if (!tc) {
-                    canBePopulated = false;
-                }
+            // TODO: Entities are loaded here
+
+            if(world.ChunkExists(x + 1, z + 1) && world.ChunkExists(x, z + 1) && world.ChunkExists(x + 1, z)) {
+                generator->PopulateChunk(x, z);
             }
-        }
-        // Chunk is in memory but hasn't been populated yet
-        if (canBePopulated) {
-            if (generator.PopulateChunk(x,z)) {
-                c->populated = true;
-                // Do lighting math
-                CalculateChunkLight(c);
-                return true;
+
+            if(world.ChunkExists(x - 1, z + 1) && world.ChunkExists(x, z + 1) && world.ChunkExists(x - 1, z)) {
+                generator->PopulateChunk(x - 1, z);
             }
+
+            if(world.ChunkExists(x + 1, z - 1) && world.ChunkExists(x, z - 1) && world.ChunkExists(x + 1, z)) {
+                generator->PopulateChunk(x, z - 1);
+            }
+
+            if(world.ChunkExists(x - 1, z - 1) && world.ChunkExists(x, z - 1) && world.ChunkExists(x - 1, z)) {
+                generator->PopulateChunk(x - 1, z - 1);
+            }
+            
+            c->state = ChunkState::Populated;
         }
-        //std::cout << "No population took place for Chunk " << x << ", " << z << std::endl;
     }
-    return false;
+    return c;
 }
 
 // Sets the wm name
@@ -210,7 +215,7 @@ void WorldManager::SaveNbt() {
 	auto data = std::make_shared<CompoundTag>("Data");
 	root->Put(data);
 
-    Int3 spawn = Vec3ToInt3(server.GetSpawnPoint());
+    Int3 spawn = server.GetSpawnPoint();
 
 	data->Put(std::make_shared<LongTag>("RandomSeed",seed));
 	data->Put(std::make_shared<IntTag>("SpawnY", spawn.y));

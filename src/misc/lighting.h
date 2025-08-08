@@ -2,8 +2,11 @@
 #include <cstdint>
 #include "helper.h"
 #include "blocks.h"
+#include "chunk.h"
 #include "world.h"
 #include "datatypes.h"
+
+class Chunk;
 
 void CalculateColumnLight(int32_t x, int32_t z, Chunk* c, int32_t& unobstructedLayers);
 void CalculateChunkLight(Chunk* c);

@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.2.10)
+project(BetrockServer VERSION 0.2.11)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -73,19 +73,25 @@ add_executable(
     src/misc/helpers/datatypes.cpp
     src/misc/helpers/helper.cpp
     src/misc/helpers/luahelper.cpp
+    src/misc/helpers/terrainhelper.cpp
 
     src/misc/commands/command.cpp
     src/misc/gamerules.cpp
     src/misc/lighting.cpp
     src/misc/sysinfo.cpp
 
+    src/objects/chunk.cpp
     src/objects/entity.cpp
     src/objects/player.cpp
     src/objects/world.cpp
     src/objects/worldManager.cpp
 
-    src/plugins/plugins.cpp
+    src/plugins/terrain/historic/generatorInfdev20100227.cpp
+    src/plugins/terrain/historic/generatorInfdev20100327.cpp
+    src/plugins/terrain/historic/infdevoctaves.cpp
+    src/plugins/terrain/historic/infdevperlin.cpp
     src/plugins/terrain/generator.cpp
+    src/plugins/plugins.cpp
 
     src/client.cpp
     src/config.cpp

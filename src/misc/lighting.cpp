@@ -8,7 +8,7 @@ void CalculateColumnLight(int8_t x, int8_t z, Chunk* c, int8_t& unobstructedLaye
     }
     uint8_t skyLight = 0xF;
     for (int8_t y = CHUNK_HEIGHT-1; y > 0; y--) {
-        Block* b = &c->blocks[GetBlockIndex(Int3{x,y,z})];
+        Block* b = c->GetBlock(x,y,z);
         if (!b) {
             continue;
         }
@@ -37,7 +37,7 @@ void CalculateSpreadLight(int8_t y, Chunk* c) {
 
     for (int8_t x = 0; x < CHUNK_WIDTH_X; x++) {
         for (int8_t z = 0; z < CHUNK_WIDTH_Z; z++) {
-            Block* b = &c->blocks[GetBlockIndex(Int3{x,y,z})];
+            Block* b = c->GetBlock(Int3{x,y,z});
             if (!b) {
                 continue;
             }
@@ -47,7 +47,7 @@ void CalculateSpreadLight(int8_t y, Chunk* c) {
                 // Spread light to adjacent blocks
                 auto TrySpread = [&](int8_t nx, int8_t nz) {
                     if (nx >= 0 && nx < CHUNK_WIDTH_X && nz >= 0 && nz < CHUNK_WIDTH_Z) {
-                        Block* nb = &c->blocks[GetBlockIndex(Int3{nx, y, nz})];
+                        Block* nb = c->GetBlock(Int3{nx, y, nz});
                         if (!nb) {
                             return;
                         }

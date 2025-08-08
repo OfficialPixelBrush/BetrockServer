@@ -45,7 +45,7 @@ World *Server::GetWorld(int8_t worldId) const {
 	return &this->worldManagers.at(worldId)->world;
 }
 
-const Vec3 &Server::GetSpawnPoint() const noexcept { return this->spawnPoint; }
+const Int3 &Server::GetSpawnPoint() const noexcept { return this->spawnPoint; }
 
 std::mutex &Server::GetConnectedClientMutex() noexcept { return this->connectedClientsMutex; }
 
@@ -55,7 +55,7 @@ void Server::SetServerTime(uint64_t serverTime) { this->serverTime = serverTime;
 
 void Server::AddUpTime(uint64_t upTime) { this->upTime += upTime; }
 
-void Server::SetSpawnPoint(const Vec3 &spawnPoint) noexcept { this->spawnPoint = spawnPoint; }
+void Server::SetSpawnPoint(const Int3 &spawnPoint) noexcept { this->spawnPoint = spawnPoint; }
 
 Client *Server::FindClientByUsername(std::string_view username) const {
 	auto client = std::ranges::find_if(std::ranges::views::all(this->connectedClients),
@@ -152,7 +152,7 @@ void Server::LoadConfig() {
 	} else {
 		GlobalConfig::Instance().LoadFromDisk();
 		chunkDistance = GlobalConfig::Instance().GetAsNumber<int>("view-distance");
-		seed = GlobalConfig::Instance().GetAsNumber<int>("level-seed");
+		seed = GlobalConfig::Instance().GetAsNumber<int64_t>("level-seed");
 		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int>("max-players");
 		whitelistEnabled = GlobalConfig::Instance().GetAsBoolean("white-list");
 	}

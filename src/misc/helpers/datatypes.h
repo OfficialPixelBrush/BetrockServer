@@ -49,20 +49,6 @@ struct Block {
     }
 };
 
-struct Chunk {
-    struct Block blocks[CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT];
-    // This describes the number of clients that can see this chunk.
-    // If this hits 0, the chunk is invisible and can be removed
-    // TODO: Actually implement this value!
-    uint16_t viewers = 0;
-
-    // A non-populated chunk still needs to be popualated with foliage
-    bool populated = false;
-
-    // Set if a chunk was been modified and needs to be re-saved
-    bool modified = false;
-};
-
 // Custom Types
 struct Vec3 {
 	double x,y,z;

@@ -85,8 +85,8 @@ void Command::Populated(Player* player) {
 	if (!w) failureReason = "World does not exist!";
 	Chunk* c = w->GetChunk(int(player->position.x/16.0),int(player->position.z/16.0));
 	if (!c) failureReason = "Chunk does not exist!";
-	if (!c->populated) failureReason = "Chunk is not populated";
-	if (c->populated) failureReason = "Chunk is populated";
+	if (!c->state == ChunkState::Populated) failureReason = "Chunk is not populated";
+	if (c->state == ChunkState::Populated) failureReason = "Chunk is populated";
 	return;
 }
 
@@ -330,7 +330,7 @@ void Command::Kick(Client* client) {
 
 // Teleport to Spawn
 void Command::Spawn(Client* client) {
-	client->Teleport(response, Betrock::Server::Instance().GetSpawnPoint());
+	client->Teleport(response, Int3ToVec3(Betrock::Server::Instance().GetSpawnPoint()));
 	failureReason = "";
 }
 

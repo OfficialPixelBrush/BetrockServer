@@ -26,7 +26,7 @@ function GenerateChunk(cx,cz)
             for y = CHUNK_HEIGHT, 0, -1 do
                 if (blocksSinceSkyVisible < 6) then
                     if (c[index(x, y, z)][1] == 1) then
-                        c[index(x, y, z)] = {getNaturalGrass(cx*16+x,y,cz*16+z,blocksSinceSkyVisible),0};
+                        c[index(x, y, z)] = {3,0}
                         blocksSinceSkyVisible = blocksSinceSkyVisible+1
                     end
                 end
@@ -66,6 +66,9 @@ function PopulateChunk(cx,cz)
             -- Iterate from sky to bottom
             for y = CHUNK_HEIGHT, 0, -1 do
                 block = getBlock(fx,y,fz)
+                if (block == nil) then
+                    break
+                end
                 if (block[1] == 9) then
                     break
                 end

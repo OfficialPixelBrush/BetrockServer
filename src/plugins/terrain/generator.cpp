@@ -1,7 +1,7 @@
 #include "generator.h"
 
 // Prepare the Generator to utilize some preset numbers and functions
-void Generator::PrepareGenerator(int64_t seed, World* world) {
+Generator::Generator(int64_t seed, World* world) {
 	logger = &Betrock::Logger::Instance();
     this->seed = seed;
     this->world = world;
@@ -83,8 +83,8 @@ Block Generator::DecodeBlock() {
 // Run the GenerateChunk function and pass its execution onto lua
 // Then retrieve the generated Chunk data
 // This step is for ma
-Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
-    Chunk c = Chunk();
+std::unique_ptr<Chunk> Generator::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
     
     if (!L) {
         return c;
@@ -99,7 +99,7 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
         if (lua_istable(L, -1)) {    
             for (int i = 1; i <= CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z; i++) {
                 lua_rawgeti(L, -1, i);
-                c.blocks[i-1] = DecodeBlock();
+                c->blocks[i-1] = DecodeBlock();
                 lua_pop(L, 1);  // Pop table[i]
             }
     
@@ -107,7 +107,9 @@ Chunk Generator::GenerateChunk(int32_t cX, int32_t cZ) {
         }
     }
     // For initial loading a chunk needs to be marked as modified
-    c.modified = true;
+    c->GenerateHeightMap();
+    c->state = ChunkState::Generated;
+    c->modified = true;
     return c;
 }
 
@@ -157,10 +159,9 @@ int Generator::lua_Index(lua_State *L) {
     if (y >= CHUNK_HEIGHT) {
         y = CHUNK_HEIGHT-1;
     }
-    Int3 pos = Int3{x,y,z};
 
     // Call Between and push the result
-    int32_t result = GetBlockIndex(pos)+1;
+    int32_t result = ((int32_t)(y + z*CHUNK_HEIGHT + (x*CHUNK_HEIGHT*CHUNK_WIDTH_Z)))+1;
     lua_pushnumber(L, result);
 
     return 1; // One return value on the Lua stack
