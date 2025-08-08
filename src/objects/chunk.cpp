@@ -135,6 +135,8 @@ bool Chunk::CanBlockSeeTheSky(Int3 pos) {
         // Out of bounds
         return false;
     }
+    if (!this) return false;
+    if (!this->heightMap) return false;
     return pos.y >= (this->heightMap[pos.z << 4 | pos.x] & 255);
 }
 

@@ -65,8 +65,8 @@ int main() {
 		}
 	}
 
-	//Int3 spawnBlock = overworld->FindSpawnableBlock(Int3{8, 127, 8});
-	auto spawnPoint = Int3{0,200,0};
+	Int3 spawnPoint = overworld->FindSpawnableBlock(Int3{8, 127, 8});
+	//auto spawnPoint = Int3{0,200,0};
 	//spawnPoint.y += STANCE_OFFSET;
 	server.SetSpawnPoint(spawnPoint);
 
