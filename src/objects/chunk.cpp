@@ -27,8 +27,6 @@ void Chunk::GenerateHeightMap() {
     this->modified = true;
 }
 
-#include "labels.h"
-
 void Chunk::RelightBlock(int x, int y, int z) {
     int var4 = this->heightMap[z << 4 | x] & 255;
     int var5 = var4;
@@ -42,8 +40,6 @@ void Chunk::RelightBlock(int x, int y, int z) {
         //std::cout << Int3{x, var5 - 1, z} << GetLabel(bType) << ": " << (int)GetTranslucency(bType) << std::endl;
         --var5;
     }
-    
-    //std::cout << y << ": " << (int)var5 << std::endl;
 
     // If var5 and var4 aren't equal, we recalculate lighting
     if(var5 != var4) {
@@ -135,6 +131,10 @@ Block* Chunk::GetBlock(int32_t x, int8_t y, int32_t z) {
 }
 
 bool Chunk::CanBlockSeeTheSky(Int3 pos) {
+    if (pos.x < 0 || pos.x >= 16 || pos.z < 0 || pos.z >= 16) {
+        // Out of bounds
+        return false;
+    }
     return pos.y >= (this->heightMap[pos.z << 4 | pos.x] & 255);
 }
 

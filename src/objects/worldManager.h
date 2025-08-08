@@ -28,7 +28,7 @@ class WorldManager {
     private:
         std::string name;
         std::mutex queueMutex;
-        std::queue<QueueChunk> chunkQueue;
+        std::deque<QueueChunk> chunkQueue;
         std::unordered_set<int64_t> chunkPositions;  // Set to track chunk hashes
         int64_t seed;
         std::condition_variable queueCV;

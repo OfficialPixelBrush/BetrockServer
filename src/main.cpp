@@ -46,14 +46,12 @@ int main() {
 	if (overworld->GetNumberOfChunks() == 0) {
 		logger.Info("Preparing level \"" + std::string(Betrock::GlobalConfig::Instance().Get("level-name")) + "\"");
 		//wm->ForceGenerateChunk(0, 0);
-		/*
 		for (int x = -1; x <= 1; x++) {
 			for (int z = -1; z <= 1; z++) {
 				wm->ForceGenerateChunk(x, z);
 				issuedChunks++;
 			}
 		}
-		*/
 	}
 	logger.Info("Preparing start region");
 	while (true) {

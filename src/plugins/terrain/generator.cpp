@@ -128,9 +128,6 @@ bool Generator::PopulateChunk(int32_t cX, int32_t cZ) {
     lua_pushnumber(L,cX);
     lua_pushnumber(L,cZ);
     CheckLua(L, lua_pcall(L, 2, 1, 0));
-    Chunk* c = world->GetChunk(cX,cZ);
-    if (!c) return false;
-    c->state = ChunkState::Populated;
     return true;
 }
 

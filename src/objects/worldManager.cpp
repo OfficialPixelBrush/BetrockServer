@@ -21,13 +21,19 @@ void WorldManager::AddChunkToQueue(int32_t x, int32_t z, const std::shared_ptr<C
     std::lock_guard<std::mutex> lock(queueMutex);  // Ensure thread safety
     if (chunkPositions.find(hash) != chunkPositions.end()) {
         // Chunk is already in the queue, no need to add it again
-        // TODO: Add other requestClient to chunk!!
+        for (QueueChunk& qc : chunkQueue) {
+            if (qc.position.x == x && qc.position.z == z) {
+                qc.requestedClients.push_back(requestClient);
+                break;
+            }
+        }
         return;
     }
 
     // Add to queue and track position
-    chunkQueue.emplace(Int3{x, 0, z}, requestClient);
+    chunkQueue.emplace_back(Int3{x, 0, z}, requestClient);
     chunkPositions.insert(hash);
+    queueCV.notify_one();
 }
 
 // Returns if the ChunkQueue is empty
@@ -62,7 +68,7 @@ void WorldManager::Run() {
 
     // TODO: Add clean-up thread to remove unseen chunks
     while (Betrock::Server::Instance().IsAlive()) {
-        GenerateQueuedChunks();
+        //GenerateQueuedChunks();
         world.UpdateLighting();
         std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Sleep for half a second
     }
@@ -91,7 +97,7 @@ void WorldManager::ForceGenerateChunk(int32_t x, int32_t z) {
 // This is run by all the available Worker Threads
 // To generate a chunk, if some are queued
 void WorldManager::WorkerThread() {
-    std::unique_ptr<Generator> generator = std::make_unique<Generator>(seed, &this->world);
+    std::unique_ptr<Generator> generator = std::make_unique<GeneratorInfdev20100327>(seed, &this->world);
 
     while (Betrock::Server::Instance().IsAlive()) {
         QueueChunk cq;
@@ -102,24 +108,30 @@ void WorldManager::WorkerThread() {
             if (!Betrock::Server::Instance().IsAlive()) return; // Exit thread when stopping
 
             cq = chunkQueue.front();
-            chunkQueue.pop();
+            chunkQueue.pop_front();
+            chunkPositions.erase(GetChunkHash(cq.position.x, cq.position.z));
         }
 
 
-        std::scoped_lock lock(queueMutex);
-        {
-            int64_t hash = GetChunkHash(cq.position.x, cq.position.z);
-            chunkPositions.erase(hash);  // Remove from tracking set
+        Chunk* c = GetChunk(cq.position.x, cq.position.z, generator.get());
 
-            // Try to load chunk
-            Chunk* c = GetChunk(cq.position.x, cq.position.z,generator.get());
-            if (c) {
-                std::scoped_lock lock(Betrock::Server::Instance().GetConnectedClientMutex());
-                for (auto& weak : cq.requestedClients) {
-                    // Only send populated chunks
-                    if (auto client = weak.lock()) {
-                        client->AddNewChunk(cq.position);
-                    }
+        if (!c) {
+            continue; // Something went wrong; skip this one
+        }
+
+        if (c->state != ChunkState::Populated) {
+            std::scoped_lock lock(queueMutex);
+            chunkQueue.push_back(cq);
+            chunkPositions.insert(GetChunkHash(cq.position.x, cq.position.z));
+            queueCV.notify_one();
+            continue;
+        }
+
+        if (c) {
+            std::scoped_lock lock(Betrock::Server::Instance().GetConnectedClientMutex());
+            for (auto& weak : cq.requestedClients) {
+                if (auto client = weak.lock()) {
+                    client->AddNewChunk(cq.position);
                 }
             }
         }
@@ -146,7 +158,8 @@ Chunk* WorldManager::GetChunk(int32_t x, int32_t z, Generator* generator) {
         } else {
             c = world.AddChunk(x, z, generator->GenerateChunk(x,z));
 
-            // Entities are loaded here
+            // TODO: Entities are loaded here
+
             if(world.ChunkExists(x + 1, z + 1) && world.ChunkExists(x, z + 1) && world.ChunkExists(x + 1, z)) {
                 generator->PopulateChunk(x, z);
             }
@@ -162,6 +175,8 @@ Chunk* WorldManager::GetChunk(int32_t x, int32_t z, Generator* generator) {
             if(world.ChunkExists(x - 1, z - 1) && world.ChunkExists(x, z - 1) && world.ChunkExists(x - 1, z)) {
                 generator->PopulateChunk(x - 1, z - 1);
             }
+            
+            c->state = ChunkState::Populated;
         }
     }
     return c;

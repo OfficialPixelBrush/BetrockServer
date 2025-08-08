@@ -58,26 +58,21 @@ void Client::ProcessChunk(const Int3& position, WorldManager* wm) {
         return;
     }
 
-    // Check if the chunk has already been put onto the queue
-    if (!wm->world.ChunkExists(position.x,position.z)) {
-		// Otherwise queue chunk loading or generation
+    // Check if the chunk has already been put into the queue
+	if (!wm->world.ChunkExists(position.x, position.z) || 
+		!wm->world.IsChunkPopulated(position.x, position.z)) {
 		wm->AddChunkToQueue(position.x, position.z, shared_from_this());
-        return;
-    }
-
-	// This is redundant. The world manager SHOULD send me populated chunks
+	} else {
+		AddNewChunk(position);
+	}
 	
     // Check if the chunk has already been populated
 	/*
     if (wm->world.IsChunkPopulated(position.x,position.z)) {
 		// Otherwise queue chunk loading or generation
-		//wm->AddChunkToQueue(position.x, position.z, shared_from_this());
-        return;
+		AddNewChunk(position);
     }
-
-    // If the chunk is already available, send it over
-	AddNewChunk(position);
-	*/
+		*/
 }
 
 // Figure out what chunks the player can see and
@@ -147,37 +142,38 @@ void Client::SendNewChunks() {
 	while(sentThisCycle > 0) {
 		if(newChunks.empty()) {
 			break;
-		} else {
-			auto nc = newChunks.begin();
-			auto chunkData = wm->world.GetChunkData(*nc);
-			if (!chunkData) {
-				// We'll just drop this chunk
-				newChunks.erase(nc);
-				return;
-			}
-
-			// Send chunk to player
-			size_t compressedSize = 0;
-			auto chunk = CompressChunk(chunkData.get(), compressedSize);
-
-			if (chunk) {
-				visibleChunks.push_back(Int3{nc->x,0,nc->z});
-				Respond::PreChunk(response, nc->x, nc->z, 1);
-
-				Respond::Chunk(
-					response, 
-					Int3{nc->x<<4,0,nc->z<<4}, 
-					CHUNK_WIDTH_X - 1, 
-					CHUNK_HEIGHT - 1, 
-					CHUNK_WIDTH_Z - 1, 
-					compressedSize, 
-					chunk.get()
-				);
-			}
-			// Better to remove the entry either way if compression fails,
-			// otherwise we may get an infinite build-up of failing chunks
-			newChunks.erase(nc);
 		}
+		auto nc = newChunks.begin();
+		if (!wm->world.IsChunkPopulated(nc->x, nc->z)) {
+			//++nc;
+			break;
+		}
+		auto chunkData = wm->world.GetChunkData(*nc);
+		if (!chunkData) {
+			// We'll just drop this chunk
+			newChunks.erase(nc);
+			continue;
+		}
+
+		// Send chunk to player
+		size_t compressedSize = 0;
+		auto chunk = CompressChunk(chunkData.get(), compressedSize);
+
+		if (chunk) {
+			visibleChunks.push_back(Int3{nc->x,0,nc->z});
+			Respond::PreChunk(response, nc->x, nc->z, 1);
+
+			Respond::Chunk(
+				response, 
+				Int3{nc->x<<4,0,nc->z<<4}, 
+				CHUNK_WIDTH_X - 1, 
+				CHUNK_HEIGHT - 1, 
+				CHUNK_WIDTH_Z - 1, 
+				compressedSize, 
+				chunk.get()
+			);
+		}
+		newChunks.erase(nc);
 		sentThisCycle--;
 	}
 }

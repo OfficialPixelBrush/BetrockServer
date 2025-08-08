@@ -309,7 +309,7 @@ void World::UpdateLighting() {
                                 if(var19) {
                                     var9 = 15;
                                 }
-                            } else if(currentUpdate.skyLight) {
+                            } else {
                                 var9 = GetEmissiveness(var7);
                             }
 

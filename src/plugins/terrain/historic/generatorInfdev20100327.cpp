@@ -273,9 +273,7 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 				for(var14 = var7 - var13; var14 <= var7 + var13 && canPlaceTree; ++var14) {
 					for(var15 = var9 - var13; var15 <= var9 + var13 && canPlaceTree; ++var15) {
 						if(treeY >= 0 && treeY < 128) {
-                            Block* b = world->GetBlock(Int3{var14, treeY, var15});
-                            if (!b) continue;
-							if(b->type != 0) {
+							if(world->GetBlockType(Int3{var14, treeY, var15}) != 0) {
 								canPlaceTree = false;
 							}
 						} else {
@@ -332,8 +330,5 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 			cX3 = false;
 		}
 	}
-    Chunk* c = world->GetChunk(cX,cZ);
-    if (!c) return false;
-    c->state = ChunkState::Populated;
     return true;
 }

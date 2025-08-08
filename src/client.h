@@ -127,6 +127,8 @@ class Client : public std::enable_shared_from_this<Client> {
         std::mutex &GetNewChunksMutex() noexcept { return this->newChunksMutex; }
         void AddNewChunk(Int3 pos) { 
             std::lock_guard<std::mutex> lock(newChunksMutex);
-            newChunks.push_back(pos);
+            if (std::find(newChunks.begin(), newChunks.end(), pos) == newChunks.end()) {
+                newChunks.push_back(pos);
+            }
         }
 };
