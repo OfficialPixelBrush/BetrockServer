@@ -96,7 +96,12 @@ std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_
     }
     // To prevent population
     c->GenerateHeightMap();
-    c->state = ChunkState::Populated;
+    c->state = ChunkState::Generated;
     c->modified = true;
     return c;
+}
+
+// Do nothing, since population didn't exist yet
+bool GeneratorInfdev20100227::PopulateChunk(int32_t cX, int32_t cZ) {
+    return true;
 }

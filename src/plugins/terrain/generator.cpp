@@ -107,8 +107,8 @@ std::unique_ptr<Chunk> Generator::GenerateChunk(int32_t cX, int32_t cZ) {
         }
     }
     // For initial loading a chunk needs to be marked as modified
-    c->state = ChunkState::Generated;
     c->GenerateHeightMap();
+    c->state = ChunkState::Generated;
     c->modified = true;
     return c;
 }
