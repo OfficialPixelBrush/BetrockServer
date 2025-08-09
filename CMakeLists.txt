@@ -86,6 +86,7 @@ add_executable(
     src/objects/world.cpp
     src/objects/worldManager.cpp
 
+    src/plugins/terrain/historic/generatorBeta173.cpp
     src/plugins/terrain/historic/generatorInfdev20100227.cpp
     src/plugins/terrain/historic/generatorInfdev20100327.cpp
     src/plugins/terrain/historic/infdevoctaves.cpp
