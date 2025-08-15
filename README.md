@@ -32,6 +32,10 @@ sudo apt install git cmake build-essential libdeflate-dev liblua5.4-dev
 ```bash
 sudo pacman -Syu git cmake make gcc lua libdeflate
 ```
+**Fedora**
+```bash
+sudo dnf install git cmake make gcc lua-devel libdeflate libasan
+```
 This installs all the necessary libraries that BetrockServer needs.
 
 ### Clone
