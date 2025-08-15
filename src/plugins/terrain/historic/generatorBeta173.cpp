@@ -17,6 +17,7 @@ GeneratorBeta173::GeneratorBeta173(int64_t seed, World* world) : Generator(seed,
 }
 
 std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
     c->GenerateHeightMap();
     c->state = ChunkState::Generated;
     c->modified = true;
