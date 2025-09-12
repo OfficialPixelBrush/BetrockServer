@@ -39,3 +39,8 @@
 
 # Language Server
 .cache
+
+# Gource
+*.mp4
+*.ppm
+/avatars
