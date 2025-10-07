@@ -23,10 +23,10 @@ void GlobalConfig::Overwrite(const ConfType &config) noexcept {
 }
 
 bool GlobalConfig::LoadFromDisk() noexcept {
-	std::ifstream file(this->path.data());
+	std::ifstream file(this->path);
 
 	if (!file.is_open()) {
-		std::cerr << "Error opening properties file.\n";
+		std::cerr << "Error opening properties file (load).\n";
 		return false;
 	}
 
@@ -60,9 +60,9 @@ bool GlobalConfig::LoadFromDisk() noexcept {
 }
 
 bool GlobalConfig::SaveToDisk() const noexcept {
-	std::ofstream file(this->path.data());
+	std::ofstream file(this->path);
 	if (!file.is_open()) {
-		std::cerr << "Error opening properties file.\n";
+		std::cerr << "Error opening properties file (save).\n";
 		return false;
 	}
 
