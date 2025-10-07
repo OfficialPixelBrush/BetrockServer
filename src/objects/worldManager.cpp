@@ -98,15 +98,16 @@ void WorldManager::ForceGenerateChunk(int32_t x, int32_t z) {
 void WorldManager::WorkerThread() {
     auto &cfg = Betrock::GlobalConfig::Instance();
     auto gen = cfg.Get("generator");
-    std::cout << gen << std::endl;
-    std::unique_ptr<Generator> generator;
+    //std::cout << gen << std::endl;
+    std::unique_ptr<Generator> generator; // = std::make_unique<GeneratorInfdev20100327>(seed, &this->world);
     // I wish C++ supported strings in switch statements
+    //    generator
     if (gen == "inf20100227" ) {
         generator = std::make_unique<GeneratorInfdev20100227>(seed, &this->world);
     } else if (gen == "inf20100327") {
         generator = std::make_unique<GeneratorInfdev20100327>(seed, &this->world);
     } else {
-        generator = std::make_unique<Generator>(seed, &this->world);
+        generator = std::make_unique<GeneratorLua>(seed, &this->world);
     }
 
     while (Betrock::Server::Instance().IsAlive()) {
