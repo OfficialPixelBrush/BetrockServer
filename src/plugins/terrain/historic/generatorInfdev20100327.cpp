@@ -170,7 +170,7 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
     return var13;
 }
 
-bool WorldGenMinableGenerate(int blockType, World* world, JavaRandom* rand, int var3, int var4, int var5) {
+bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* world, JavaRandom* rand, int var3, int var4, int var5) {
     float var6 = rand->nextFloat() * (float)M_PI;
     double var7 = (double)((float)(var3 + 8) + std::sin(var6) * 2.0F);
     double var9 = (double)((float)(var3 + 8) - std::sin(var6) * 2.0F);
