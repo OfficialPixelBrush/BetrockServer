@@ -15,7 +15,6 @@ void QueueChunk::AddClient(const std::shared_ptr<Client>& requestClient) {
 
 // This adds a Chunk to the ChunkQueue
 void WorldManager::AddChunkToQueue(int32_t x, int32_t z, const std::shared_ptr<Client>& requestClient) {
-
     auto hash = GetChunkHash(x, z);  // Compute hash
 
     std::lock_guard<std::mutex> lock(queueMutex);  // Ensure thread safety
@@ -97,7 +96,18 @@ void WorldManager::ForceGenerateChunk(int32_t x, int32_t z) {
 // This is run by all the available Worker Threads
 // To generate a chunk, if some are queued
 void WorldManager::WorkerThread() {
-    std::unique_ptr<Generator> generator = std::make_unique<Generator>(seed, &this->world);
+    auto &cfg = Betrock::GlobalConfig::Instance();
+    auto gen = cfg.Get("generator");
+    std::cout << gen << std::endl;
+    std::unique_ptr<Generator> generator;
+    // I wish C++ supported strings in switch statements
+    if (gen == "inf20100227" ) {
+        generator = std::make_unique<GeneratorInfdev20100227>(seed, &this->world);
+    } else if (gen == "inf20100327") {
+        generator = std::make_unique<GeneratorInfdev20100327>(seed, &this->world);
+    } else {
+        generator = std::make_unique<Generator>(seed, &this->world);
+    }
 
     while (Betrock::Server::Instance().IsAlive()) {
         QueueChunk cq;
