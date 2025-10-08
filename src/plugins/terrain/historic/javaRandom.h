@@ -13,9 +13,9 @@
 
 class JavaRandom {
 private:
-    static constexpr uint64_t multiplier = 0x5DEECE66DULL;
-    static constexpr uint64_t addend     = 0xBULL;
-    static constexpr uint64_t mask       = (1ULL << 48) - 1;
+    static constexpr int64_t multiplier = 0x5DEECE66D;
+    static constexpr int64_t addend     = 0xB;
+    static constexpr int64_t mask       = (1LL << 48) - 1;
 
     int64_t seed;
 
