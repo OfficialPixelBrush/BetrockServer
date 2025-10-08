@@ -24,9 +24,9 @@ double InfdevPerlin::generateNoise(double xOffset, double yOffset, double zOffse
     double var7 = xOffset + this->xCoord;
     double var9 = yOffset + this->yCoord;
     double var11 = zOffset + this->zCoord;
-    int var22 = (int)std::floor(var7) & 255;
-    int var2 = (int)std::floor(var9) & 255;
-    int var23 = (int)std::floor(var11) & 255;
+    int var22 = ((int)std::floor(var7)) & 255;
+    int var2 = ((int)std::floor(var9)) & 255;
+    int var23 = ((int)std::floor(var11)) & 255;
     var7 -= (double)std::floor(var7);
     var9 -= (double)std::floor(var9);
     var11 -= (double)std::floor(var11);
