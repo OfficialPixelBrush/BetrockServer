@@ -4,7 +4,6 @@ InfdevPerlin::InfdevPerlin()
     : InfdevPerlin(new JavaRandom()) {}
 
 InfdevPerlin::InfdevPerlin(JavaRandom* rand) {
-    //this->permutations = new int[512];
     this->xCoord = rand->nextDouble() * 256.0D;
     this->yCoord = rand->nextDouble() * 256.0D;
     this->zCoord = rand->nextDouble() * 256.0D;
@@ -20,32 +19,64 @@ InfdevPerlin::InfdevPerlin(JavaRandom* rand) {
     }
 }
 
-double InfdevPerlin::generateNoise(double xOffset, double yOffset, double zOffset) {
-    double var7 = xOffset + this->xCoord;
-    double var9 = yOffset + this->yCoord;
-    double var11 = zOffset + this->zCoord;
-    int var22 = ((int)std::floor(var7)) & 255;
-    int var2 = ((int)std::floor(var9)) & 255;
-    int var23 = ((int)std::floor(var11)) & 255;
-    var7 -= (double)std::floor(var7);
-    var9 -= (double)std::floor(var9);
-    var11 -= (double)std::floor(var11);
-    double var16 = staticGenerateNoise(var7);
-    double var18 = staticGenerateNoise(var9);
-    double var20 = staticGenerateNoise(var11);
-    int var4 = this->permutations[var22] + var2;
-    int var24 = this->permutations[var4] + var23;
-    var4 = this->permutations[var4 + 1] + var23;
-    var22 = this->permutations[var22 + 1] + var2;
-    var2 = this->permutations[var22] + var23;
-    var22 = this->permutations[var22 + 1] + var23;
-    return lerp(var20, lerp(var18, lerp(var16, grad(this->permutations[var24], var7, var9, var11), grad(this->permutations[var2], var7 - 1.0D, var9, var11)), lerp(var16, grad(this->permutations[var4], var7, var9 - 1.0D, var11), grad(this->permutations[var22], var7 - 1.0D, var9 - 1.0D, var11))), lerp(var18, lerp(var16, grad(this->permutations[var24 + 1], var7, var9, var11 - 1.0D), grad(this->permutations[var2 + 1], var7 - 1.0D, var9, var11 - 1.0D)), lerp(var16, grad(this->permutations[var4 + 1], var7, var9 - 1.0D, var11 - 1.0D), grad(this->permutations[var22 + 1], var7 - 1.0D, var9 - 1.0D, var11 - 1.0D))));
+// This is a rather standard implementation of "Improved Perlin Noise",
+// as described by Ken Perlin in 2002
+double InfdevPerlin::generateNoise(double x, double y, double z) {
+    x += this->xCoord;
+    y += this->yCoord;
+    z += this->zCoord;
+    // The farlands are caused by this getting cast to a 32-Bit Integer.
+    // Change these ints to longs to fix the farlands.
+    int xInt = (int)x;
+    int yInt = (int)y;
+    int zInt = (int)z;
+    if(x < (double)xInt) --xInt;
+    if(y < (double)yInt) --yInt;
+    if(z < (double)zInt) --zInt;
+
+    int xIndex = xInt & 255;
+    int yIndex = yInt & 255;
+    int zIndex = zInt & 255;
+
+    x -= (double)xInt;
+    y -= (double)yInt;
+    z -= (double)zInt;
+    double w = fade(x);
+    double v = fade(y);
+    double u = fade(z);
+    int permXY = this->permutations[xIndex] + yIndex;
+    int permXYZ = this->permutations[permXY] + zIndex;
+    // Some of the following code is weird,
+    // probably because it got optimized by Java to use
+    // fewer variables or Notch did this to be efficient
+    permXY = this->permutations[permXY + 1] + zIndex;
+    xIndex = this->permutations[xIndex + 1] + yIndex;
+    yIndex = this->permutations[xIndex] + zIndex;
+    xIndex = this->permutations[xIndex + 1] + zIndex;
+    return lerp(u,
+        lerp(v,
+            lerp(w,
+                grad(this->permutations[permXYZ], x, y, z),
+                grad(this->permutations[yIndex], x - 1.0D, y, z)
+            ), lerp(w,
+                grad(this->permutations[permXY], x, y - 1.0D, z),
+                grad(this->permutations[xIndex], x - 1.0D, y - 1.0D, z)
+            )
+        ), lerp(v,
+                lerp(w, grad(this->permutations[permXYZ + 1], x, y, z - 1.0D),
+                grad(this->permutations[yIndex + 1], x - 1.0D, y, z - 1.0D)
+            ), lerp(w,
+                grad(this->permutations[permXY + 1], x, y - 1.0D, z - 1.0D),
+                grad(this->permutations[xIndex + 1], x - 1.0D, y - 1.0D, z - 1.0D)
+            )
+        )
+    );
 }
 
-double InfdevPerlin::generateNoise(double xOffset, double yOffset) {
-    return this->generateNoise(xOffset, yOffset, 0.0D);
+double InfdevPerlin::generateNoise(double x, double y) {
+    return this->generateNoise(x, y, 0.0D);
 }
 
-double InfdevPerlin::generateNoiseD(double xOffset, double yOffset, double zOffset) {
-    return this->generateNoise(xOffset, yOffset, zOffset);
+double InfdevPerlin::generateNoiseD(double x, double y, double z) {
+    return this->generateNoise(x, y, z);
 }
