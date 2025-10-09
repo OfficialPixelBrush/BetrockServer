@@ -45,3 +45,4 @@
 *.ppm
 /avatars
 src/misc/version.h
+src/misc/version.h
