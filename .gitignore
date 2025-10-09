@@ -44,3 +44,4 @@
 *.mp4
 *.ppm
 /avatars
+src/misc/version.h
