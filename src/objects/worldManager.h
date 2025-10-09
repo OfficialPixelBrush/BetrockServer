@@ -9,6 +9,7 @@
 #include "generator.h"
 #include "historic/generatorInfdev20100227.h"
 #include "historic/generatorInfdev20100327.h"
+#include "historic/generatorBeta173.h"
 #include "generatorLua.h"
 #include "coms.h"
 #include "client.h"
