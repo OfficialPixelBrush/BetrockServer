@@ -11,7 +11,7 @@ class GeneratorBeta173 : public Generator {
         std::unique_ptr<InfdevOctaves> noiseGen6;
         std::unique_ptr<InfdevOctaves> noiseGen7;
         std::unique_ptr<InfdevOctaves> mobSpawnerNoise;
-        GenerateTerrain(int cX, int cY, std::unique_ptr<Chunk> c);
+        void GenerateTerrain(int cX, int cY, std::unique_ptr<Chunk>& c);
     public:
         GeneratorBeta173(int64_t seed, World* world);
         ~GeneratorBeta173() = default;

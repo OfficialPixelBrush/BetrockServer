@@ -26,12 +26,13 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     return true;
 }
 
-void GeneratorBeta173::GenerateTerrain(int cX, int cY, std::unique_ptr<Chunk> c) {//, BiomeGenBase[] var4, double[] var5) {
+void GeneratorBeta173::GenerateTerrain(int cX, int cY, std::unique_ptr<Chunk>& c) {//, BiomeGenBase[] var4, double[] var5) {
     uint8_t var6 = 4;
     uint8_t waterLevel = 64;
     int var8 = 4 + 1;
     uint8_t var9 = 17;
     int var10 = var6 + 1;
+    /*
     this.field_4224_q = this.func_4058_a(this.field_4224_q, cX * 4, 0, cY * 4, var8, var9, var10);
 
     for(int macroX = 0; macroX < 4; ++macroX) {
@@ -92,5 +93,5 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cY, std::unique_ptr<Chunk> c)
                 }
             }
         }
-    }
+    }*/
 }
