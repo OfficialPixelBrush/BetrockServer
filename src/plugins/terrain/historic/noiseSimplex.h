@@ -28,7 +28,7 @@ class NoiseSimplex : public NoiseGenerator {
     public:
         NoiseSimplex();
         NoiseSimplex(JavaRandom* rand);
-        void GenerateNoise(std::vector<double> var1, double var2, double var4, int var6, int var7, double var8, double var10, double var12);
+        void GenerateNoise(std::vector<double>& var1, double var2, double var4, int var6, int var7, double var8, double var10, double var12);
 };
 
 static int wrap(double var0) {

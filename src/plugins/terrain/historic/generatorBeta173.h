@@ -5,13 +5,13 @@ class GeneratorBeta173 : public Generator {
     private:
         std::unique_ptr<JavaRandom> rand;
         // Perlin Noise Generators
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> lowNoise;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> highNoise;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen1;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen2;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen3;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen4;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen5;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen6;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen7;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> sandGravelNoise;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> stonePerlinNoise;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> mobSpawnerNoise;
 
         // Simplex Noise Generators
