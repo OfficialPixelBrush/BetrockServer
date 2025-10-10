@@ -64,7 +64,7 @@ class Client : public std::enable_shared_from_this<Client> {
         // Packets
         bool HandleKeepAlive();
         bool HandleHandshake();
-        bool HandleLoginRequest();
+        bool HandleLoginRequest(World* world);
         bool HandleChatMessage();
         bool HandleUseEntity();
         bool HandleRespawn();

@@ -285,7 +285,7 @@ void Client::HandlePacket() {
 					HandleKeepAlive();
 					break;
 				case Packet::LoginRequest:
-					HandleLoginRequest();
+					HandleLoginRequest(world);
 					break;
 				case Packet::Handshake:
 					HandleHandshake();
@@ -431,7 +431,7 @@ bool Client::HandleHandshake() {
 }
 
 // Log the player in and perform checks to ensure a valid connection
-bool Client::HandleLoginRequest() {
+bool Client::HandleLoginRequest(World* world) {
 	bool firstJoin = true;
 	auto &server = Betrock::Server::Instance();
 	if (GetConnectionStatus() != ConnectionStatus::LoggingIn) {
@@ -464,7 +464,7 @@ bool Client::HandleLoginRequest() {
 	}
 
 	// Accept the Login
-	Respond::Login(response,player->entityId,1,0);
+	Respond::Login(response,player->entityId,world->seed,0);
 	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at " + player->position.str());
 	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.");
 
