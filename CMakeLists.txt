@@ -66,6 +66,7 @@ add_executable(
 
     src/enums/blocks.cpp
     src/enums/labels.cpp
+    src/enums/biomes.cpp
 
     src/logger/logger.cpp
     src/logger/style.cpp

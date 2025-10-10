@@ -68,7 +68,7 @@ double NoiseOctaves<T>::GenerateOctaves(double xOffset, double yOffset, double z
 template <typename T>
 std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double> var1, double var2, double var4, double var6, int var8, int var9, int var10, double var11, double var13, double var15) {
     if(var1.empty()) {
-        var1.reserve(var8 * var9 * var10);
+        var1.resize(var8 * var9 * var10, 0.0);
     } else {
         for(int var17 = 0; var17 < var1.size(); ++var17) {
             var1[var17] = 0.0D;
@@ -104,7 +104,7 @@ std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double> var1, d
             var1[var16] = 0.0D;
         }
     } else {
-        var1.reserve(var6 * var7);
+        var1.resize(var6 * var7, 0.0);
     }
 
     double var21 = 1.0D;

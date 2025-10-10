@@ -2,6 +2,7 @@
 
 #include "config.h"
 #include "server.h"
+#include "biomes.h"
 
 // The Save interval in ticks
 // This matches what Minecraft does
@@ -20,6 +21,8 @@ int main() {
 	signal(SIGTERM, HandleGracefulSignal); // Handle termination signals
 
 	logger.Info("Starting " + std::string(PROJECT_NAME) + " version " + std::string(PROJECT_VERSION_FULL_STRING));
+
+	GenerateBiomeLookup();
 
 	server.LoadConfig();
 
