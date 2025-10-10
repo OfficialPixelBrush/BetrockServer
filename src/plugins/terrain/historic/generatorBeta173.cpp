@@ -8,13 +8,13 @@ GeneratorBeta173::GeneratorBeta173(int64_t seed, World* world) : Generator(seed,
     rand = std::make_unique<JavaRandom>(this->seed);
 
     // Init Terrain Noise
-    noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-    noiseGen2 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-    noiseGen3 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
-    noiseGen4 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
-    noiseGen5 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
-    noiseGen6 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 10);
-    noiseGen7 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    lowNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    highNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
+    sandGravelNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
+    stonePerlinNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
+    noiseGen2 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 10);
+    noiseGen3 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
     mobSpawnerNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
 
     // Init Biome Noise
@@ -61,10 +61,10 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
     this->sandNoise.resize(256, 0.0);
     this->gravelNoise.resize(256, 0.0);
     this->stoneNoise.resize(256, 0.0);
-    
-    this->sandNoise = this->noiseGen4->GenerateOctaves(this->sandNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, var6, var6, 1.0D);
-    this->gravelNoise = this->noiseGen4->GenerateOctaves(this->gravelNoise, (double)(cX * 16), 109.0134D, (double)(cZ * 16), 16, 1, 16, var6, 1.0D, var6);
-    this->stoneNoise = this->noiseGen5->GenerateOctaves(this->stoneNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, var6 * 2.0D, var6 * 2.0D, var6 * 2.0D);
+
+    this->sandNoise = this->sandGravelNoise->GenerateOctaves(this->sandNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, var6, var6, 1.0D);
+    this->gravelNoise = this->sandGravelNoise->GenerateOctaves(this->gravelNoise, (double)(cX * 16), 109.0134D, (double)(cZ * 16), 16, 1, 16, var6, 1.0D, var6);
+    this->stoneNoise = this->stonePerlinNoise->GenerateOctaves(this->stoneNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, var6 * 2.0D, var6 * 2.0D, var6 * 2.0D);
 
     for(int var8 = 0; var8 < 16; ++var8) {
         for(int var9 = 0; var9 < 16; ++var9) {
@@ -73,8 +73,8 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
             bool var12 = this->gravelNoise[var8 + var9 * 16] + this->rand->nextDouble() * 0.2D > 3.0D;
             int var13 = (int)(this->stoneNoise[var8 + var9 * 16] / 3.0D + 3.0D + this->rand->nextDouble() * 0.25D);
             int var14 = -1;
-            uint8_t var15 = BLOCK_GRASS; //var10.topBlock;
-            uint8_t var16 = BLOCK_DIRT; //var10.fillerBlock;
+            uint8_t var15 = GetTopBlock(var10);
+            uint8_t var16 = GetFillerBlock(var10);
 
             for(int var17 = 127; var17 >= 0; --var17) {
                 int blockIndex = (var9 * 16 + var8) * 128 + var17;
@@ -90,8 +90,8 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
                                 var15 = 0;
                                 var16 = (uint8_t)BLOCK_STONE;
                             } else if(var17 >= var5 - 4 && var17 <= var5 + 1) {
-                                var15 = BLOCK_GRASS; //var10.topBlock;
-                                var16 = BLOCK_DIRT; //var10.fillerBlock;
+                                var15 = GetTopBlock(var10);
+                                var16 = GetFillerBlock(var10);
                                 if(var12) {
                                     var15 = 0;
                                 }
@@ -234,7 +234,8 @@ std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(std::vector<Biome> biomeMa
 
             this->temperature[index] = temp;
             this->humidity[index] = humi;
-            biomeMap[index++] = GetBiomeFromLookup(temp, humi); //;BiomeGenBase.getBiomeFromLookup(temp, humi);
+            biomeMap[index] = GetBiomeFromLookup(temp, humi); //;BiomeGenBase.getBiomeFromLookup(temp, humi);
+            index++;
         }
     }
 
@@ -252,11 +253,11 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
     std::vector<double> var13 = this->humidity;
     
     // We do this to need to generate noise as often
-    this->noiseField1 = this->noiseGen6->GenerateOctaves(this->noiseField1, cX, cZ, xMax, zMax, 1.121D, 1.121D, 0.5D);
-    this->noiseField2 = this->noiseGen7->GenerateOctaves(this->noiseField2, cX, cZ, xMax, zMax, 200.0D, 200.0D, 0.5D);
-    this->noiseField3 = this->noiseGen3->GenerateOctaves(this->noiseField3, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale / 80.0D, vertScale / 160.0D, horiScale / 80.0D);
-    this->noiseField4 = this->noiseGen1->GenerateOctaves(this->noiseField4, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
-    this->noiseField5 = this->noiseGen2->GenerateOctaves(this->noiseField5, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
+    this->noiseField1 = this->noiseGen2->GenerateOctaves(this->noiseField1, cX, cZ, xMax, zMax, 1.121D, 1.121D, 0.5D);
+    this->noiseField2 = this->noiseGen3->GenerateOctaves(this->noiseField2, cX, cZ, xMax, zMax, 200.0D, 200.0D, 0.5D);
+    this->noiseField3 = this->noiseGen1->GenerateOctaves(this->noiseField3, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale / 80.0D, vertScale / 160.0D, horiScale / 80.0D);
+    this->noiseField4 = this->lowNoise->GenerateOctaves(this->noiseField4, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
+    this->noiseField5 = this->highNoise->GenerateOctaves(this->noiseField5, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
     int yIndex = 0;
     int zIndex = 0;
     int xIndex = 16 / xMax;

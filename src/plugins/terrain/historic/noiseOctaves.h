@@ -13,10 +13,10 @@ class NoiseOctaves {
         NoiseOctaves(JavaRandom* rand, int octaves);
         double GenerateOctaves(double xOffset, double yOffset);
         double GenerateOctaves(double xOffset, double yOffset, double zOffset);
-        std::vector<double> GenerateOctaves(std::vector<double> noiseField, double var2, double var4, double var6, int var8, int var9, int var10, double var11, double var13, double var15);
-        std::vector<double> GenerateOctaves(std::vector<double> noiseField, int var2, int var3, int var4, int var5, double var6, double var8, double var10);
-        std::vector<double> GenerateOctaves(std::vector<double> noiseField, double var2, double var4, int var6, int var7, double var8, double var10, double var12);
-        std::vector<double> GenerateOctaves(std::vector<double> noiseField, double var2, double var4, int var6, int var7, double var8, double var10, double var12, double var14);
+        std::vector<double> GenerateOctaves(std::vector<double>& noiseField, double var2, double var4, double var6, int var8, int var9, int var10, double var11, double var13, double var15);
+        std::vector<double> GenerateOctaves(std::vector<double>& noiseField, int var2, int var3, int var4, int var5, double var6, double var8, double var10);
+        std::vector<double> GenerateOctaves(std::vector<double>& noiseField, double var2, double var4, int var6, int var7, double var8, double var10, double var12);
+        std::vector<double> GenerateOctaves(std::vector<double>& noiseField, double var2, double var4, int var6, int var7, double var8, double var10, double var12, double var14);
     private:
         int octaves;
         std::vector<std::unique_ptr<T>> generatorCollection;
@@ -66,7 +66,7 @@ double NoiseOctaves<T>::GenerateOctaves(double xOffset, double yOffset, double z
 }
 
 template <typename T>
-std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double> noiseField, double var2, double var4, double var6, int var8, int var9, int var10, double var11, double var13, double var15) {
+std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double>& noiseField, double var2, double var4, double var6, int var8, int var9, int var10, double var11, double var13, double var15) {
     if(noiseField.empty()) {
         noiseField.resize(var8 * var9 * var10, 0.0);
     } else {
@@ -86,17 +86,17 @@ std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double> noiseFi
 }
 
 template <typename T>
-std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double> noiseField, int var2, int var3, int var4, int var5, double var6, double var8, double var10) {
+std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double>& noiseField, int var2, int var3, int var4, int var5, double var6, double var8, double var10) {
     return this->GenerateOctaves(noiseField, (double)var2, 10.0D, (double)var3, var4, 1, var5, var6, 1.0D, var8);
 }
 
 template <typename T>
-std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double> noiseField, double var2, double var4, int var6, int var7, double var8, double var10, double var12) {
+std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double>& noiseField, double var2, double var4, int var6, int var7, double var8, double var10, double var12) {
     return this->GenerateOctaves(noiseField, var2, var4, var6, var7, var8, var10, var12, 0.5D);
 }
 
 template <typename T>
-std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double> noiseField, double var2, double var4, int var6, int var7, double var8, double var10, double var12, double var14) {
+std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double>& noiseField, double var2, double var4, int var6, int var7, double var8, double var10, double var12, double var14) {
     var8 /= 1.5D;
     var10 /= 1.5D;
     if(!noiseField.empty() && noiseField.size() >= var6 * var7) {

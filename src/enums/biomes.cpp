@@ -1,5 +1,20 @@
 #include "biomes.h"
 
+
+uint8_t GetTopBlock(Biome biome) {
+    if (biome == BIOME_DESERT) {
+        return BLOCK_SAND;
+    }
+    return BLOCK_GRASS;
+}
+
+uint8_t GetFillerBlock(Biome biome) {
+    if (biome == BIOME_ICEDESERT) {
+        return BLOCK_SAND;
+    }
+    return BLOCK_DIRT;
+}
+
 Biome BiomeLUT[64*64];
 
 Biome GetBiome(float temperature, float humidity) {

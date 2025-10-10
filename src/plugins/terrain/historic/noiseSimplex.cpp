@@ -19,7 +19,7 @@ NoiseSimplex::NoiseSimplex(JavaRandom* rand) {
     }
 }
 
-void NoiseSimplex::GenerateNoise(std::vector<double> var1, double var2, double var4, int var6, int var7, double var8, double var10, double var12) {
+void NoiseSimplex::GenerateNoise(std::vector<double>& var1, double var2, double var4, int var6, int var7, double var8, double var10, double var12) {
     int var14 = 0;
 
     for(int var15 = 0; var15 < var6; ++var15) {

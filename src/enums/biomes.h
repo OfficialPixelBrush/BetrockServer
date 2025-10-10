@@ -1,4 +1,5 @@
 #pragma once
+#include "blocks.h"
 
 enum Biome {
     BIOME_NONE = 0,
@@ -20,3 +21,6 @@ enum Biome {
 Biome GetBiome(float temperature, float humidity);
 void GenerateBiomeLookup();
 Biome GetBiomeFromLookup(float temperature, float humidity);
+
+uint8_t GetTopBlock(Biome biome);
+uint8_t GetFillerBlock(Biome biome);
