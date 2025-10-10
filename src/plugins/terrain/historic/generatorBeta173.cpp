@@ -31,7 +31,7 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
     std::memset(c->blocks, 0, sizeof(c->blocks));
 
-    // this.biomesForGeneration = this.worldObj.getWorldChunkManager().loadBlockGeneratorData(this.biomesForGeneration, var1 * 16, var2 * 16, 16, 16);
+    // this->biomesForGeneration = this->worldObj.getWorldChunkManager().loadBlockGeneratorData(this->biomesForGeneration, var1 * 16, var2 * 16, 16, 16);
 	this->biomeMap = GenerateBiomeMap(
         this->biomeMap,
         cX * CHUNK_WIDTH_X,
@@ -41,7 +41,7 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     );
 
     GenerateTerrain(cX, cZ, c, this->biomeMap, this->temperature);
-    //this->replaceBlocksForBiome(cX, cZ, c, this->biomeMap);
+    ReplaceBlocksForBiome(cX, cZ, c, this->biomeMap);
     //this->field_695_u.func_667_a(this, this->worldObj, var1, var2, var3);
     //var4.func_353_b();
     
@@ -53,6 +53,86 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
 
 bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     return true;
+}
+
+void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap) {
+    uint8_t var5 = 64;
+    double var6 = 1.0D / 32.0D;
+    this->sandNoise.resize(256, 0.0);
+    this->gravelNoise.resize(256, 0.0);
+    this->stoneNoise.resize(256, 0.0);
+    
+    this->sandNoise = this->noiseGen4->GenerateOctaves(this->sandNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, var6, var6, 1.0D);
+    this->gravelNoise = this->noiseGen4->GenerateOctaves(this->gravelNoise, (double)(cX * 16), 109.0134D, (double)(cZ * 16), 16, 1, 16, var6, 1.0D, var6);
+    this->stoneNoise = this->noiseGen5->GenerateOctaves(this->stoneNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, var6 * 2.0D, var6 * 2.0D, var6 * 2.0D);
+
+    for(int var8 = 0; var8 < 16; ++var8) {
+        for(int var9 = 0; var9 < 16; ++var9) {
+            Biome var10 = biomeMap[var8 + var9 * 16];
+            bool var11 = this->sandNoise[var8 + var9 * 16] + this->rand->nextDouble() * 0.2D > 0.0D;
+            bool var12 = this->gravelNoise[var8 + var9 * 16] + this->rand->nextDouble() * 0.2D > 3.0D;
+            int var13 = (int)(this->stoneNoise[var8 + var9 * 16] / 3.0D + 3.0D + this->rand->nextDouble() * 0.25D);
+            int var14 = -1;
+            uint8_t var15 = BLOCK_GRASS; //var10.topBlock;
+            uint8_t var16 = BLOCK_DIRT; //var10.fillerBlock;
+
+            for(int var17 = 127; var17 >= 0; --var17) {
+                int blockIndex = (var9 * 16 + var8) * 128 + var17;
+                if(var17 <= 0 + this->rand->nextInt(5)) {
+                    c->blocks[blockIndex].type = (uint8_t)BLOCK_BEDROCK;
+                } else {
+                    uint8_t var19 = c->blocks[blockIndex].type;
+                    if(var19 == 0) {
+                        var14 = -1;
+                    } else if(var19 == BLOCK_STONE) {
+                        if(var14 == -1) {
+                            if(var13 <= 0) {
+                                var15 = 0;
+                                var16 = (uint8_t)BLOCK_STONE;
+                            } else if(var17 >= var5 - 4 && var17 <= var5 + 1) {
+                                var15 = BLOCK_GRASS; //var10.topBlock;
+                                var16 = BLOCK_DIRT; //var10.fillerBlock;
+                                if(var12) {
+                                    var15 = 0;
+                                }
+
+                                if(var12) {
+                                    var16 = (uint8_t)BLOCK_GRAVEL;
+                                }
+
+                                if(var11) {
+                                    var15 = (uint8_t)BLOCK_SAND;
+                                }
+
+                                if(var11) {
+                                    var16 = (uint8_t)BLOCK_SAND;
+                                }
+                            }
+
+                            if(var17 < var5 && var15 == 0) {
+                                var15 = (uint8_t)BLOCK_WATER_STILL;
+                            }
+
+                            var14 = var13;
+                            if(var17 >= var5 - 1) {
+                                c->blocks[blockIndex].type = var15;
+                            } else {
+                                c->blocks[blockIndex].type = var16;
+                            }
+                        } else if(var14 > 0) {
+                            --var14;
+                            c->blocks[blockIndex].type = var16;
+                            if(var14 == 0 && var16 == BLOCK_SAND) {
+                                var14 = this->rand->nextInt(4);
+                                var16 = (uint8_t)BLOCK_SANDSTONE;
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
 }
 
 void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap, std::vector<double>& temperature) {//, BiomeGenBase[] var4, double[] var5) {
