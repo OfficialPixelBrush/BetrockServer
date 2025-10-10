@@ -5,13 +5,13 @@
 class GeneratorInfdev20100327 : public Generator {
     private:
         std::unique_ptr<JavaRandom> rand;
-        std::unique_ptr<InfdevOctaves> noiseGen1;
-        std::unique_ptr<InfdevOctaves> noiseGen2;
-        std::unique_ptr<InfdevOctaves> noiseGen3;
-        std::unique_ptr<InfdevOctaves> noiseGen4;
-        std::unique_ptr<InfdevOctaves> noiseGen5;
-        std::unique_ptr<InfdevOctaves> noiseGen6;
-        std::unique_ptr<InfdevOctaves> mobSpawnerNoise;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen1;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen2;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen3;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen4;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen5;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen6;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> mobSpawnerNoise;
         double InitializeNoiseField(double var1, double var3, double var5);
         bool WorldGenMinableGenerate(int blockType, World* world, JavaRandom* rand, int var3, int var4, int var5);
         bool GenerateMinable(int blockType, World* world, JavaRandom* rand, int var3, int var4, int var5);

@@ -6,12 +6,12 @@ GeneratorInfdev20100227::GeneratorInfdev20100227(int64_t seed, World* world) : G
     this->world = world;
 
     rand = std::make_unique<JavaRandom>(this->seed);
-    noiseGen1 = std::make_unique<InfdevOctaves>(rand.get(), 16);
-    noiseGen2 = std::make_unique<InfdevOctaves>(rand.get(), 16);
-    noiseGen3 = std::make_unique<InfdevOctaves>(rand.get(), 8);
-    noiseGen4 = std::make_unique<InfdevOctaves>(rand.get(), 4);
-    noiseGen5 = std::make_unique<InfdevOctaves>(rand.get(), 4);
-    noiseGen6 = std::make_unique<InfdevOctaves>(rand.get(), 5);
+    noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    noiseGen2 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    noiseGen3 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
+    noiseGen4 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
+    noiseGen5 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
+    noiseGen6 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 5);
 }
 
 std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
@@ -24,14 +24,14 @@ std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_
         for(int var6 = var14; var6 < var14 + 16; ++var6) {
             int var7 = var5 / 1024;
             int var8 = var6 / 1024;
-            float var9 = (float)(this->noiseGen1.get()->generateNoiseOctaves((double)((float)var5 / 0.03125F), 0.0D, (double)((float)var6 / 0.03125F)) - this->noiseGen2.get()->generateNoiseOctaves((double)((float)var5 / 0.015625F), 0.0D, (double)((float)var6 / 0.015625F))) / 512.0F / 4.0F;
-            float var10 = (float)this->noiseGen5.get()->noiseGenerator((double)((float)var5 / 4.0F), (double)((float)var6 / 4.0F));
-            float var11 = (float)this->noiseGen6.get()->noiseGenerator((double)((float)var5 / 8.0F), (double)((float)var6 / 8.0F)) / 8.0F;
-            var10 = var10 > 0.0F ? (float)(this->noiseGen3.get()->noiseGenerator((double)((float)var5 * 0.25714284F * 2.0F), (double)((float)var6 * 0.25714284F * 2.0F)) * (double)var11 / 4.0D) : (float)(this->noiseGen4.get()->noiseGenerator((double)((float)var5 * 0.25714284F), (double)((float)var6 * 0.25714284F)) * (double)var11);
+            float var9 = (float)(this->noiseGen1.get()->GenerateOctaves((double)((float)var5 / 0.03125F), 0.0D, (double)((float)var6 / 0.03125F)) - this->noiseGen2.get()->GenerateOctaves((double)((float)var5 / 0.015625F), 0.0D, (double)((float)var6 / 0.015625F))) / 512.0F / 4.0F;
+            float var10 = (float)this->noiseGen5.get()->GenerateOctaves((double)((float)var5 / 4.0F), (double)((float)var6 / 4.0F));
+            float var11 = (float)this->noiseGen6.get()->GenerateOctaves((double)((float)var5 / 8.0F), (double)((float)var6 / 8.0F)) / 8.0F;
+            var10 = var10 > 0.0F ? (float)(this->noiseGen3.get()->GenerateOctaves((double)((float)var5 * 0.25714284F * 2.0F), (double)((float)var6 * 0.25714284F * 2.0F)) * (double)var11 / 4.0D) : (float)(this->noiseGen4.get()->GenerateOctaves((double)((float)var5 * 0.25714284F), (double)((float)var6 * 0.25714284F)) * (double)var11);
             int var15 = (int)(var9 + 64.0F + var10);
-            if((float)this->noiseGen5.get()->noiseGenerator((double)var5, (double)var6) < 0.0F) {
+            if((float)this->noiseGen5.get()->GenerateOctaves((double)var5, (double)var6) < 0.0F) {
                 var15 = var15 / 2 << 1;
-                if((float)this->noiseGen5.get()->noiseGenerator((double)(var5 / 5), (double)(var6 / 5)) < 0.0F) {
+                if((float)this->noiseGen5.get()->GenerateOctaves((double)(var5 / 5), (double)(var6 / 5)) < 0.0F) {
                     ++var15;
                 }
             }

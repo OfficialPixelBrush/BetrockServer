@@ -89,8 +89,9 @@ add_executable(
     src/plugins/terrain/historic/generatorInfdev20100227.cpp
     src/plugins/terrain/historic/generatorInfdev20100327.cpp
     src/plugins/terrain/historic/generatorBeta173.cpp
-    src/plugins/terrain/historic/infdevoctaves.cpp
-    src/plugins/terrain/historic/infdevperlin.cpp
+    src/plugins/terrain/historic/noiseGenerator.cpp
+    src/plugins/terrain/historic/noisePerlin.cpp
+    src/plugins/terrain/historic/noiseSimplex.cpp
     src/plugins/terrain/generatorLua.cpp
     src/plugins/terrain/generator.cpp
     src/plugins/plugins.cpp

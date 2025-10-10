@@ -10,7 +10,7 @@
 #include "world.h"
 #include "generatorVersionCheck.h"
 #include "historic/javaRandom.h"
-#include "historic/infdevoctaves.h"
+#include "historic/noiseOctaves.h"
 #include "lighting.h"
 #include "chunk.h"
 #include "PerlinNoise.hpp"
