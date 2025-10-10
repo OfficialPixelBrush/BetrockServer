@@ -27,6 +27,7 @@ double NoisePerlin::GenerateNoiseBase(double x, double y, double z) {
     z += this->zCoord;
     // The farlands are caused by this getting cast to a 32-Bit Integer.
     // Change these ints to longs to fix the farlands.
+    // TODO: Apparently not? Fix this PLEASE
     int xInt = (int)x;
     int yInt = (int)y;
     int zInt = (int)z;

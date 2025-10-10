@@ -56,7 +56,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 }
 
 void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap) {
-    uint8_t var5 = 64;
+    uint8_t waterLevel = 64;
     double var6 = 1.0D / 32.0D;
     this->sandNoise.resize(256, 0.0);
     this->gravelNoise.resize(256, 0.0);
@@ -66,65 +66,55 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
     this->gravelNoise = this->sandGravelNoise->GenerateOctaves(this->gravelNoise, (double)(cX * 16), 109.0134D, (double)(cZ * 16), 16, 1, 16, var6, 1.0D, var6);
     this->stoneNoise = this->stonePerlinNoise->GenerateOctaves(this->stoneNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, var6 * 2.0D, var6 * 2.0D, var6 * 2.0D);
 
-    for(int var8 = 0; var8 < 16; ++var8) {
-        for(int var9 = 0; var9 < 16; ++var9) {
-            Biome var10 = biomeMap[var8 + var9 * 16];
-            bool var11 = this->sandNoise[var8 + var9 * 16] + this->rand->nextDouble() * 0.2D > 0.0D;
-            bool var12 = this->gravelNoise[var8 + var9 * 16] + this->rand->nextDouble() * 0.2D > 3.0D;
-            int var13 = (int)(this->stoneNoise[var8 + var9 * 16] / 3.0D + 3.0D + this->rand->nextDouble() * 0.25D);
+    for(int x = 0; x < 16; ++x) {
+        for(int z = 0; z < 16; ++z) {
+            Biome biome = biomeMap[x + z * 16];
+            bool var11 = this->sandNoise[x + z * 16] + this->rand->nextDouble() * 0.2D > 0.0D;
+            bool var12 = this->gravelNoise[x + z * 16] + this->rand->nextDouble() * 0.2D > 3.0D;
+            int var13 = (int)(this->stoneNoise[x + z * 16] / 3.0D + 3.0D + this->rand->nextDouble() * 0.25D);
             int var14 = -1;
-            uint8_t var15 = GetTopBlock(var10);
-            uint8_t var16 = GetFillerBlock(var10);
+            uint8_t topBlock = GetTopBlock(biome);
+            uint8_t fillerBlock = GetFillerBlock(biome);
 
-            for(int var17 = 127; var17 >= 0; --var17) {
-                int blockIndex = (var9 * 16 + var8) * 128 + var17;
-                if(var17 <= 0 + this->rand->nextInt(5)) {
+            for(int y = CHUNK_HEIGHT-1; y >= 0; --y) {
+                int blockIndex = (z * CHUNK_WIDTH_Z + x) * CHUNK_HEIGHT + y;
+                if(y <= 0 + this->rand->nextInt(5)) {
                     c->blocks[blockIndex].type = (uint8_t)BLOCK_BEDROCK;
                 } else {
-                    uint8_t var19 = c->blocks[blockIndex].type;
-                    if(var19 == 0) {
+                    uint8_t currentBlock = c->blocks[blockIndex].type;
+                    if(currentBlock == 0) {
                         var14 = -1;
-                    } else if(var19 == BLOCK_STONE) {
+                    } else if(currentBlock == BLOCK_STONE) {
                         if(var14 == -1) {
                             if(var13 <= 0) {
-                                var15 = 0;
-                                var16 = (uint8_t)BLOCK_STONE;
-                            } else if(var17 >= var5 - 4 && var17 <= var5 + 1) {
-                                var15 = GetTopBlock(var10);
-                                var16 = GetFillerBlock(var10);
-                                if(var12) {
-                                    var15 = 0;
-                                }
+                                topBlock = 0;
+                                fillerBlock = (uint8_t)BLOCK_STONE;
+                            } else if(y >= waterLevel - 4 && y <= waterLevel + 1) {
+                                topBlock = GetTopBlock(biome);
+                                fillerBlock = GetFillerBlock(biome);
 
-                                if(var12) {
-                                    var16 = (uint8_t)BLOCK_GRAVEL;
-                                }
-
-                                if(var11) {
-                                    var15 = (uint8_t)BLOCK_SAND;
-                                }
-
-                                if(var11) {
-                                    var16 = (uint8_t)BLOCK_SAND;
-                                }
+                                if(var12) topBlock = 0;
+                                if(var12) fillerBlock = (uint8_t)BLOCK_GRAVEL;
+                                if(var11) topBlock = (uint8_t)BLOCK_SAND;
+                                if(var11) fillerBlock = (uint8_t)BLOCK_SAND;
                             }
 
-                            if(var17 < var5 && var15 == 0) {
-                                var15 = (uint8_t)BLOCK_WATER_STILL;
+                            if(y < waterLevel && topBlock == 0) {
+                                topBlock = (uint8_t)BLOCK_WATER_STILL;
                             }
 
                             var14 = var13;
-                            if(var17 >= var5 - 1) {
-                                c->blocks[blockIndex].type = var15;
+                            if(y >= waterLevel - 1) {
+                                c->blocks[blockIndex].type = topBlock;
                             } else {
-                                c->blocks[blockIndex].type = var16;
+                                c->blocks[blockIndex].type = fillerBlock;
                             }
                         } else if(var14 > 0) {
                             --var14;
-                            c->blocks[blockIndex].type = var16;
-                            if(var14 == 0 && var16 == BLOCK_SAND) {
+                            c->blocks[blockIndex].type = fillerBlock;
+                            if(var14 == 0 && fillerBlock == BLOCK_SAND) {
                                 var14 = this->rand->nextInt(4);
-                                var16 = (uint8_t)BLOCK_SANDSTONE;
+                                fillerBlock = (uint8_t)BLOCK_SANDSTONE;
                             }
                         }
                     }
@@ -135,7 +125,7 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
 
 }
 
-void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap, std::vector<double>& temperature) {//, BiomeGenBase[] var4, double[] var5) {
+void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap, std::vector<double>& temperature) {//, BiomeGenBase[] var4, double[] waterLevel) {
     uint8_t waterLevel = 64;
     int xMax = 4 + 1;
     uint8_t yMax = 16 + 1;
@@ -170,13 +160,13 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
                         short worldHeight = 128;
                         double var46 = 0.25D;
                         double var48 = var35;
-                        double var50 = (var37 - var35) * var46;
+                        double waterLevel0 = (var37 - var35) * var46;
 
                         for(int subZ = 0; subZ < 4; ++subZ) {
-                            double var53 = temperature[(macroX * 4 + subX) * 16 + macroZ * 4 + subZ];
+                            double waterLevel3 = temperature[(macroX * 4 + subX) * 16 + macroZ * 4 + subZ];
                             int blockType = 0;
                             if(macroY * 8 + subY < waterLevel) {
-                                if(var53 < 0.5D && macroY * 8 + subY >= waterLevel - 1) {
+                                if(waterLevel3 < 0.5D && macroY * 8 + subY >= waterLevel - 1) {
                                     blockType = BLOCK_ICE;
                                 } else {
                                     blockType = BLOCK_WATER_STILL;
@@ -189,7 +179,7 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
                             
                             c->blocks[blockIndex].type = (uint8_t)blockType;
                             blockIndex += worldHeight;
-                            var48 += var50;
+                            var48 += waterLevel0;
                         }
 
                         var35 += var39;
@@ -218,13 +208,13 @@ std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(std::vector<Biome> biomeMa
 
     for(int iX = 0; iX < xMax; ++iX) {
         for(int iZ = 0; iZ < zMax; ++iZ) {
-            double var9 = this->otherBiomeThing[index] * 1.1D + 0.5D;
+            double z = this->otherBiomeThing[index] * 1.1D + 0.5D;
             double var11 = 0.01D;
             double var13 = 1.0D - var11;
-            double temp = (this->temperature[index] * 0.15D + 0.7D) * var13 + var9 * var11;
+            double temp = (this->temperature[index] * 0.15D + 0.7D) * var13 + z * var11;
             var11 = 0.002D;
             var13 = 1.0D - var11;
-            double humi = (this->humidity[index] * 0.15D + 0.5D) * var13 + var9 * var11;
+            double humi = (this->humidity[index] * 0.15D + 0.5D) * var13 + z * var11;
             temp = 1.0D - (1.0D - temp) * (1.0D - temp);
             // Limit values to 0.0 - 1.0
             if(temp < 0.0D) temp = 0.0D;

@@ -2,14 +2,14 @@
 
 
 uint8_t GetTopBlock(Biome biome) {
-    if (biome == BIOME_DESERT) {
+    if (biome == BIOME_DESERT || biome == BIOME_ICEDESERT) {
         return BLOCK_SAND;
     }
     return BLOCK_GRASS;
 }
 
 uint8_t GetFillerBlock(Biome biome) {
-    if (biome == BIOME_ICEDESERT) {
+    if (biome == BIOME_DESERT || biome == BIOME_ICEDESERT) {
         return BLOCK_SAND;
     }
     return BLOCK_DIRT;
