@@ -3,14 +3,14 @@
 class GeneratorBeta173 : public Generator {
     private:
         std::unique_ptr<JavaRandom> rand;
-        std::unique_ptr<InfdevOctaves> noiseGen1;
-        std::unique_ptr<InfdevOctaves> noiseGen2;
-        std::unique_ptr<InfdevOctaves> noiseGen3;
-        std::unique_ptr<InfdevOctaves> noiseGen4;
-        std::unique_ptr<InfdevOctaves> noiseGen5;
-        std::unique_ptr<InfdevOctaves> noiseGen6;
-        std::unique_ptr<InfdevOctaves> noiseGen7;
-        std::unique_ptr<InfdevOctaves> mobSpawnerNoise;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen1;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen2;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen3;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen4;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen5;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen6;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen7;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> mobSpawnerNoise;
         void GenerateTerrain(int cX, int cY, std::unique_ptr<Chunk>& c, std::vector<double>& temperature);
         std::vector<double> GenerateTerrainNoise(std::vector<double> var1, int var2, int var3, int var4, int var5, int var6, int var7);
         std::vector<double> field_4224_q;

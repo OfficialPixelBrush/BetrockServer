@@ -6,14 +6,14 @@ GeneratorBeta173::GeneratorBeta173(int64_t seed, World* world) : Generator(seed,
     this->world = world;
 
     rand = std::make_unique<JavaRandom>(this->seed);
-    noiseGen1 = std::make_unique<InfdevOctaves>(rand.get(), 16);
-    noiseGen2 = std::make_unique<InfdevOctaves>(rand.get(), 16);
-    noiseGen3 = std::make_unique<InfdevOctaves>(rand.get(), 8);
-    noiseGen4 = std::make_unique<InfdevOctaves>(rand.get(), 4);
-    noiseGen5 = std::make_unique<InfdevOctaves>(rand.get(), 4);
-    noiseGen6 = std::make_unique<InfdevOctaves>(rand.get(), 10);
-    noiseGen7 = std::make_unique<InfdevOctaves>(rand.get(), 16);
-    mobSpawnerNoise = std::make_unique<InfdevOctaves>(rand.get(), 8);
+    noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    noiseGen2 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    noiseGen3 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
+    noiseGen4 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
+    noiseGen5 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
+    noiseGen6 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 10);
+    noiseGen7 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    mobSpawnerNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
 }
 
 std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
@@ -120,11 +120,11 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> v
     //double[] var12 = this->worldObj.getWorldChunkManager().temperature;
     //double[] var13 = this->worldObj.getWorldChunkManager().humidity;
     // This is some different noise generator
-    this->field_4226_g = this->noiseGen6->func_4103_a(this->field_4226_g, var2, var4, var5, var7, 1.121D, 1.121D, 0.5D);
-    this->field_4225_h = this->noiseGen7->func_4103_a(this->field_4225_h, var2, var4, var5, var7, 200.0D, 200.0D, 0.5D);
-    this->field_4229_d = this->noiseGen3->generateNoiseOctaves(this->field_4229_d, (double)var2, (double)var3, (double)var4, var5, var6, var7, var8 / 80.0D, var10 / 160.0D, var8 / 80.0D);
-    this->field_4228_e = this->noiseGen1->generateNoiseOctaves(this->field_4228_e, (double)var2, (double)var3, (double)var4, var5, var6, var7, var8, var10, var8);
-    this->field_4227_f = this->noiseGen2->generateNoiseOctaves(this->field_4227_f, (double)var2, (double)var3, (double)var4, var5, var6, var7, var8, var10, var8);
+    this->field_4226_g = this->noiseGen6->GenerateOctaves(this->field_4226_g, var2, var4, var5, var7, 1.121D, 1.121D, 0.5D);
+    this->field_4225_h = this->noiseGen7->GenerateOctaves(this->field_4225_h, var2, var4, var5, var7, 200.0D, 200.0D, 0.5D);
+    this->field_4229_d = this->noiseGen3->GenerateOctaves(this->field_4229_d, (double)var2, (double)var3, (double)var4, var5, var6, var7, var8 / 80.0D, var10 / 160.0D, var8 / 80.0D);
+    this->field_4228_e = this->noiseGen1->GenerateOctaves(this->field_4228_e, (double)var2, (double)var3, (double)var4, var5, var6, var7, var8, var10, var8);
+    this->field_4227_f = this->noiseGen2->GenerateOctaves(this->field_4227_f, (double)var2, (double)var3, (double)var4, var5, var6, var7, var8, var10, var8);
     int var14 = 0;
     int var15 = 0;
     int var16 = 16 / var5;

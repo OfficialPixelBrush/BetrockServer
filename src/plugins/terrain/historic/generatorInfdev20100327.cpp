@@ -6,13 +6,13 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t seed, World* world) : G
     this->world = world;
 
     rand = std::make_unique<JavaRandom>(this->seed);
-    noiseGen1 = std::make_unique<InfdevOctaves>(rand.get(), 16);
-    noiseGen2 = std::make_unique<InfdevOctaves>(rand.get(), 16);
-    noiseGen3 = std::make_unique<InfdevOctaves>(rand.get(), 8);
-    noiseGen4 = std::make_unique<InfdevOctaves>(rand.get(), 4);
-    noiseGen5 = std::make_unique<InfdevOctaves>(rand.get(), 4);
-    noiseGen6 = std::make_unique<InfdevOctaves>(rand.get(), 5);
-    mobSpawnerNoise = std::make_unique<InfdevOctaves>(rand.get(), 5);
+    noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    noiseGen2 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    noiseGen3 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
+    noiseGen4 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
+    noiseGen5 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
+    noiseGen6 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 5);
+    mobSpawnerNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 5);
 }
 
 std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
@@ -120,11 +120,11 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
         var7 *= 3.0D;
     }
 
-    double var9 = this->noiseGen3->generateNoiseOctaves(var1 * 684.412D / 80.0D, var3 * 684.412D / 400.0D, var5 * 684.412D / 80.0D) / 2.0D;
+    double var9 = this->noiseGen3->GenerateOctaves(var1 * 684.412D / 80.0D, var3 * 684.412D / 400.0D, var5 * 684.412D / 80.0D) / 2.0D;
     double var11;
     double var13;
     if(var9 < -1.0D) {
-        var11 = this->noiseGen1->generateNoiseOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D;
+        var11 = this->noiseGen1->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D;
         var13 = var11 - var7;
         if(var13 < -10.0D) {
             var13 = -10.0D;
@@ -134,7 +134,7 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
             var13 = 10.0D;
         }
     } else if(var9 > 1.0D) {
-        var11 = this->noiseGen2->generateNoiseOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D;
+        var11 = this->noiseGen2->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D;
         var13 = var11 - var7;
         if(var13 < -10.0D) {
             var13 = -10.0D;
@@ -144,8 +144,8 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
             var13 = 10.0D;
         }
     } else {
-        double var15 = this->noiseGen1->generateNoiseOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D - var7;
-        double var17 = this->noiseGen2->generateNoiseOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D - var7;
+        double var15 = this->noiseGen1->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D - var7;
+        double var17 = this->noiseGen2->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D - var7;
         if(var15 < -10.0D) {
             var15 = -10.0D;
         }
@@ -243,7 +243,7 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 		WorldGenMinableGenerate(BLOCK_ORE_DIAMOND, this->world, this->rand.get(), cZ, oreZ, oreY);
 	}
 
-	cZ = (int)this->mobSpawnerNoise->noiseGenerator((double)chunkZOffset * 0.25D, (double)cX * 0.25D) << 3;
+	cZ = (int)this->mobSpawnerNoise->GenerateOctaves((double)chunkZOffset * 0.25D, (double)cX * 0.25D) << 3;
 
 	for(oreZ = 0; oreZ < cZ; ++oreZ) {
 		oreY = chunkZOffset + this->rand->nextInt(16);

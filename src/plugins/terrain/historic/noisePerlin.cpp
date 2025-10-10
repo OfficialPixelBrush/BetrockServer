@@ -1,9 +1,9 @@
-#include "infdevperlin.h"
+#include "noisePerlin.h"
 
-InfdevPerlin::InfdevPerlin()
-    : InfdevPerlin(new JavaRandom()) {}
+NoisePerlin::NoisePerlin()
+    : NoisePerlin(new JavaRandom()) {}
 
-InfdevPerlin::InfdevPerlin(JavaRandom* rand) {
+NoisePerlin::NoisePerlin(JavaRandom* rand) {
     this->xCoord = rand->nextDouble() * 256.0D;
     this->yCoord = rand->nextDouble() * 256.0D;
     this->zCoord = rand->nextDouble() * 256.0D;
@@ -21,7 +21,7 @@ InfdevPerlin::InfdevPerlin(JavaRandom* rand) {
 
 // This is a rather standard implementation of "Improved Perlin Noise",
 // as described by Ken Perlin in 2002
-double InfdevPerlin::generateNoise(double x, double y, double z) {
+double NoisePerlin::GenerateNoiseBase(double x, double y, double z) {
     x += this->xCoord;
     y += this->yCoord;
     z += this->zCoord;
@@ -73,15 +73,15 @@ double InfdevPerlin::generateNoise(double x, double y, double z) {
     );
 }
 
-double InfdevPerlin::generateNoise(double x, double y) {
-    return this->generateNoise(x, y, 0.0D);
+double NoisePerlin::GenerateNoise(double x, double y) {
+    return this->GenerateNoiseBase(x, y, 0.0D);
 }
 
-double InfdevPerlin::generateNoiseD(double x, double y, double z) {
-    return this->generateNoise(x, y, z);
+double NoisePerlin::GenerateNoise(double x, double y, double z) {
+    return this->GenerateNoiseBase(x, y, z);
 }
 
-void InfdevPerlin::func_646_a(std::vector<double>& var1, double var2, double var4, double var6, int var8, int var9, int var10, double var11, double var13, double var15, double var17) {
+void NoisePerlin::GenerateNoise(std::vector<double>& var1, double var2, double var4, double var6, int var8, int var9, int var10, double var11, double var13, double var15, double var17) {
     int var10001;
     int var19;
     int var22;
