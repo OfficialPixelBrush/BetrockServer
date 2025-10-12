@@ -10,20 +10,20 @@ GeneratorBeta173::GeneratorBeta173(int64_t seed, World* world) : Generator(seed,
     // Init Terrain Noise
     lowNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
     highNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-    noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
+    selectorNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
     sandGravelNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
     stonePerlinNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
-    noiseGen2 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 10);
-    noiseGen3 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 10);
+    depthNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
     mobSpawnerNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
 
     // Init Biome Noise
     std::unique_ptr<JavaRandom> rand1 = std::make_unique<JavaRandom>(this->seed * 9871L);
-    noiseSimplex1 = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand1.get(), 4);
+    temperatureNoise = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand1.get(), 4);
     std::unique_ptr<JavaRandom> rand2 = std::make_unique<JavaRandom>(this->seed * 39811L);
-    noiseSimplex2 = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand2.get(), 4);
+    humidityNoise = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand2.get(), 4);
     std::unique_ptr<JavaRandom> rand3 = std::make_unique<JavaRandom>(this->seed * 543321L);
-    noiseSimplex3 = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand3.get(), 2);
+    noiseSimplex1 = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand3.get(), 2);
 }
 
 std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
@@ -57,14 +57,14 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 
 void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap) {
     uint8_t waterLevel = 64;
-    double var6 = 1.0D / 32.0D;
+    double oneThirtySecond = 1.0D / 32.0D;
     this->sandNoise.resize(256, 0.0);
     this->gravelNoise.resize(256, 0.0);
     this->stoneNoise.resize(256, 0.0);
 
-    this->sandNoise = this->sandGravelNoise->GenerateOctaves(this->sandNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, var6, var6, 1.0D);
-    this->gravelNoise = this->sandGravelNoise->GenerateOctaves(this->gravelNoise, (double)(cX * 16), 109.0134D, (double)(cZ * 16), 16, 1, 16, var6, 1.0D, var6);
-    this->stoneNoise = this->stonePerlinNoise->GenerateOctaves(this->stoneNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, var6 * 2.0D, var6 * 2.0D, var6 * 2.0D);
+    this->sandNoise = this->sandGravelNoise->GenerateOctaves(this->sandNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, oneThirtySecond, oneThirtySecond, 1.0D);
+    this->gravelNoise = this->sandGravelNoise->GenerateOctaves(this->gravelNoise, (double)(cX * 16), 109.0134D, (double)(cZ * 16), 16, 1, 16, oneThirtySecond, 1.0D, oneThirtySecond);
+    this->stoneNoise = this->stonePerlinNoise->GenerateOctaves(this->stoneNoise, (double)(cX * 16), (double)(cZ * 16), 0.0D, 16, 16, 1, oneThirtySecond * 2.0D, oneThirtySecond * 2.0D, oneThirtySecond * 2.0D);
 
     for(int x = 0; x < 16; ++x) {
         for(int z = 0; z < 16; ++z) {
@@ -132,20 +132,20 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
     int zMax = 4 + 1;
     
     // Terrain noise is interpolated and only sampled every 4 blocks
-    this->terrainNoise = this->GenerateTerrainNoise(this->terrainNoise, cX * 4, 0, cZ * 4, xMax, yMax, zMax);
+    this->terrainNoiseField = this->GenerateTerrainNoise(this->terrainNoiseField, cX * 4, 0, cZ * 4, xMax, yMax, zMax);
 
     for(int macroX = 0; macroX < 4; ++macroX) {
         for(int macroZ = 0; macroZ < 4; ++macroZ) {
             for(int macroY = 0; macroY < 16; ++macroY) {
                 double eigthScaler = 0.125D;
-                double xIndex =  this->terrainNoise[((macroX + 0) * zMax + macroZ + 0) * yMax + macroY + 0];
-                double var18 =  this->terrainNoise[((macroX + 0) * zMax + macroZ + 1) * yMax + macroY + 0];
-                double var20 =  this->terrainNoise[((macroX + 1) * zMax + macroZ + 0) * yMax + macroY + 0];
-                double var22 =  this->terrainNoise[((macroX + 1) * zMax + macroZ + 1) * yMax + macroY + 0];
-                double var24 = (this->terrainNoise[((macroX + 0) * zMax + macroZ + 0) * yMax + macroY + 1] - xIndex) * eigthScaler;
-                double var26 = (this->terrainNoise[((macroX + 0) * zMax + macroZ + 1) * yMax + macroY + 1] - var18) * eigthScaler;
-                double var28 = (this->terrainNoise[((macroX + 1) * zMax + macroZ + 0) * yMax + macroY + 1] - var20) * eigthScaler;
-                double var30 = (this->terrainNoise[((macroX + 1) * zMax + macroZ + 1) * yMax + macroY + 1] - var22) * eigthScaler;
+                double xIndex =  this->terrainNoiseField[((macroX + 0) * zMax + macroZ + 0) * yMax + macroY + 0];
+                double var18 =  this->terrainNoiseField[((macroX + 0) * zMax + macroZ + 1) * yMax + macroY + 0];
+                double var20 =  this->terrainNoiseField[((macroX + 1) * zMax + macroZ + 0) * yMax + macroY + 0];
+                double var22 =  this->terrainNoiseField[((macroX + 1) * zMax + macroZ + 1) * yMax + macroY + 0];
+                double var24 = (this->terrainNoiseField[((macroX + 0) * zMax + macroZ + 0) * yMax + macroY + 1] - xIndex) * eigthScaler;
+                double var26 = (this->terrainNoiseField[((macroX + 0) * zMax + macroZ + 1) * yMax + macroY + 1] - var18) * eigthScaler;
+                double var28 = (this->terrainNoiseField[((macroX + 1) * zMax + macroZ + 0) * yMax + macroY + 1] - var20) * eigthScaler;
+                double var30 = (this->terrainNoiseField[((macroX + 1) * zMax + macroZ + 1) * yMax + macroY + 1] - var22) * eigthScaler;
 
                 // Interpolate the 1/4th scale noise
                 for(int subY = 0; subY < 8; ++subY) {
@@ -201,9 +201,9 @@ std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(std::vector<Biome> biomeMa
         biomeMap.resize(xMax * zMax, BIOME_NONE);
     }
 
-    this->temperature = this->noiseSimplex1->GenerateOctaves(this->temperature, (double)x, (double)z, xMax, zMax, (double)0.025F, (double)0.025F, 0.25D);
-    this->humidity = this->noiseSimplex2->GenerateOctaves(this->humidity, (double)x, (double)z, xMax, zMax, (double)0.05F, (double)0.05F, 1.0D / 3.0D);
-    this->otherBiomeThing = this->noiseSimplex3->GenerateOctaves(this->otherBiomeThing, (double)x, (double)z, xMax, zMax, 0.25D, 0.25D, 0.5882352941176471D);
+    this->temperature = this->temperatureNoise->GenerateOctaves(this->temperature, (double)x, (double)z, xMax, zMax, (double)0.025F, (double)0.025F, 0.25D);
+    this->humidity = this->humidityNoise->GenerateOctaves(this->humidity, (double)x, (double)z, xMax, zMax, (double)0.05F, (double)0.05F, 1.0D / 3.0D);
+    this->otherBiomeThing = this->noiseSimplex1->GenerateOctaves(this->otherBiomeThing, (double)x, (double)z, xMax, zMax, 0.25D, 0.25D, 0.5882352941176471D);
     int index = 0;
 
     for(int iX = 0; iX < xMax; ++iX) {
@@ -243,11 +243,11 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
     std::vector<double> var13 = this->humidity;
     
     // We do this to need to generate noise as often
-    this->noiseField1 = this->noiseGen2->GenerateOctaves(this->noiseField1, cX, cZ, xMax, zMax, 1.121D, 1.121D, 0.5D);
-    this->noiseField2 = this->noiseGen3->GenerateOctaves(this->noiseField2, cX, cZ, xMax, zMax, 200.0D, 200.0D, 0.5D);
-    this->noiseField3 = this->noiseGen1->GenerateOctaves(this->noiseField3, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale / 80.0D, vertScale / 160.0D, horiScale / 80.0D);
-    this->noiseField4 = this->lowNoise->GenerateOctaves(this->noiseField4, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
-    this->noiseField5 = this->highNoise->GenerateOctaves(this->noiseField5, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
+    this->noiseField1 = this->noiseGen1->GenerateOctaves(this->noiseField1, cX, cZ, xMax, zMax, 1.121D, 1.121D, 0.5D);
+    this->depthNoiseField = this->depthNoise->GenerateOctaves(this->depthNoiseField, cX, cZ, xMax, zMax, 200.0D, 200.0D, 0.5D);
+    this->selectorNoiseField = this->selectorNoise->GenerateOctaves(this->selectorNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale / 80.0D, vertScale / 160.0D, horiScale / 80.0D);
+    this->lowNoiseField = this->lowNoise->GenerateOctaves(this->lowNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
+    this->highNoiseField = this->highNoise->GenerateOctaves(this->highNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
     int yIndex = 0;
     int zIndex = 0;
     int xIndex = 16 / xMax;
@@ -269,7 +269,7 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
                 var27 = 1.0D;
             }
 
-            double var29 = this->noiseField2[zIndex] / 8000.0D;
+            double var29 = this->depthNoiseField[zIndex] / 8000.0D;
             if(var29 < 0.0D) {
                 var29 = -var29 * 0.3D;
             }
@@ -308,9 +308,9 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
                     var36 *= 4.0D;
                 }
 
-                double var38 = this->noiseField4[yIndex] / 512.0D;
-                double var40 = this->noiseField5[yIndex] / 512.0D;
-                double var42 = (this->noiseField3[yIndex] / 10.0D + 1.0D) / 2.0D;
+                double var38 = this->lowNoiseField[yIndex] / 512.0D;
+                double var40 = this->highNoiseField[yIndex] / 512.0D;
+                double var42 = (this->selectorNoiseField[yIndex] / 10.0D + 1.0D) / 2.0D;
                 if(var42 < 0.0D) {
                     var34 = var38;
                 } else if(var42 > 1.0D) {

@@ -7,25 +7,25 @@ class GeneratorBeta173 : public Generator {
         // Perlin Noise Generators
         std::unique_ptr<NoiseOctaves<NoisePerlin>> lowNoise;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> highNoise;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen1;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen2;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen3;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> selectorNoise;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> sandGravelNoise;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> stonePerlinNoise;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen1;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> depthNoise;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> mobSpawnerNoise;
 
         // Simplex Noise Generators
+        std::unique_ptr<NoiseOctaves<NoiseSimplex>> temperatureNoise;
+        std::unique_ptr<NoiseOctaves<NoiseSimplex>> humidityNoise;
         std::unique_ptr<NoiseOctaves<NoiseSimplex>> noiseSimplex1;
-        std::unique_ptr<NoiseOctaves<NoiseSimplex>> noiseSimplex2;
-        std::unique_ptr<NoiseOctaves<NoiseSimplex>> noiseSimplex3;
 
-        // Stored noise
-        std::vector<double> terrainNoise;
+        // Stored noise Fields
+        std::vector<double> terrainNoiseField;
+        std::vector<double> lowNoiseField;
+        std::vector<double> highNoiseField;
+        std::vector<double> selectorNoiseField;
         std::vector<double> noiseField1;
-        std::vector<double> noiseField2;
-        std::vector<double> noiseField3;
-        std::vector<double> noiseField4;
-        std::vector<double> noiseField5;
+        std::vector<double> depthNoiseField;
 
         std::vector<double> sandNoise;
         std::vector<double> gravelNoise;
