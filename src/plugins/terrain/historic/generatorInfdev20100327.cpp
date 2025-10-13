@@ -20,60 +20,57 @@ std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
     this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
     std::memset(c->blocks, 0, sizeof(c->blocks));
 
-    int var5;
-    int var6;
-    int var8;
-    int var9;
-    for(var5 = 0; var5 < 4; ++var5) {
-        for(var6 = 0; var6 < 4; ++var6) {
+    // Terrain shape generation
+    for(int macroX = 0; macroX < 4; ++macroX) {
+        for(int macroZ = 0; macroZ < 4; ++macroZ) {
             double var7[33][4];
-            var8 = (cX << 2) + var5;
-            var9 = (cZ << 2) + var6;
+            int macroY = (cX << 2) + macroX;
+            int blockY = (cZ << 2) + macroZ;
 
             // 33 == size of var7's first
             for(int var10 = 0; var10 < 33; ++var10) {
-                var7[var10][0] = this->InitializeNoiseField((double)var8, (double)var10, (double)var9);
-                var7[var10][1] = this->InitializeNoiseField((double)var8, (double)var10, (double)(var9 + 1));
-                var7[var10][2] = this->InitializeNoiseField((double)(var8 + 1), (double)var10, (double)var9);
-                var7[var10][3] = this->InitializeNoiseField((double)(var8 + 1), (double)var10, (double)(var9 + 1));
+                var7[var10][0] = this->InitializeNoiseField((double)macroY, (double)var10, (double)blockY);
+                var7[var10][1] = this->InitializeNoiseField((double)macroY, (double)var10, (double)(blockY + 1));
+                var7[var10][2] = this->InitializeNoiseField((double)(macroY + 1), (double)var10, (double)blockY);
+                var7[var10][3] = this->InitializeNoiseField((double)(macroY + 1), (double)var10, (double)(blockY + 1));
             }
 
-            for(var8 = 0; var8 < 32; ++var8) {
-                double var50 = var7[var8][0];
-                double var11 = var7[var8][1];
-                double var13 = var7[var8][2];
-                double var15 = var7[var8][3];
-                double var17 = var7[var8 + 1][0];
-                double var19 = var7[var8 + 1][1];
-                double var21 = var7[var8 + 1][2];
-                double var23 = var7[var8 + 1][3];
+            for(macroY = 0; macroY < 32; ++macroY) {
+                double macroX0 = var7[macroY][0];
+                double var11 = var7[macroY][1];
+                double var13 = var7[macroY][2];
+                double var15 = var7[macroY][3];
+                double var17 = var7[macroY + 1][0];
+                double var19 = var7[macroY + 1][1];
+                double var21 = var7[macroY + 1][2];
+                double var23 = var7[macroY + 1][3];
 
                 for(int var25 = 0; var25 < 4; ++var25) {
                     double var26 = (double)var25 / 4.0D;
-                    double var28 = var50 + (var17 - var50) * var26;
+                    double var28 = macroX0 + (var17 - macroX0) * var26;
                     double var30 = var11 + (var19 - var11) * var26;
                     double var32 = var13 + (var21 - var13) * var26;
                     double var34 = var15 + (var23 - var15) * var26;
-                    for(int var51 = 0; var51 < 4; ++var51) {
-                        double var37 = (double)var51 / 4.0D;
+                    for(int macroX1 = 0; macroX1 < 4; ++macroX1) {
+                        double var37 = (double)macroX1 / 4.0D;
                         double var39 = var28 + (var32 - var28) * var37;
                         double var41 = var30 + (var34 - var30) * var37;
-                        int var27 = var51 + (var5 << 2) << 11 | 0 + (var6 << 2) << 7 | (var8 << 2) + var25;
+                        int blockIndex = macroX1 + (macroX << 2) << 11 | 0 + (macroZ << 2) << 7 | (macroY << 2) + var25;
 
                         for(int var36 = 0; var36 < 4; ++var36) {
                             double var45 = (double)var36 / 4.0D;
-                            double var47 = var39 + (var41 - var39) * var45;
-                            int var52 = 0;
-                            if((var8 << 2) + var25 < 64) {
-                                var52 = BLOCK_WATER_STILL;
+                            double terrainDensity = var39 + (var41 - var39) * var45;
+                            int blockType = BLOCK_AIR;
+                            if((macroY << 2) + var25 < WATER_LEVEL) {
+                                blockType = BLOCK_WATER_STILL;
                             }
 
-                            if(var47 > 0.0D) {
-                                var52 = BLOCK_STONE;
+                            if(terrainDensity > 0.0D) {
+                                blockType = BLOCK_STONE;
                             }
 
-                            c->blocks[var27].type = (char)var52;
-                            var27 += 128;
+                            c->blocks[blockIndex].type = (char)blockType;
+                            blockIndex += CHUNK_HEIGHT;
                         }
                     }
                 }
@@ -81,29 +78,30 @@ std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
         }
     }
 
-    for(var5 = 0; var5 < 16; ++var5) {
-        for(var6 = 0; var6 < 16; ++var6) {
-            int var49 = var5 << 11 | var6 << 7 | 127;
-            var8 = -1;
+    // "Biome" blocks
+    for(int blockX = 0; blockX < CHUNK_WIDTH_X; ++blockX) {
+        for(int blockZ = 0; blockZ < CHUNK_WIDTH_Z; ++blockZ) {
+            int blockIndex = blockX << 11 | blockZ << 7 | 127;
+            int depth = -1;
 
-            for(var9 = 127; var9 >= 0; --var9) {
-                if(c->blocks[var49].type == BLOCK_AIR) {
-                    var8 = -1;
-                } else if(c->blocks[var49].type == BLOCK_STONE) {
-                    if(var8 == -1) {
-                        var8 = 3;
-                        if(var9 >= 63) {
-                            c->blocks[var49].type = BLOCK_GRASS;
+            for(int blockY = CHUNK_HEIGHT-1; blockY >= 0; --blockY) {
+                if(c->blocks[blockIndex].type == BLOCK_AIR) {
+                    depth = -1;
+                } else if(c->blocks[blockIndex].type == BLOCK_STONE) {
+                    if(depth == -1) {
+                        depth = 3;
+                        if(blockY >= WATER_LEVEL-1) {
+                            c->blocks[blockIndex].type = BLOCK_GRASS;
                         } else {
-                            c->blocks[var49].type = BLOCK_DIRT;
+                            c->blocks[blockIndex].type = BLOCK_DIRT;
                         }
-                    } else if(var8 > 0) {
-                        --var8;
-                        c->blocks[var49].type = BLOCK_DIRT;
+                    } else if(depth > 0) {
+                        --depth;
+                        c->blocks[blockIndex].type = BLOCK_DIRT;
                     }
                 }
 
-                --var49;
+                --blockIndex;
             }
         }
     }
@@ -114,17 +112,17 @@ std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
     return c;
 }
 
-double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, double var5) {
+double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, double macroX) {
     double var7 = var3 * 4.0D - 64.0D;
     if(var7 < 0.0D) {
         var7 *= 3.0D;
     }
 
-    double var9 = this->noiseGen3->GenerateOctaves(var1 * 684.412D / 80.0D, var3 * 684.412D / 400.0D, var5 * 684.412D / 80.0D) / 2.0D;
+    double blockY = this->noiseGen3->GenerateOctaves(var1 * 684.412D / 80.0D, var3 * 684.412D / 400.0D, macroX * 684.412D / 80.0D) / 2.0D;
     double var11;
     double var13;
-    if(var9 < -1.0D) {
-        var11 = this->noiseGen1->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D;
+    if(blockY < -1.0D) {
+        var11 = this->noiseGen1->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, macroX * 684.412D) / 512.0D;
         var13 = var11 - var7;
         if(var13 < -10.0D) {
             var13 = -10.0D;
@@ -133,8 +131,8 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
         if(var13 > 10.0D) {
             var13 = 10.0D;
         }
-    } else if(var9 > 1.0D) {
-        var11 = this->noiseGen2->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D;
+    } else if(blockY > 1.0D) {
+        var11 = this->noiseGen2->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, macroX * 684.412D) / 512.0D;
         var13 = var11 - var7;
         if(var13 < -10.0D) {
             var13 = -10.0D;
@@ -144,8 +142,8 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
             var13 = 10.0D;
         }
     } else {
-        double var15 = this->noiseGen1->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D - var7;
-        double var17 = this->noiseGen2->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, var5 * 684.412D) / 512.0D - var7;
+        double var15 = this->noiseGen1->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, macroX * 684.412D) / 512.0D - var7;
+        double var17 = this->noiseGen2->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, macroX * 684.412D) / 512.0D - var7;
         if(var15 < -10.0D) {
             var15 = -10.0D;
         }
@@ -162,7 +160,7 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
             var17 = 10.0D;
         }
 
-        double var19 = (var9 + 1.0D) / 2.0D;
+        double var19 = (blockY + 1.0D) / 2.0D;
         var11 = var15 + (var17 - var15) * var19;
         var13 = var11;
     }
@@ -170,17 +168,17 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
     return var13;
 }
 
-bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* world, JavaRandom* rand, int var3, int var4, int var5) {
-    float var6 = rand->nextFloat() * (float)M_PI;
-    double var7 = (double)((float)(var3 + 8) + std::sin(var6) * 2.0F);
-    double var9 = (double)((float)(var3 + 8) - std::sin(var6) * 2.0F);
-    double world1 = (double)((float)(var5 + 8) + std::cos(var6) * 2.0F);
-    double world3 = (double)((float)(var5 + 8) - std::cos(var6) * 2.0F);
+bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* world, JavaRandom* rand, int var3, int var4, int macroX) {
+    float macroZ = rand->nextFloat() * (float)M_PI;
+    double var7 = (double)((float)(var3 + 8) + std::sin(macroZ) * 2.0F);
+    double blockY = (double)((float)(var3 + 8) - std::sin(macroZ) * 2.0F);
+    double world1 = (double)((float)(macroX + 8) + std::cos(macroZ) * 2.0F);
+    double world3 = (double)((float)(macroX + 8) - std::cos(macroZ) * 2.0F);
     double world5 = (double)(var4 + rand->nextInt(3) + 2);
     double world7 = (double)(var4 + rand->nextInt(3) + 2);
 
     for(var3 = 0; var3 <= 16; ++var3) {
-        double rand0 = var7 + (var9 - var7) * (double)var3 / 16.0D;
+        double rand0 = var7 + (blockY - var7) * (double)var3 / 16.0D;
         double rand2 = world5 + (world7 - world5) * (double)var3 / 16.0D;
         double rand4 = world1 + (world3 - world1) * (double)var3 / 16.0D;
         double rand6 = rand->nextDouble();
@@ -188,12 +186,12 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* worl
         double var30 = (double)(std::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
 
         for(var4 = (int)(rand0 - rand8 / 2.0D); var4 <= (int)(rand0 + rand8 / 2.0D); ++var4) {
-            for(var5 = (int)(rand2 - var30 / 2.0D); var5 <= (int)(rand2 + var30 / 2.0D); ++var5) {
+            for(macroX = (int)(rand2 - var30 / 2.0D); macroX <= (int)(rand2 + var30 / 2.0D); ++macroX) {
                 for(int var41 = (int)(rand4 - rand8 / 2.0D); var41 <= (int)(rand4 + rand8 / 2.0D); ++var41) {
                     double var35 = ((double)var4 + 0.5D - rand0) / (rand8 / 2.0D);
-                    double var37 = ((double)var5 + 0.5D - rand2) / (var30 / 2.0D);
+                    double var37 = ((double)macroX + 0.5D - rand2) / (var30 / 2.0D);
                     double var39 = ((double)var41 + 0.5D - rand4) / (rand8 / 2.0D);
-                    Block* b = world->GetBlock(Int3{var4, var5, var41});
+                    Block* b = world->GetBlock(Int3{var4, macroX, var41});
                     if (!b) continue;
                     if(var35 * var35 + var37 * var37 + var39 * var39 < 1.0D && b->type == BLOCK_STONE) {
                         b->type = blockType;
@@ -251,11 +249,11 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 		//new WorldGenTrees();
 		int heightValue = this->world->GetHeightValue(oreY, oreX);
 		int var7 = oreY + 2;
-		int var9 = oreX + 2;
+		int blockY = oreX + 2;
 		int var10 = this->rand->nextInt(3) + 4;
 		bool canPlaceTree = true;
 		bool cX3;
-		if(heightValue > 0 && heightValue + var10 + 1 <= 128) {
+		if(heightValue > 0 && heightValue + var10 + 1 <= CHUNK_HEIGHT) {
 			int treeY;
 			int var14;
 			int var15;
@@ -271,8 +269,8 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 				}
 
 				for(var14 = var7 - var13; var14 <= var7 + var13 && canPlaceTree; ++var14) {
-					for(var15 = var9 - var13; var15 <= var9 + var13 && canPlaceTree; ++var15) {
-						if(treeY >= 0 && treeY < 128) {
+					for(var15 = blockY - var13; var15 <= blockY + var13 && canPlaceTree; ++var15) {
+						if(treeY >= 0 && treeY < CHUNK_HEIGHT) {
 							if(world->GetBlockType(Int3{var14, treeY, var15}) != 0) {
 								canPlaceTree = false;
 							}
@@ -286,10 +284,10 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 			if(!canPlaceTree) {
 				cX3 = false;
 			} else {
-                Block* b = world->GetBlock(Int3{var7, heightValue - 1, var9});
+                Block* b = world->GetBlock(Int3{var7, heightValue - 1, blockY});
                 if (!b) break;
 				treeY = b->type;
-				if((treeY == BLOCK_GRASS || treeY == BLOCK_DIRT) && heightValue < 128 - var10 - 1) {
+				if((treeY == BLOCK_GRASS || treeY == BLOCK_DIRT) && heightValue < CHUNK_HEIGHT - var10 - 1) {
 				    b->type = BLOCK_DIRT;
 
 					int cX2;
@@ -300,8 +298,8 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 						for(blockId = var7 - var15; blockId <= var7 + var15; ++blockId) {
 							int cX1 = blockId - var7;
 
-							for(treeY = var9 - var15; treeY <= var9 + var15; ++treeY) {
-								int var17 = treeY - var9;
+							for(treeY = blockY - var15; treeY <= blockY + var15; ++treeY) {
+								int var17 = treeY - blockY;
                                 Block* b = world->GetBlock(Int3{blockId, cX2, treeY});
                                 if (!b) continue;
 								if((std::abs(cX1) != var15 || std::abs(var17) != var15 || this->rand->nextInt(2) != 0 && var14 != 0) && !IsOpaque(b->type)) {
@@ -313,7 +311,7 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 					}
 
 					for(cX2 = 0; cX2 < var10; ++cX2) {
-                        Block* b = world->GetBlock(Int3{var7, heightValue + cX2, var9});
+                        Block* b = world->GetBlock(Int3{var7, heightValue + cX2, blockY});
                         if (!b) continue;
 						if(!IsOpaque(b->type)) {
                             b->type = BLOCK_LOG;

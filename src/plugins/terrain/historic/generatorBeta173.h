@@ -10,7 +10,7 @@ class GeneratorBeta173 : public Generator {
         std::unique_ptr<NoiseOctaves<NoisePerlin>> selectorNoiseGen;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> sandGravelNoiseGen;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> stoneNoiseGen;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen1;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> continentalnessNoiseGen;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> depthNoiseGen;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> mobSpawnerNoiseGen;
 
@@ -24,7 +24,7 @@ class GeneratorBeta173 : public Generator {
         std::vector<double> lowNoiseField;
         std::vector<double> highNoiseField;
         std::vector<double> selectorNoiseField;
-        std::vector<double> noiseField1;
+        std::vector<double> continentalnessNoiseField;
         std::vector<double> depthNoiseField;
 
         std::vector<double> sandNoise;

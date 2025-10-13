@@ -272,116 +272,98 @@ void World::UpdateLighting() {
             lightingToUpdate.pop();
         }
 
-        for(int var3 = currentUpdate.posA.x; var3 <= currentUpdate.posB.x; ++var3) {
-            for(int var4 = currentUpdate.posA.z; var4 <= currentUpdate.posB.z; ++var4) {
-                if(this->BlockExists(Int3{var3, 0, var4})) {
-                    for(int var5 = currentUpdate.posA.y; var5 <= currentUpdate.posB.y; ++var5) {
-                        if(var5 >= 0 && var5 < 128) {
-                            int var6 = this->GetLight(currentUpdate.skyLight, Int3{var3, var5, var4});
-                            int var7 = this->GetBlockType(Int3{var3, var5, var4});
-                            int var8 = GetTranslucency(var7);
-                            if(var8 == 0) {
-                                var8 = 1;
-                            }
+        for(int blockX = currentUpdate.posA.x; blockX <= currentUpdate.posB.x; ++blockX) {
+            for(int blockZ = currentUpdate.posA.z; blockZ <= currentUpdate.posB.z; ++blockZ) {
+                if(this->BlockExists(Int3{blockX, 0, blockZ})) {
+                    for(int blockY = currentUpdate.posA.y; blockY <= currentUpdate.posB.y; ++blockY) {
+                        if(blockY >= 0 && blockY < CHUNK_HEIGHT) {
+                            int skyLightLevel = this->GetLight(currentUpdate.skyLight, Int3{blockX, blockY, blockZ});
+                            int blockType = this->GetBlockType(Int3{blockX, blockY, blockZ});
+                            int translucencyLevel = GetTranslucency(blockType);
+                            if(translucencyLevel == 0) translucencyLevel = 1;
 
-                            int var9 = 0;
-                            int var11;
-                            int var13;
-                            if(currentUpdate.skyLight) {
-                                bool var19;
-                                if(var3 >= -32000000 && var4 >= -32000000 && var3 < 32000000 && var4 <= 32000000) {
-                                    if(var5 < 0) {
-                                        var19 = false;
-                                    } else if(var5 >= 128) {
-                                        var19 = true;
-                                    } else if(!this->ChunkExists(var3 >> 4, var4 >> 4)) {
-                                        var19 = false;
+                            int lightLevel = 0;
+                            int inChunkBlockX;
+                            int inChunkBlockZ;
+                            if(!currentUpdate.skyLight) {
+                                lightLevel = GetEmissiveness(blockType);
+                            } else {
+                                bool updateSkylight;
+                                // Check if block is within world bounds
+                                if(blockX >= -32000000 && blockZ >= -32000000 && blockX < 32000000 && blockZ <= 32000000) {
+                                    // Block is in void
+                                    if(blockY < 0) {
+                                        updateSkylight = false;
+                                    // Block is above build limit
+                                    } else if(blockY >= CHUNK_HEIGHT) {
+                                        updateSkylight = true;
+                                    // Chunk doesn't exist
+                                    } else if(!this->ChunkExists(blockX >> 4, blockZ >> 4)) {
+                                        updateSkylight = false;
                                     } else {
-                                        Chunk* var14 = this->GetChunk(var3 >> 4, var4 >> 4);
-                                        var11 = var3 & 15;
-                                        var13 = var4 & 15;
-                                        var19 = var14->CanBlockSeeTheSky(var11, var5, var13);
+                                        Chunk* currentChunk = this->GetChunk(blockX >> 4, blockZ >> 4);
+                                        inChunkBlockX = blockX & 15;
+                                        inChunkBlockZ = blockZ & 15;
+                                        updateSkylight = currentChunk->CanBlockSeeTheSky(inChunkBlockX, blockY, inChunkBlockZ);
                                     }
                                 } else {
-                                    var19 = false;
+                                    updateSkylight = false;
                                 }
 
-                                if(var19) {
-                                    var9 = 15;
-                                }
-                            } else {
-                                var9 = GetEmissiveness(var7);
+                                if(updateSkylight) lightLevel = 15;
                             }
 
                             int var12;
                             int var18;
-                            if(var8 >= 15 && var9 == 0) {
-                                var7 = 0;
+                            // Opaque Block
+                            if(translucencyLevel >= 15 && lightLevel == 0) {
+                                // Probably not actually the block type, but just reused by java
+                                blockType = 0;
                             } else {
-                                var7 = this->GetLight(currentUpdate.skyLight, Int3{var3 - 1, var5, var4});
-                                int var10 = this->GetLight(currentUpdate.skyLight, Int3{var3 + 1, var5, var4});
-                                var11 = this->GetLight(currentUpdate.skyLight, Int3{var3, var5 - 1, var4});
-                                var12 = this->GetLight(currentUpdate.skyLight, Int3{var3, var5 + 1, var4});
-                                var13 = this->GetLight(currentUpdate.skyLight, Int3{var3, var5, var4 - 1});
-                                var18 = this->GetLight(currentUpdate.skyLight, Int3{var3, var5, var4 + 1});
-                                var7 = var7;
-                                if(var10 > var7) {
-                                    var7 = var10;
-                                }
+                                blockType = this->GetLight(currentUpdate.skyLight, Int3{blockX - 1, blockY, blockZ});
+                                int var10 = this->GetLight(currentUpdate.skyLight, Int3{blockX + 1, blockY, blockZ});
+                                inChunkBlockX = this->GetLight(currentUpdate.skyLight, Int3{blockX, blockY - 1, blockZ});
+                                var12 = this->GetLight(currentUpdate.skyLight, Int3{blockX, blockY + 1, blockZ});
+                                inChunkBlockZ = this->GetLight(currentUpdate.skyLight, Int3{blockX, blockY, blockZ - 1});
+                                var18 = this->GetLight(currentUpdate.skyLight, Int3{blockX, blockY, blockZ + 1});
+                                blockType = blockType;
+                                if(var10 > blockType) blockType = var10;
+                                if(inChunkBlockX > blockType) blockType = inChunkBlockX;
+                                if(var12 > blockType) blockType = var12;
+                                if(inChunkBlockZ > blockType) blockType = inChunkBlockZ;
+                                if(var18 > blockType) blockType = var18;
 
-                                if(var11 > var7) {
-                                    var7 = var11;
-                                }
-
-                                if(var12 > var7) {
-                                    var7 = var12;
-                                }
-
-                                if(var13 > var7) {
-                                    var7 = var13;
-                                }
-
-                                if(var18 > var7) {
-                                    var7 = var18;
-                                }
-
-                                var7 -= var8;
-                                if(var7 < 0) {
-                                    var7 = 0;
-                                }
-
-                                if(var9 > var7) {
-                                    var7 = var9;
-                                }
+                                blockType -= translucencyLevel;
+                                if(blockType < 0) blockType = 0;
+                                if(lightLevel > blockType) blockType = lightLevel;
                             }
 
-                            if(var6 != var7) {
-                                var18 = var4;
-                                var13 = var5;
-                                var12 = var3;
+                            if(skyLightLevel != blockType) {
+                                var18 = blockZ;
+                                inChunkBlockZ = blockY;
+                                var12 = blockX;
                                 bool var17 = currentUpdate.skyLight;
                                 //World var16 = var2;
-                                if(var3 >= -32000000 && var4 >= -32000000 && var3 < 32000000 && var4 <= 32000000 && var5 >= 0 && var5 < 128 && this->ChunkExists(var3 >> 4, var4 >> 4)) {
-                                    Chunk* c = this->GetChunk(var3 >> 4, var4 >> 4);
+                                // Check if in world bounds
+                                if(blockX >= -32000000 && blockZ >= -32000000 && blockX < 32000000 && blockZ <= 32000000 && blockY >= 0 && blockY < 128 && this->ChunkExists(blockX >> 4, blockZ >> 4)) {
+                                    Chunk* c = this->GetChunk(blockX >> 4, blockZ >> 4);
                                     if (!c) continue;
-                                    c->SetLight(var17, Int3{var3 & 15, var5, var4 & 15}, var7);
+                                    c->SetLight(var17, Int3{blockX & 15, blockY, blockZ & 15}, blockType);
 
-                                    //for(var6 = 0; var6 < var16.worldAccesses.size(); ++var6) {
-                                    //    ((IWorldAccess)var16.worldAccesses.get(var6)).markBlockAndNeighborsNeedsUpdate(var12, var13, var18);
+                                    //for(skyLightLevel = 0; skyLightLevel < var16.worldAccesses.size(); ++skyLightLevel) {
+                                    //    ((IWorldAccess)var16.worldAccesses.get(skyLightLevel)).markBlockAndNeighborsNeedsUpdate(var12, inChunkBlockZ, var18);
                                     //}
                                 }
 
-                                --var7;
-                                if(var7 < 0) {
-                                    var7 = 0;
-                                }
+                                --blockType;
+                                if(blockType < 0) blockType = 0;
 
-                                this->SpreadLight(currentUpdate.skyLight, Int3{var3 - 1, var5, var4}, var7);
-                                this->SpreadLight(currentUpdate.skyLight, Int3{var3 + 1, var5, var4}, var7);
-                                this->SpreadLight(currentUpdate.skyLight, Int3{var3, var5 - 1, var4}, var7);
-                                this->SpreadLight(currentUpdate.skyLight, Int3{var3, var5 + 1, var4}, var7);
-                                this->SpreadLight(currentUpdate.skyLight, Int3{var3, var5, var4 - 1}, var7);
-                                this->SpreadLight(currentUpdate.skyLight, Int3{var3, var5, var4 + 1}, var7);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX - 1, blockY, blockZ}, blockType);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX + 1, blockY, blockZ}, blockType);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX, blockY - 1, blockZ}, blockType);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX, blockY + 1, blockZ}, blockType);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX, blockY, blockZ - 1}, blockType);
+                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX, blockY, blockZ + 1}, blockType);
                             }
                         }
                     }

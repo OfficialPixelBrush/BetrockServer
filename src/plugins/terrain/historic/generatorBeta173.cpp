@@ -8,14 +8,14 @@ GeneratorBeta173::GeneratorBeta173(int64_t seed, World* world) : Generator(seed,
     rand = std::make_unique<JavaRandom>(this->seed);
 
     // Init Terrain Noise
-    lowNoiseGen         = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-    highNoiseGen        = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-    selectorNoiseGen    = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
-    sandGravelNoiseGen  = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
-    stoneNoiseGen       = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
-    noiseGen1           = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 10);
-    depthNoiseGen       = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-    mobSpawnerNoiseGen  = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
+    lowNoiseGen             = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    highNoiseGen            = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    selectorNoiseGen        = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
+    sandGravelNoiseGen      = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
+    stoneNoiseGen           = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
+    continentalnessNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 10);
+    depthNoiseGen           = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
+    mobSpawnerNoiseGen      = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
 
     // Init Biome Noise
     std::unique_ptr<JavaRandom> rand1 = std::make_unique<JavaRandom>(this->seed * 9871L);
@@ -299,7 +299,7 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
     double vertScale = 684.412D;
     
     // We do this to need to generate noise as often
-    this->noiseField1 = this->noiseGen1->GenerateOctaves(this->noiseField1, cX, cZ, xMax, zMax, 1.121D, 1.121D, 0.5D);
+    this->continentalnessNoiseField = this->continentalnessNoiseGen->GenerateOctaves(this->continentalnessNoiseField, cX, cZ, xMax, zMax, 1.121D, 1.121D, 0.5D);
     this->depthNoiseField = this->depthNoiseGen->GenerateOctaves(this->depthNoiseField, cX, cZ, xMax, zMax, 200.0D, 200.0D, 0.5D);
     this->selectorNoiseField = this->selectorNoiseGen->GenerateOctaves(this->selectorNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale / 80.0D, vertScale / 160.0D, horiScale / 80.0D);
     this->lowNoiseField = this->lowNoiseGen->GenerateOctaves(this->lowNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
@@ -309,42 +309,35 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
     int xIndex = 16 / xMax;
 
     for(int iX = 0; iX < xMax; ++iX) {
-        int var18 = iX * xIndex + xIndex / 2;
+        int sampleX = iX * xIndex + xIndex / 2;
 
         for(int iZ = 0; iZ < zMax; ++iZ) {
-            int var20 = iZ * xIndex + xIndex / 2;
+            int sampleZ = iZ * xIndex + xIndex / 2;
             // Apply biome-noise-dependent variety
-            double temp = this->temperature[var18 * 16 + var20];
-            double humi = this->humidity[var18 * 16 + var20] * temp;
-            double inverseHumi = 1.0D - humi;
-            inverseHumi *= inverseHumi;
-            inverseHumi *= inverseHumi;
-            inverseHumi = 1.0D - inverseHumi;
-            double continentalness = (this->noiseField1[zIndex] + 256.0D) / 512.0D;
-            continentalness *= inverseHumi;
-            if(continentalness > 1.0D) {
-                continentalness = 1.0D;
-            }
+            double temp = this->temperature[sampleX * CHUNK_WIDTH_X + sampleZ];
+            double humi = this->humidity[sampleX * CHUNK_WIDTH_X + sampleZ] * temp;
+            humi = 1.0D - humi;
+            humi *= humi;
+            humi *= humi;
+            humi = 1.0D - humi;
+            // Apply contientalness
+            double continentalness = (this->continentalnessNoiseField[zIndex] + 256.0D) / 512.0D;
+            continentalness *= humi;
+            if(continentalness > 1.0D) continentalness = 1.0D;
 
             double depthNoise = this->depthNoiseField[zIndex] / 8000.0D;
-            if(depthNoise < 0.0D) {
-                depthNoise = -depthNoise * 0.3D;
-            }
+            if(depthNoise < 0.0D) depthNoise = -depthNoise * 0.3D;
 
             depthNoise = depthNoise * 3.0D - 2.0D;
             if(depthNoise < 0.0D) {
                 depthNoise /= 2.0D;
-                if(depthNoise < -1.0D) {
-                    depthNoise = -1.0D;
-                }
+                if(depthNoise < -1.0D) depthNoise = -1.0D;
 
                 depthNoise /= 1.4D;
                 depthNoise /= 2.0D;
                 continentalness = 0.0D;
             } else {
-                if(depthNoise > 1.0D) {
-                    depthNoise = 1.0D;
-                }
+                if(depthNoise > 1.0D) depthNoise = 1.0D;
 
                 depthNoise /= 8.0D;
             }
@@ -355,14 +348,14 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
 
             continentalness += 0.5D;
             depthNoise = depthNoise * (double)yMax / 16.0D;
-            double var31 = (double)yMax / 2.0D + depthNoise * 4.0D;
+            double elevationOffset = (double)yMax / 2.0D + depthNoise * 4.0D;
             ++zIndex;
 
             for(int iY = 0; iY < yMax; ++iY) {
                 double terrainDensity = 0.0D;
-                double var36 = ((double)iY - var31) * 12.0D / continentalness;
-                if(var36 < 0.0D) {
-                    var36 *= 4.0D;
+                double densityOffset = ((double)iY - elevationOffset) * 12.0D / continentalness;
+                if(densityOffset < 0.0D) {
+                    densityOffset *= 4.0D;
                 }
 
                 double lowNoise = this->lowNoiseField[yIndex] / 512.0D;
@@ -376,11 +369,11 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
                     terrainDensity = lowNoise + (highNoise - lowNoise) * selectorNoise;
                 }
 
-                terrainDensity -= var36;
+                terrainDensity -= densityOffset;
                 // Reduce density towards max height
                 if(iY > yMax - 4) {
-                    double var44 = (double)((float)(iY - (yMax - 4)) / 3.0F);
-                    terrainDensity = terrainDensity * (1.0D - var44) + -10.0D * var44;
+                    double heightEdgeFade = (double)((float)(iY - (yMax - 4)) / 3.0F);
+                    terrainDensity = terrainDensity * (1.0D - heightEdgeFade) + -10.0D * heightEdgeFade;
                 }
 
                 terrainMap[yIndex] = terrainDensity;
