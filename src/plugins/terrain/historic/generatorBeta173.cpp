@@ -232,6 +232,7 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
                             blockIndex += CHUNK_HEIGHT;
                             terrainDensity += densityStepZ;
                         }
+                        
 
                         terrainX0 += terrainStepX0;
                         terrainX1 += terrainStepX1;
@@ -248,16 +249,16 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
 }
 
 // Generate Biomes based on simplex noise
-std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(std::vector<Biome> biomeMap, int x, int z, int xMax, int zMax) {
+std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(std::vector<Biome> biomeMap, int bx, int bz, int xMax, int zMax) {
     // Init Biome map
     if(biomeMap.empty() || biomeMap.size() < xMax * zMax) {
         biomeMap.resize(xMax * zMax, BIOME_NONE);
     }
 
     // Get noise values
-    this->temperature = this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)x, (double)z, xMax, zMax, (double)0.025F, (double)0.025F, 0.25D);
-    this->humidity = this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)x, (double)z, xMax, zMax, (double)0.05F, (double)0.05F, 1.0D / 3.0D);
-    this->weirdness = this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)x, (double)z, xMax, zMax, 0.25D, 0.25D, 0.5882352941176471D);
+    this->temperature = this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, zMax, (double)0.025F, (double)0.025F, 0.25D);
+    this->humidity = this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)bx, (double)bz, xMax, zMax, (double)0.05F, (double)0.05F, 1.0D / 3.0D);
+    this->weirdness = this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, zMax, 0.25D, 0.25D, 0.5882352941176471D);
     int index = 0;
 
     // Iterate over each block column
@@ -285,6 +286,27 @@ std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(std::vector<Biome> biomeMa
             index++;
         }
     }
+
+    /*
+    std::cout << "# " << bx/CHUNK_WIDTH_X << ", " << bz/CHUNK_WIDTH_Z << std::endl;
+    std::cout << "[";
+    for (int x = 0; x < CHUNK_WIDTH_X; x++) {
+        for (int z = 0; z < CHUNK_WIDTH_Z; z++) {
+            //for (int y = CHUNK_HEIGHT - 1; y >= 0; y--) {
+            //   if (c->blocks[(z + x *CHUNK_WIDTH_X) * CHUNK_HEIGHT + y].type == BLOCK_STONE) {
+            //std::cout << gravelNoise[z + x *CHUNK_WIDTH_X];
+            std::cout << weirdness[z + x *CHUNK_WIDTH_X];
+            if ((z + x *CHUNK_WIDTH_X) < CHUNK_WIDTH_X*CHUNK_WIDTH_Z -1) {
+                    //if ((z + x *CHUNK_WIDTH_X) * CHUNK_HEIGHT + y < CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT -1) {
+                        std::cout << ",";
+                    }
+            //        break;
+            //    }
+            //}
+        }
+    }
+    std::cout << "]," << std::endl;
+    */
 
     return biomeMap;
 }

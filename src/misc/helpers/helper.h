@@ -53,3 +53,15 @@ std::string GetRealTimeFileFormat();
 std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size);
 
 void LimitBlockCoordinates(Int3 &position);
+
+template <typename T>
+void PrintVector(std::vector<T>& values) {
+    std::cout << "[";
+    for (int i = 0; i < values.size(); i++) {
+        std::cout << values[i];
+        if (i < values.size() - 1) {
+            std::cout << ", ";
+        }
+    }
+    std::cout << "]" << std::endl;
+}
