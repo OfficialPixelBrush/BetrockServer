@@ -5,19 +5,19 @@ class GeneratorBeta173 : public Generator {
     private:
         std::unique_ptr<JavaRandom> rand;
         // Perlin Noise Generators
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> lowNoise;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> highNoise;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> selectorNoise;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> sandGravelNoise;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> stonePerlinNoise;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> lowNoiseGen;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> highNoiseGen;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> selectorNoiseGen;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> sandGravelNoiseGen;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> stoneNoiseGen;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen1;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> depthNoise;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> mobSpawnerNoise;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> depthNoiseGen;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> mobSpawnerNoiseGen;
 
         // Simplex Noise Generators
-        std::unique_ptr<NoiseOctaves<NoiseSimplex>> temperatureNoise;
-        std::unique_ptr<NoiseOctaves<NoiseSimplex>> humidityNoise;
-        std::unique_ptr<NoiseOctaves<NoiseSimplex>> noiseSimplex1;
+        std::unique_ptr<NoiseOctaves<NoiseSimplex>> temperatureNoiseGen;
+        std::unique_ptr<NoiseOctaves<NoiseSimplex>> humidityNoiseGen;
+        std::unique_ptr<NoiseOctaves<NoiseSimplex>> weirdnessNoiseGen;
 
         // Stored noise Fields
         std::vector<double> terrainNoiseField;
@@ -35,7 +35,7 @@ class GeneratorBeta173 : public Generator {
         std::vector<Biome> biomeMap;
         std::vector<double> temperature;
         std::vector<double> humidity;
-        std::vector<double> otherBiomeThing;
+        std::vector<double> weirdness;
 
         void GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap, std::vector<double>& temperature);
         std::vector<double> GenerateTerrainNoise(std::vector<double> terrainMap, int x, int y, int z, int xMax, int yMax, int zMax);

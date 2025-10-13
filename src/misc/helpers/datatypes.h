@@ -6,6 +6,7 @@
 #define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH_X 16
 #define CHUNK_WIDTH_Z 16
+#define WATER_LEVEL 64
 
 #define CHUNK_DATA_SIZE static_cast<size_t>(CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z * 2.5)
 
