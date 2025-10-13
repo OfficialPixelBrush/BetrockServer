@@ -16,81 +16,70 @@ GeneratorInfdev20100227::GeneratorInfdev20100227(int64_t seed, World* world) : G
 
 std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
     std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
-    int var3 = cX << 4;
-    int var14 = cZ << 4;
-    int var4 = 0;
+    int chunkStartX = cX << 4;
+    int chunkStartZ = cZ << 4;
+    int blockIndex = 0;
 
-    for(int var5 = var3; var5 < var3 + 16; ++var5) {
-        for(int var6 = var14; var6 < var14 + 16; ++var6) {
-            int var7 = var5 / 1024;
-            int var8 = var6 / 1024;
-            float var9 = (float)(this->noiseGen1.get()->GenerateOctaves((double)((float)var5 / 0.03125F), 0.0D, (double)((float)var6 / 0.03125F)) - this->noiseGen2.get()->GenerateOctaves((double)((float)var5 / 0.015625F), 0.0D, (double)((float)var6 / 0.015625F))) / 512.0F / 4.0F;
-            float var10 = (float)this->noiseGen5.get()->GenerateOctaves((double)((float)var5 / 4.0F), (double)((float)var6 / 4.0F));
-            float var11 = (float)this->noiseGen6.get()->GenerateOctaves((double)((float)var5 / 8.0F), (double)((float)var6 / 8.0F)) / 8.0F;
-            var10 = var10 > 0.0F ? (float)(this->noiseGen3.get()->GenerateOctaves((double)((float)var5 * 0.25714284F * 2.0F), (double)((float)var6 * 0.25714284F * 2.0F)) * (double)var11 / 4.0D) : (float)(this->noiseGen4.get()->GenerateOctaves((double)((float)var5 * 0.25714284F), (double)((float)var6 * 0.25714284F)) * (double)var11);
-            int var15 = (int)(var9 + 64.0F + var10);
-            if((float)this->noiseGen5.get()->GenerateOctaves((double)var5, (double)var6) < 0.0F) {
-                var15 = var15 / 2 << 1;
-                if((float)this->noiseGen5.get()->GenerateOctaves((double)(var5 / 5), (double)(var6 / 5)) < 0.0F) {
-                    ++var15;
+    for(int blockX = chunkStartX; blockX < chunkStartX + 16; ++blockX) {
+        for(int blockZ = chunkStartZ; blockZ < chunkStartZ + 16; ++blockZ) {
+            int regionX = blockX / 1024;
+            int regionZ = blockZ / 1024;
+            // Generate terrain height
+            float noiseGen1Value = (float)(this->noiseGen1.get()->GenerateOctaves((double)((float)blockX / 0.03125F), 0.0D, (double)((float)blockZ / 0.03125F)) - this->noiseGen2.get()->GenerateOctaves((double)((float)blockX / 0.015625F), 0.0D, (double)((float)blockZ / 0.015625F))) / 512.0F / 4.0F;
+            float noiseGen5Value = (float)this->noiseGen5.get()->GenerateOctaves((double)((float)blockX / 4.0F), (double)((float)blockZ / 4.0F));
+            float noiseGen6Value = (float)this->noiseGen6.get()->GenerateOctaves((double)((float)blockX / 8.0F), (double)((float)blockZ / 8.0F)) / 8.0F;
+            noiseGen5Value = noiseGen5Value > 0.0F ? (float)(this->noiseGen3.get()->GenerateOctaves((double)((float)blockX * 0.25714284F * 2.0F), (double)((float)blockZ * 0.25714284F * 2.0F)) * (double)noiseGen6Value / 4.0D) : (float)(this->noiseGen4.get()->GenerateOctaves((double)((float)blockX * 0.25714284F), (double)((float)blockZ * 0.25714284F)) * (double)noiseGen6Value);
+            int terrainHeight = (int)(noiseGen1Value + 64.0F + noiseGen5Value);
+            if((float)this->noiseGen5.get()->GenerateOctaves((double)blockX, (double)blockZ) < 0.0F) {
+                terrainHeight = terrainHeight / 2 << 1;
+                if((float)this->noiseGen5.get()->GenerateOctaves((double)(blockX / 5), (double)(blockZ / 5)) < 0.0F) {
+                    ++terrainHeight;
                 }
             }
 
-            float value = static_cast<float>(std::rand()) / RAND_MAX;
+            // Generate value for chunk decorations
+            // TODO: Maybe replace this with java random for accuracy?
+            float decorationChance = static_cast<float>(std::rand()) / RAND_MAX;
 
-            for(int var16 = 0; var16 < 128; ++var16) {
-                int var17 = 0;
-                if((var5 == 0 || var6 == 0) && var16 <= var15 + 2) {
-                    var17 = BLOCK_OBSIDIAN;
-                } else if(var16 == var15 + 1 && var15 >= 64 && value < 0.02D) {
-                    var17 = BLOCK_DANDELION;
-                } else if(var16 == var15 && var15 >= 64) {
-                    var17 = BLOCK_GRASS;
-                } else if(var16 <= var15 - 2) {
-                    var17 = BLOCK_STONE;
-                } else if(var16 <= var15) {
-                    var17 = BLOCK_DIRT;
-                } else if(var16 <= 64) {
-                    var17 = BLOCK_WATER_STILL;
+            for(int blockY = 0; blockY < CHUNK_HEIGHT; ++blockY) {
+                // Determine Block Type based on parameters
+                int blockType = BLOCK_AIR;
+                if((blockX == 0 || blockZ == 0) && blockY <= terrainHeight + 2) {
+                    blockType = BLOCK_OBSIDIAN;
+                } else if(blockY == terrainHeight + 1 && terrainHeight >= WATER_LEVEL && decorationChance < 0.02D) {
+                    blockType = BLOCK_DANDELION;
+                } else if(blockY == terrainHeight && terrainHeight >= WATER_LEVEL) {
+                    blockType = BLOCK_GRASS;
+                } else if(blockY <= terrainHeight - 2) {
+                    blockType = BLOCK_STONE;
+                } else if(blockY <= terrainHeight) {
+                    blockType = BLOCK_DIRT;
+                } else if(blockY <= WATER_LEVEL) {
+                    blockType = BLOCK_WATER_STILL;
                 }
 
-                this->rand->setSeed((long)(var7 + var8 * 13871));
-                int var12 = (var7 << 10) + 128 + this->rand->nextInt(512);
-                int var13 = (var8 << 10) + 128 + this->rand->nextInt(512);
-                var12 = var5 - var12;
-                var13 = var6 - var13;
-                if(var12 < 0) {
-                    var12 = -var12;
+                // Generate Brick Pyramids
+                this->rand->setSeed((long)(regionX + regionZ * 13871));
+                int pyramidOffsetX = (regionX << 10) + CHUNK_HEIGHT + this->rand->nextInt(512);
+                int pyramidOffsetZ = (regionZ << 10) + CHUNK_HEIGHT + this->rand->nextInt(512);
+                pyramidOffsetX = blockX - pyramidOffsetX;
+                pyramidOffsetZ = blockZ - pyramidOffsetZ;
+                if(pyramidOffsetX < 0) pyramidOffsetX = -pyramidOffsetX;
+                if(pyramidOffsetZ < 0) pyramidOffsetZ = -pyramidOffsetZ;
+                if(pyramidOffsetZ > pyramidOffsetX) pyramidOffsetX = pyramidOffsetZ;
+                pyramidOffsetX = (CHUNK_HEIGHT - 1) - pyramidOffsetX;
+                if(pyramidOffsetX == 0xFF) pyramidOffsetX = 1;
+                if(pyramidOffsetX < terrainHeight) pyramidOffsetX = terrainHeight;
+                if(blockY <= pyramidOffsetX && (blockType == BLOCK_AIR || blockType == BLOCK_WATER_STILL)) {
+                    blockType = BLOCK_BRICKS;
                 }
 
-                if(var13 < 0) {
-                    var13 = -var13;
-                }
-
-                if(var13 > var12) {
-                    var12 = var13;
-                }
-
-                var12 = 127 - var12;
-                if(var12 == 255) {
-                    var12 = 1;
-                }
-
-                if(var12 < var15) {
-                    var12 = var15;
-                }
-
-                if(var16 <= var12 && (var17 == 0 || var17 == BLOCK_WATER_STILL)) {
-                    var17 = BLOCK_BRICKS;
-                }
-
-                if(var17 < 0) {
-                    var17 = 0;
-                }
+                // Clamping
+                if(blockType < BLOCK_AIR) blockType = BLOCK_AIR;
 
                 Block b;
-                b.type = var17;
-                c->blocks[var4++] = b;
+                b.type = blockType;
+                c->blocks[blockIndex++] = b;
             }
         }
     }
