@@ -29,6 +29,10 @@ class GlobalConfig {
 	// get the value at key or a the default mapped_type if key doesn't exist
 	std::string_view Get(const std::string &key) noexcept;
 
+	std::string GetAsString(const std::string& key) {
+		return std::string(this->Get(key));
+	}
+
 	// get the value at key as number
 	template <std::integral num_type> num_type GetAsNumber(const std::string &key) {
 		return std::stoll(std::string(this->Get(key)));
