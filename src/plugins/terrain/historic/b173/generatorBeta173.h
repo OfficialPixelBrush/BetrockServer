@@ -1,5 +1,6 @@
 #include "generator.h"
 #include "biomes.h"
+#include "beta173Caver.h"
 
 class GeneratorBeta173 : public Generator {
     private:
@@ -36,6 +37,9 @@ class GeneratorBeta173 : public Generator {
         std::vector<double> temperature;
         std::vector<double> humidity;
         std::vector<double> weirdness;
+
+        // Cave Gen
+        std::unique_ptr<Beta173Caver> caver;
 
         void GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap, std::vector<double>& temperature);
         std::vector<double> GenerateTerrainNoise(std::vector<double> terrainMap, int x, int y, int z, int xMax, int yMax, int zMax);
