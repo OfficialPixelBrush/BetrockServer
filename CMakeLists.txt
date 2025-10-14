@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.2.11)
+project(BetrockServer VERSION 0.3.0)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -51,6 +51,8 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/src/objects"
     "${PROJECT_SOURCE_DIR}/src/plugins"
     "${PROJECT_SOURCE_DIR}/src/plugins/terrain"
+    "${PROJECT_SOURCE_DIR}/src/plugins/terrain/historic"
+    "${PROJECT_SOURCE_DIR}/src/plugins/terrain/historic/noise"
     "${PROJECT_SOURCE_DIR}/src/"
     ${LUA_INCLUDE_DIR}
 )
@@ -87,12 +89,13 @@ add_executable(
     src/objects/world.cpp
     src/objects/worldManager.cpp
 
-    src/plugins/terrain/historic/generatorInfdev20100227.cpp
-    src/plugins/terrain/historic/generatorInfdev20100327.cpp
-    src/plugins/terrain/historic/generatorBeta173.cpp
-    src/plugins/terrain/historic/noiseGenerator.cpp
-    src/plugins/terrain/historic/noisePerlin.cpp
-    src/plugins/terrain/historic/noiseSimplex.cpp
+    src/plugins/terrain/historic/inf20100227/generatorInfdev20100227.cpp
+    src/plugins/terrain/historic/inf20100327/generatorInfdev20100327.cpp
+    src/plugins/terrain/historic/b173/beta173Caver.cpp
+    src/plugins/terrain/historic/b173/generatorBeta173.cpp
+    src/plugins/terrain/historic/noise/noiseGenerator.cpp
+    src/plugins/terrain/historic/noise/noisePerlin.cpp
+    src/plugins/terrain/historic/noise/noiseSimplex.cpp
     src/plugins/terrain/generatorLua.cpp
     src/plugins/terrain/generator.cpp
     src/plugins/plugins.cpp

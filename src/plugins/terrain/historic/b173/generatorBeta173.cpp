@@ -24,6 +24,9 @@ GeneratorBeta173::GeneratorBeta173(int64_t seed, World* world) : Generator(seed,
     humidityNoiseGen    = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand2.get(), 4);
     std::unique_ptr<JavaRandom> rand3 = std::make_unique<JavaRandom>(this->seed * 543321L);
     weirdnessNoiseGen   = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand3.get(), 2);
+
+    // Init Caver
+    caver = std::make_unique<Beta173Caver>();
 }
 
 std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
@@ -46,8 +49,7 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     GenerateTerrain(cX, cZ, c, this->biomeMap, this->temperature);
     // Replace some of the stone with Biome-appropriate blocks
     ReplaceBlocksForBiome(cX, cZ, c, this->biomeMap);
-
-    //this->field_695_u.func_667_a(this, this->worldObj, var1, var2, var3);
+    this->caver->func_667_a(this->world, cX, cZ, c);
     //var4.func_353_b();
     
     c->GenerateHeightMap();
