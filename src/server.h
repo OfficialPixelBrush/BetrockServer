@@ -11,6 +11,7 @@
 #include "world.h"
 #include "worldManager.h"
 #include "plugins.h"
+#include "javaMath.h"
 
 #define PROTOCOL_VERSION 14
 #define TICK_SPEED 20

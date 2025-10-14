@@ -3,7 +3,7 @@ Beta173Caver::Beta173Caver() {
     rand = std::make_unique<JavaRandom>();
 }
 
-void Beta173Caver::func_667_a(World* world, int cX, int cZ, std::unique_ptr<Chunk>& c) {
+void Beta173Caver::GenerateCaves(World* world, int cX, int cZ, std::unique_ptr<Chunk>& c) {
     int genOffset = this->generatorOffset;
     this->rand->setSeed(world->seed);
     long xOffset = this->rand->nextLong() / 2L * 2L + 1L;
@@ -12,14 +12,14 @@ void Beta173Caver::func_667_a(World* world, int cX, int cZ, std::unique_ptr<Chun
     for(int x = cX - genOffset; x <= cX + genOffset; ++x) {
         for(int z = cZ - genOffset; z <= cZ + genOffset; ++z) {
             this->rand->setSeed((long)x * xOffset + (long)z * zOffset ^ world->seed);
-            this->func_666_a(world, x, z, cX, cZ, c);
+            this->GenerateCave(world, x, z, cX, cZ, c);
         }
     }
 }
 
 // TODO: This is only the cave generator for the overworld.
 // The one for the nether is different!
-void Beta173Caver::func_666_a(World* world, int x, int z, int cX, int cZ, std::unique_ptr<Chunk>& c) {
+void Beta173Caver::GenerateCave(World* world, int x, int z, int cX, int cZ, std::unique_ptr<Chunk>& c) {
     int var7 = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(40) + 1) + 1);
     if(this->rand->nextInt(15) != 0) {
         var7 = 0;
@@ -31,7 +31,7 @@ void Beta173Caver::func_666_a(World* world, int x, int z, int cX, int cZ, std::u
         double zOffset = (double)(z * CHUNK_WIDTH_Z + this->rand->nextInt(CHUNK_WIDTH_Z));
         int var15 = 1;
         if(this->rand->nextInt(4) == 0) {
-            this->func_669_a(cX, cZ, c, xOffset, yOffset, zOffset);
+            this->CarveCave(cX, cZ, c, xOffset, yOffset, zOffset);
             var15 += this->rand->nextInt(4);
         }
 
@@ -39,16 +39,16 @@ void Beta173Caver::func_666_a(World* world, int x, int z, int cX, int cZ, std::u
             float var17 = this->rand->nextFloat() * (float)M_PI * 2.0F;
             float var18 = (this->rand->nextFloat() - 0.5F) * 2.0F / 8.0F;
             float var19 = this->rand->nextFloat() * 2.0F + this->rand->nextFloat();
-            this->releaseEntitySkin(cX, cZ, c, xOffset, yOffset, zOffset, var19, var17, var18, 0, 0, 1.0D);
+            this->CarveCave(cX, cZ, c, xOffset, yOffset, zOffset, var19, var17, var18, 0, 0, 1.0D);
         }
     }
 }
 
-void Beta173Caver::func_669_a(int cX, int cZ, std::unique_ptr<Chunk>& c, double xOffset, double yOffset, double zOffset) {
-    this->releaseEntitySkin(cX, cZ, c, xOffset, yOffset, zOffset, 1.0F + this->rand->nextFloat() * 6.0F, 0.0F, 0.0F, -1, -1, 0.5D);
+void Beta173Caver::CarveCave(int cX, int cZ, std::unique_ptr<Chunk>& c, double xOffset, double yOffset, double zOffset) {
+    this->CarveCave(cX, cZ, c, xOffset, yOffset, zOffset, 1.0F + this->rand->nextFloat() * 6.0F, 0.0F, 0.0F, -1, -1, 0.5D);
 }
 
-void Beta173Caver::releaseEntitySkin(int cX, int cZ, std::unique_ptr<Chunk>& c, double xOffset, double yOffset, double zOffset, float var10, float var11, float var12, int var13, int var14, double var15) {
+void Beta173Caver::CarveCave(int cX, int cZ, std::unique_ptr<Chunk>& c, double xOffset, double yOffset, double zOffset, float var10, float var11, float var12, int var13, int var14, double var15) {
     double var17 = (double)(cX * CHUNK_WIDTH_X + 8);
     double var19 = (double)(cZ * CHUNK_WIDTH_Z + 8);
     float var21 = 0.0F;
@@ -88,8 +88,8 @@ void Beta173Caver::releaseEntitySkin(int cX, int cZ, std::unique_ptr<Chunk>& c, 
         var22 += (var23->nextFloat() - var23->nextFloat()) * var23->nextFloat() * 2.0F;
         var21 += (var23->nextFloat() - var23->nextFloat()) * var23->nextFloat() * 4.0F;
         if(!var52 && var13 == var25 && var10 > 1.0F) {
-            this->releaseEntitySkin(cX, cZ, c, xOffset, yOffset, zOffset, var23->nextFloat() * 0.5F + 0.5F, var11 - (float)M_PI * 0.5F, var12 / 3.0F, var13, var14, 1.0D);
-            this->releaseEntitySkin(cX, cZ, c, xOffset, yOffset, zOffset, var23->nextFloat() * 0.5F + 0.5F, var11 + (float)M_PI * 0.5F, var12 / 3.0F, var13, var14, 1.0D);
+            this->CarveCave(cX, cZ, c, xOffset, yOffset, zOffset, var23->nextFloat() * 0.5F + 0.5F, var11 - (float)M_PI * 0.5F, var12 / 3.0F, var13, var14, 1.0D);
+            this->CarveCave(cX, cZ, c, xOffset, yOffset, zOffset, var23->nextFloat() * 0.5F + 0.5F, var11 + (float)M_PI * 0.5F, var12 / 3.0F, var13, var14, 1.0D);
             return;
         }
 

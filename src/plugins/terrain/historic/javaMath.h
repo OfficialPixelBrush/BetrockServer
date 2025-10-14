@@ -26,3 +26,13 @@ static double altGrad(int var1, double var2, double var4) {
 static double fade(double value) {
     return value * value * value * (value * (value * 6.0D - 15.0D) + 10.0D);
 }
+
+static int hashCode(std::string value) {
+    int h = 0;
+    if (h == 0 && value.size() > 0) {
+        for (int i = 0; i < value.size(); i++) {
+            h = 31 * h + value[i];
+        }
+    }
+    return h;
+}
