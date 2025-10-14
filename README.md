@@ -90,8 +90,11 @@ Some stuff can be found on the [BetrockServer Wiki](https://github.com/OfficialP
 especially if you're interested in developing your own [World Generator](https://github.com/OfficialPixelBrush/BetrockServer/wiki/World-Generation) or [Plugin](https://github.com/OfficialPixelBrush/BetrockServer/wiki/Plugins). It also features a very complete [ID Listing](https://github.com/OfficialPixelBrush/BetrockServer/wiki/Full-ID-Listing),
 though the one hosted on [grahamedgecombe.com](https://minecraft-ids.grahamedgecombe.com/) is a great alternative for general usage.
 
+If you're more interested in the in-depth technical stuff of Beta 1.7.3, check out [my extended fork of mudkipdev's Beta Wiki](https://officialpixelbrush.github.io/beta-wiki)!
+
 - GitHub
-    - [beta-wiki](https://github.com/mudkipdev/beta-wiki) by [mudkipdev](https://github.com/mudkipdev)
+    - [beta-wiki (fork)](https://officialpixelbrush.github.io/beta-wiki) by [OfficialPixelBrush](https://github.com/OfficialPixelBrush/beta-wiki)
+    - [beta-wiki (og)](https://github.com/mudkipdev/beta-wiki) by [mudkipdev](https://github.com/mudkipdev)
 - Wiki.vg (Now part of the Minecraft Wiki)
     - [Protocol](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Protocol?oldid=2769758)
     - [Region Files](https://minecraft.wiki/w/Minecraft_Wiki:Projects/wiki.vg_merge/Region_Files)
