@@ -1022,6 +1022,12 @@ void Client::Respawn(std::vector<uint8_t> &response) {
     // After respawning, the health is automatically set back to the maximum health
     // The Client should do this automatically
     player->health = HEALTH_MAX;
+	// If keep inventory is on, preserve player inventory
+	if (!keepInventory) {
+		ClearInventory();
+	} else {
+		UpdateInventory(response);
+	}
 }
 
 // Attempt to put an item into a slot
