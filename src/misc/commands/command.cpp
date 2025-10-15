@@ -429,6 +429,9 @@ std::string CommandGamerule::Execute(std::vector<std::string> command, std::vect
 		} else if (command[1] == "doTileDrops") {
 			doTileDrops = !doTileDrops;
 			Respond::ChatMessage(response, "§7Set doTileDrops to " + std::to_string(doTileDrops));
+		} else if (command[1] == "keepInventory") {
+			keepInventory = !keepInventory;
+			Respond::ChatMessage(response, "§7Set keepInventory to " + std::to_string(keepInventory));
 		} else {
 			return "Gamerule does not exist!";
 		}
