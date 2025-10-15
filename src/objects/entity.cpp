@@ -27,3 +27,18 @@ void Entity::Kill(std::vector<uint8_t> &response) {
 void Entity::PrintStats() {
     std::cout << entityId << ": " << position << "; " << yaw << ", " << pitch << std::endl;
 }
+
+// Check collision
+bool Entity::CheckCollision(Vec3 otherPos, AABB otherAABB) {
+    AABB a = CalculateAABB(this->position, this->collisionBox);
+    AABB b = CalculateAABB(otherPos, otherAABB);
+    // Check if bounding boxes intersect
+    return (
+        a.min.x <= b.max.x &&
+        a.max.x >= b.min.x &&
+        a.min.y <= b.max.y &&
+        a.max.y >= b.min.y &&
+        a.min.z <= b.max.z &&
+        a.max.z >= b.min.z
+    );
+}

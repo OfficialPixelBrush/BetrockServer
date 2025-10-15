@@ -8,6 +8,17 @@ class Entity {
         // Movement Stats
         Vec3 position;
         Vec3 previousPosition;
+        // Default to collision size of 1 block
+        // Centered around the current position
+        AABB collisionBox = AABB
+        {
+            Vec3 {
+                -0.5,-0.5,-0.5
+            },
+            Vec3 {
+                0.5,0.5,0.5
+            }
+        };
         bool onGround = true;
         float yaw = 0.0f;
         float pitch = 0.0f;
@@ -30,4 +41,5 @@ class Entity {
         virtual void Hurt(std::vector<uint8_t> &response, int8_t damage);
         virtual void Kill(std::vector<uint8_t> &response);
         virtual void PrintStats();
+        bool CheckCollision(Vec3 otherPos, AABB otherAABB);
 };

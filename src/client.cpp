@@ -7,7 +7,18 @@
 // Check if the position of a player is valid
 bool Client::CheckPosition(Vec3 &newPosition, double &newStance) {
 	player->previousPosition = player->position;
-
+	Vec3 testPos {
+		0,0,0
+	};
+	AABB testBox {
+		Vec3 {
+			0,0,0
+		},
+		Vec3 {
+			16,128,16
+		}
+	};
+	std::cout << player->CheckCollision(testPos,testBox) << std::endl;
 	player->position = newPosition;
 	player->stance = newStance;
 	return true;
@@ -645,7 +656,9 @@ bool Client::HandlePlayerPosition() {
 	newStance = EntryToDouble(message,offset);
 	newPosition.z = EntryToDouble(message,offset);
 	player->onGround = EntryToByte(message, offset);
-	CheckPosition(newPosition,newStance);
+	if (!CheckPosition(newPosition,newStance)) {
+		Teleport(response,player->position);
+	}
 	UpdatePositionForOthers(false);
 
 	if (CheckIfNewChunksRequired()) {

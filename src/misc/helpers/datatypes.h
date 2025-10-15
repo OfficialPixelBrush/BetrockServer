@@ -103,8 +103,14 @@ struct Int3 {
     }
 };
 
+struct AABB {
+    Vec3 min;
+    Vec3 max;
+};
+
 typedef struct Vec3 Vec3;
 typedef struct Int3 Int3;
+typedef struct AABB AABB;
 
 Vec3 Int3ToVec3(Int3 i);
 Int3 Vec3ToInt3(Vec3 v);
@@ -112,3 +118,4 @@ Int3 Vec3ToInt3(Vec3 v);
 Int3 Int3ToEntityInt3(Int3 pos);
 Int3 Vec3ToEntityInt3(Vec3 pos);
 Vec3 EntityInt3ToVec3(Int3 pos);
+AABB CalculateAABB(Vec3 position, AABB base);
