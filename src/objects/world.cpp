@@ -56,15 +56,27 @@ bool World::IsChunkPopulated(int32_t x, int32_t z) {
 World::World(const std::string& extra)
     : dev(), rng(dev())
 {
-    dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
-    if (extra.empty()) {
-        dirPath += "/region";
-    } else {
-        dirPath += "/" + extra + "/region";
+    std::cout << "CWD: " << std::filesystem::current_path() << "\n";
+
+    dirPath = std::filesystem::current_path() / std::string(Betrock::GlobalConfig::Instance().Get("level-name"));
+
+    // Create dirPath first
+    if (!std::filesystem::create_directories(dirPath)) {
+        std::cout << "Failed to create: " << dirPath << std::endl;
     }
 
-    if (std::filesystem::create_directories(dirPath)) {
-        std::cout << "Directory created: " << dirPath << '\n';
+    // Then dimension sub-directories
+    if (!extra.empty()) {
+        dirPath /= extra;
+        if (!std::filesystem::create_directories(dirPath)) {
+            std::cout << "Failed to create: " << dirPath << std::endl;
+        }
+    }
+
+    // The region folder in that
+    dirPath /= "region";
+    if (!std::filesystem::create_directories(dirPath)) {
+        std::cout << "Failed to create: " << dirPath << std::endl;
     }
 }
 

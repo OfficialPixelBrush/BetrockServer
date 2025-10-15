@@ -134,7 +134,7 @@ void Server::LoadConfig() {
 
 	if (!std::filesystem::exists(GlobalConfig::Instance().GetPath())) {
 		GlobalConfig::Instance().Overwrite({{"level-name", "world"},
-											{"view-distance", "5"},
+											{"view-distance", "10"},
 											{"white-list","false"},
 											{"server-ip", ""},
 											//{"pvp","true"},
@@ -147,7 +147,7 @@ void Server::LoadConfig() {
 											{"max-players","-1"},
 											//{"online-mode","false"},
 											//{"allow-flight","false"}
-											{"generator", "terrain/worley.lua"}});
+											{"generator", "inf20100327"}});
 		GlobalConfig::Instance().SaveToDisk();
 	} else {
 		GlobalConfig::Instance().LoadFromDisk();

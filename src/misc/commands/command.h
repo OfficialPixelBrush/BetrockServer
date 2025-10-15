@@ -20,6 +20,7 @@
 
 #define MAX_CHAT_LINE_SIZE 60
 
+// Small defins for a bit less copy-paste
 #define DEFINE_COMMAND(name, label, description, syntax, requiresOp, requiresCreative) \
 class name : public Command { \
 public: \
@@ -35,6 +36,7 @@ if (!perms.empty()) return perms;
 class Client;
 class CommandManager;
 
+// Base class for how a command is defined
 class Command {
     private:
         std::string label;

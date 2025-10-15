@@ -4,6 +4,7 @@
 class Command;
 class Client;
 
+// Responsible for all command handling and execution
 class CommandManager {
     public:
         static void Init();
