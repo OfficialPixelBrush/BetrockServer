@@ -79,6 +79,7 @@ add_executable(
     src/misc/helpers/terrainhelper.cpp
 
     src/misc/commands/command.cpp
+    src/misc/commands/commandManager.cpp
     src/misc/gamerules.cpp
     src/misc/lighting.cpp
     src/misc/sysinfo.cpp

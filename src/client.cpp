@@ -566,7 +566,7 @@ bool Client::HandleChatMessage() {
 	std::string chatMessage = EntryToString16(message, offset);
 	if (chatMessage.size() > 0 && chatMessage[0] == '/') {
 		std::string command = chatMessage.substr(1);
-		Command::Parse(command, this);
+		CommandManager::Parse(command, this);
 	} else {
 		std::string sentChatMessage = "<" + player->username + "> " + chatMessage;
 		Betrock::Logger::Instance().Info(sentChatMessage);
@@ -737,7 +737,7 @@ bool Client::HandlePlayerDigging(World* world) {
 	Block* targetedBlock = world->GetBlock(pos);
 	
 	if (debugPunchBlockInfo) {
-		Betrock::Logger::Instance().Debug(GetLabel((int)targetedBlock->type) + " " + targetedBlock->str() + " at " + pos.str());
+		Betrock::Logger::Instance().Debug(IdToLabel((int)targetedBlock->type) + " " + targetedBlock->str() + " at " + pos.str());
 	}
 
 	// If the block is broken or instantly breakable

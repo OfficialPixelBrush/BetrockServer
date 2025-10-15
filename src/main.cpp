@@ -3,6 +3,7 @@
 #include "config.h"
 #include "server.h"
 #include "biomes.h"
+#include "gamerules.h"
 
 // The Save interval in ticks
 // This matches what Minecraft does
@@ -36,6 +37,8 @@ int main() {
 	// Read in the usernames of all operators
 	server.ReadOperators();
 	server.ReadWhitelist();
+
+	CommandManager::Init();
 	
 	// Init the plugins
 	server.InitPlugins();
