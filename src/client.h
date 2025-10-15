@@ -9,7 +9,9 @@
 #include <thread>
 
 #include "player.h"
-#include "command.h"
+#include "commandManager.h"
+#include "gamerules.h"
+#include "labels.h"
 #include "worldManager.h"
 #include "version.h"
 #include "helper.h"

@@ -37,7 +37,7 @@ void Chunk::RelightBlock(int x, int y, int z) {
     // We decrement var5 until we hit a fully opaque block
     while(var5 > 0 && GetTranslucency(this->GetBlockType(Int3{x, var5 - 1, z})) == 0) {
         //int bType = this->GetBlockType(Int3{x, var5 - 1, z});
-        //std::cout << Int3{x, var5 - 1, z} << GetLabel(bType) << ": " << (int)GetTranslucency(bType) << std::endl;
+        //std::cout << Int3{x, var5 - 1, z} << IdToLabel(bType) << ": " << (int)GetTranslucency(bType) << std::endl;
         --var5;
     }
 
