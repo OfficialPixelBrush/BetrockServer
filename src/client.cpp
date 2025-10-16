@@ -909,7 +909,14 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		if (b.type == SLOT_EMPTY) {
 			return false;
 		}
-		world->PlaceBlock(pos,b.type,b.meta);
+		switch(b.type) {
+			case BLOCK_SPONGE:
+				world->PlaceSponge(pos);
+				break;
+			default:
+				world->PlaceBlock(pos,b.type,b.meta);
+				break;
+		}
 	}
 	// Immediately give back the item if we're in creative mode
 	if (player->creativeMode) {

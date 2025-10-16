@@ -51,7 +51,8 @@ class World {
         std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkMeta(Chunk* c);
         std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkBlockLight(Chunk* c);
         std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkSkyLight(Chunk* c);
-        void PlaceBlock(Int3 position, int8_t type = 0, int8_t meta = 0, bool sendUpdate = true);
+        void PlaceBlock(Int3 position, int8_t type = BLOCK_AIR, int8_t meta = 0, bool sendUpdate = true);
+        void PlaceSponge(Int3 position);
         Block* BreakBlock(Int3 position, bool sendUpdate = true);
         bool BlockExists(Int3 position);
         Block* GetBlock(Int3 position);
