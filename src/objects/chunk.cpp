@@ -28,28 +28,28 @@ void Chunk::GenerateHeightMap() {
 }
 
 void Chunk::RelightBlock(int x, int y, int z) {
-    int var4 = this->heightMap[z << 4 | x] & 255;
-    int var5 = var4;
-    if(y > var4) {
-        var5 = y;
+    int heightMapValue = this->heightMap[z << 4 | x] & 255;
+    int heightValue = heightMapValue;
+    if(y > heightMapValue) {
+        heightValue = y;
     }
 
-    // We decrement var5 until we hit a fully opaque block
-    while(var5 > 0 && GetTranslucency(this->GetBlockType(Int3{x, var5 - 1, z})) == 0) {
-        //int bType = this->GetBlockType(Int3{x, var5 - 1, z});
-        //std::cout << Int3{x, var5 - 1, z} << IdToLabel(bType) << ": " << (int)GetTranslucency(bType) << std::endl;
-        --var5;
+    // We decrement heightValue until we hit a fully opaque block
+    while(heightValue > 0 && GetTranslucency(this->GetBlockType(Int3{x, heightValue - 1, z})) == 0) {
+        //int bType = this->GetBlockType(Int3{x, heightValue - 1, z});
+        //std::cout << Int3{x, heightValue - 1, z} << IdToLabel(bType) << ": " << (int)GetTranslucency(bType) << std::endl;
+        --heightValue;
     }
 
-    // If var5 and var4 aren't equal, we recalculate lighting
-    if(var5 != var4) {
+    // If heightValue and heightMapValue aren't equal, we recalculate lighting
+    if(heightValue != heightMapValue) {
         // This is purely for the Infdev Singleplayer client to update stuff visually
-        //this->world->MarkBlocksDirtyVertical(x, z, var5, var4);
-        this->heightMap[z << 4 | x] = (int8_t)var5;
+        //this->world->MarkBlocksDirtyVertical(x, z, heightValue, heightMapValue);
+        this->heightMap[z << 4 | x] = (int8_t)heightValue;
         int ix;
         int iz;
-        if(var5 < this->lowestBlockHeight) {
-            this->lowestBlockHeight = var5;
+        if(heightValue < this->lowestBlockHeight) {
+            this->lowestBlockHeight = heightValue;
         } else {
             y = 127;
 
@@ -66,36 +66,36 @@ void Chunk::RelightBlock(int x, int y, int z) {
 
         y = (this->xPos << 4) + x;
         ix = (this->zPos << 4) + z;
-        if(var5 < var4) {
-            for(iz = var5; iz < var4; ++iz) {
+        if(heightValue < heightMapValue) {
+            for(iz = heightValue; iz < heightMapValue; ++iz) {
                 this->SetLight(true,Int3{x, iz, z}, 15);
             }
         } else {
-            this->world->AddToLightQueue(true, Int3{y, var4, ix}, Int3{y, var5, ix});
+            this->world->AddToLightQueue(true, Int3{y, heightMapValue, ix}, Int3{y, heightValue, ix});
 
-            for(iz = var4; iz < var5; ++iz) {
+            for(iz = heightMapValue; iz < heightValue; ++iz) {
                 this->SetLight(true,Int3{x, iz, z}, 0);
             }
         }
 
         iz = 15;
 
-        while(var5 > 0 && iz > 0) {
-            --var5;
-            var4 = GetTranslucency(
-                this->GetBlockType(Int3{x, var5, z})
+        while(heightValue > 0 && iz > 0) {
+            --heightValue;
+            heightMapValue = GetTranslucency(
+                this->GetBlockType(Int3{x, heightValue, z})
             );
-            if(var4 == 0) {
-                var4 = 1;
+            if(heightMapValue == 0) {
+                heightMapValue = 1;
             }
 
-            iz -= var4;
+            iz -= heightMapValue;
             if(iz < 0) {
                 iz = 0;
             }
 
-            this->SetLight(true,Int3{x, var5, z}, iz);
-            this->world->SpreadLight(true, Int3{y, var5, ix}, -1);
+            this->SetLight(true,Int3{x, heightValue, z}, iz);
+            this->world->SpreadLight(true, Int3{y, heightValue, ix}, -1);
         }
 
         this->modified = true;
@@ -174,4 +174,5 @@ void Chunk::SetBlockType(int8_t blockType, Int3 pos) {
     Block* b = this->GetBlock(pos);
     if (!b) return;
     b->type = blockType;
+    RelightBlock(pos.x, pos.y, pos.z);
 }
