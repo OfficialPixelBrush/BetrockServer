@@ -239,6 +239,24 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     chunk->modified = false;
 }
 
+void World::PlaceSponge(Int3 position) {
+    PlaceBlock(position, BLOCK_SPONGE);
+    for (int x = -2; x <= 2; x++) {
+        for (int z = -2; z <= 2; z++) {
+            for (int y = -2; y <= 2; y++) {
+                Block* b = GetBlock(position + Int3{x,y,z});
+                if (!b) continue;
+                if (
+                    b->type == BLOCK_WATER_STILL ||
+                    b->type == BLOCK_WATER_FLOWING
+                ) {
+                    PlaceBlock(position + Int3{x,y,z}, BLOCK_AIR);
+                }
+            }
+        }
+    }
+}
+
 // Place a block at the passed position
 // This position must be within a currently loaded Chunk
 void World::PlaceBlock(Int3 position, int8_t type, int8_t meta, bool sendUpdate) {
