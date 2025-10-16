@@ -7,20 +7,30 @@
 // Check if the position of a player is valid
 bool Client::CheckPosition(Vec3 &newPosition, double &newStance) {
 	player->previousPosition = player->position;
+	/*
 	Vec3 testPos {
 		0,0,0
 	};
 	AABB testBox {
 		Vec3 {
-			0,0,0
+			48,0,48
 		},
 		Vec3 {
-			16,128,16
+			64,128,64
 		}
 	};
-	std::cout << player->CheckCollision(testPos,testBox) << std::endl;
+	*/
+	// Accept what the player has sent us
 	player->position = newPosition;
 	player->stance = newStance;
+
+	// Player has collided
+	/*
+	if (player->CheckCollision(testPos,testBox)) {
+		player->position = player->position + player->CheckPushback(testPos,testBox);
+		return false;
+	}
+	*/
 	return true;
 }
 
@@ -248,10 +258,10 @@ void Client::HandlePacket() {
 	// Prep for next packet
 	ssize_t bytes_received = Setup();
 
-	// If we receive no Data from the player, such as when they 
+	// If we receive no Data from the player, such as when they
+	// crash or close the game without quitting
 	if (bytes_received <= 0) {
-		perror("read");
-		DisconnectClient("No data.");
+		DisconnectClient("No data",true,false);
 		return;
 	}
 
@@ -401,6 +411,7 @@ void Client::HandleClient() {
 	// While the player is connected, read packets from them
 	while (server.IsAlive() && GetConnectionStatus() > ConnectionStatus::Disconnected) {
 		HandlePacket();
+		// A packet is handled every tick
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED));
 	}
 	
@@ -656,8 +667,9 @@ bool Client::HandlePlayerPosition() {
 	newStance = EntryToDouble(message,offset);
 	newPosition.z = EntryToDouble(message,offset);
 	player->onGround = EntryToByte(message, offset);
+	// If an invalid position was hit, tp the player back
 	if (!CheckPosition(newPosition,newStance)) {
-		Teleport(response,player->position);
+		TeleportKeepView(response,player->position);
 	}
 	UpdatePositionForOthers(false);
 
@@ -957,17 +969,19 @@ bool Client::HandleDisconnect() {
 
 // This should be used for disconnecting clients
 // Disconnect the current client from the server
-void Client::DisconnectClient(std::string disconnectMessage, bool tellOthers) {
+void Client::DisconnectClient(std::string disconnectMessage, bool tellOthers, bool tellPlayer) {
 	SetConnectionStatus(ConnectionStatus::Disconnected);
-	Respond::Disconnect(response, disconnectMessage);
-	SendResponse(true);
+	if (tellPlayer) {
+		Respond::Disconnect(response, disconnectMessage);
+		SendResponse(true);
+	}
 	// Inform other clients
 	if (tellOthers) {
-		Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
 		Respond::ChatMessage(broadcastOthersResponse, "§e" + player->username + " left the game.");
 	}
 	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
 	BroadcastToClients(broadcastOthersResponse,this);
+	Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
 }
 
 // Add something to the current clients upcoming response packet
@@ -1024,6 +1038,17 @@ void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
 	//SendResponse(true);
     DetermineVisibleChunks(true);
     Respond::PlayerPositionLook(response, player.get());
+}
+
+// Teleport the client to the requested while keeping view
+void Client::TeleportKeepView(std::vector<uint8_t> &response, Vec3 position) {
+    player->position = position;
+	player->position.y += STANCE_OFFSET;
+    player->stance = position.y;
+    newChunks.clear();
+	//SendResponse(true);
+    DetermineVisibleChunks(true);
+    Respond::PlayerPosition(response, player.get());
 }
 
 // Respawn the Client by sending them back to spawn

@@ -8,15 +8,16 @@ class Entity {
         // Movement Stats
         Vec3 position;
         Vec3 previousPosition;
-        // Default to collision size of 1 block
-        // Centered around the current position
+        // Default to collision size of player
+        // Centered around the current position,
+        // which is at the entites' feet
         AABB collisionBox = AABB
         {
             Vec3 {
-                -0.5,-0.5,-0.5
+                -0.3,0.0,-0.3
             },
             Vec3 {
-                0.5,0.5,0.5
+                0.3,1.8,0.3
             }
         };
         bool onGround = true;
@@ -42,4 +43,5 @@ class Entity {
         virtual void Kill(std::vector<uint8_t> &response);
         virtual void PrintStats();
         bool CheckCollision(Vec3 otherPos, AABB otherAABB);
+        Vec3 CheckPushback(Vec3 otherPos, AABB otherAABB);
 };

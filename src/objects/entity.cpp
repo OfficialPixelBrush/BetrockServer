@@ -42,3 +42,35 @@ bool Entity::CheckCollision(Vec3 otherPos, AABB otherAABB) {
         a.max.z >= b.min.z
     );
 }
+
+Vec3 Entity::CheckPushback(Vec3 otherPos, AABB otherAABB) {
+    AABB a = CalculateAABB(this->position, this->collisionBox);
+    AABB b = CalculateAABB(otherPos, otherAABB);
+    float overlapX1 = a.max.x - b.min.x; // A overlaps B from left
+    float overlapX2 = b.max.x - a.min.x; // A overlaps B from right
+
+    float overlapY1 = a.max.y - b.min.y;
+    float overlapY2 = b.max.y - a.min.y;
+
+    float overlapZ1 = a.max.z - b.min.z;
+    float overlapZ2 = b.max.z - a.min.z;
+    
+    float pushX = (overlapX1 < overlapX2) ? -overlapX1 : overlapX2;
+    float pushY = (overlapY1 < overlapY2) ? -overlapY1 : overlapY2;
+    float pushZ = (overlapZ1 < overlapZ2) ? -overlapZ1 : overlapZ2;
+
+    float absX = std::abs(pushX);
+    float absY = std::abs(pushY);
+    float absZ = std::abs(pushZ);
+
+    Vec3 correction { 0,0,0 };
+
+    if (absX < absY && absX < absZ)
+        correction.x = pushX;
+    else if (absY < absZ)
+        correction.y = pushY;
+    else
+        correction.z = pushZ;
+    std::cout << correction << std::endl;
+    return correction;
+}

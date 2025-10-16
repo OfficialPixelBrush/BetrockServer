@@ -110,7 +110,7 @@ class Client : public std::enable_shared_from_this<Client> {
 
         Client(int clientFd) : clientFd(clientFd) {}
         void HandleClient();
-        void DisconnectClient(std::string disconnectMessage = "", bool tellOthers = false);
+        void DisconnectClient(std::string disconnectMessage = "", bool tellOthers = false, bool tellPlayer = true);
 
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
         bool UpdateInventory(std::vector<uint8_t> &response);
@@ -121,6 +121,7 @@ class Client : public std::enable_shared_from_this<Client> {
 
         Player* GetPlayer() { return this->player.get(); };
         void Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw = 0, float pitch = 0);
+        void TeleportKeepView(std::vector<uint8_t> &response, Vec3 position);
         void AppendResponse(std::vector<uint8_t> &addition);
         void SendResponse(bool autoclear = false);
 
