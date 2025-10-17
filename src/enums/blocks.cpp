@@ -347,6 +347,23 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
 	Block b = Block{(int8_t)id,(int8_t)damage,0,0};
 
 	// Handle items that place as blocks
+    if (id == ITEM_HOE_DIAMOMD ||
+        id == ITEM_HOE_GOLD ||
+        id == ITEM_HOE_IRON ||
+        id == ITEM_HOE_STONE ||
+        id == ITEM_HOE_WOOD
+    ) {
+        Block* belowBlock = world->GetBlock(pos-Int3{0,1,0});
+        if (belowBlock && belowBlock->type == BLOCK_GRASS) {
+            world->PlaceBlock(pos-Int3{0,1,0},BLOCK_FARMLAND);
+        }
+        id = SLOT_EMPTY;
+        return b;
+    }
+    if (id == ITEM_SEEDS_WHEAT) {
+        b.type = BLOCK_CROP_WHEAT;
+        return b;
+    }
 	if (id == ITEM_REDSTONE) {
 		b.type = BLOCK_REDSTONE;
 		return b;
@@ -437,6 +454,7 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
 		return b;
 	}
 
+    // --- ALL ITEMS WAS A RIGHT-CLICK USE MUST BE HANDLED BEFORE HERE ---
 	// If it hasn't been caught yet by any of the items
 	// its an invalid block, so we don't care.
 	if (id > BLOCK_MAX) {

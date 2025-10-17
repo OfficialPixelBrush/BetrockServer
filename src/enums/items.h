@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 #define SLOT_EMPTY -1
 
@@ -110,3 +111,6 @@ enum Items {
     ITEM_SHEARS,
     ITEM_MAX,
 };
+
+bool IsHoe(uint8_t id);
+bool CanPlace(uint8_t id);

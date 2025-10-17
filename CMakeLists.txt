@@ -67,6 +67,7 @@ add_executable(
     src/coms/responses.cpp
 
     src/enums/blocks.cpp
+    src/enums/items.cpp
     src/enums/labels.cpp
     src/enums/biomes.cpp
 

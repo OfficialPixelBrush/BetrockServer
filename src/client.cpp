@@ -913,6 +913,10 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 			case BLOCK_SPONGE:
 				world->PlaceSponge(pos);
 				break;
+			//case ITEM_BED:
+			//	world->PlaceBlock(pos,b.type,b.meta);
+			//	BlockToFace(pos,face);
+			//	break;
 			default:
 				world->PlaceBlock(pos,b.type,b.meta);
 				break;
@@ -1237,12 +1241,19 @@ bool Client::CanDecrementHotbar() {
 // Decrement the held item by 1
 void Client::DecrementHotbar(std::vector<uint8_t> &response) {
     Item* i = &player->inventory[GetHotbarSlot()];
-    i->amount--;
-    if (i->amount <= 0) {
-        i->id = -1;
-        i->amount = 0;
-        i->damage = 0;
-    }
+	// TODO: This is bad. Investigate making items better.
+	if (IsHoe(i->id)) {
+		// Damage Tool
+		i->damage -= 1;
+	} else {
+		// Place item
+		i->amount--;
+		if (i->amount <= 0) {
+			i->id = SLOT_EMPTY;
+			i->amount = 0;
+			i->damage = 0;
+		}
+	}
 	Respond::SetSlot(response, 0, GetHotbarSlot(), i->id, i->amount, i->damage);
 }
 
