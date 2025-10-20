@@ -199,6 +199,35 @@ Chunk* World::LoadChunk(int32_t x, int32_t z) {
             c->blocks[i*2  ].lightSky = (skyLight[i]     )&0xF;
             c->blocks[i*2+1].lightSky = (skyLight[i] >> 4)&0xF;
         }
+
+        // Load Tile Entity Data
+        auto tileEntitiesNbt = std::dynamic_pointer_cast<ListTag>(level->Get("TileEntities"));
+        if (tileEntitiesNbt && tileEntitiesNbt->GetNumberOfTags() > 0) {
+            for (auto teNbt : tileEntitiesNbt->GetTags()) {
+                auto teNbtTag = std::dynamic_pointer_cast<CompoundTag>(teNbt);
+                // Shared between all tile entities
+                auto xTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("x"));
+                auto yTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("y"));
+                auto zTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("z"));
+                auto typeTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("id"));
+                if (!xTag || !yTag || !zTag || !typeTag) continue;
+
+                int x = xTag->GetData();
+                int y = yTag->GetData();
+                int z = zTag->GetData();
+                std::string type = typeTag->GetData();
+                if (type == TILEENTITY_SIGN) {
+                    std::array<std::string, 4> lines;
+                    lines[0] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text1"))->GetData();
+                    lines[1] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text2"))->GetData();
+                    lines[2] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text3"))->GetData();
+                    lines[3] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text4"))->GetData();
+                    c->AddTileEntity(std::make_unique<SignTile>(Int3{x, y, z}, lines));
+                    continue;
+                }
+            }
+        }
+
         if (terrainPopulated) c->state = ChunkState::Populated;
         return AddChunk(x,z,std::move(c));
     } catch (const std::exception& e) {
@@ -240,10 +269,18 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     for (auto te : tileEntities) {
         auto subtag = std::make_shared<CompoundTag>("TileEntities");
         // Shared between all tile entities
-        tileEntitiesNbt->Put(std::make_shared<IntTag>("x", te->position.x));
-        tileEntitiesNbt->Put(std::make_shared<IntTag>("y", te->position.y));
-        tileEntitiesNbt->Put(std::make_shared<IntTag>("z", te->position.z));
-        tileEntitiesNbt->Put(std::make_shared<StringTag>("id", te->type));
+        subtag->Put(std::make_shared<IntTag>("x", te->position.x));
+        subtag->Put(std::make_shared<IntTag>("y", te->position.y));
+        subtag->Put(std::make_shared<IntTag>("z", te->position.z));
+        subtag->Put(std::make_shared<StringTag>("id", te->type));
+        if (te->type == TILEENTITY_SIGN) {
+            auto sign = static_cast<SignTile*>(te); 
+            subtag->Put(std::make_shared<StringTag>("Text1", sign->lines[0]));
+            subtag->Put(std::make_shared<StringTag>("Text2", sign->lines[1]));
+            subtag->Put(std::make_shared<StringTag>("Text3", sign->lines[2]));
+            subtag->Put(std::make_shared<StringTag>("Text4", sign->lines[3]));
+        }
+        tileEntitiesNbt->Put(subtag);
     }
     
     NbtWriteToFile(filePath,root,NBT_ZLIB);
