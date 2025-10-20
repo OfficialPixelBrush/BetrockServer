@@ -44,7 +44,10 @@ class Client : public std::enable_shared_from_this<Client> {
         std::vector<uint8_t> broadcastResponse;
         std::vector<uint8_t> broadcastOthersResponse;
 
+        // Window status
         int8_t activeWindow = INVENTORY_NONE;
+        int8_t windowIndex = 0;
+
         int64_t lastPacketTime = 0;
         int clientFd;
         std::atomic<ConnectionStatus> connectionStatus = ConnectionStatus::Disconnected;
@@ -126,6 +129,8 @@ class Client : public std::enable_shared_from_this<Client> {
         void SendResponse(bool autoclear = false);
 
         bool ChunkIsVisible(Int3 pos);
+        void OpenWindow(int8_t type);
+        void CloseLatestWindow();
 
         std::mutex &GetNewChunksMutex() noexcept { return this->newChunksMutex; }
         void AddNewChunk(Int3 pos) { 

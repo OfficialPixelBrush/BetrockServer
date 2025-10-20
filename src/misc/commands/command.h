@@ -10,6 +10,7 @@
 #include "labels.h"
 #include "sysinfo.h"
 #include "labels.h"
+#include "inventory.h"
 
 #define ERROR_OPERATOR "Only operators can use this command!"
 #define ERROR_CREATIVE "Only creative players can use this command!"
@@ -64,6 +65,7 @@ DEFINE_COMMAND(CommandVersion,  "version",  "Shows the current Server version"  
 DEFINE_COMMAND(CommandList,     "list",     "List all currently online players"                     , ""                                        , false, false);
 DEFINE_COMMAND(CommandPose,     "pose",     "Set the current players' pose"                         , "<crouch/fire/sit>"                       , false, false);
 DEFINE_COMMAND(CommandSpawn,    "spawn",    "Teleport to Spawn"                                     , ""                                        , false, false);
+DEFINE_COMMAND(CommandInterface,"interface","Open the desired interface"                            , "<id>"                                    , false, false);
 // Needs at least creative mode to run
 DEFINE_COMMAND(CommandTeleport, "tp",       "Teleports player to coordinates or another player"     , "<player> <x> <y> <z>/<player> <player>"  , false, true );
 DEFINE_COMMAND(CommandGive,     "give",     "Give yourself a block or item"                         , "<id> [meta] [amount]"                    , false, true );

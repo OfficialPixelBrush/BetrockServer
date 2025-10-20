@@ -528,3 +528,16 @@ std::string CommandSpawn::Execute(std::vector<std::string> command, std::vector<
 	client->Teleport(response, Int3ToVec3(Betrock::Server::Instance().GetSpawnPoint()));
 	return "";
 }
+
+// Open the desired interface
+std::string CommandInterface::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+	DEFINE_PERMSCHECK(client);
+	
+	// TODO: Tracks players open Window IDs
+	if (command[1] == "craft") {
+		client->OpenWindow(INVENTORY_WORKBENCH);
+	} else if (command[1] == "chest") {
+		client->OpenWindow(INVENTORY_CHEST);
+	}
+	return "";
+}

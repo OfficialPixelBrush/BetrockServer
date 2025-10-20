@@ -53,6 +53,7 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/src/plugins/terrain"
     "${PROJECT_SOURCE_DIR}/src/plugins/terrain/historic"
     "${PROJECT_SOURCE_DIR}/src/plugins/terrain/historic/noise"
+    "${PROJECT_SOURCE_DIR}/src/world"
     "${PROJECT_SOURCE_DIR}/src/"
     ${LUA_INCLUDE_DIR}
 )
@@ -85,11 +86,12 @@ add_executable(
     src/misc/lighting.cpp
     src/misc/sysinfo.cpp
 
-    src/objects/chunk.cpp
     src/objects/entity.cpp
     src/objects/player.cpp
-    src/objects/world.cpp
-    src/objects/worldManager.cpp
+
+    src/world/chunk.cpp
+    src/world/world.cpp
+    src/world/worldManager.cpp
 
     src/plugins/terrain/historic/inf20100227/generatorInfdev20100227.cpp
     src/plugins/terrain/historic/inf20100327/generatorInfdev20100327.cpp

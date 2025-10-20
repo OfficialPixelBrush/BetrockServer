@@ -936,8 +936,10 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 
 // Handle the Client closing a Window
 bool Client::HandleCloseWindow() {
+	// TODO: Is this a dynamically sized list or an array with 99 items?
 	int8_t window 	= EntryToByte(message, offset);
 	activeWindow = INVENTORY_NONE;
+	//CloseLatestWindow();
 	return true;
 }
 
@@ -1260,4 +1262,36 @@ void Client::DecrementHotbar(std::vector<uint8_t> &response) {
 // Check if the passed chunk position is visible to the client
 bool Client::ChunkIsVisible(Int3 pos) {
 	return std::find(visibleChunks.begin(), visibleChunks.end(), pos) != visibleChunks.end();
+}
+
+void Client::OpenWindow(int8_t type) {
+    windowIndex++;
+    switch(type) {
+        case INVENTORY_CHEST:
+            Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Chest", INVENTORY_CHEST_SIZE);
+            break;
+        case INVENTORY_CHEST_LARGE:
+            Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Large Chest", INVENTORY_CHEST_LARGE_SIZE);
+            break;
+        case INVENTORY_WORKBENCH:
+            Respond::OpenWindow(response, windowIndex, INVENTORY_WORKBENCH, "", INVENTORY_WORKBENCH_SIZE);
+            break;
+        case INVENTORY_FURNACE:
+            Respond::OpenWindow(response, windowIndex, INVENTORY_FURNACE, "", INVENTORY_FURNACE_SIZE);
+            break;
+        case INVENTORY_DISPENSER:
+            Respond::OpenWindow(response, windowIndex, INVENTORY_DISPENSER, "", INVENTORY_DISPENSER_SIZE);
+            break;
+        default:
+            windowIndex--;
+            return;
+    }
+    activeWindow = type;
+    return;
+}
+
+void Client::CloseLatestWindow() {
+    Respond::CloseWindow(response, windowIndex);
+    windowIndex--;
+    return;
 }

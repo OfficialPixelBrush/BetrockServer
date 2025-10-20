@@ -6,8 +6,16 @@ enum Inventory {
     INVENTORY_WORKBENCH = 1,
     INVENTORY_FURNACE = 2,
     INVENTORY_DISPENSER = 3,
+    // Doesn't actually exist, but makes distinction easier
+    INVENTORY_CHEST_LARGE = 4,
     CLICK_OUTSIDE = -999
 };
+
+#define INVENTORY_CHEST_SIZE 27
+#define INVENTORY_CHEST_LARGE_SIZE 54
+#define INVENTORY_WORKBENCH_SIZE 9
+#define INVENTORY_FURNACE_SIZE 3
+#define INVENTORY_DISPENSER_SIZE 9
 
 #define MAX_STACK 64
 

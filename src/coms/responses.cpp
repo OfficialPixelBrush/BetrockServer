@@ -247,6 +247,19 @@ void Respond::Soundeffect(std::vector<uint8_t> &response, int32_t sound, Int3 po
     AppendIntegerToVector(response,extra);
 }
 
+void Respond::OpenWindow(std::vector<uint8_t> &response, int8_t windowId, uint8_t type, std::string name, int8_t size) {
+    response.push_back((uint8_t)Packet::OpenWindow);
+    response.push_back((uint8_t)windowId);
+    response.push_back((uint8_t)type);
+    AppendString8ToVector(response,name);
+    response.push_back((uint8_t)size);
+}
+
+void Respond::CloseWindow(std::vector<uint8_t> &response, int8_t windowId) {
+    response.push_back((uint8_t)Packet::CloseWindow);
+    response.push_back((uint8_t)windowId);
+}
+
 void Respond::SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slot, int16_t item, int8_t amount, int16_t damage) {
     response.push_back((uint8_t)Packet::SetSlot);
     response.push_back(window);
