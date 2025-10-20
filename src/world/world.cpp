@@ -223,6 +223,7 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     auto meta = GetChunkMeta(chunk);
     auto blockLight = GetChunkBlockLight(chunk);
     auto skyLight = GetChunkSkyLight(chunk);
+    auto tileEntities = chunk->GetTileEntities();
 
     auto root = std::make_shared<CompoundTag>("");
     auto level = std::make_shared<CompoundTag>("Level");
@@ -234,6 +235,16 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     level->Put(std::make_shared<ByteTag>("TerrainPopulated", chunk->state == ChunkState::Populated));
     level->Put(std::make_shared<IntTag>("zPos",x));
     level->Put(std::make_shared<IntTag>("xPos",z));
+    auto tileEntitiesNbt = std::make_shared<ListTag>("TileEntities");
+    level->Put(tileEntitiesNbt);
+    for (auto te : tileEntities) {
+        auto subtag = std::make_shared<CompoundTag>("TileEntities");
+        // Shared between all tile entities
+        tileEntitiesNbt->Put(std::make_shared<IntTag>("x", te->position.x));
+        tileEntitiesNbt->Put(std::make_shared<IntTag>("y", te->position.y));
+        tileEntitiesNbt->Put(std::make_shared<IntTag>("z", te->position.z));
+        tileEntitiesNbt->Put(std::make_shared<StringTag>("id", te->type));
+    }
     
     NbtWriteToFile(filePath,root,NBT_ZLIB);
     chunk->modified = false;
@@ -460,6 +471,14 @@ void World::SetSkyLight(Int3 position, int8_t level) {
     if (b) {
         b->lightSky = level;
     }
+}
+
+std::vector<SignTile*> World::GetChunkSigns(Int3 position) {
+    Chunk* c = GetChunk(position.x,position.z);
+    if (!c) {
+        return {};
+    }
+    return c->GetSigns();
 }
 
 // Get all the block,meta,block light and sky light data of a Chunk in a Binary Format
@@ -856,4 +875,13 @@ int8_t World::GetBlockType(Int3 pos) {
         pos.z &= 15;
         return c->GetBlockType(pos);
     }
+}
+
+void World::AddTileEntity(std::unique_ptr<TileEntity>&& te) {
+    Chunk* c = this->GetChunk(
+        te->position.x >> 4,
+        te->position.z >> 4
+    );
+    if (!c) return;
+    c->AddTileEntity(std::move(te));
 }

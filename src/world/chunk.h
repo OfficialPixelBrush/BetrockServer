@@ -3,6 +3,7 @@
 #include "datatypes.h"
 #include "blocks.h"
 #include "world.h"
+#include "tileEntity.h"
 
 class World;
 
@@ -18,6 +19,7 @@ class Chunk {
         uint8_t lowestBlockHeight;
         World* world;
         int32_t xPos, zPos;
+        std::vector<std::unique_ptr<TileEntity>> tileEntities;
         
         void RelightBlock(int var1, int var2, int var3);
         void UpdateSkylight_do(int x, int z);
@@ -38,4 +40,7 @@ class Chunk {
         int8_t GetLight(bool skyLight, Int3 pos);
         void SetBlockType(int8_t blockType, Int3 pos);
         int8_t GetBlockType(Int3 pos);
+        void AddTileEntity(std::unique_ptr<TileEntity>&& te);
+        std::vector<TileEntity*> GetTileEntities();
+        std::vector<SignTile*> GetSigns();
 };

@@ -176,3 +176,28 @@ void Chunk::SetBlockType(int8_t blockType, Int3 pos) {
     b->type = blockType;
     RelightBlock(pos.x, pos.y, pos.z);
 }
+
+void Chunk::AddTileEntity(std::unique_ptr<TileEntity>&& te) {
+    tileEntities.push_back(std::move(te));
+}
+
+std::vector<TileEntity*> Chunk::GetTileEntities() {
+    std::vector<TileEntity*> tes;
+    for (const auto& te : tileEntities) {
+        tes.push_back(te.get());
+    }
+    return tes;
+}
+
+std::vector<SignTile*> Chunk::GetSigns() {
+    std::vector<SignTile*> signs;
+    for (const auto& te : tileEntities) {
+        if (!te || te->type != "Sign") {
+            continue;
+        }
+        if (auto sign = dynamic_cast<SignTile*>(te.get())) {
+            signs.push_back(sign);
+        }
+    }
+    return signs;
+}

@@ -283,6 +283,11 @@ void Respond::WindowItems(std::vector<uint8_t> &response, int8_t window, std::ve
     }
 }
 
+// TODO: Check that there are enough lines
+void Respond::UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::array<std::string, 4> lines) {
+    UpdateSign(response,pos,lines[0],lines[1],lines[2],lines[3]);
+}
+
 void Respond::UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::string line1, std::string line2, std::string line3, std::string line4) {
     response.push_back((uint8_t)Packet::UpdateSign);
     AppendIntegerToVector(response,pos.x);

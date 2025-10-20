@@ -15,6 +15,7 @@
 #include "generator.h"
 #include "config.h"
 #include "chunk.h"
+#include "tileEntity.h"
 
 class Chunk;
 
@@ -43,26 +44,37 @@ class World {
         int64_t seed;
         void UpdateLighting();
         World(const std::string &extra = "");
-        void Save();
-        int GetNumberOfChunks();
-        int8_t GetHeightValue(int32_t x, int32_t z);
-        std::unique_ptr<char[]> GetChunkData(Int3 position);
-        std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkBlocks(Chunk* c);
-        std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkMeta(Chunk* c);
-        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkBlockLight(Chunk* c);
-        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkSkyLight(Chunk* c);
+
+        // Block-related
         void PlaceBlock(Int3 position, int8_t type = BLOCK_AIR, int8_t meta = 0, bool sendUpdate = true);
         void PlaceSponge(Int3 position);
         Block* BreakBlock(Int3 position, bool sendUpdate = true);
         bool BlockExists(Int3 position);
         Block* GetBlock(Int3 position);
+        void SetBlockType(int8_t blockType, Int3 pos);
+        int8_t GetBlockType(Int3 pos);
+        void UpdateBlock(Int3 position, Block* b);
+        bool InteractWithBlock(Int3 pos);
+
+        // Light-related
+        int8_t GetSkyLight(Int3 position);
+        void SetSkyLight(Int3 position, int8_t level);
+        void SpreadLight(bool skyLight, Int3 pos, int limit);
+        void AddToLightQueue(bool skyLight, Int3 posA, Int3 posB);
+        void SetLight(bool skyLight, Int3 pos,int8_t newLight);
+        int8_t GetLight(bool skyLight, Int3 pos);
+
+        // Chunk-related
+        std::unique_ptr<char[]> GetChunkData(Int3 position);
+        std::vector<SignTile*> GetChunkSigns(Int3 position);
+        std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkBlocks(Chunk* c);
+        std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkMeta(Chunk* c);
+        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkBlockLight(Chunk* c);
+        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkSkyLight(Chunk* c);
+        void TickChunks();
         Chunk* GetChunk(int32_t x, int32_t z);
         bool IsChunkPopulated(int32_t x, int32_t z);
         bool IsChunkGenerated(int32_t x, int32_t z);
-        int8_t GetSkyLight(Int3 position);
-        void SetSkyLight(Int3 position, int8_t level);
-        void UpdateBlock(Int3 position, Block* b);
-        Int3 FindSpawnableBlock(Int3 position);
         Chunk* AddChunk(int32_t x, int32_t z, std::unique_ptr<Chunk> c);
         void FreeUnseenChunks();
         void SaveChunk(int32_t x, int32_t z, Chunk* chunk);
@@ -70,12 +82,11 @@ class World {
         Chunk* LoadOldChunk(int32_t x, int32_t z);
         bool ChunkFileExists(int32_t x, int32_t z, std::string extension = std::string(CHUNK_FILE_EXTENSION));
         bool ChunkExists(int32_t x, int32_t z);
-        void TickChunks();
-        bool InteractWithBlock(Int3 pos);
-        void SpreadLight(bool skyLight, Int3 pos, int limit);
-        void AddToLightQueue(bool skyLight, Int3 posA, Int3 posB);
-        void SetLight(bool skyLight, Int3 pos,int8_t newLight);
-        int8_t GetLight(bool skyLight, Int3 pos);
-        void SetBlockType(int8_t blockType, Int3 pos);
-        int8_t GetBlockType(Int3 pos);
+        
+        // Misc
+        void Save();
+        int GetNumberOfChunks();
+        int8_t GetHeightValue(int32_t x, int32_t z);
+        Int3 FindSpawnableBlock(Int3 position);
+        void AddTileEntity(std::unique_ptr<TileEntity>&& te);
 };

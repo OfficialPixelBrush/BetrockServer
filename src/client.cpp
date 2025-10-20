@@ -175,6 +175,7 @@ void Client::SendNewChunks() {
 			newChunks.erase(nc);
 			continue;
 		}
+		auto signs = wm->world.GetChunkSigns(*nc);
 
 		// Send chunk to player
 		size_t compressedSize = 0;
@@ -193,6 +194,13 @@ void Client::SendNewChunks() {
 				compressedSize, 
 				chunk.get()
 			);
+			for (auto s : signs) {
+				Respond::UpdateSign(
+					response,
+					s->position,
+					s->lines
+				);
+			}
 		}
 		newChunks.erase(nc);
 		sentThisCycle--;
@@ -962,14 +970,18 @@ bool Client::HandleWindowClick() {
 }
 
 bool Client::HandleUpdateSign() {
-	int32_t x 		= EntryToInteger(message, offset);
-	int16_t y 		= EntryToShort(message,offset);
-	int32_t z 	= EntryToInteger(message, offset);
-	std::string line1 = EntryToString16(message,offset);
-	std::string line2 = EntryToString16(message,offset);
-	std::string line3 = EntryToString16(message,offset);
-	std::string line4 = EntryToString16(message,offset);
-	Respond::UpdateSign(broadcastOthersResponse,Int3{x,y,z},line1,line2,line3,line4);
+	int32_t x 		  = EntryToInteger(message, offset);
+	int16_t y 		  = EntryToShort(message,offset);
+	int32_t z 		  = EntryToInteger(message, offset);
+	std::array<std::string, 4> lines;
+	lines[0] = EntryToString16(message,offset);
+	lines[1] = EntryToString16(message,offset);
+	lines[2] = EntryToString16(message,offset);
+	lines[3] = EntryToString16(message,offset);
+
+	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
+	wm->world.AddTileEntity(std::make_unique<SignTile>(Int3{x, y, z}, lines));
+	Respond::UpdateSign(broadcastResponse,Int3{x,y,z},lines);
 	return true;
 }
 

@@ -46,6 +46,7 @@ class Respond {
         static void CloseWindow(std::vector<uint8_t> &response, int8_t windowId);
         static void SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slot, int16_t itemId, int8_t itemCount, int16_t itemUses);
         static void WindowItems(std::vector<uint8_t> &response, int8_t window, std::vector<Item> payload);
+        static void UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::array<std::string, 4> lines);
         static void UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::string line1, std::string line2, std::string line3, std::string line4);
         static void Disconnect(std::vector<uint8_t> &response, std::string message);
 };
