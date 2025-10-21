@@ -178,8 +178,8 @@ Chunk* World::LoadChunk(int32_t x, int32_t z) {
         auto terrainPopulated = std::dynamic_pointer_cast<ByteTag>(level->Get("TerrainPopulated"))->GetData();
 
         std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,x,z);
-        size_t blockDataSize  = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z *  CHUNK_HEIGHT   );
-        size_t nibbleDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT/2));
+        const size_t blockDataSize  = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z *  CHUNK_HEIGHT   );
+        const size_t nibbleDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT/2));
         // Block Data
         for (size_t i = 0; i < blockDataSize; i++) {
             c->blocks[i].type = blocks[i];
@@ -262,8 +262,8 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     level->Put(std::make_shared<ByteArrayTag>("BlockLight", blockLight));
     level->Put(std::make_shared<ByteArrayTag>("SkyLight", skyLight));
     level->Put(std::make_shared<ByteTag>("TerrainPopulated", chunk->state == ChunkState::Populated));
-    level->Put(std::make_shared<IntTag>("zPos",x));
-    level->Put(std::make_shared<IntTag>("xPos",z));
+    level->Put(std::make_shared<IntTag>("xPos",x));
+    level->Put(std::make_shared<IntTag>("zPos",z));
     auto tileEntitiesNbt = std::make_shared<ListTag>("TileEntities");
     level->Put(tileEntitiesNbt);
     for (auto te : tileEntities) {
@@ -602,8 +602,8 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
 }
 
 // Get all the Meta Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkMeta(Chunk* c) {
-    std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
+std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkMeta(Chunk* c) {
+    std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
     }
@@ -612,11 +612,14 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+                // Default to safe values
+                uint8_t b1v = 0;
+                uint8_t b2v = 0;
                 Block* b1 = c->GetBlock(cX,cY*2,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
-                if (!b1 || !b2) continue;
-                data[index] = (b2->meta << 4 | b1->meta);
-                index++;
+                if (b1) b1v = b1->meta;
+                if (b2) b2v = b2->meta;
+                data[index++] = (b2v << 4 | b1v);
             }
         }
     }
@@ -634,11 +637,14 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+                // Default to safe values
+                uint8_t b1v = 0;
+                uint8_t b2v = 0;
                 Block* b1 = c->GetBlock(cX,cY*2,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
-                if (!b1 || !b2) continue;
-                data[index] = (b2->lightBlock << 4 | b1->lightBlock);
-                index++;
+                if (b1) b1v = b1->lightBlock;
+                if (b2) b2v = b2->lightBlock;
+                data[index++] = (b2v << 4 | b1v);
             }
         }
     }
@@ -657,11 +663,14 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+                // Default to safe values
+                uint8_t b1v = 0;
+                uint8_t b2v = 0;
                 Block* b1 = c->GetBlock(cX,cY*2,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
-                if (!b1 || !b2) continue;
-                data[index] = (b2->lightSky << 4 | b1->lightSky);
-                index++;
+                if (b1) b1v = b1->lightSky;
+                if (b2) b2v = b2->lightSky;
+                data[index++] = (b2v << 4 | b1v);
             }
         }
     }
