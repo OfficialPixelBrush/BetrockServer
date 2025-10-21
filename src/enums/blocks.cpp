@@ -342,8 +342,23 @@ void BlockToFace(Int3& pos, int8_t& direction) {
 	}
 }
 
+uint8_t GetSignOrientation(float playerYaw) {
+    playerYaw = fmod(fmod(playerYaw, 360.0) + 360.0, 360.0);
+    // Divide into 360/16th angles
+    const float angleSlice = 360.0f/16.0f;
+
+    // This is a lot easier than a huge-ass if-else chain
+    int index = static_cast<int>(std::floor((playerYaw + angleSlice * 0.5f) / angleSlice)) % 16;
+    if (index < 0) index += 16;
+
+    // Face the player
+    index = (index + 8) % 16;
+
+    return static_cast<uint8_t>(index);
+}
+
 // Figure out which block should be placed based on the passed parameters
-Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection, int16_t id, int16_t damage) {
+Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_t playerDirection, int16_t id, int16_t damage) {
 	Block b = Block{(int8_t)id,(int8_t)damage,0,0};
 
 	// Handle items that place as blocks
@@ -385,7 +400,7 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection
                 return b;
             case yPlus:
                 b.type = BLOCK_SIGN;
-                // TODO: Handle sign rotation based on player rotation
+                b.meta = GetSignOrientation(playerYaw);
                 return b;
         }
 		return b;

@@ -913,7 +913,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	} else {
 		// Get the block we need to place
 		BlockToFace(pos,face);
-		Block b = GetPlacedBlock(world,pos,face,GetPlayerOrientation(),i.id,i.damage);
+		Block b = GetPlacedBlock(world,pos,face,player->yaw,GetPlayerOrientation(),i.id,i.damage);
 		if (b.type == SLOT_EMPTY) {
 			return false;
 		}

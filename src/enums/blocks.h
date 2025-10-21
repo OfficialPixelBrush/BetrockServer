@@ -18,7 +18,8 @@ bool IsInteractable(int16_t id);
 bool KeepDamageOnDrop(int8_t type);
 bool NoDrop(Item item);
 Item GetDrop(Item item);
-Block GetPlacedBlock(World* world, Int3 pos, int8_t face, int8_t playerDirection, int16_t id, int16_t damage);
+uint8_t GetSignOrientation(float playerYaw);
+Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_t playerDirection, int16_t id, int16_t damage);
 void BlockToFace(Int3& pos, int8_t& direction);
 
 #define MAX_CROP_SIZE 7
