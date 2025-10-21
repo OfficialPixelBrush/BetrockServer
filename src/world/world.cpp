@@ -714,7 +714,7 @@ Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
         return nullptr;
     }
 
-    std::ifstream chunkFile (entryPath);
+    std::ifstream chunkFile (entryPath, std::ios::binary);
     if (!chunkFile.is_open()) {
         Betrock::Logger::Instance().Warning("Failed to load chunk " + std::string(entryPath));
         return nullptr;
@@ -769,6 +769,7 @@ Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
             c->blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
         }
     }
+    c->state = ChunkState::Populated;
     chunkFile.close();
     Betrock::Logger::Instance().Info("Updated " + std::string(entryPath));
     // Delete the old chunk file
