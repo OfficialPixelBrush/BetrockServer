@@ -48,5 +48,5 @@ class Respond {
         static void WindowItems(std::vector<uint8_t> &response, int8_t window, std::vector<Item> payload);
         static void UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::array<std::string, 4> lines);
         static void UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::string line1, std::string line2, std::string line3, std::string line4);
-        static void Disconnect(std::vector<uint8_t> &response, std::string message);
+        static void Disconnect(std::string message);
 };

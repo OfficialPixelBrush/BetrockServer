@@ -1,7 +1,7 @@
 #include "generator.h"
 
 // Prepare the Generator to utilize some preset numbers and functions
-Generator::Generator(int64_t seed, World* world) {
+Generator::Generator( [[maybe_unused]] int64_t seed, [[maybe_unused]] World* world) {
     
 }
 
@@ -9,10 +9,10 @@ Generator::~Generator() {
 
 }
 
-std::unique_ptr<Chunk> Generator::GenerateChunk(int32_t cX, int32_t cZ) {
+std::unique_ptr<Chunk> Generator::GenerateChunk( [[maybe_unused]] int32_t cX, [[maybe_unused]] int32_t cZ) {
     return nullptr;
 }
 
-bool Generator::PopulateChunk(int32_t cX, int32_t cZ) {
+bool Generator::PopulateChunk( [[maybe_unused]] int32_t cX, [[maybe_unused]] int32_t cZ) {
     return true;
 }

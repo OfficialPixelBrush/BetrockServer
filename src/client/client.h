@@ -7,6 +7,7 @@
 #include <unistd.h>
 #include <mutex>
 #include <thread>
+#include <ranges>
 
 #include "player.h"
 #include "commandManager.h"

@@ -70,7 +70,7 @@ std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double>& noiseF
     if(noiseField.empty()) {
         noiseField.resize(var8 * var9 * var10, 0.0);
     } else {
-        for(int var17 = 0; var17 < noiseField.size(); ++var17) {
+        for(size_t var17 = 0; var17 < noiseField.size(); ++var17) {
             noiseField[var17] = 0.0D;
         }
     }
@@ -86,7 +86,7 @@ std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double>& noiseF
 }
 
 template <typename T>
-std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double>& noiseField, int var2, int var3, int var4, int var5, double var6, double var8, double var10) {
+std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double>& noiseField, int var2, int var3, int var4, int var5, double var6, double var8, [[maybe_unused]] double var10) {
     return this->GenerateOctaves(noiseField, (double)var2, 10.0D, (double)var3, var4, 1, var5, var6, 1.0D, var8);
 }
 
@@ -99,8 +99,8 @@ template <typename T>
 std::vector<double> NoiseOctaves<T>::GenerateOctaves(std::vector<double>& noiseField, double var2, double var4, int var6, int var7, double var8, double var10, double var12, double var14) {
     var8 /= 1.5D;
     var10 /= 1.5D;
-    if(!noiseField.empty() && noiseField.size() >= var6 * var7) {
-        for(int var16 = 0; var16 < noiseField.size(); ++var16) {
+    if(!noiseField.empty() && int(noiseField.size()) >= var6 * var7) {
+        for(size_t var16 = 0; var16 < noiseField.size(); ++var16) {
             noiseField[var16] = 0.0D;
         }
     } else {

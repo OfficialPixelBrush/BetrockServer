@@ -41,10 +41,10 @@ class GeneratorBeta173 : public Generator {
         // Cave Gen
         std::unique_ptr<Beta173Caver> caver;
 
-        void GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap, std::vector<double>& temperature);
+        void GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<double>& temperature);
         std::vector<double> GenerateTerrainNoise(std::vector<double> terrainMap, int x, int y, int z, int xMax, int yMax, int zMax);
         std::vector<Biome> GenerateBiomeMap(std::vector<Biome> biomeMap, int x, int z, int xMax, int zMax);
-        void ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap);
+        void ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c);
     public:
         GeneratorBeta173(int64_t seed, World* world);
         ~GeneratorBeta173() = default;

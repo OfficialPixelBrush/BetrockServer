@@ -11,15 +11,15 @@ void Beta173Caver::GenerateCaves(World* world, int cX, int cZ, std::unique_ptr<C
 
     for(int x = cX - genOffset; x <= cX + genOffset; ++x) {
         for(int z = cZ - genOffset; z <= cZ + genOffset; ++z) {
-            this->rand->setSeed((long)x * xOffset + (long)z * zOffset ^ world->seed);
-            this->GenerateCave(world, x, z, cX, cZ, c);
+            this->rand->setSeed((((long)x * xOffset) + ((long)z * zOffset)) ^ world->seed);
+            this->GenerateCave(x, z, cX, cZ, c);
         }
     }
 }
 
 // TODO: This is only the cave generator for the overworld.
 // The one for the nether is different!
-void Beta173Caver::GenerateCave(World* world, int x, int z, int cX, int cZ, std::unique_ptr<Chunk>& c) {
+void Beta173Caver::GenerateCave(int x, int z, int cX, int cZ, std::unique_ptr<Chunk>& c) {
     int var7 = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(40) + 1) + 1);
     if(this->rand->nextInt(15) != 0) {
         var7 = 0;

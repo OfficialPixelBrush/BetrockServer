@@ -1,0 +1,550 @@
+#include "client.h"
+
+#include "server.h"
+
+// --- Packet answers ---
+// Respond to any KeepAlive packets
+bool Client::HandleKeepAlive() {
+	Respond::KeepAlive(response);
+	return true;
+}
+
+// Engage with the handshake packet
+bool Client::HandleHandshake() {
+	player->username = EntryToString16(message, offset);
+	auto &server = Betrock::Server::Instance();
+	if (server.IsWhitelistEnabled() && !server.IsWhitelist(player->username)) {
+		DisconnectClient("Not on whitelist!");
+		return false;
+	}
+	Respond::Handshake(response);
+	SetConnectionStatus(ConnectionStatus::LoggingIn);
+	return true;
+}
+
+// Log the player in and perform checks to ensure a valid connection
+bool Client::HandleLoginRequest(World* world) {
+	bool firstJoin = true;
+	auto &server = Betrock::Server::Instance();
+	if (GetConnectionStatus() != ConnectionStatus::LoggingIn) {
+		DisconnectClient("Expected Login.");
+		return false;
+	}
+
+	// Login response
+	int protocolVersion = EntryToInteger(message,offset);
+
+	if (protocolVersion != PROTOCOL_VERSION) {
+		// If client has wrong protocol, close
+		DisconnectClient("Wrong Protocol Version!");
+		return false;
+	}
+
+	std::string username = EntryToString16(message,offset);
+
+	if (username != player->username) {
+		DisconnectClient("Client has mismatched username.");
+		return false;
+	} 
+	
+	EntryToLong(message,offset); // Get map seed
+	EntryToByte(message,offset); // Get dimension
+
+	// Fill the players inventory
+	if (player->Load()) {
+		firstJoin = false;
+	}
+
+	// Accept the Login
+	Respond::Login(response,player->entityId,world->seed,0);
+	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at " + player->position.str());
+	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.");
+
+  	const auto &spawnPoint = server.GetSpawnPoint();
+
+	// Set the Respawn Point, Time and Player Health
+	Respond::SpawnPoint(response,spawnPoint);
+	Respond::Time(response,server.GetServerTime());
+	// This is usually only done if the players health isn't full upon joining
+	if (player->health != HEALTH_MAX) {
+		Respond::UpdateHealth(response,player->health);
+	}
+
+	if (firstJoin) {
+		// Place the player at spawn
+		// TODO: Search for a block for the player to spawn on
+		player->position = Int3ToVec3(spawnPoint);
+
+		// Give starter items
+		Give(response,ITEM_PICKAXE_DIAMOND);
+		Give(response,ITEM_AXE_DIAMOND);
+		Give(response,ITEM_SHOVEL_DIAMOND);
+		Give(response,BLOCK_STONE);
+		Give(response,BLOCK_COBBLESTONE);
+		Give(response,BLOCK_PLANKS);
+	} else {
+		UpdateInventory(response);
+	}
+
+	// Create the player for other players
+	Respond::NamedEntitySpawn(
+		broadcastOthersResponse,
+		player->entityId,
+		player->username,
+		Vec3ToInt3(player->position),
+		player->yaw,
+		player->pitch,
+		player->inventory[INVENTORY_HOTBAR].id
+	);
+	Respond::EntityTeleport(
+		broadcastOthersResponse,
+		player->entityId,
+		Vec3ToEntityInt3(player->position),
+		ConvertFloatToPackedByte(player->yaw),
+		ConvertFloatToPackedByte(player->pitch)
+	);
+
+	// Spawn the other players for the new client
+    for (auto other : Betrock::Server::Instance().GetConnectedClients()) {
+		if (other.get() == this) { continue; }
+		auto otherPlayer = other->GetPlayer();
+		Respond::NamedEntitySpawn(
+			response,
+			otherPlayer->entityId,
+			otherPlayer->username,
+			Vec3ToInt3(otherPlayer->position),
+			otherPlayer->yaw,
+			otherPlayer->pitch,
+			other->GetHeldItem().id
+		);
+
+		// Note: Even though we already send a packet that
+		// tells the client what item the player holds,
+		// this packet needs to be sent regardless
+		// because otherwise the sky inverts
+		Respond::EntityEquipment(
+			response,
+			otherPlayer->entityId,
+			0,
+			other->GetHeldItem().id,
+			other->GetHeldItem().damage
+		);
+		
+		// Apparently needed to entities show up where they need to
+		Respond::EntityTeleport(
+			response,
+			otherPlayer->entityId,
+			Vec3ToEntityInt3(otherPlayer->position),
+			ConvertFloatToPackedByte(otherPlayer->yaw),
+			ConvertFloatToPackedByte(otherPlayer->pitch)
+		);
+
+    }
+	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION_FULL));
+	SendResponse(true);
+
+	// Note: Teleporting automatically loads surrounding chunks,
+	// so no further loading is necessary
+	player->position.y += 1.0;
+	Teleport(response,player->position, player->yaw, player->pitch);
+	// ONLY SET THIS AFTER LOGIN HAS FINISHED
+	SetConnectionStatus(ConnectionStatus::Connected);
+	return true;
+}
+
+// Accept any chat messages that're sent.
+// If a message starts with a '/', handle it as a command
+bool Client::HandleChatMessage() {
+	std::string chatMessage = EntryToString16(message, offset);
+	if (chatMessage.size() > 0 && chatMessage[0] == '/') {
+		std::string command = chatMessage.substr(1);
+		CommandManager::Parse(command, this);
+	} else {
+		std::string sentChatMessage = "<" + player->username + "> " + chatMessage;
+		Betrock::Logger::Instance().Info(sentChatMessage);
+		Respond::ChatMessage(broadcastResponse,sentChatMessage);
+	}
+	return true;
+}
+
+// Handle any interactions between entities
+bool Client::HandleUseEntity() {
+	//int32_t originEntityId = EntryToInteger(message, offset);
+	EntryToInteger(message, offset);
+	//int32_t recipientEntityId = EntryToInteger(message, offset);
+	EntryToInteger(message, offset);
+	//bool leftClick = EntryToByte(message, offset);
+	EntryToByte(message, offset);
+	return true;
+}
+
+// Handle the player pressing the respawn button
+bool Client::HandleRespawn() {
+	//int8_t dimension = EntryToByte(message, offset);
+	EntryToByte(message, offset);
+	Respawn(response);
+	return true;
+}
+
+// Handle when the Client claims to be standing on solid ground
+bool Client::HandlePlayerGrounded() {
+	player->onGround = EntryToByte(message, offset);
+	return true;
+}
+
+// Handle Player Position packets and relay this information to other clients
+bool Client::HandlePlayerPosition() {
+	Vec3 newPosition;
+	double newStance;
+	newPosition.x = EntryToDouble(message,offset);
+	newPosition.y = EntryToDouble(message,offset);
+	newStance = EntryToDouble(message,offset);
+	newPosition.z = EntryToDouble(message,offset);
+	player->onGround = EntryToByte(message, offset);
+	// If an invalid position was hit, tp the player back
+	if (!CheckPosition(newPosition,newStance)) {
+		TeleportKeepView(response,player->position);
+	}
+	UpdatePositionForOthers(false);
+
+	if (CheckIfNewChunksRequired()) {
+		DetermineVisibleChunks();
+	}
+	return true;
+}
+
+// Handle Player Look packets and relay this information to other clients
+bool Client::HandlePlayerLook() {
+	player->yaw = EntryToFloat(message,offset);
+	player->pitch = EntryToFloat(message,offset);
+	player->onGround = EntryToByte(message, offset);
+	Respond::EntityLook(broadcastOthersResponse,player->entityId, ConvertFloatToPackedByte(player->yaw), ConvertFloatToPackedByte(player->pitch));
+	return true;
+}
+
+// Handle Player Position and Look packets and relay this information to other clients
+bool Client::HandlePlayerPositionLook() {
+	Vec3 newPosition;
+	double newStance;
+	newPosition.x = EntryToDouble(message,offset);
+	newPosition.y = EntryToDouble(message,offset);
+	newStance 	  = EntryToDouble(message,offset);
+	newPosition.z = EntryToDouble(message,offset);
+	player->yaw   = EntryToFloat(message,offset);
+	player->pitch = EntryToFloat(message,offset);
+	player->onGround = EntryToByte(message, offset);
+	CheckPosition(newPosition,newStance);
+
+	UpdatePositionForOthers(true);
+
+	if (CheckIfNewChunksRequired()) {
+		DetermineVisibleChunks();
+	}
+	return true;
+}
+
+// Handle the client changing their held item
+bool Client::HandleHoldingChange() {
+	int16_t slot = EntryToShort(message, offset);
+	ChangeHeldItem(broadcastOthersResponse,slot);
+	return true;
+}
+
+// Handle the client sending out an animation
+bool Client::HandleAnimation() {
+	int32_t entityId = EntryToInteger(message, offset);
+	int8_t animation = EntryToByte(message, offset);
+	// Only send this to other clients
+	Respond::Animation(broadcastOthersResponse, entityId, animation);
+	return true;
+}
+
+// Handle a client performing an Entity Action
+bool Client::HandleEntityAction() {
+	int32_t entityId = EntryToInteger(message, offset);
+	int8_t action = EntryToByte(message, offset);
+	// some EntityMetadata info
+	// A BITMASK
+	// - Bit 0 is for Crouching
+	// - Bit 1 is for On Fire
+	// - Bit 2 is for Sitting
+	// All other bits are irrelevant, it looks like
+	switch(action) {
+		case 1:
+			player->crouching = true;
+			break;
+		case 2:
+			player->crouching = false;
+			break;
+		default:
+			break;
+	}
+	int8_t responseByte = (player->sitting << 2 | player->crouching << 1 | player->onFire);
+	Respond::EntityMetadata(broadcastOthersResponse, entityId, responseByte);
+	return true;
+}
+
+// Handle the client digging/destroying a block
+bool Client::HandlePlayerDigging(World* world) {
+	int8_t status = EntryToByte(message, offset);
+	int32_t x = EntryToInteger(message, offset);
+	int8_t y = EntryToByte(message, offset);
+	int32_t z = EntryToInteger(message, offset);
+	//int8_t face = EntryToByte(message, offset);
+	EntryToByte(message, offset);
+
+	Int3 pos = Int3(x,y,z);
+	Block* targetedBlock = world->GetBlock(pos);
+	
+	if (debugPunchBlockInfo) {
+		Betrock::Logger::Instance().Debug(IdToLabel((int)targetedBlock->type) + " " + targetedBlock->str() + " at " + pos.str());
+	}
+
+	// If the block is broken or instantly breakable
+	if (status == 2 || player->creativeMode || IsInstantlyBreakable(targetedBlock->type)) {
+		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,targetedBlock->type);
+		if (doTileDrops && !player->creativeMode) {
+			// TODO: This works now,
+			// but results in entities piling up
+			// We need server-side managed entities
+			/*
+			Respond::PickupSpawn(
+				broadcastResponse,
+				Betrock::Server::Instance().GetLatestEntityId(),
+				b.type,
+				1,
+				b.meta,
+				Int3ToEntityInt3(pos),
+				0,0,0
+			);
+			*/
+			Item item = Item{targetedBlock->type,1,targetedBlock->meta};
+			if (!player->creativeMode) {
+				item = GetDrop(item);
+			}
+			Give(response,item.id,item.amount,item.damage);
+		}
+		// Special handling for multi-block blocks
+		if (targetedBlock->type == BLOCK_DOOR_WOOD ||
+			targetedBlock->type == BLOCK_DOOR_IRON)
+		{
+			Int3 nPos = pos;
+			if (targetedBlock->meta & 0b1000) {
+				// Interacted with Top
+				// Update Bottom
+				nPos = pos + Int3{0,-1,0};
+			} else {
+				// Interacted with Bottom
+				// Update Top
+				nPos = pos + Int3{0,1,0};
+			}
+			Block* bb = world->GetBlock(nPos);
+			if (bb && bb->type==targetedBlock->type) {
+				world->BreakBlock(nPos);
+			}
+		}
+		// Only get rid of the block here to avoid unreferenced pointers
+		world->BreakBlock(pos);
+	}
+
+	// Check if the targeted block is interactable
+	if (IsInteractable(targetedBlock->type)) {
+		world->InteractWithBlock(pos);
+		return true;
+	}
+	return true;
+}
+
+// Handle the client attempting to place a block
+bool Client::HandlePlayerBlockPlacement(World* world) {
+	int32_t x = EntryToInteger(message, offset);
+	int8_t y = EntryToByte(message, offset);
+	int32_t z = EntryToInteger(message, offset);
+	int8_t face = EntryToByte(message, offset);
+	// All of the following is pretty optional,
+	// Since we get the players' desired block from
+	// The Server-side inventory anyways
+	int16_t id = EntryToShort(message, offset);
+	//int8_t amount = 0;
+	//int16_t damage = 0;
+	if (id >= 0) {
+		EntryToByte(message, offset);
+		EntryToShort(message, offset);
+		//amount = EntryToByte(message, offset);
+		//damage = EntryToShort(message, offset);
+	}
+
+	Int3 pos = Int3{x,y,z};
+	Block* targetedBlock = world->GetBlock(pos);
+	if (!targetedBlock) { return false; }
+
+	// Check if the targeted block is interactable
+	if (IsInteractable(targetedBlock->type)) {
+		if (!HasInventory(targetedBlock->type)) {
+			world->InteractWithBlock(pos);
+		} else {
+			switch(targetedBlock->type) {
+				case BLOCK_CRAFTING_TABLE:
+					OpenWindow(INVENTORY_WORKBENCH);
+					return true;
+			}
+		}
+		return true;
+	}
+
+	// This packet has a special case where X, Y, Z, and Direction are all -1.
+	// This special packet indicates that the currently held item for the player should have
+	// its state updated such as eating food, shooting bows, using buckets, etc.
+
+	// Apparently this also handles the player standing inside the block its trying to place in
+	if (x == -1 && y == -1 && z == -1 && face == -1) {
+		return false;
+	}
+
+	// Place a block if we can
+	if (!CanDecrementHotbar()) {
+		return false;
+	}
+
+	// Check if the server-side inventory item is valid
+	Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
+	
+	// Special handling for Slabs
+	if (
+		targetedBlock->type == BLOCK_SLAB &&
+		targetedBlock->meta == i.damage &&
+		face == yPlus
+	) {
+		world->PlaceBlock(pos,BLOCK_DOUBLE_SLAB,i.damage);
+	} else {
+		// Get the block we need to place
+		BlockToFace(pos,face);
+		Block b = GetPlacedBlock(world,pos,face,player->yaw,GetPlayerOrientation(),i.id,i.damage);
+		if (b.type == SLOT_EMPTY) {
+			return false;
+		}
+		switch(b.type) {
+			case BLOCK_SPONGE:
+				world->PlaceSponge(pos);
+				break;
+			//case ITEM_BED:
+			//	world->PlaceBlock(pos,b.type,b.meta);
+			//	BlockToFace(pos,face);
+			//	break;
+			default:
+				world->PlaceBlock(pos,b.type,b.meta);
+				break;
+		}
+	}
+	// Immediately give back the item if we're in creative mode
+	if (player->creativeMode) {
+		Item i = GetHeldItem();
+		Respond::SetSlot(response,0,GetHotbarSlot(),i.id,i.amount,i.damage);
+	} else {
+		DecrementHotbar(response);
+	}
+	return true;
+}
+
+// Handle the Client closing a Window
+bool Client::HandleCloseWindow() {
+	int8_t windowId = EntryToByte(message, offset);
+	if (windowId == windowIndex) {
+		activeWindow = INVENTORY_NONE;
+	} else {
+		CloseLatestWindow();
+	}
+	return true;
+}
+
+// Handle the Client clicking while a Window is open
+bool Client::HandleWindowClick() {
+	int8_t window 		= EntryToByte(message, offset);
+	int16_t slot 		= EntryToShort(message,offset);
+	int8_t rightClick 	= EntryToByte(message, offset);
+	int16_t actionNumber= EntryToShort(message,offset);
+	int8_t shift 		= EntryToByte(message, offset);
+	int16_t itemId		= EntryToShort(message,offset);
+	int8_t itemCount	= 1;
+	int16_t itemUses	= 0;
+	if (itemId > 0) {
+		itemCount		= EntryToByte(message, offset);
+		itemUses		= EntryToShort(message,offset);
+	}
+	ClickedSlot(response, window,slot,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
+	return true;
+}
+
+bool Client::HandleUpdateSign() {
+	int32_t x 		  = EntryToInteger(message, offset);
+	int16_t y 		  = EntryToShort(message,offset);
+	int32_t z 		  = EntryToInteger(message, offset);
+	std::array<std::string, 4> lines;
+	lines[0] = EntryToString16(message,offset);
+	lines[1] = EntryToString16(message,offset);
+	lines[2] = EntryToString16(message,offset);
+	lines[3] = EntryToString16(message,offset);
+
+	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
+	wm->world.AddTileEntity(std::make_unique<SignTile>(Int3{x, y, z}, lines));
+	Respond::UpdateSign(broadcastResponse,Int3{x,y,z},lines);
+	return true;
+}
+
+// Handle the Client attempting to disconnect
+bool Client::HandleDisconnect() {
+	std::string disconnectMessage = EntryToString16(message, offset);
+	DisconnectClient(disconnectMessage,true);
+	return true;
+}
+
+// This is incredibly ugly, but it makes the Server show up in 1.6+ Server Lists!
+// Handle the 1.6+ Server List Packet
+void Client::HandleLegacyPing() {
+	response.push_back((uint8_t)Packet::Disconnect);
+	response.push_back(0x00);
+	response.push_back(0x23);
+	response.push_back(0x00);
+	response.push_back(0xA7);
+	response.push_back(0x00);
+	response.push_back('1');
+	response.push_back(0x00);
+	response.push_back(0x00);
+	response.push_back(0x00);
+	std::string protocol = std::to_string(PROTOCOL_VERSION);
+	for (size_t i = 0; i < protocol.size(); i++) {
+		response.push_back(protocol[i]);
+		response.push_back(0);
+	}
+	response.push_back(0);
+	response.push_back(0);
+	std::string gameVersion = std::string("b1.7.3");
+	for (size_t i = 0; i < gameVersion.size(); i++) {
+		response.push_back(gameVersion[i]);
+		response.push_back(0);
+	}
+	response.push_back(0);
+	response.push_back(0);
+	std::string motd = std::string("A Minecraft Server");
+	for (size_t i = 0; i < motd.size(); i++) {
+		response.push_back(motd[i]);
+		response.push_back(0);
+	}
+	response.push_back(0);
+	response.push_back(0);
+	std::string connectedPlayerCount = std::to_string(Betrock::Server::Instance().GetConnectedClients().size());
+	for (size_t i = 0; i < connectedPlayerCount.size(); i++) {
+		response.push_back(connectedPlayerCount[i]);
+		response.push_back(0);
+	}
+	response.push_back(0);
+	response.push_back(0);
+	std::string maxPlayerCount = "0";
+	for (size_t i = 0; i < maxPlayerCount.size(); i++) {
+		response.push_back(maxPlayerCount[i]);
+		response.push_back(0);
+	}
+
+	SendResponse(true);
+	SetConnectionStatus(ConnectionStatus::Disconnected);
+}

@@ -42,6 +42,7 @@ configure_file(
 include_directories(
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/include/pixnbt"
+    "${PROJECT_SOURCE_DIR}/src/client"
     "${PROJECT_SOURCE_DIR}/src/coms"
     "${PROJECT_SOURCE_DIR}/src/enums"
     "${PROJECT_SOURCE_DIR}/src/logger"
@@ -105,7 +106,9 @@ add_executable(
     src/plugins/terrain/generator.cpp
     src/plugins/plugins.cpp
 
-    src/client.cpp
+    src/client/client.cpp
+    src/client/clientChunks.cpp
+    src/client/clientPackets.cpp
     src/config.cpp
     src/debug.cpp
     src/main.cpp
@@ -122,6 +125,25 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
 endif ()
 
 set(CMAKE_SYSTEM_NAME Linux)
+
+# If we're being extra pedantic
+target_compile_options(BetrockServer PRIVATE
+    -Wall
+    -Wextra
+    #-Wpedantic           # Enforce strict ISO compliance
+    #-Wconversion          # Implicit conversions (int → float, etc.)
+    #-Wsign-conversion     # Sign mismatches
+    #-Wshadow              # Variable shadowing
+    -Wunused              # Unused variables, params, etc.
+    -Wuninitialized
+    -Werror               # Treat warnings as errors
+    -Wnon-virtual-dtor    # Common OOP pitfall
+    #-Wold-style-cast
+    -Woverloaded-virtual
+    -Wnull-dereference
+    -Wdouble-promotion
+    -Wformat=2
+)
 
 # Maybe get Windows Target working
 #if (CMAKE_SYSTEM_NAME STREQUAL "Windows")

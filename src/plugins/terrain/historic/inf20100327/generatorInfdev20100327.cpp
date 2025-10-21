@@ -18,7 +18,7 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t seed, World* world) : G
 std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
     std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
     this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
-    std::memset(c->blocks, 0, sizeof(c->blocks));
+    std::fill(std::begin(c->blocks), std::end(c->blocks), Block{BLOCK_AIR});
 
     // Terrain shape generation
     for(int macroX = 0; macroX < 4; ++macroX) {
@@ -55,7 +55,7 @@ std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
                         double var37 = (double)macroX1 / 4.0D;
                         double var39 = var28 + (var32 - var28) * var37;
                         double var41 = var30 + (var34 - var30) * var37;
-                        int blockIndex = macroX1 + (macroX << 2) << 11 | 0 + (macroZ << 2) << 7 | (macroY << 2) + var25;
+                        int blockIndex = (macroX1 + ((macroX << 2) << 11)) | (0 + ((macroZ << 2) << 7)) | ((macroY << 2) + var25);
 
                         for(int var36 = 0; var36 < 4; ++var36) {
                             double var45 = (double)var36 / 4.0D;
@@ -252,7 +252,6 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 		int blockY = oreX + 2;
 		int var10 = this->rand->nextInt(3) + 4;
 		bool canPlaceTree = true;
-		bool cX3;
 		if(heightValue > 0 && heightValue + var10 + 1 <= CHUNK_HEIGHT) {
 			int treeY;
 			int var14;
@@ -281,9 +280,7 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 				}
 			}
 
-			if(!canPlaceTree) {
-				cX3 = false;
-			} else {
+			if(canPlaceTree) {
                 Block* b = world->GetBlock(Int3{var7, heightValue - 1, blockY});
                 if (!b) break;
 				treeY = b->type;
@@ -302,7 +299,13 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 								int var17 = treeY - blockY;
                                 Block* b = world->GetBlock(Int3{blockId, cX2, treeY});
                                 if (!b) continue;
-								if((std::abs(cX1) != var15 || std::abs(var17) != var15 || this->rand->nextInt(2) != 0 && var14 != 0) && !IsOpaque(b->type)) {
+								if (
+                                    (
+                                        (std::abs(cX1) != var15) ||
+                                        (std::abs(var17) != var15) ||
+                                        (this->rand->nextInt(2) != 0 && var14 != 0)
+                                    ) && !IsOpaque(b->type)
+                                ) {
                                     b->type = BLOCK_LEAVES;
                                     b->meta = 0;
 								}
@@ -318,14 +321,8 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
                             b->meta = 0;
 						}
 					}
-
-					cX3 = true;
-				} else {
-					cX3 = false;
 				}
 			}
-		} else {
-			cX3 = false;
 		}
 	}
     return true;

@@ -64,7 +64,7 @@ void CommandManager::Parse(std::string &rawCommand, Client* client) noexcept {
 
 	try {
         // TODO: Make this efficient
-        for (int i = 0; i < registeredCommands.size(); i++) {
+        for (size_t i = 0; i < registeredCommands.size(); i++) {
             if (registeredCommands[i]->GetLabel() == command[0]) {
                 failureReason = registeredCommands[i]->Execute(command, response, client);
                 break;

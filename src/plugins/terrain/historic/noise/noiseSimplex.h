@@ -31,10 +31,10 @@ class NoiseSimplex : public NoiseGenerator {
         void GenerateNoise(std::vector<double>& var1, double var2, double var4, int var6, int var7, double var8, double var10, double var12);
 };
 
-static int wrap(double var0) {
+inline int wrap(double var0) {
     return var0 > 0.0D ? (int)var0 : (int)var0 - 1;
 }
 
-static double func_4114_a(int var0[3], double var1, double var3) {
+inline double func_4114_a(int var0[3], double var1, double var3) {
     return (double)var0[0] * var1 + (double)var0[1] * var3;
 }

@@ -44,12 +44,9 @@ Int3 GetPointPositionInChunk(int64_t seed, Int3 position, Vec3 scale) {
     // Use different seeds for x, y, z to ensure unique coordinates
     int32_t randomized = SpatialPrng(seed, position);
 
-    int32_t x = ((randomized ^ position.x) % CHUNK_WIDTH_X + CHUNK_WIDTH_X) % CHUNK_WIDTH_X;
-    int32_t y = ((randomized ^ position.y) % CHUNK_HEIGHT  + CHUNK_HEIGHT ) % CHUNK_HEIGHT;
-    int32_t z = ((randomized ^ position.z) % CHUNK_WIDTH_Z + CHUNK_WIDTH_Z) % CHUNK_WIDTH_Z;
-    x = x*scale.x;
-    y = y*scale.y;
-    z = x*scale.z;
+    int32_t x = int32_t(double(((randomized ^ position.x) % CHUNK_WIDTH_X + CHUNK_WIDTH_X) % CHUNK_WIDTH_X) * scale.x);
+    int32_t y = int32_t(double(((randomized ^ position.y) % CHUNK_HEIGHT  + CHUNK_HEIGHT ) % CHUNK_HEIGHT ) * scale.y);
+    int32_t z = int32_t(double(((randomized ^ position.z) % CHUNK_WIDTH_Z + CHUNK_WIDTH_Z) % CHUNK_WIDTH_Z) * scale.z);
     
     return Int3{x, y, z};
 }
@@ -95,11 +92,11 @@ double GetNoiseWorley(int64_t seed, Int3 position, double threshold, Vec3 scale)
     return 1.0 - SmoothStep(0.0, threshold, distance);
 }
 
-double GetNoisePerlin2D(int64_t seed, Vec3 position, int octaves) {
+double GetNoisePerlin2D([[maybe_unused]] int64_t seed, Vec3 position, int octaves) {
     return perlin.octave2D_01(position.x, position.z, octaves);
 }
 
-double GetNoisePerlin3D(int64_t seed, Vec3 position, int octaves) {
+double GetNoisePerlin3D([[maybe_unused]] int64_t seed, Vec3 position, int octaves) {
     return perlin.octave3D_01(position.x, position.y, position.z, octaves);
 }
 

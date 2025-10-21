@@ -273,7 +273,7 @@ void Respond::WindowItems(std::vector<uint8_t> &response, int8_t window, std::ve
     response.push_back((uint8_t)Packet::WindowItems);
     response.push_back(window); // Player Inventory
     AppendShortToVector(response, payload.size());
-    for (int16_t slot = 0; slot < payload.size(); slot++) {
+    for (size_t slot = 0; slot < payload.size(); slot++) {
         Item i = payload[slot];
         AppendShortToVector(response,i.id);
         if (i.id > SLOT_EMPTY) {
@@ -299,7 +299,7 @@ void Respond::UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::string l
     AppendString16ToVector(response,line4);
 }
 
-void Respond::Disconnect(std::vector<uint8_t> &response, std::string message) {
+void Respond::Disconnect(std::string message) {
 	std::vector<uint8_t> disconnectResponse;
 	disconnectResponse.push_back((uint8_t)Packet::Disconnect);
 	AppendString16ToVector(disconnectResponse,message);

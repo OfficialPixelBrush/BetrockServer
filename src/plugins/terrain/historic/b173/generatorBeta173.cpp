@@ -34,7 +34,7 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
     
     // Allocate empty chunk
-    std::memset(c->blocks, BLOCK_AIR, sizeof(c->blocks));
+    std::fill(std::begin(c->blocks), std::end(c->blocks), Block{BLOCK_AIR});
 
     // Generate Biomes
 	this->biomeMap = GenerateBiomeMap(
@@ -46,9 +46,9 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     );
 
     // Generate the Terrain, minus any caves, as just stone 
-    GenerateTerrain(cX, cZ, c, this->biomeMap, this->temperature);
+    GenerateTerrain(cX, cZ, c, this->temperature);
     // Replace some of the stone with Biome-appropriate blocks
-    ReplaceBlocksForBiome(cX, cZ, c, this->biomeMap);
+    ReplaceBlocksForBiome(cX, cZ, c);
     this->caver->GenerateCaves(this->world, cX, cZ, c);
     //var4.func_353_b();
     
@@ -58,12 +58,15 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     return c;
 }
 
-bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
+bool GeneratorBeta173::PopulateChunk(
+    [[maybe_unused]] int32_t cX,
+    [[maybe_unused]] int32_t cZ
+) {
     return true;
 }
 
 // Replace some of the stone with Biome-appropriate blocks
-void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap) {
+void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c) {
     const double oneThirtySecond = 1.0D / 32.0D;
     // Init noise maps
     this->sandNoise.resize(256, 0.0);
@@ -162,7 +165,7 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
 }
 
 // Generate the Terrain, minus any caves, as just stone 
-void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap, std::vector<double>& temperature) {
+void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<double>& temperature) {
     const int     xMax = CHUNK_WIDTH_X / 4 + 1;
     const uint8_t yMax = CHUNK_HEIGHT  / 8 + 1;
     const int     zMax = CHUNK_WIDTH_Z / 4 + 1;
@@ -203,7 +206,9 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
                     double terrainStepX1 = (corner110 - corner010) * horizontalLerpStep;
 
                     for(int subX = 0; subX < 4; ++subX) {
-                        int blockIndex = subX + macroX * 4 << 11 | 0 + macroZ * 4 << 7 | macroY * 8 + subY;
+                        int blockIndex = ((subX + macroX * 4) << 11) 
+                                | ((macroZ * 4) << 7) 
+                                | ((macroY * 8) + subY);
                         double terrainDensity = terrainX0;
                         double densityStepZ = (terrainX1 - terrainX0) * horizontalLerpStep;
 
@@ -253,7 +258,7 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
 // Generate Biomes based on simplex noise
 std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(std::vector<Biome> biomeMap, int bx, int bz, int xMax, int zMax) {
     // Init Biome map
-    if(biomeMap.empty() || biomeMap.size() < xMax * zMax) {
+    if(biomeMap.empty() || int(biomeMap.size()) < xMax * zMax) {
         biomeMap.resize(xMax * zMax, BIOME_NONE);
     }
 

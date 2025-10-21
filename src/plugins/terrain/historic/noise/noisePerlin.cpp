@@ -95,10 +95,12 @@ void NoisePerlin::GenerateNoise(std::vector<double>& var1, double var2, double v
     double var42;
     int var75;
     if(var9 == 1) {
+        /*
         bool var64 = false;
         bool var65 = false;
         bool var21 = false;
         bool var68 = false;
+        */
         double var70 = 0.0D;
         double var73 = 0.0D;
         var75 = 0;
@@ -141,12 +143,14 @@ void NoisePerlin::GenerateNoise(std::vector<double>& var1, double var2, double v
         var19 = 0;
         double var20 = 1.0D / var17;
         var22 = -1;
+        /*
         bool var23 = false;
         bool var24 = false;
         bool var25 = false;
         bool var26 = false;
         bool var27 = false;
         bool var28 = false;
+        */
         double var29 = 0.0D;
         var31 = 0.0D;
         double var33 = 0.0D;

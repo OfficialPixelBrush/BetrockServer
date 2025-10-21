@@ -5,6 +5,8 @@
 
 class Entity {
     public:
+        // Connection Stats
+        int32_t entityId;
         // Movement Stats
         Vec3 position;
         Vec3 previousPosition;
@@ -28,9 +30,6 @@ class Entity {
         std::string world;
 
         int8_t health;
-
-        // Connection Stats
-        int32_t entityId;
 
         Entity(int entityId, Vec3 position, int8_t dimension, std::string world)
             : entityId(entityId++), position(position), dimension(dimension), world(world) {}

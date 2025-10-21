@@ -48,7 +48,7 @@ public:
         if (bound <= 0) throw std::invalid_argument("bound must be positive");
 
         if ((bound & -bound) == bound) { // power of two
-            return static_cast<int32_t>((bound * static_cast<int64_t>(next(31))) >> 31);
+            return int32_t((bound * int64_t(next(31))) >> 31);
         }
 
         int32_t bits, val;
@@ -60,11 +60,11 @@ public:
     }
 
     int64_t nextLong() {
-        return (static_cast<int64_t>(next(32)) << 32) + next(32);
+        return (int64_t(next(32)) << 32) + next(32);
     }
 
     double nextDouble() {
-        return (((int64_t)next(26) << 27) + next(27)) / static_cast<double>(1LL << 53);
+        return double(((int64_t)next(26) << 27) + next(27)) / double(1LL << 53);
     }
 
     bool nextBoolean() {
@@ -72,6 +72,6 @@ public:
     }
 
     float nextFloat() {
-        return next(24) / static_cast<float>(1 << 24);
+        return float(next(24)) / float(1 << 24);
     }
 };

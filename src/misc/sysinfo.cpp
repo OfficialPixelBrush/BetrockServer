@@ -2,7 +2,7 @@
 
 int parseLine(char* line){
     // This assumes that a digit will be found and the line ends in " Kb".
-    int i = strlen(line);
+    int i = int(strlen(line));
     const char* p = line;
     while (*p <'0' || *p > '9') p++;
     line[i-3] = '\0';

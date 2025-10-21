@@ -96,7 +96,7 @@ Int3 BlockToChunkPosition(Vec3 position) {
 
 // Turn a float value into a byte, mapping the range 0-255 to 0°-360°
 int8_t ConvertFloatToPackedByte(float value) {
-	return static_cast<int8_t>((value/360.0)*255.0);
+	return static_cast<int8_t>((value/360.0f)*255.0f);
 }
 
 constexpr std::array<const char*, 256> packetLabels = [] {

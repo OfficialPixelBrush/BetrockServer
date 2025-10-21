@@ -130,7 +130,7 @@ bool Player::Load() {
 
     // Get the players saved inventory
     std::shared_ptr<ListTag> inventoryList = std::dynamic_pointer_cast<ListTag>(root->Get("Inventory"));
-    for (int i = 0; i < inventoryList->GetNumberOfTags(); i++) {
+    for (size_t i = 0; i < inventoryList->GetNumberOfTags(); i++) {
         auto slot = std::dynamic_pointer_cast<CompoundTag>(inventoryList->Get(i));
         int8_t  slotNumber = std::dynamic_pointer_cast<ByteTag>(slot->Get("Slot"))->GetData();
         int16_t itemId = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"))->GetData();

@@ -67,10 +67,10 @@ class World {
         // Chunk-related
         std::unique_ptr<char[]> GetChunkData(Int3 position);
         std::vector<SignTile*> GetChunkSigns(Int3 position);
-        std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkBlocks(Chunk* c);
-        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkMeta(Chunk* c);
-        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkBlockLight(Chunk* c);
-        std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkSkyLight(Chunk* c);
+        std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> GetChunkBlocks(Chunk* c);
+        std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkMeta(Chunk* c);
+        std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkBlockLight(Chunk* c);
+        std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetChunkSkyLight(Chunk* c);
         void TickChunks();
         Chunk* GetChunk(int32_t x, int32_t z);
         bool IsChunkPopulated(int32_t x, int32_t z);

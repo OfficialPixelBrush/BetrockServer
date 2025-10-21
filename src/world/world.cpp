@@ -528,9 +528,9 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     }
     // TODO: Make use of the individual functions!!!
     // BlockData
-    for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
-        for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
+    for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
+        for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
+            for (uint8_t cY = 0; cY < CHUNK_HEIGHT; cY++) {
                 Block* b = c->GetBlock(cX,cY,cZ);
                 if (!b) continue;
                 bytes[index] = b->type;
@@ -542,7 +542,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     // Block Metadata
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+            for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 Block* b1 = c->GetBlock(cX,cY*2,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
                 if (!b1 || !b2) continue;
@@ -555,7 +555,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     // Block Light
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+            for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 Block* b1 = c->GetBlock(cX,cY*2,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
                 if (!b1 || !b2) continue;
@@ -568,7 +568,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     // Sky Light
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+            for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 Block* b1 = c->GetBlock(cX,cY*2,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
                 if (!b1 || !b2) continue;
@@ -581,16 +581,16 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
 }
 
 // Get all the Block Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkBlocks(Chunk* c) {
-    std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
+std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkBlocks(Chunk* c) {
+    std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
     }
     int index = 0;
     // BlockData
-    for (int cX = 0; cX < CHUNK_WIDTH_X; cX++) {
-        for (int cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (int cY = 0; cY < CHUNK_HEIGHT; cY++) {
+    for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
+        for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
+            for (uint8_t cY = 0; cY < CHUNK_HEIGHT; cY++) {
                 Block* b = c->GetBlock(cX,cY,cZ);
                 if (!b) continue;
                 data[index] = b->type;
@@ -602,8 +602,8 @@ std::array<int8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunk
 }
 
 // Get all the Meta Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkMeta(Chunk* c) {
-    std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
+std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkMeta(Chunk* c) {
+    std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
     }
@@ -611,15 +611,15 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     // Block Metadata
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+            for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 // Default to safe values
                 uint8_t b1v = 0;
                 uint8_t b2v = 0;
-                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b1 = c->GetBlock(cX,cY*2  ,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
                 if (b1) b1v = b1->meta;
                 if (b2) b2v = b2->meta;
-                data[index++] = (b2v << 4 | b1v);
+                data[index++] = int8_t(b2v << 4 | b1v);
             }
         }
     }
@@ -627,8 +627,8 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
 }
 
 // Get all the Block Light Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkBlockLight(Chunk* c) {
-    std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
+std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkBlockLight(Chunk* c) {
+    std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
     }
@@ -636,15 +636,15 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     // Block Light
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+            for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 // Default to safe values
                 uint8_t b1v = 0;
                 uint8_t b2v = 0;
-                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b1 = c->GetBlock(cX,cY*2  ,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
                 if (b1) b1v = b1->lightBlock;
                 if (b2) b2v = b2->lightBlock;
-                data[index++] = (b2v << 4 | b1v);
+                data[index++] = int8_t(b2v << 4 | b1v);
             }
         }
     }
@@ -652,8 +652,8 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
 }
 
 // Get all the Sky Light Data of a Chunk as an array
-std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkSkyLight(Chunk* c) {
-    std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
+std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkSkyLight(Chunk* c) {
+    std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
     if (!c) {
         return data;
     }
@@ -662,15 +662,15 @@ std::array<int8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetC
     // Sky Light
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (int8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
+            for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 // Default to safe values
                 uint8_t b1v = 0;
                 uint8_t b2v = 0;
-                Block* b1 = c->GetBlock(cX,cY*2,cZ);
+                Block* b1 = c->GetBlock(cX,cY*2  ,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
                 if (b1) b1v = b1->lightSky;
                 if (b2) b2v = b2->lightSky;
-                data[index++] = (b2v << 4 | b1v);
+                data[index++] = int8_t(b2v << 4 | b1v);
             }
         }
     }
@@ -816,8 +816,7 @@ void World::TickChunks() {
         for (int i = 0; i < 16; i++) {
             int blockIndex = dist6(rng);
             Block* b = &chunk->blocks[blockIndex];
-            int8_t oldType = b->type;
-            int8_t oldMeta = b->meta;
+            if (!b) continue;
 
             Int3 chunkPos = DecodeChunkHash(hash);
             Int3 blockPos = GetBlockPosition(blockIndex);
@@ -827,13 +826,10 @@ void World::TickChunks() {
                 chunkPos.z<<4 | blockPos.z
             };
             // If the block was changed, send this to the clients
-            if (RandomTick(b,pos)) {
-                Block* nb = GetBlock(pos);
-                if (nb) {
-                    UpdateBlock(pos,nb);
-                    //std::cout << pos << std::endl;
-                }
-            }
+            if (!RandomTick(b,pos)) continue;
+            
+            Block* nb = GetBlock(pos);
+            if (nb) UpdateBlock(pos,nb);
         }
     }
 }

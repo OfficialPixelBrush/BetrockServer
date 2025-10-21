@@ -20,7 +20,7 @@ struct Item {
     int16_t damage = 0; // Also known as metadata
 
     friend std::ostream& operator<<(std::ostream& os, const Item& i) {
-        os << "(" << (int)i.id << ":" << (int)i.damage << "x" << (int)i.amount << ")";
+        os << "(" << int(i.id) << ":" << int(i.damage) << "x" << int(i.amount) << ")";
         return os;
     }
     
@@ -39,7 +39,7 @@ struct Block {
     int8_t lightSky = 0;
 
     friend std::ostream& operator<<(std::ostream& os, const Block& b) {
-        os << "(" << (int)b.type << ":" << (int)b.meta << ")";
+        os << "(" << int(b.type) << ":" << int(b.meta) << ")";
         return os;
     }
     

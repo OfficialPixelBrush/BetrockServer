@@ -12,7 +12,10 @@ class TileEntity {
         std::string type;
 
         TileEntity(Int3 position, std::string type)
-            : position(position), type(type) {}
+        {
+            this->position = position;
+            this->type = std::move(type);
+        }
         virtual ~TileEntity() = default;
 };
 

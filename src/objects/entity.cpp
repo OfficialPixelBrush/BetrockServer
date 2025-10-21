@@ -1,7 +1,7 @@
 #include "entity.h"
 
 // Teleport the entity to the passed position
-void Entity::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, float pitch) {
+void Entity::Teleport([[maybe_unused]] std::vector<uint8_t> &response, Vec3 position, float yaw, float pitch) {
     this->position = position;
     this->yaw = yaw;
     this->pitch = pitch;
@@ -9,17 +9,17 @@ void Entity::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
 }
 
 // Set the entity health
-void Entity::SetHealth(std::vector<uint8_t> &response, int8_t health) {
+void Entity::SetHealth([[maybe_unused]] std::vector<uint8_t> &response, int8_t health) {
     this->health = health;
 }
 
 // Reduce the entites health by the damage amount
-void Entity::Hurt(std::vector<uint8_t> &response, int8_t damage) {
+void Entity::Hurt([[maybe_unused]] std::vector<uint8_t> &response, int8_t damage) {
     this->health = this->health - damage;
 }
 
 // Set the entitys health to 0
-void Entity::Kill(std::vector<uint8_t> &response) {
+void Entity::Kill([[maybe_unused]] std::vector<uint8_t> &response) {
     this->health = 0;
 }
 
@@ -46,22 +46,22 @@ bool Entity::CheckCollision(Vec3 otherPos, AABB otherAABB) {
 Vec3 Entity::CheckPushback(Vec3 otherPos, AABB otherAABB) {
     AABB a = CalculateAABB(this->position, this->collisionBox);
     AABB b = CalculateAABB(otherPos, otherAABB);
-    float overlapX1 = a.max.x - b.min.x; // A overlaps B from left
-    float overlapX2 = b.max.x - a.min.x; // A overlaps B from right
+    double overlapX1 = a.max.x - b.min.x; // A overlaps B from left
+    double overlapX2 = b.max.x - a.min.x; // A overlaps B from right
 
-    float overlapY1 = a.max.y - b.min.y;
-    float overlapY2 = b.max.y - a.min.y;
+    double overlapY1 = a.max.y - b.min.y;
+    double overlapY2 = b.max.y - a.min.y;
 
-    float overlapZ1 = a.max.z - b.min.z;
-    float overlapZ2 = b.max.z - a.min.z;
+    double overlapZ1 = a.max.z - b.min.z;
+    double overlapZ2 = b.max.z - a.min.z;
     
-    float pushX = (overlapX1 < overlapX2) ? -overlapX1 : overlapX2;
-    float pushY = (overlapY1 < overlapY2) ? -overlapY1 : overlapY2;
-    float pushZ = (overlapZ1 < overlapZ2) ? -overlapZ1 : overlapZ2;
+    double pushX = (overlapX1 < overlapX2) ? -overlapX1 : overlapX2;
+    double pushY = (overlapY1 < overlapY2) ? -overlapY1 : overlapY2;
+    double pushZ = (overlapZ1 < overlapZ2) ? -overlapZ1 : overlapZ2;
 
-    float absX = std::abs(pushX);
-    float absY = std::abs(pushY);
-    float absZ = std::abs(pushZ);
+    double absX = std::abs(pushX);
+    double absY = std::abs(pushY);
+    double absZ = std::abs(pushZ);
 
     Vec3 correction { 0,0,0 };
 

@@ -39,7 +39,7 @@ std::string CommandHelp::Execute(std::vector<std::string> command, std::vector<u
 	std::vector<std::shared_ptr<Command>> registeredCommands = CommandManager::GetRegisteredCommands();
 	// Get help with specific command
 	if (command.size() > 1) {
-		for (int i = 0; i < registeredCommands.size(); i++) {
+		for (size_t i = 0; i < registeredCommands.size(); i++) {
 			if (registeredCommands[i]->GetLabel() == command[1]) {
 				Respond::ChatMessage(
 					response,
@@ -66,7 +66,7 @@ std::string CommandHelp::Execute(std::vector<std::string> command, std::vector<u
 	} else {
 		Respond::ChatMessage(response, "§7-- All commands --");
 		std::string msg = "§7";
-		for (int i = 0; i < registeredCommands.size(); i++) {
+		for (size_t i = 0; i < registeredCommands.size(); i++) {
 			msg += registeredCommands[i]->GetLabel();
 			if (i < registeredCommands.size()-1) {
 				msg += ", ";
@@ -82,7 +82,7 @@ std::string CommandHelp::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Shows how long the server has been alive in ticks
-std::string CommandUptime::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandUptime::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client)
 	Respond::ChatMessage(response, "§7Uptime is " + std::to_string(Betrock::Server::Instance().GetUpTime()) + " Ticks");
 	return "";
@@ -164,7 +164,7 @@ std::string CommandTime::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Shows the current Server version
-std::string CommandVersion::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandVersion::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client)
 	Respond::ChatMessage(response, "§7Current " + std::string(PROJECT_NAME) + " version is "  + std::string(PROJECT_VERSION_FULL_STRING));
 	return "";
@@ -235,7 +235,7 @@ std::string CommandWhitelist::Execute(std::vector<std::string> command, std::vec
 			Respond::ChatMessage(response, "§7-- Whitelisted Players --");
 			std::string msg = "§7";
 			auto& whitelist = server.GetWhitelist();
-			for (int i = 0; i < whitelist.size(); i++) {
+			for (size_t i = 0; i < whitelist.size(); i++) {
 				msg += whitelist[i];
 				if (i < whitelist.size()-1) {
 					msg += ", ";
@@ -282,7 +282,7 @@ std::string CommandGive::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Kick a player from the server
-std::string CommandKick::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandKick::Execute(std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	if (command.size() > 0) {
@@ -321,14 +321,14 @@ std::string CommandHealth::Execute(std::vector<std::string> command, std::vector
 }
 
 // List all currently online players
-std::string CommandList::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandList::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 
 	Respond::ChatMessage(response, "§7-- All players --");
 	Betrock::Server::Instance().GetConnectedClientMutex();
 	auto clients = Betrock::Server::Instance().GetConnectedClients();
 	std::string msg = "§7";
-	for (int i = 0; i < clients.size(); i++) {
+	for (size_t i = 0; i < clients.size(); i++) {
 		msg += clients[i]->GetPlayer()->username;
 		if (i < clients.size()-1) {
 			msg += ", ";
@@ -342,7 +342,7 @@ std::string CommandList::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Toggle creative mode
-std::string CommandCreative::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandCreative::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto player = client->GetPlayer();
 	player->creativeMode = !player->creativeMode;
@@ -441,7 +441,7 @@ std::string CommandGamerule::Execute(std::vector<std::string> command, std::vect
 }
 
 // Forces the server to save all loaded chunks
-std::string CommandSave::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandSave::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	Respond::ChatMessage(response, "§7Saving...");
@@ -451,7 +451,7 @@ std::string CommandSave::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Forces the server to stop
-std::string CommandStop::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandStop::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	Respond::ChatMessage(response, "§7Stopping server");
@@ -460,7 +460,7 @@ std::string CommandStop::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Forces the server to unload chunks nobody can see
-std::string CommandFree::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandFree::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	Respond::ChatMessage(response, "§7Freeing Chunks");
@@ -470,7 +470,7 @@ std::string CommandFree::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Shows the number of loaded chunks
-std::string CommandLoaded::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandLoaded::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto player = client->GetPlayer();
 	
@@ -480,7 +480,7 @@ std::string CommandLoaded::Execute(std::vector<std::string> command, std::vector
 }
 
 // Shows the current memory usage in megabytes
-std::string CommandUsage::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandUsage::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	std::stringstream ss;
@@ -508,7 +508,7 @@ std::string CommandSummon::Execute(std::vector<std::string> command, std::vector
 }
 
 // Check the population status of the current chunk
-std::string CommandPopulated::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandPopulated::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto player = client->GetPlayer();
 
@@ -517,20 +517,20 @@ std::string CommandPopulated::Execute(std::vector<std::string> command, std::vec
 	if (!w) return "World does not exist!";
 	Chunk* c = w->GetChunk(int(player->position.x/16.0),int(player->position.z/16.0));
 	if (!c) return "Chunk does not exist!";
-	if (!c->state == ChunkState::Populated) return "Chunk is not populated";
+	if (c->state != ChunkState::Populated) return "Chunk is not populated";
 	if (c->state == ChunkState::Populated) return "Chunk is populated";
 	return ERROR_REASON_ERROR;
 }
 
 // Teleport to Spawn
-std::string CommandSpawn::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandSpawn::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	client->Teleport(response, Int3ToVec3(Betrock::Server::Instance().GetSpawnPoint()));
 	return "";
 }
 
 // Open the desired interface
-std::string CommandInterface::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandInterface::Execute(std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	// TODO: Tracks players open Window IDs
