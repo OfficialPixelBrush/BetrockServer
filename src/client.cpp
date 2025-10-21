@@ -882,7 +882,15 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 
 	// Check if the targeted block is interactable
 	if (IsInteractable(targetedBlock->type)) {
-		world->InteractWithBlock(pos);
+		if (!HasInventory(targetedBlock->type)) {
+			world->InteractWithBlock(pos);
+		} else {
+			switch(targetedBlock->type) {
+				case BLOCK_CRAFTING_TABLE:
+					OpenWindow(INVENTORY_WORKBENCH);
+					return true;
+			}
+		}
 		return true;
 	}
 
@@ -1283,7 +1291,7 @@ void Client::OpenWindow(int8_t type) {
             Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Chest", INVENTORY_CHEST_SIZE);
             break;
         case INVENTORY_CHEST_LARGE:
-            Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Large Chest", INVENTORY_CHEST_LARGE_SIZE);
+            Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Large chest", INVENTORY_CHEST_LARGE_SIZE);
             break;
         case INVENTORY_WORKBENCH:
             Respond::OpenWindow(response, windowIndex, INVENTORY_WORKBENCH, "", INVENTORY_WORKBENCH_SIZE);

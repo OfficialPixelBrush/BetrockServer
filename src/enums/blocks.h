@@ -15,6 +15,7 @@ bool IsEmissive(int16_t id);
 uint8_t GetEmissiveness(int16_t id);
 bool IsInstantlyBreakable(int16_t id);
 bool IsInteractable(int16_t id);
+bool HasInventory(int16_t id);
 bool KeepDamageOnDrop(int8_t type);
 bool NoDrop(Item item);
 Item GetDrop(Item item);

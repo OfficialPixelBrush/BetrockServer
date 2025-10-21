@@ -187,7 +187,12 @@ bool IsInteractable(int16_t id) {
         id == BLOCK_DOOR_WOOD ||
         id == BLOCK_TRAPDOOR ||
         id == BLOCK_BUTTON_STONE ||
-        id == BLOCK_LEVER
+        id == BLOCK_LEVER ||
+        id == BLOCK_CRAFTING_TABLE ||
+        id == BLOCK_FURNACE ||
+        id == BLOCK_FURNACE_LIT ||
+        id == BLOCK_CHEST ||
+        id == BLOCK_DISPENSER
     ) {
         return true;
     }
@@ -237,83 +242,98 @@ Item GetDrop(Item item) {
         item.damage = 0;
     }
     // By default, give back one of the same block
-    if (item.id == BLOCK_CROP_WHEAT) {
-        if (damage < MAX_CROP_SIZE) {
-            item.id = ITEM_SEEDS_WHEAT;
-        } else {
-            item.id = ITEM_WHEAT;
-        }
-    }
-    if (item.id == BLOCK_STONE) {
-        item.id = BLOCK_COBBLESTONE;
-    }
-    if (item.id == BLOCK_GRASS) {
-        item.id = BLOCK_DIRT;
-    }
-    if (item.id == BLOCK_SUGARCANE) {
-        item.id = ITEM_SUGARCANE;
-    }
-    if (item.id == BLOCK_ORE_COAL) {
-        item.id = ITEM_COAL;
-    }
-    if (item.id == BLOCK_LEAVES) {
-        item.id = BLOCK_SAPLING;
-        // 1/20 chance
-        item.amount = 1;
-    }
-    if (item.id == BLOCK_ORE_LAPIS_LAZULI) {
-        item.id = ITEM_DYE;
-        // 4-8
-        item.amount = 4;
-        item.damage = 4;
-    }
-    if (item.id == BLOCK_BED) {
-        item.id = ITEM_BED;
-    }
-    if (item.id == BLOCK_REDSTONE) {
-        item.id = ITEM_REDSTONE;
-    }
-    if (item.id == BLOCK_ORE_DIAMOND) {
-        item.id = ITEM_DIAMOND;
-    }
-    if (item.id == BLOCK_CROP_WHEAT) {
-        item.id = ITEM_WHEAT;
-    }
-    if (item.id == BLOCK_SIGN || item.id == BLOCK_SIGN_WALL) {
-        item.id = ITEM_SIGN;
-    }
-    if (item.id == BLOCK_DOOR_WOOD) {
-        item.id = ITEM_DOOR_WOOD;
-    }
-    if (item.id == BLOCK_DOOR_IRON) {
-        item.id = ITEM_DOOR_IRON;
-    }
-    if (item.id == BLOCK_ORE_REDSTONE_OFF || item.id == BLOCK_ORE_REDSTONE_ON) {
-        item.id = ITEM_REDSTONE;
-        // 4-5
-        item.amount = 4;
-    }
-    if (item.id == BLOCK_REDSTONE_TORCH_OFF || item.id == BLOCK_REDSTONE_TORCH_ON) {
-        item.id = BLOCK_REDSTONE_TORCH_ON;
-    }
-    if (item.id == BLOCK_CLAY) {
-        item.id = ITEM_CLAY;
-        // ???
-        item.amount = 4;
-    }
-    if (item.id == BLOCK_GLOWSTONE) {
-        item.id = ITEM_GLOWSTONE_DUST;
-        // 2-4
-        item.amount = 2;
-    }
-    if (item.id == BLOCK_REDSTONE_REPEATER_ON || item.id == BLOCK_REDSTONE_REPEATER_OFF) {
-        item.id = BLOCK_REDSTONE_REPEATER_OFF;
-    }
-    if (item.id == BLOCK_DOUBLE_SLAB) {
-        item.id = BLOCK_SLAB;
-        item.amount = 2;
+    switch(item.id) {
+        case BLOCK_CROP_WHEAT:
+            if (damage < MAX_CROP_SIZE) {
+                item.id = ITEM_SEEDS_WHEAT;
+            } else {
+                item.id = ITEM_WHEAT;
+            }
+            break;
+        case BLOCK_STONE:
+            item.id = BLOCK_COBBLESTONE;
+            break;
+        case BLOCK_GRASS:
+            item.id = BLOCK_DIRT;
+            break;
+        case BLOCK_SUGARCANE:
+            item.id = ITEM_SUGARCANE;
+            break;
+        case BLOCK_ORE_COAL:
+            item.id = ITEM_COAL;
+            break;
+        case BLOCK_LEAVES:
+            item.id = BLOCK_SAPLING;
+            item.amount = 1;
+            break;
+        case BLOCK_ORE_LAPIS_LAZULI:
+            item.id = ITEM_DYE;
+            // 4-8
+            item.amount = 4;
+            item.damage = 4;
+            break;
+        case BLOCK_BED:
+            item.id = ITEM_BED;
+            break;
+        case BLOCK_REDSTONE:
+            item.id = ITEM_REDSTONE;
+            break;
+        case BLOCK_ORE_DIAMOND:
+            item.id = ITEM_DIAMOND;
+            break;
+        case BLOCK_SIGN:
+        case BLOCK_SIGN_WALL:
+            item.id = ITEM_SIGN;
+            break;
+        case BLOCK_DOOR_WOOD:
+            item.id = ITEM_DOOR_WOOD;
+            break;
+        case BLOCK_DOOR_IRON:
+            item.id = ITEM_DOOR_IRON;
+            break;
+        case BLOCK_ORE_REDSTONE_OFF:
+        case BLOCK_ORE_REDSTONE_ON:
+            item.id = ITEM_REDSTONE;
+            // 4-5
+            item.amount = 4;
+            break;
+        case BLOCK_REDSTONE_TORCH_OFF:
+        case BLOCK_REDSTONE_TORCH_ON:
+            item.id = BLOCK_REDSTONE_TORCH_ON;
+            break;
+        case BLOCK_CLAY:
+            item.id = ITEM_CLAY;
+            // ???
+            item.amount = 4;
+            break;
+        case BLOCK_GLOWSTONE:
+            item.id = ITEM_GLOWSTONE_DUST;
+            // 2-4
+            item.amount = 2;
+            break;
+        case BLOCK_REDSTONE_REPEATER_ON:
+        case BLOCK_REDSTONE_REPEATER_OFF:
+            item.id = BLOCK_REDSTONE_REPEATER_OFF;
+            break;
+        case BLOCK_DOUBLE_SLAB:
+            item.id = BLOCK_SLAB;
+            item.amount = 2;
+            break;
     }
     return item;
+}
+
+bool HasInventory(int16_t id) {
+    if (
+        id == BLOCK_CHEST ||
+        id == BLOCK_CRAFTING_TABLE ||
+        id == BLOCK_FURNACE ||
+        id == BLOCK_FURNACE_LIT ||
+        id == BLOCK_DISPENSER
+    ) {
+        return true;
+    }
+    return false;
 }
 
 // Determine in which direction a block needs to be placed
