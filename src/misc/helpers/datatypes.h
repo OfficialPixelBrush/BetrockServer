@@ -12,6 +12,7 @@
 
 #define OLD_CHUNK_FILE_EXTENSION ".cnk"
 #define CHUNK_FILE_EXTENSION ".ncnk"
+#define MCREGION_FILE_EXTENSION ".mcr"
 
 // Item
 struct Item {

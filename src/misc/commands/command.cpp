@@ -541,3 +541,20 @@ std::string CommandInterface::Execute(std::vector<std::string> command, [[maybe_
 	}
 	return "";
 }
+
+// Test the region infrastructure
+std::string CommandRegion::Execute(std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+	DEFINE_PERMSCHECK(client);
+	
+	// Read in region data
+	if (command[1] == "load") {
+		std::unique_ptr<RegionFile> rf =
+			std::make_unique<RegionFile>(std::filesystem::current_path() / "r.0.0.mcr");
+		auto root = rf->GetChunkNbt(0,0);
+		if (root) {
+			root->NbtPrintData();
+		}
+		return std::to_string(rf->freeSectors.size());
+	}
+	return ERROR_REASON_PARAMETERS;
+}

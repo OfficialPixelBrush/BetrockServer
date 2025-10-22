@@ -328,3 +328,11 @@ std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size) {
 void LimitBlockCoordinates(Int3 &position) {
     position.y = std::max(std::min(position.y,127),0);
 }
+
+size_t GetFileSize(std::fstream& file){
+    auto current = file.tellg();
+    file.seekg(0, std::ios::end);
+    size_t size = file.tellg();
+    file.seekg(current);
+    return size;
+}

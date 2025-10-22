@@ -16,6 +16,7 @@
 #include "config.h"
 #include "chunk.h"
 #include "tileEntity.h"
+#include "region.h"
 
 class Chunk;
 

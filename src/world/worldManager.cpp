@@ -232,6 +232,8 @@ void WorldManager::SaveNbt() {
 
     Int3 spawn = server.GetSpawnPoint();
 
+    // For ease of programming, this currently goes unused.
+    // The relevant variables are stored in server.properties
 	data->Put(std::make_shared<LongTag>("RandomSeed",seed));
 	data->Put(std::make_shared<IntTag>("SpawnY", spawn.y));
 	data->Put(std::make_shared<IntTag>("rainTime", 87264));

@@ -65,3 +65,5 @@ void PrintVector(std::vector<T>& values) {
     }
     std::cout << "]" << std::endl;
 }
+
+size_t GetFileSize(std::fstream& file);

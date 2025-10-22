@@ -163,7 +163,14 @@ Chunk* World::LoadChunk(int32_t x, int32_t z) {
     try {
         std::ifstream readFile(entryPath, std::ios::binary);
         // TODO: This estimate is probably overkill
-        auto readRoot = NbtRead(readFile,NBT_ZLIB,-1,CHUNK_DATA_SIZE*2);
+		//std::unique_ptr<RegionFile> rf =
+		//	std::make_unique<RegionFile>(std::filesystem::current_path() / "r.0.0.mcr");
+        std::shared_ptr<Tag> readRoot;
+        //if (x >= 0 && z >= 0 && x < 32 && z < 32) {
+		//    readRoot = rf->GetChunkNbt(x,z);
+        //} else {
+            readRoot = NbtRead(readFile,NBT_ZLIB,-1,CHUNK_DATA_SIZE*2);
+        //}
         readFile.close();
         if (!readRoot) {
             throw std::runtime_error("Unable to read NBT data!");

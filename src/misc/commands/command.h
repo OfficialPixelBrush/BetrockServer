@@ -11,6 +11,7 @@
 #include "sysinfo.h"
 #include "labels.h"
 #include "inventory.h"
+#include "region.h"
 
 #define ERROR_OPERATOR "Only operators can use this command!"
 #define ERROR_CREATIVE "Only creative players can use this command!"
@@ -88,3 +89,4 @@ DEFINE_COMMAND(CommandLoaded,   "loaded",   "Shows the number of loaded chunks" 
 DEFINE_COMMAND(CommandUsage,    "usage",    "Shows the current memory usage in megabytes"           , ""                                        , true,  false);
 DEFINE_COMMAND(CommandSummon,   "summon",   "Summon a player entity"                                , "<player>"                                , true,  false);
 DEFINE_COMMAND(CommandPopulated,"populated","Check the population status of the current chunk"      , ""                                        , true,  false);
+DEFINE_COMMAND(CommandRegion,   "region",   "Test the region infrastructure"                        , "<action>"                                , true,  false);
