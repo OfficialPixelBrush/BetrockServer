@@ -102,13 +102,20 @@ std::string CommandTeleport::Execute(std::vector<std::string> command, std::vect
 
 		// Option 1: Target coordinates
 		try {
+			float pitch = 0.0f;
+			float yaw = 0.0f;
 			int32_t x = std::stoi(command[2].c_str());
 			int32_t y = std::stoi(command[3].c_str());
 			int32_t z = std::stoi(command[4].c_str());
+			if (command.size() > 6) {
+				pitch = std::stof(command[5].c_str());
+				yaw = std::stof(command[6].c_str());
+			}
 			Int3 tpGoal = {x,y,z};
 			sourceClient->Teleport(
 				sourceResponse,
-				Int3ToVec3(tpGoal)
+				Int3ToVec3(tpGoal),
+				yaw, pitch
 			);
 			sourceClient->AppendResponse(sourceResponse);
 			auto sourcePlayer = sourceClient->GetPlayer();
