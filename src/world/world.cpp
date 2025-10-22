@@ -161,74 +161,15 @@ Chunk* World::LoadChunk(int32_t x, int32_t z) {
     }
 
     try {
+        std::ifstream readFile(entryPath, std::ios::binary);
         // TODO: This estimate is probably overkill
-        auto readRoot = NbtReadFromFile(entryPath,NBT_ZLIB,-1,CHUNK_DATA_SIZE*2);
+        auto readRoot = NbtRead(readFile,NBT_ZLIB,-1,CHUNK_DATA_SIZE*2);
+        readFile.close();
         if (!readRoot) {
             throw std::runtime_error("Unable to read NBT data!");
         }
-
-        auto root = std::dynamic_pointer_cast<CompoundTag>(readRoot);
-        auto level = std::dynamic_pointer_cast<CompoundTag>(root->Get("Level"));
-        auto blockTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Blocks"));
-        auto blocks = blockTag->GetData();
-        auto meta = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Data"))->GetData();
-        auto blockLight = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("BlockLight"))->GetData();
-        auto skyLight = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("SkyLight"))->GetData();
-
-        auto terrainPopulated = std::dynamic_pointer_cast<ByteTag>(level->Get("TerrainPopulated"))->GetData();
-
         std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,x,z);
-        const size_t blockDataSize  = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z *  CHUNK_HEIGHT   );
-        const size_t nibbleDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT/2));
-        // Block Data
-        for (size_t i = 0; i < blockDataSize; i++) {
-            c->blocks[i].type = blocks[i];
-        }
-        // Block Metadata
-        for (size_t i = 0; i < nibbleDataSize; i++) {
-            c->blocks[i*2  ].meta = (meta[i]     )&0xF;
-            c->blocks[i*2+1].meta = (meta[i] >> 4)&0xF;
-        }
-        // Block Light
-        for (size_t i = 0; i < nibbleDataSize; i++) {
-            c->blocks[i*2  ].lightBlock = (blockLight[i]     )&0xF;
-            c->blocks[i*2+1].lightBlock = (blockLight[i] >> 4)&0xF;
-        }
-        // Sky Light
-        for (size_t i = 0; i < nibbleDataSize; i++) {
-            c->blocks[i*2  ].lightSky = (skyLight[i]     )&0xF;
-            c->blocks[i*2+1].lightSky = (skyLight[i] >> 4)&0xF;
-        }
-
-        // Load Tile Entity Data
-        auto tileEntitiesNbt = std::dynamic_pointer_cast<ListTag>(level->Get("TileEntities"));
-        if (tileEntitiesNbt && tileEntitiesNbt->GetNumberOfTags() > 0) {
-            for (auto teNbt : tileEntitiesNbt->GetTags()) {
-                auto teNbtTag = std::dynamic_pointer_cast<CompoundTag>(teNbt);
-                // Shared between all tile entities
-                auto xTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("x"));
-                auto yTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("y"));
-                auto zTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("z"));
-                auto typeTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("id"));
-                if (!xTag || !yTag || !zTag || !typeTag) continue;
-
-                int x = xTag->GetData();
-                int y = yTag->GetData();
-                int z = zTag->GetData();
-                std::string type = typeTag->GetData();
-                if (type == TILEENTITY_SIGN) {
-                    std::array<std::string, 4> lines;
-                    lines[0] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text1"))->GetData();
-                    lines[1] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text2"))->GetData();
-                    lines[2] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text3"))->GetData();
-                    lines[3] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text4"))->GetData();
-                    c->AddTileEntity(std::make_unique<SignTile>(Int3{x, y, z}, lines));
-                    continue;
-                }
-            }
-        }
-
-        if (terrainPopulated) c->state = ChunkState::Populated;
+        c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
         return AddChunk(x,z,std::move(c));
     } catch (const std::exception& e) {
         Betrock::Logger::Instance().Error(e.what());
@@ -241,49 +182,16 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     if (!chunk || !chunk->modified) {
         //
     }
+
     // Update Chunklight before saving
-    //CalculateChunkLight(GetChunk(x,z));
     Int3 pos = Int3{x,0,z};
 
     std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + CHUNK_FILE_EXTENSION);
+    CalculateChunkLight(GetChunk(x,z));
 
-    // Acquire existing chunk data
-    auto blocks = GetChunkBlocks(chunk);
-    auto meta = GetChunkMeta(chunk);
-    auto blockLight = GetChunkBlockLight(chunk);
-    auto skyLight = GetChunkSkyLight(chunk);
-    auto tileEntities = chunk->GetTileEntities();
-
-    auto root = std::make_shared<CompoundTag>("");
-    auto level = std::make_shared<CompoundTag>("Level");
-    root->Put(level);
-    level->Put(std::make_shared<ByteArrayTag>("Blocks", blocks));
-    level->Put(std::make_shared<ByteArrayTag>("Data", meta));
-    level->Put(std::make_shared<ByteArrayTag>("BlockLight", blockLight));
-    level->Put(std::make_shared<ByteArrayTag>("SkyLight", skyLight));
-    level->Put(std::make_shared<ByteTag>("TerrainPopulated", chunk->state == ChunkState::Populated));
-    level->Put(std::make_shared<IntTag>("xPos",x));
-    level->Put(std::make_shared<IntTag>("zPos",z));
-    auto tileEntitiesNbt = std::make_shared<ListTag>("TileEntities");
-    level->Put(tileEntitiesNbt);
-    for (auto te : tileEntities) {
-        auto subtag = std::make_shared<CompoundTag>("TileEntities");
-        // Shared between all tile entities
-        subtag->Put(std::make_shared<IntTag>("x", te->position.x));
-        subtag->Put(std::make_shared<IntTag>("y", te->position.y));
-        subtag->Put(std::make_shared<IntTag>("z", te->position.z));
-        subtag->Put(std::make_shared<StringTag>("id", te->type));
-        if (te->type == TILEENTITY_SIGN) {
-            auto sign = static_cast<SignTile*>(te); 
-            subtag->Put(std::make_shared<StringTag>("Text1", sign->lines[0]));
-            subtag->Put(std::make_shared<StringTag>("Text2", sign->lines[1]));
-            subtag->Put(std::make_shared<StringTag>("Text3", sign->lines[2]));
-            subtag->Put(std::make_shared<StringTag>("Text4", sign->lines[3]));
-        }
-        tileEntitiesNbt->Put(subtag);
-    }
-    
-    NbtWriteToFile(filePath,root,NBT_ZLIB);
+    std::ofstream writeFile(filePath, std::ios::binary);
+    NbtWrite(writeFile,chunk->GetAsNbt(),NBT_ZLIB);
+    writeFile.close();
     chunk->modified = false;
 }
 
@@ -578,103 +486,6 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
         }
     }
     return bytes;
-}
-
-// Get all the Block Data of a Chunk as an array
-std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> World::GetChunkBlocks(Chunk* c) {
-    std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
-    if (!c) {
-        return data;
-    }
-    int index = 0;
-    // BlockData
-    for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
-        for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (uint8_t cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                Block* b = c->GetBlock(cX,cY,cZ);
-                if (!b) continue;
-                data[index] = b->type;
-                index++;
-            }
-        }
-    }
-    return data;
-}
-
-// Get all the Meta Data of a Chunk as an array
-std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkMeta(Chunk* c) {
-    std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
-    if (!c) {
-        return data;
-    }
-    int index = 0;
-    // Block Metadata
-    for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
-        for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                // Default to safe values
-                uint8_t b1v = 0;
-                uint8_t b2v = 0;
-                Block* b1 = c->GetBlock(cX,cY*2  ,cZ);
-                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
-                if (b1) b1v = b1->meta;
-                if (b2) b2v = b2->meta;
-                data[index++] = int8_t(b2v << 4 | b1v);
-            }
-        }
-    }
-    return data;
-}
-
-// Get all the Block Light Data of a Chunk as an array
-std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkBlockLight(Chunk* c) {
-    std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
-    if (!c) {
-        return data;
-    }
-    int index = 0;
-    // Block Light
-    for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
-        for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                // Default to safe values
-                uint8_t b1v = 0;
-                uint8_t b2v = 0;
-                Block* b1 = c->GetBlock(cX,cY*2  ,cZ);
-                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
-                if (b1) b1v = b1->lightBlock;
-                if (b2) b2v = b2->lightBlock;
-                data[index++] = int8_t(b2v << 4 | b1v);
-            }
-        }
-    }
-    return data;
-}
-
-// Get all the Sky Light Data of a Chunk as an array
-std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> World::GetChunkSkyLight(Chunk* c) {
-    std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> data;
-    if (!c) {
-        return data;
-    }
-    int index = 0;
-
-    // Sky Light
-    for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
-        for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
-            for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                // Default to safe values
-                uint8_t b1v = 0;
-                uint8_t b2v = 0;
-                Block* b1 = c->GetBlock(cX,cY*2  ,cZ);
-                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
-                if (b1) b1v = b1->lightSky;
-                if (b2) b2v = b2->lightSky;
-                data[index++] = int8_t(b2v << 4 | b1v);
-            }
-        }
-    }
-    return data;
 }
 
 // Find the highest possible non-solid block that can see the sky

@@ -95,7 +95,9 @@ void Player::Save() {
         std::cout << "Directory created: " << dirPath << '\n';
     }
     std::filesystem::path entryPath = dirPath / (username + ".dat");
-	NbtWriteToFile(entryPath,root);
+    std::ofstream writeFile(entryPath, std::ios::binary);
+	NbtWrite(writeFile,root);
+    writeFile.close();
 }
 
 // Load the players data from an NBT-format file
@@ -112,7 +114,9 @@ bool Player::Load() {
     }
 
     // Load the NBT Data into the root node
-    std::shared_ptr<CompoundTag> root = std::dynamic_pointer_cast<CompoundTag>(NbtReadFromFile(entryPath));
+    std::ifstream readFile(entryPath, std::ios::binary);
+    auto root = std::dynamic_pointer_cast<CompoundTag>(NbtRead(readFile));
+    readFile.close();
 
     // Get the players saved rotation
     std::shared_ptr<ListTag> rotationList = std::dynamic_pointer_cast<ListTag>(root->Get("Rotation"));

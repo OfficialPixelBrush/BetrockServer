@@ -92,6 +92,7 @@ add_executable(
     src/objects/tileEntity.cpp
 
     src/world/chunk.cpp
+    src/world/region.cpp
     src/world/world.cpp
     src/world/worldManager.cpp
 

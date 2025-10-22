@@ -4,6 +4,7 @@
 #include "blocks.h"
 #include "world.h"
 #include "tileEntity.h"
+#include "nbt.h"
 
 class World;
 
@@ -28,6 +29,8 @@ class Chunk {
         int8_t state = ChunkState::Invalid;
         struct Block blocks[CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT];
         bool modified = false;
+        std::shared_ptr<CompoundTag> GetAsNbt();
+        void ReadFromNbt(std::shared_ptr<CompoundTag> readRoot);
 
         Chunk(World* world, int32_t cX, int32_t cZ) : world(world), xPos(cX), zPos(cZ) {}
         int8_t GetHeightValue(uint8_t x, uint8_t z);
@@ -43,4 +46,8 @@ class Chunk {
         void AddTileEntity(std::unique_ptr<TileEntity>&& te);
         std::vector<TileEntity*> GetTileEntities();
         std::vector<SignTile*> GetSigns();
+        std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z>     GetBlockTypes();
+        std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetBlockMetas();
+        std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetBlockLights();
+        std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> GetSkyLights();
 };

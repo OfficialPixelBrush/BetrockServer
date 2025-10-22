@@ -246,8 +246,10 @@ void WorldManager::SaveNbt() {
     std::string levelName = std::string(Betrock::GlobalConfig::Instance().Get("level-name"));
 	data->Put(std::make_shared<StringTag>("LevelName", levelName));
 	data->Put(std::make_shared<LongTag>("SizeOnDisk", 3956736));
-
-	NbtWriteToFile(levelName + "/level.dat",root);
+    
+    std::ofstream writeFile(levelName + "/level.dat", std::ios::binary);
+	NbtWrite(writeFile,root);
+    writeFile.close();
 }
 
 /*
