@@ -144,40 +144,33 @@ void World::FreeUnseenChunks() {
     }
 }
 
-// Load a Chunk into Memory from an NBT-Format file
-Chunk* World::LoadChunk(int32_t x, int32_t z) {
+Chunk* World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
         return nullptr;
     }
-
-    // Create the chunk entry file path based on x and z coordinates
-    std::filesystem::path entryPath = dirPath / (std::to_string(x) + "," + std::to_string(z) + CHUNK_FILE_EXTENSION);
-
-    // Check if the entry file exists and has a .cnk extension
-    if (!ChunkFileExists(x,z)) {
-        std::cout << "File doesn't exist!" << std::endl;
-        return nullptr;
-    }
-
+    
     try {
-        std::ifstream readFile(entryPath, std::ios::binary);
-        // TODO: This estimate is probably overkill
-		//std::unique_ptr<RegionFile> rf =
-		//	std::make_unique<RegionFile>(std::filesystem::current_path() / "r.0.0.mcr");
+        int32_t regionX = int32_t(floor(cX / 32.0f));
+        int32_t regionZ = int32_t(floor(cZ / 32.0f));
+        std::filesystem::path regionPath =
+            dirPath /
+            ("r." + std::to_string(regionX) + "." + std::to_string(regionZ) + MCREGION_FILE_EXTENSION);
+        std::cout << regionPath << std::endl;
+        
+        // TODO: Keep track of which regions already exist
+        std::unique_ptr<RegionFile> rf =
+            std::make_unique<RegionFile>(regionPath);
+
         std::shared_ptr<Tag> readRoot;
-        //if (x >= 0 && z >= 0 && x < 32 && z < 32) {
-		//    readRoot = rf->GetChunkNbt(x,z);
-        //} else {
-            readRoot = NbtRead(readFile,NBT_ZLIB,-1,CHUNK_DATA_SIZE*2);
-        //}
-        readFile.close();
+        readRoot = rf->GetChunkNbt(cX,cZ);
+
         if (!readRoot) {
             throw std::runtime_error("Unable to read NBT data!");
         }
-        std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,x,z);
+        std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,cX,cZ);
         c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
-        return AddChunk(x,z,std::move(c));
+        return AddChunk(cX,cZ,std::move(c));
     } catch (const std::exception& e) {
         Betrock::Logger::Instance().Error(e.what());
         return nullptr;
@@ -196,9 +189,9 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + CHUNK_FILE_EXTENSION);
     CalculateChunkLight(GetChunk(x,z));
 
-    std::ofstream writeFile(filePath, std::ios::binary);
-    NbtWrite(writeFile,chunk->GetAsNbt(),NBT_ZLIB);
-    writeFile.close();
+    //std::ofstream writeFile(filePath, std::ios::binary);
+    //NbtWrite(writeFile,chunk->GetAsNbt(),NBT_ZLIB);
+    //writeFile.close();
     chunk->modified = false;
 }
 
@@ -515,6 +508,38 @@ Int3 World::FindSpawnableBlock(Int3 position) {
 
     std::cout << "Found no suitable place to spawn, defaulting." << std::endl;
     return position;
+}
+
+// Load a Chunk into Memory from an NBT-Format file
+Chunk* World::LoadOldV2Chunk(int32_t x, int32_t z) {
+    if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
+        std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
+        return nullptr;
+    }
+
+    // Create the chunk entry file path based on x and z coordinates
+    std::filesystem::path entryPath = dirPath / (std::to_string(x) + "," + std::to_string(z) + CHUNK_FILE_EXTENSION);
+
+    // Check if the entry file exists and has a .cnk extension
+    if (!ChunkFileExists(x,z)) {
+        std::cout << "File doesn't exist!" << std::endl;
+        return nullptr;
+    }
+
+    try {
+        std::ifstream readFile(entryPath, std::ios::binary);
+        std::shared_ptr<Tag> readRoot = NbtRead(readFile,NBT_ZLIB,-1,CHUNK_DATA_SIZE*2);
+        readFile.close();
+        if (!readRoot) {
+            throw std::runtime_error("Unable to read NBT data!");
+        }
+        std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,x,z);
+        c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
+        return AddChunk(x,z,std::move(c));
+    } catch (const std::exception& e) {
+        Betrock::Logger::Instance().Error(e.what());
+        return nullptr;
+    }
 }
 
 // Load an old-format Chunk into Memory from a Binary File

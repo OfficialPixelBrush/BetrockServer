@@ -75,7 +75,8 @@ class World {
         Chunk* AddChunk(int32_t x, int32_t z, std::unique_ptr<Chunk> c);
         void FreeUnseenChunks();
         void SaveChunk(int32_t x, int32_t z, Chunk* chunk);
-        Chunk* LoadChunk(int32_t x, int32_t z);
+        Chunk* LoadMcRegionChunk(int32_t cX, int32_t cZ);
+        Chunk* LoadOldV2Chunk(int32_t x, int32_t z);
         Chunk* LoadOldChunk(int32_t x, int32_t z);
         bool ChunkFileExists(int32_t x, int32_t z, std::string extension = std::string(CHUNK_FILE_EXTENSION));
         bool ChunkExists(int32_t x, int32_t z);

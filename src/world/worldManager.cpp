@@ -162,11 +162,14 @@ Chunk* WorldManager::GetChunk(int32_t x, int32_t z, Generator* generator) {
 
     // If the chunk already exists, return right away
     if (!c) {
-        if (world.ChunkFileExists(x,z)) {
-            // Chunk exists as a file
-            c = world.LoadChunk(x,z);
-            // TODO: Populate unpopulated chunks!!!!
+        c = world.LoadMcRegionChunk(x,z);
+        if (c) {
             c->state = ChunkState::Populated;
+        } else if (world.ChunkFileExists(x,z)) {
+            // Chunk exists as a file
+            c = world.LoadOldV2Chunk(x,z);
+            // TODO: Populate unpopulated chunks!!!!
+            if (c->state != ChunkState::Populated) c->state = ChunkState::Populated;
         } else if (world.ChunkFileExists(x,z,OLD_CHUNK_FILE_EXTENSION)) {
             // Chunk exists as a file (old format)
             c = world.LoadOldChunk(x,z);

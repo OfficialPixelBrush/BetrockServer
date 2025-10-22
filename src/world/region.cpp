@@ -75,12 +75,21 @@ int32_t RegionFile::GetChunkOffset(int32_t cX, int32_t cZ) {
 }
 
 std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(int32_t cX, int32_t cZ) {
+    // Put into bounds
+    cX = (cX & 31);
+    cZ = (cZ & 31);
     // Check if chunk is within bounds
-    if (IsOutOfBounds(cX, cZ)) return nullptr;
+    if (IsOutOfBounds(cX, cZ)) {
+        std::cout << "READ " << std::to_string(cX) << ", " << std::to_string(cZ) << " out of bounds" << std::endl;
+        return nullptr;
+    }
 
     // Get the chunk offset
     int32_t offset = GetChunkOffset(cX, cZ);
-    if (!offset) return nullptr;
+    if (!offset) {
+        std::cout << "READ " << std::to_string(cX) << ", " << std::to_string(cZ) << " invalid offset" << std::endl;
+        return nullptr;
+    }
 
     int32_t upperOffset = offset >> 8;
     int32_t lowerOffset = offset & 0xFF;
@@ -111,10 +120,10 @@ std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(int32_t cX, int32_t cZ) {
     switch(compressionFormat) {
         case 1:
             // Gzip compressed
-            return std::dynamic_pointer_cast<CompoundTag>(NbtRead(dataStream, NBT_GZIP, -1, CHUNK_DATA_SIZE*10));
+            return std::dynamic_pointer_cast<CompoundTag>(NbtRead(dataStream, NBT_GZIP, -1, CHUNK_DATA_SIZE*20));
         case 2:
             // ZLib compressed
-            return std::dynamic_pointer_cast<CompoundTag>(NbtRead(dataStream, NBT_ZLIB, -1, CHUNK_DATA_SIZE*10));
+            return std::dynamic_pointer_cast<CompoundTag>(NbtRead(dataStream, NBT_ZLIB, -1, CHUNK_DATA_SIZE*20));
     }
 
     std::cout << "READ " << std::to_string(cX) << ", " << std::to_string(cZ) << " unknown version " << std::to_string(compressionFormat) << std::endl;
