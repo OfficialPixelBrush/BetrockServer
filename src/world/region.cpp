@@ -75,6 +75,13 @@ int32_t RegionFile::GetChunkOffset(int32_t cX, int32_t cZ) {
 }
 
 std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(int32_t cX, int32_t cZ) {
+    streamMutex.lock();
+    std::lock_guard lock(streamMutex);
+    if (!regionStream.good()) {
+        std::cout << "Stream read failed, possibly corrupt region\n";
+        return nullptr;
+    }
+
     // Put into bounds
     cX = (cX & 31);
     cZ = (cZ & 31);

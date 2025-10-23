@@ -19,6 +19,7 @@
 #include "region.h"
 
 class Chunk;
+class RegionFile;
 
 struct LightUpdate {
     bool skyLight;
@@ -32,6 +33,9 @@ typedef struct LightUpdate LightUpdate;
 
 class World {
     private:
+        std::unordered_map<std::string, std::shared_ptr<RegionFile>> openRegions;
+        std::mutex regionMutex;
+
         std::unordered_map<long, std::unique_ptr<Chunk>> chunks;
         std::stack<LightUpdate>lightingToUpdate;
         std::filesystem::path dirPath;

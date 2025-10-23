@@ -166,10 +166,11 @@ Chunk* World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
         readRoot = rf->GetChunkNbt(cX,cZ);
 
         if (!readRoot) {
-            throw std::runtime_error("Unable to read NBT data!");
+            return nullptr;
         }
         std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,cX,cZ);
         c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
+        c->state = ChunkState::Populated;
         return AddChunk(cX,cZ,std::move(c));
     } catch (const std::exception& e) {
         Betrock::Logger::Instance().Error(e.what());
@@ -535,6 +536,7 @@ Chunk* World::LoadOldV2Chunk(int32_t x, int32_t z) {
         }
         std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,x,z);
         c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
+        c->state = ChunkState::Populated;
         return AddChunk(x,z,std::move(c));
     } catch (const std::exception& e) {
         Betrock::Logger::Instance().Error(e.what());
@@ -617,6 +619,7 @@ Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
     Betrock::Logger::Instance().Info("Updated " + std::string(entryPath));
     // Delete the old chunk file
     remove(entryPath);
+    c->state = ChunkState::Populated;
     return AddChunk(x,z,std::move(c));
 }
 

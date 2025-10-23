@@ -3,23 +3,28 @@ Beta173Caver::Beta173Caver() {
     rand = std::make_unique<JavaRandom>();
 }
 
-void Beta173Caver::GenerateCaves(World* world, int cX, int cZ, std::unique_ptr<Chunk>& c) {
+void Beta173Caver::GenerateCavesForChunk(World* world, int cX, int cZ, std::unique_ptr<Chunk>& c) {
     int genOffset = this->generatorOffset;
     this->rand->setSeed(world->seed);
     long xOffset = this->rand->nextLong() / 2L * 2L + 1L;
     long zOffset = this->rand->nextLong() / 2L * 2L + 1L;
 
-    for(int x = cX - genOffset; x <= cX + genOffset; ++x) {
-        for(int z = cZ - genOffset; z <= cZ + genOffset; ++z) {
-            this->rand->setSeed((((long)x * xOffset) + ((long)z * zOffset)) ^ world->seed);
-            this->GenerateCave(x, z, cX, cZ, c);
+    // Iterate beyond the current chunk by 8 chunks in every direction
+    for (int x = cX - genOffset; x <= cX + genOffset; ++x) {
+        for (int z = cZ - genOffset; z <= cZ + genOffset; ++z) {
+            this->rand->setSeed(
+            (
+                (long(x) * xOffset) + (long(z) * zOffset)
+            ) ^ world->seed
+            );
+            this->GenerateCaves(x, z, cX, cZ, c);
         }
     }
 }
 
 // TODO: This is only the cave generator for the overworld.
 // The one for the nether is different!
-void Beta173Caver::GenerateCave(int x, int z, int cX, int cZ, std::unique_ptr<Chunk>& c) {
+void Beta173Caver::GenerateCaves(int x, int z, int cX, int cZ, std::unique_ptr<Chunk>& c) {
     int var7 = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(40) + 1) + 1);
     if(this->rand->nextInt(15) != 0) {
         var7 = 0;

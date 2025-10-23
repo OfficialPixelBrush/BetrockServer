@@ -49,7 +49,7 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     GenerateTerrain(cX, cZ, c, this->temperature);
     // Replace some of the stone with Biome-appropriate blocks
     ReplaceBlocksForBiome(cX, cZ, c);
-    this->caver->GenerateCaves(this->world, cX, cZ, c);
+    this->caver->GenerateCavesForChunk(this->world, cX, cZ, c);
     //var4.func_353_b();
     
     c->GenerateHeightMap();

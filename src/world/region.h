@@ -19,6 +19,7 @@ class RegionFile {
         uint32_t timestamps[MCREGION_CHUNKS];
         std::vector<bool> freeSectors;
         size_t sizeDelta = 0;
+        std::mutex streamMutex;
 
         RegionFile(std::filesystem::path filePath);
         void Write();
@@ -30,8 +31,11 @@ class RegionFile {
         int32_t GetChunkOffset(int32_t cX, int32_t cZ);
 };
 
-class RegionHandler {
+/*
+class RegionManager {
+    std::unordered_map<std::string, std::shared_ptr<RegionFile>> openRegions;
     public: 
-        RegionHandler();
+        RegionManager();
 
 };
+*/
