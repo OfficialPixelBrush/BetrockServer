@@ -140,7 +140,7 @@ bool Player::Load() {
         int16_t itemId = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"))->GetData();
         int8_t  itemCount = std::dynamic_pointer_cast<ByteTag>(slot->Get("Count"))->GetData();
         int16_t itemDamage = std::dynamic_pointer_cast<ShortTag>(slot->Get("Damage"))->GetData();
-        std::cout << int(slotNumber) << + " -> " << int(NbtConvertToSlot(slotNumber)) << std::endl;
+        //std::cout << int(slotNumber) << + " -> " << int(NbtConvertToSlot(slotNumber)) << std::endl;
         inventory[NbtConvertToSlot(slotNumber)] = {
             itemId,
             itemCount,
