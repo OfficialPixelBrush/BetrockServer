@@ -180,6 +180,9 @@ Chunk* World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
 
 // Save a Chunk as an NBT-format file
 void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
+    // Skip if we have this flag set
+    if (debugDisableSave) return;
+
     if (!chunk || !chunk->modified) {
         //
     }
@@ -188,11 +191,11 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     Int3 pos = Int3{x,0,z};
 
     std::filesystem::path filePath = dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + CHUNK_FILE_EXTENSION);
-    CalculateChunkLight(GetChunk(x,z));
+    //CalculateChunkLight(GetChunk(x,z));
 
-    //std::ofstream writeFile(filePath, std::ios::binary);
-    //NbtWrite(writeFile,chunk->GetAsNbt(),NBT_ZLIB);
-    //writeFile.close();
+    std::ofstream writeFile(filePath, std::ios::binary);
+    NbtWrite(writeFile,chunk->GetAsNbt(),NBT_ZLIB);
+    writeFile.close();
     chunk->modified = false;
 }
 

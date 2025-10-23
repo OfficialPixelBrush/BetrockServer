@@ -10,7 +10,8 @@ extern bool debugSentPacketType;
 extern bool debugNumberOfPacketBytes;
 extern bool debugPlayerStatus;
 
-extern bool debugDisableSaveLoad;
+extern bool debugDisableSave;
+//extern bool debugDisableLoad;
 extern bool debugDisablePrintChunk;
 
 extern bool debugPunchBlockInfo;
