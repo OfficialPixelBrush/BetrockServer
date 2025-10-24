@@ -387,6 +387,20 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 				case BLOCK_CRAFTING_TABLE:
 					OpenWindow(INVENTORY_WORKBENCH);
 					return true;
+				// TODO: Figure out how to handle large chests
+				// Possibly by checking for surrounding chests,
+				// then adding up their capacities?
+				// Gotta recreate the 3-size chest bug somehow!
+				case BLOCK_CHEST:
+					OpenWindow(INVENTORY_CHEST);
+					return true;
+				case BLOCK_FURNACE:
+				case BLOCK_FURNACE_LIT:
+					OpenWindow(INVENTORY_FURNACE);
+					return true;
+				case BLOCK_DISPENSER:
+					OpenWindow(INVENTORY_DISPENSER);
+					return true;
 			}
 		}
 		return true;
@@ -431,6 +445,10 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 			//	world->PlaceBlock(pos,b.type,b.meta);
 			//	BlockToFace(pos,face);
 			//	break;
+			case BLOCK_CHEST:
+				world->AddTileEntity(std::make_unique<ChestTile>(pos));
+				world->PlaceBlock(pos,b.type,b.meta);
+				break;
 			default:
 				world->PlaceBlock(pos,b.type,b.meta);
 				break;
@@ -467,6 +485,7 @@ bool Client::HandleWindowClick() {
 	int16_t itemId		= EntryToShort(message,offset);
 	int8_t itemCount	= 1;
 	int16_t itemUses	= 0;
+	std::cout << int(window) << " (" << int(slot) << ")" << std::endl;
 	if (itemId > 0) {
 		itemCount		= EntryToByte(message, offset);
 		itemUses		= EntryToShort(message,offset);

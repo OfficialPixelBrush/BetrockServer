@@ -445,7 +445,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
         zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
-        //(new WorldGenDungeons()).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+        //Beta173Feature().GenerateDungeon(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     for(int i = 0; i < 10; ++i) {

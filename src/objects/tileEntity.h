@@ -1,6 +1,7 @@
 #pragma once
 
 #include "datatypes.h"
+#include "inventory.h"
 #include <vector>
 
 #define TILEENTITY_SIGN "Sign"
@@ -30,6 +31,11 @@ class SignTile : public TileEntity {
 };
 
 class ChestTile : public TileEntity {
-    ChestTile(Int3 position)
-        : TileEntity(position, TILEENTITY_CHEST) {}
+    public:
+        std::array<Item,INVENTORY_CHEST_SIZE> inventory;
+
+        ChestTile(Int3 position, const std::array<Item,INVENTORY_CHEST_SIZE>& inventory = {})
+            : TileEntity(position, TILEENTITY_CHEST), inventory(inventory) {}
+        void SetInventory(std::array<Item,INVENTORY_CHEST_SIZE> inventory);
+        std::array<Item,INVENTORY_CHEST_SIZE> GetInventory();
 };
