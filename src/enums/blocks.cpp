@@ -336,6 +336,23 @@ bool HasInventory(int16_t id) {
     return false;
 }
 
+bool IsLiquid(int16_t id) {
+    if (
+        id == BLOCK_WATER_STILL ||
+        id == BLOCK_WATER_FLOWING ||
+        id == BLOCK_LAVA_STILL ||
+        id == BLOCK_LAVA_FLOWING
+    ) {
+        return true;
+    }
+    return false;
+}
+
+// TODO: Do this right
+bool IsSolid(int16_t id) {
+    return IsOpaque(id);
+} 
+
 // Determine in which direction a block needs to be placed
 void BlockToFace(Int3& pos, int8_t& direction) {
 	switch(direction) {

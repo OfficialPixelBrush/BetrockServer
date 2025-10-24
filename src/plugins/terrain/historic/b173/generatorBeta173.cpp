@@ -50,19 +50,14 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     // Replace some of the stone with Biome-appropriate blocks
     ReplaceBlocksForBiome(cX, cZ, c);
     this->caver->GenerateCavesForChunk(this->world, cX, cZ, c);
-    //var4.func_353_b();
+    // TODO: Replace this with actual beta lighting
+    //this->world->UpdateLightingInfdev(cX,cZ);
+    //blockX.func_353_b();
     
     c->GenerateHeightMap();
     c->state = ChunkState::Generated;
     c->modified = true;
     return c;
-}
-
-bool GeneratorBeta173::PopulateChunk(
-    [[maybe_unused]] int32_t cX,
-    [[maybe_unused]] int32_t cZ
-) {
-    return true;
 }
 
 // Replace some of the stone with Biome-appropriate blocks
@@ -412,4 +407,307 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
     }
 
     return terrainMap;
+}
+
+bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
+    //BlockSand.fallInstantly = true;
+    int blockX = cX * CHUNK_WIDTH_X;
+    int blockZ = cZ * CHUNK_WIDTH_Z;
+    //BiomeGenBase var6 = this->worldObj.getWorldChunkManager().getBiomeGenAt(blockX + CHUNK_WIDTH_X, blockZ + CHUNK_WIDTH_Z);
+    this->rand->setSeed(this->world->seed);
+    long xOffset = this->rand->nextLong() / 2L * 2L + 1L;
+    long zOffset = this->rand->nextLong() / 2L * 2L + 1L;
+    this->rand->setSeed(((long(cX) * xOffset) + (long(cZ) * zOffset)) ^ this->world->seed);
+    //double quarter = 0.25D;
+    [[maybe_unused]] int xCoordinate;
+    [[maybe_unused]] int yCoordinate;
+    [[maybe_unused]] int zCoordinate;
+
+    // Generate lakes
+    if(this->rand->nextInt(4) == 0) {
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+        Beta173Feature(BLOCK_WATER_STILL).GenerateLake(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    // Generate lava lakes
+    if(this->rand->nextInt(8) == 0) {
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+        yCoordinate = this->rand->nextInt(this->rand->nextInt(120) + 8);
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+        if(yCoordinate < 64 || this->rand->nextInt(10) == 0) {
+            Beta173Feature(BLOCK_LAVA_STILL).GenerateLake(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+        }
+    }
+
+    for(int i = 0; i < 8; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+        //(new WorldGenDungeons()).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    for(int i = 0; i < 10; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+        //(new WorldGenClay(32)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    for(int i = 0; i < 20; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+        //(new WorldGenMinable(BLOCK_DIRT, 32)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    for(int i = 0; i < 10; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16);
+        yCoordinate = this->rand->nextInt(128);
+        zCoordinate = blockZ + this->rand->nextInt(16);
+        //(new WorldGenMinable(BLOCK_GRAVEL, 32)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    for(int i = 0; i < 20; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16);
+        yCoordinate = this->rand->nextInt(128);
+        zCoordinate = blockZ + this->rand->nextInt(16);
+        //(new WorldGenMinable(BLOCK_ORE_COAL, 16)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    for(int i = 0; i < 20; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16);
+        yCoordinate = this->rand->nextInt(64);
+        zCoordinate = blockZ + this->rand->nextInt(16);
+        //(new WorldGenMinable(BLOCK_ORE_IRON, 8)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    for(int i = 0; i < 2; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16);
+        yCoordinate = this->rand->nextInt(32);
+        zCoordinate = blockZ + this->rand->nextInt(16);
+        //(new WorldGenMinable(BLOCK_ORE_GOLD, 8)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    for(int i = 0; i < 8; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16);
+        yCoordinate = this->rand->nextInt(16);
+        zCoordinate = blockZ + this->rand->nextInt(16);
+        //(new WorldGenMinable(BLOCK_ORE_REDSTONE, 7)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    for(int i = 0; i < 1; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16);
+        yCoordinate = this->rand->nextInt(16);
+        zCoordinate = blockZ + this->rand->nextInt(16);
+        //(new WorldGenMinable(BLOCK_ORE_DIAMOND, 7)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    for(int i = 0; i < 1; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16);
+        yCoordinate = this->rand->nextInt(16) + this->rand->nextInt(16);
+        zCoordinate = blockZ + this->rand->nextInt(16);
+        //(new WorldGenMinable(BLOCK_ORE_LAPIS_LAZULI, 6)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    /*
+
+    quarter = 0.5D;
+    xCoordinate = (int)((this->mobSpawnerNoise.func_647_a((double)blockX * quarter, (double)blockZ * quarter) / 8.0D + this->rand->nextDouble() * 4.0D + 4.0D) / 3.0D);
+    yCoordinate = 0;
+    if(this->rand->nextInt(10) == 0) {
+        ++yCoordinate;
+    }
+
+    if(var6 == BiomeGenBase.forest) {
+        yCoordinate += xCoordinate + 5;
+    }
+
+    if(var6 == BiomeGenBase.rainforest) {
+        yCoordinate += xCoordinate + 5;
+    }
+
+    if(var6 == BiomeGenBase.seasonalForest) {
+        yCoordinate += xCoordinate + 2;
+    }
+
+    if(var6 == BiomeGenBase.taiga) {
+        yCoordinate += xCoordinate + 5;
+    }
+
+    if(var6 == BiomeGenBase.desert) {
+        yCoordinate -= 20;
+    }
+
+    if(var6 == BiomeGenBase.tundra) {
+        yCoordinate -= 20;
+    }
+
+    if(var6 == BiomeGenBase.plains) {
+        yCoordinate -= 20;
+    }
+
+    int var17;
+    for(zCoordinate = 0; zCoordinate < yCoordinate; ++zCoordinate) {
+        var16 = blockX + this->rand->nextInt(16) + 8;
+        var17 = blockZ + this->rand->nextInt(16) + 8;
+        WorldGenerator var18 = var6.getRandomWorldGenForTrees(this->rand);
+        var18.func_420_a(1.0D, 1.0D, 1.0D);
+        var18.generate(this->worldObj, this->rand, var16, this->worldObj.getHeightValue(var16, var17), var17);
+    }
+
+    byte cX7 = 0;
+    if(var6 == BiomeGenBase.forest) {
+        cX7 = 2;
+    }
+
+    if(var6 == BiomeGenBase.seasonalForest) {
+        cX7 = 4;
+    }
+
+    if(var6 == BiomeGenBase.taiga) {
+        cX7 = 2;
+    }
+
+    if(var6 == BiomeGenBase.plains) {
+        cX7 = 3;
+    }
+
+    int var19;
+    int cX5;
+    for(var16 = 0; var16 < cX7; ++var16) {
+        var17 = blockX + this->rand->nextInt(16) + 8;
+        cX5 = this->rand->nextInt(128);
+        var19 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenFlowers(Block.plantYellow.blockID)).generate(this->worldObj, this->rand, var17, cX5, var19);
+    }
+
+    byte cX8 = 0;
+    if(var6 == BiomeGenBase.forest) {
+        cX8 = 2;
+    }
+
+    if(var6 == BiomeGenBase.rainforest) {
+        cX8 = 10;
+    }
+
+    if(var6 == BiomeGenBase.seasonalForest) {
+        cX8 = 2;
+    }
+
+    if(var6 == BiomeGenBase.taiga) {
+        cX8 = 1;
+    }
+
+    if(var6 == BiomeGenBase.plains) {
+        cX8 = 10;
+    }
+
+    int cX0;
+    int cX1;
+    for(var17 = 0; var17 < cX8; ++var17) {
+        byte cX6 = 1;
+        if(var6 == BiomeGenBase.rainforest && this->rand->nextInt(3) != 0) {
+            cX6 = 2;
+        }
+
+        var19 = blockX + this->rand->nextInt(16) + 8;
+        cX0 = this->rand->nextInt(128);
+        cX1 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenTallGrass(Block.tallGrass.blockID, cX6)).generate(this->worldObj, this->rand, var19, cX0, cX1);
+    }
+
+    cX8 = 0;
+    if(var6 == BiomeGenBase.desert) {
+        cX8 = 2;
+    }
+
+    for(var17 = 0; var17 < cX8; ++var17) {
+        cX5 = blockX + this->rand->nextInt(16) + 8;
+        var19 = this->rand->nextInt(128);
+        cX0 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenDeadBush(Block.deadBush.blockID)).generate(this->worldObj, this->rand, cX5, var19, cX0);
+    }
+
+    if(this->rand->nextInt(2) == 0) {
+        var17 = blockX + this->rand->nextInt(16) + 8;
+        cX5 = this->rand->nextInt(128);
+        var19 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenFlowers(Block.plantRed.blockID)).generate(this->worldObj, this->rand, var17, cX5, var19);
+    }
+
+    if(this->rand->nextInt(4) == 0) {
+        var17 = blockX + this->rand->nextInt(16) + 8;
+        cX5 = this->rand->nextInt(128);
+        var19 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenFlowers(Block.mushroomBrown.blockID)).generate(this->worldObj, this->rand, var17, cX5, var19);
+    }
+
+    if(this->rand->nextInt(8) == 0) {
+        var17 = blockX + this->rand->nextInt(16) + 8;
+        cX5 = this->rand->nextInt(128);
+        var19 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenFlowers(Block.mushroomRed.blockID)).generate(this->worldObj, this->rand, var17, cX5, var19);
+    }
+
+    for(var17 = 0; var17 < 10; ++var17) {
+        cX5 = blockX + this->rand->nextInt(16) + 8;
+        var19 = this->rand->nextInt(128);
+        cX0 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenReed()).generate(this->worldObj, this->rand, cX5, var19, cX0);
+    }
+
+    if(this->rand->nextInt(32) == 0) {
+        var17 = blockX + this->rand->nextInt(16) + 8;
+        cX5 = this->rand->nextInt(128);
+        var19 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenPumpkin()).generate(this->worldObj, this->rand, var17, cX5, var19);
+    }
+
+    var17 = 0;
+    if(var6 == BiomeGenBase.desert) {
+        var17 += 10;
+    }
+
+    for(cX5 = 0; cX5 < var17; ++cX5) {
+        var19 = blockX + this->rand->nextInt(16) + 8;
+        cX0 = this->rand->nextInt(128);
+        cX1 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenCactus()).generate(this->worldObj, this->rand, var19, cX0, cX1);
+    }
+
+    for(cX5 = 0; cX5 < 50; ++cX5) {
+        var19 = blockX + this->rand->nextInt(16) + 8;
+        cX0 = this->rand->nextInt(this->rand->nextInt(120) + 8);
+        cX1 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenLiquids(Block.waterMoving.blockID)).generate(this->worldObj, this->rand, var19, cX0, cX1);
+    }
+
+    for(cX5 = 0; cX5 < 20; ++cX5) {
+        var19 = blockX + this->rand->nextInt(16) + 8;
+        cX0 = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(112) + 8) + 8);
+        cX1 = blockZ + this->rand->nextInt(16) + 8;
+        (new WorldGenLiquids(Block.lavaMoving.blockID)).generate(this->worldObj, this->rand, var19, cX0, cX1);
+    }*/
+
+    //this->generatedTemperatures = this->worldObj.getWorldChunkManager().getTemperatures(this->generatedTemperatures, blockX + 8, blockZ + 8, 16, 16);
+
+    // Place Snow in cold regions
+    /*
+    for(cX5 = blockX + 8; cX5 < blockX + 8 + 16; ++cX5) {
+        for(var19 = blockZ + 8; var19 < blockZ + 8 + 16; ++var19) {
+            cX0 = cX5 - (blockX + 8);
+            cX1 = var19 - (blockZ + 8);
+            int cX2 = this->worldObj.getTopSolidOrLiquidBlock(cX5, var19);
+            double cX3 = this->generatedTemperatures[cX0 * 16 + cX1] - (double)(cX2 - 64) / 64.0D * 0.3D;
+            if(cX3 < 0.5D && cX2 > 0 && cX2 < 128 && this->worldObj.isAirBlock(cX5, cX2, var19) && this->worldObj.getBlockMaterial(cX5, cX2 - 1, var19).getIsSolid() && this->worldObj.getBlockMaterial(cX5, cX2 - 1, var19) != Material.ice) {
+                this->worldObj.setBlockWithNotify(cX5, cX2, var19, Block.snow.blockID);
+            }
+        }
+    }
+        */
+
+    //BlockSand.fallInstantly = false;
+    return true;
 }

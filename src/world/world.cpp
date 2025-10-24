@@ -252,7 +252,7 @@ void World::AddToLightQueue(bool skyLight, Int3 posA, Int3 posB) {
     this->lightingToUpdate.emplace(LightUpdate(skyLight,posA,posB));
 }
 
-void World::UpdateLighting() {
+void World::UpdateLightingInfdev() {
     while(true) {
         LightUpdate currentUpdate;
         {

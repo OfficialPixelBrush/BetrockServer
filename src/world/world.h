@@ -47,7 +47,7 @@ class World {
         std::mutex chunkMutex;
     public:
         int64_t seed;
-        void UpdateLighting();
+        void UpdateLightingInfdev();
         World(const std::string &extra = "");
 
         // Block-related

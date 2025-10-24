@@ -99,6 +99,7 @@ add_executable(
     src/plugins/terrain/historic/inf20100227/generatorInfdev20100227.cpp
     src/plugins/terrain/historic/inf20100327/generatorInfdev20100327.cpp
     src/plugins/terrain/historic/b173/beta173Caver.cpp
+    src/plugins/terrain/historic/b173/beta173Feature.cpp
     src/plugins/terrain/historic/b173/generatorBeta173.cpp
     src/plugins/terrain/historic/noise/noiseGenerator.cpp
     src/plugins/terrain/historic/noise/noisePerlin.cpp
