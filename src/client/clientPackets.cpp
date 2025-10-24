@@ -479,12 +479,12 @@ bool Client::HandleCloseWindow() {
 bool Client::HandleWindowClick() {
 	int8_t window 		= EntryToByte(message, offset);
 	int16_t slot 		= EntryToShort(message,offset);
-	int8_t rightClick 	= EntryToByte(message, offset);
-	int16_t actionNumber= EntryToShort(message,offset);
-	int8_t shift 		= EntryToByte(message, offset);
-	int16_t itemId		= EntryToShort(message,offset);
-	int8_t itemCount	= 1;
-	int16_t itemUses	= 0;
+	[[maybe_unused]] int8_t rightClick 	= EntryToByte(message, offset);
+	[[maybe_unused]] int16_t actionNumber= EntryToShort(message,offset);
+	[[maybe_unused]] int8_t shift 		= EntryToByte(message, offset);
+	[[maybe_unused]] int16_t itemId		= EntryToShort(message,offset);
+	[[maybe_unused]] int8_t itemCount	= 1;
+	[[maybe_unused]] int16_t itemUses	= 0;
 	std::cout << int(window) << " (" << int(slot) << ")" << std::endl;
 	if (itemId > 0) {
 		itemCount		= EntryToByte(message, offset);
