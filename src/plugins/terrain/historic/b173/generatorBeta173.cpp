@@ -332,13 +332,14 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
     int xyzIndex = 0;
     // Used to iterate 2D Noise maps (depth, continentalness)
     int xzIndex = 0;
-    int xIndex = 16 / xMax;
+    int scaleFraction = 16 / xMax;
 
     for(int iX = 0; iX < xMax; ++iX) {
-        int sampleX = iX * xIndex + xIndex / 2;
+        int sampleX = iX * scaleFraction + scaleFraction / 2;
 
         for(int iZ = 0; iZ < zMax; ++iZ) {
-            int sampleZ = iZ * xIndex + xIndex / 2;
+            // Sample 2D noises
+            int sampleZ = iZ * scaleFraction + scaleFraction / 2;
             // Apply biome-noise-dependent variety
             double temp = this->temperature[sampleX * CHUNK_WIDTH_X + sampleZ];
             double humi = this->humidity[sampleX * CHUNK_WIDTH_X + sampleZ] * temp;
@@ -364,7 +365,6 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
                 continentalness = 0.0D;
             } else {
                 if(depthNoise > 1.0D) depthNoise = 1.0D;
-
                 depthNoise /= 8.0D;
             }
 
@@ -378,6 +378,7 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
             ++xzIndex;
 
             for(int iY = 0; iY < yMax; ++iY) {
+                // Sample 3D noises
                 double terrainDensity = 0.0D;
                 double densityOffset = ((double)iY - elevationOffset) * 12.0D / continentalness;
                 if(densityOffset < 0.0D) {

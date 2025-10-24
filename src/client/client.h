@@ -47,6 +47,7 @@ class Client : public std::enable_shared_from_this<Client> {
 
         // Window status
         int8_t activeWindow = INVENTORY_NONE;
+        // Index 0 is the normal window
         int8_t windowIndex = 0;
 
         int64_t lastPacketTime = 0;

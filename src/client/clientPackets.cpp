@@ -469,6 +469,7 @@ bool Client::HandleCloseWindow() {
 	int8_t windowId = EntryToByte(message, offset);
 	if (windowId == windowIndex) {
 		activeWindow = INVENTORY_NONE;
+		windowIndex--;
 	} else {
 		CloseLatestWindow();
 	}

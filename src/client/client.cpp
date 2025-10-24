@@ -533,36 +533,60 @@ void Client::ClickedSlot(
 	[[maybe_unused]] int8_t amount,
 	[[maybe_unused]] int16_t damage)
 {
-    // Shift Click Behavior
-    if (shift) {
-        // Get item
-        Item temp = player->inventory[slotId];
-        // Empty slot
-        player->inventory[slotId] = {-1,0,0};
-        if (slotId >= INVENTORY_HOTBAR) {
-            SpreadToSlots(temp.id,temp.amount,temp.damage,2);
-        } else {
-            SpreadToSlots(temp.id,temp.amount,temp.damage,1);
-        }
-    }
-    
-    // If we've clicked outside, throw the items to the ground and clear the slot.
-    if (slotId == CLICK_OUTSIDE) {
-        hoveringItem = Item {-1,0,0};
-        return;
-    }
+	// We're interacting with a window we're not
+	// currently looking at; something messed up!
+	if (windowId != windowIndex) {
+		std::cerr << "Was looking at " << int(windowIndex) << " but got click for " << int(windowId) << "!" << std::endl;
+		return;
+	}
 
-    // If something is being held
-    if (hoveringItem.id < BLOCK_STONE) {
-        Item temp = hoveringItem;
-        hoveringItem = player->inventory[slotId];
-        player->inventory[slotId] = temp;
-    } else {
-        Item temp = player->inventory[slotId];
-        player->inventory[slotId] = hoveringItem;
-        hoveringItem = temp;
-    }
-    lastClickedSlot = slotId;
+	switch(activeWindow) {
+		case INVENTORY_DISPENSER:
+			std::cout << "Interacted with Dispenser Inventory" << std::endl;
+			break;
+		case INVENTORY_FURNACE:
+			std::cout << "Interacted with Furnace Inventory" << std::endl;
+			break;
+		case INVENTORY_WORKBENCH:
+			std::cout << "Interacted with Crafting Table Inventory" << std::endl;
+			break;
+		case INVENTORY_CHEST:
+			std::cout << "Interacted with Chest Inventory" << std::endl;
+			break;
+		// Player Inventory
+		default:
+			// Shift Click Behavior
+			if (shift) {
+				// Get item
+				Item temp = player->inventory[slotId];
+				// Empty slot
+				player->inventory[slotId] = {-1,0,0};
+				if (slotId >= INVENTORY_HOTBAR) {
+					SpreadToSlots(temp.id,temp.amount,temp.damage,2);
+				} else {
+					SpreadToSlots(temp.id,temp.amount,temp.damage,1);
+				}
+			}
+			
+			// If we've clicked outside, throw the items to the ground and clear the slot.
+			if (slotId == CLICK_OUTSIDE) {
+				hoveringItem = Item {-1,0,0};
+				break;
+			}
+
+			// If something is being held
+			if (hoveringItem.id < BLOCK_STONE) {
+				Item temp = hoveringItem;
+				hoveringItem = player->inventory[slotId];
+				player->inventory[slotId] = temp;
+			} else {
+				Item temp = player->inventory[slotId];
+				player->inventory[slotId] = hoveringItem;
+				hoveringItem = temp;
+			}
+			lastClickedSlot = slotId;
+			break;
+	}
 }
 
 // Clear the clients inventory
