@@ -74,6 +74,7 @@ void Player::Save() {
         if (item.id == SLOT_EMPTY) {
             continue;
         }
+            /*
         nbtInventory->Put(
             NbtItem(
                 NbtConvertToSlot(i),
@@ -82,6 +83,7 @@ void Player::Save() {
                 item.damage
             )
         );
+            */
     }
 
 	// Yeet to file
@@ -136,16 +138,18 @@ bool Player::Load() {
     std::shared_ptr<ListTag> inventoryList = std::dynamic_pointer_cast<ListTag>(root->Get("Inventory"));
     for (size_t i = 0; i < inventoryList->GetNumberOfTags(); i++) {
         auto slot = std::dynamic_pointer_cast<CompoundTag>(inventoryList->Get(i));
-        int8_t  slotNumber = std::dynamic_pointer_cast<ByteTag>(slot->Get("Slot"))->GetData();
-        int16_t itemId = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"))->GetData();
-        int8_t  itemCount = std::dynamic_pointer_cast<ByteTag>(slot->Get("Count"))->GetData();
-        int16_t itemDamage = std::dynamic_pointer_cast<ShortTag>(slot->Get("Damage"))->GetData();
+        [[maybe_unused]] int8_t  slotNumber = std::dynamic_pointer_cast<ByteTag>(slot->Get("Slot"))->GetData();
+        [[maybe_unused]] int16_t itemId = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"))->GetData();
+        [[maybe_unused]] int8_t  itemCount = std::dynamic_pointer_cast<ByteTag>(slot->Get("Count"))->GetData();
+        [[maybe_unused]] int16_t itemDamage = std::dynamic_pointer_cast<ShortTag>(slot->Get("Damage"))->GetData();
         //std::cout << int(slotNumber) << + " -> " << int(NbtConvertToSlot(slotNumber)) << std::endl;
+        /*
         inventory[NbtConvertToSlot(slotNumber)] = {
             itemId,
             itemCount,
             itemDamage
         };
+        */
     }
     return true;
 }

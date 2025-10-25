@@ -540,53 +540,67 @@ void Client::ClickedSlot(
 		return;
 	}
 
+	int slotOffset = 0;
+
 	switch(activeWindow) {
 		case INVENTORY_DISPENSER:
 			std::cout << "Interacted with Dispenser Inventory" << std::endl;
+			slotOffset = INVENTORY_DISPENSER_SIZE;
 			break;
 		case INVENTORY_FURNACE:
 			std::cout << "Interacted with Furnace Inventory" << std::endl;
+			slotOffset = INVENTORY_FURNACE_SIZE;
 			break;
-		case INVENTORY_WORKBENCH:
+		case INVENTORY_CRAFTING_TABLE:
 			std::cout << "Interacted with Crafting Table Inventory" << std::endl;
+			slotOffset = INVENTORY_CRAFTING_TABLE_SIZE;
 			break;
 		case INVENTORY_CHEST:
 			std::cout << "Interacted with Chest Inventory" << std::endl;
+			slotOffset = INVENTORY_CHEST_SIZE;
 			break;
 		// Player Inventory
 		default:
-			// Shift Click Behavior
-			if (shift) {
-				// Get item
-				Item temp = player->inventory[slotId];
-				// Empty slot
-				player->inventory[slotId] = {-1,0,0};
-				if (slotId >= INVENTORY_HOTBAR) {
-					SpreadToSlots(temp.id,temp.amount,temp.damage,2);
-				} else {
-					SpreadToSlots(temp.id,temp.amount,temp.damage,1);
-				}
-			}
-			
-			// If we've clicked outside, throw the items to the ground and clear the slot.
-			if (slotId == CLICK_OUTSIDE) {
-				hoveringItem = Item {-1,0,0};
-				break;
-			}
-
-			// If something is being held
-			if (hoveringItem.id < BLOCK_STONE) {
-				Item temp = hoveringItem;
-				hoveringItem = player->inventory[slotId];
-				player->inventory[slotId] = temp;
-			} else {
-				Item temp = player->inventory[slotId];
-				player->inventory[slotId] = hoveringItem;
-				hoveringItem = temp;
-			}
-			lastClickedSlot = slotId;
 			break;
 	}
+	
+	// If we've clicked outside, throw the items to the ground and clear the slot.
+	if (slotId == CLICK_OUTSIDE) {
+		hoveringItem = Item {-1,0,0};
+		return;
+	}
+
+	// We are interacting with the player inventory,
+	// if we are greater than the offset
+	if (slotId > slotOffset) {
+		slotId -= slotOffset;
+	}
+
+	// Player inventory handling
+	// Shift Click Behavior
+	if (shift) {
+		// Get item
+		Item temp = player->inventory[slotId];
+		// Empty slot
+		player->inventory[slotId] = {-1,0,0};
+		if (slotId >= INVENTORY_HOTBAR) {
+			SpreadToSlots(temp.id,temp.amount,temp.damage,2);
+		} else {
+			SpreadToSlots(temp.id,temp.amount,temp.damage,1);
+		}
+	}
+
+	// If something is being held
+	if (hoveringItem.id < BLOCK_STONE) {
+		Item temp = hoveringItem;
+		hoveringItem = player->inventory[slotId];
+		player->inventory[slotId] = temp;
+	} else {
+		Item temp = player->inventory[slotId];
+		player->inventory[slotId] = hoveringItem;
+		hoveringItem = temp;
+	}
+	lastClickedSlot = slotId;
 }
 
 // Clear the clients inventory
@@ -639,8 +653,8 @@ void Client::OpenWindow(int8_t type) {
         case INVENTORY_CHEST_LARGE:
             Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Large chest", INVENTORY_CHEST_LARGE_SIZE);
             break;
-        case INVENTORY_WORKBENCH:
-            Respond::OpenWindow(response, windowIndex, INVENTORY_WORKBENCH, "", INVENTORY_WORKBENCH_SIZE);
+        case INVENTORY_CRAFTING_TABLE:
+            Respond::OpenWindow(response, windowIndex, INVENTORY_CRAFTING_TABLE, "", INVENTORY_CRAFTING_TABLE_SIZE);
             break;
         case INVENTORY_FURNACE:
             Respond::OpenWindow(response, windowIndex, INVENTORY_FURNACE, "", INVENTORY_FURNACE_SIZE);

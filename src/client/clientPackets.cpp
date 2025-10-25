@@ -385,7 +385,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		} else {
 			switch(targetedBlock->type) {
 				case BLOCK_CRAFTING_TABLE:
-					OpenWindow(INVENTORY_WORKBENCH);
+					OpenWindow(INVENTORY_CRAFTING_TABLE);
 					return true;
 				// TODO: Figure out how to handle large chests
 				// Possibly by checking for surrounding chests,
@@ -467,6 +467,9 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 // Handle the Client closing a Window
 bool Client::HandleCloseWindow() {
 	int8_t windowId = EntryToByte(message, offset);
+	// Ignore inventory
+	if (windowId == 0) return true;
+	
 	if (windowId == windowIndex) {
 		activeWindow = INVENTORY_NONE;
 		windowIndex--;

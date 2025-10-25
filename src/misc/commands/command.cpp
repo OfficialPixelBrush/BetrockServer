@@ -542,7 +542,7 @@ std::string CommandInterface::Execute(std::vector<std::string> command, [[maybe_
 	
 	// TODO: Tracks players open Window IDs
 	if (command[1] == "craft") {
-		client->OpenWindow(INVENTORY_WORKBENCH);
+		client->OpenWindow(INVENTORY_CRAFTING_TABLE);
 	} else if (command[1] == "chest") {
 		client->OpenWindow(INVENTORY_CHEST);
 	}
