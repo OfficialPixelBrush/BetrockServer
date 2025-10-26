@@ -45,8 +45,8 @@ class Client : public std::enable_shared_from_this<Client> {
         std::vector<uint8_t> broadcastResponse;
         std::vector<uint8_t> broadcastOthersResponse;
 
-        // Window status
-        int8_t activeWindow = INVENTORY_NONE;
+        // Window type
+        int8_t activeWindowType = INVENTORY_NONE;
         // Index 0 is the normal window
         int8_t windowIndex = 0;
 

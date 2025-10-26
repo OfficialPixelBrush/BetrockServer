@@ -498,8 +498,20 @@ bool Client::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, i
 
 // Update the clients shown inventory
 bool Client::UpdateInventory(std::vector<uint8_t> &response) {
-    std::vector<Item> v(std::begin(player->inventory), std::end(player->inventory));
-    Respond::WindowItems(response, 0, v);
+	std::vector<Item> v;
+	switch(activeWindowType) {
+		case INVENTORY_NONE:
+		default:
+			// Crafting slot cannot be controlled by the server-side
+			// however, the client still expects it to be sent
+			v.push_back(Item{-1,0,0});
+			for (auto &item : player->crafting) v.push_back(item);
+			for (auto &item : player->armor) v.push_back(item);
+			for (auto &item : player->inventory) v.push_back(item);
+			break;
+	}
+    
+    Respond::WindowItems(response, windowIndex, v);
     return true;
 }
 
@@ -528,7 +540,7 @@ void Client::ClickedSlot(
 	int16_t slotId,
 	[[maybe_unused]] bool rightClick,
 	[[maybe_unused]] int16_t actionNumber,
-	bool shift,
+	[[maybe_unused]] bool shift,
 	[[maybe_unused]] int16_t id,
 	[[maybe_unused]] int8_t amount,
 	[[maybe_unused]] int16_t damage)
@@ -540,71 +552,63 @@ void Client::ClickedSlot(
 		return;
 	}
 
-	int slotOffset = 0;
+	// Clicked outside
+	// TODO: Throw item onto ground
+	if (slotId == CLICK_OUTSIDE) return;
 
-	switch(activeWindow) {
+	Item testItem {50,48,0};
+
+	// Translate network slots into local slots
+	int slotOffset = 0;
+	switch(activeWindowType) {
 		case INVENTORY_DISPENSER:
-			std::cout << "Interacted with Dispenser Inventory" << std::endl;
 			slotOffset = INVENTORY_DISPENSER_SIZE;
 			break;
 		case INVENTORY_FURNACE:
-			std::cout << "Interacted with Furnace Inventory" << std::endl;
 			slotOffset = INVENTORY_FURNACE_SIZE;
 			break;
 		case INVENTORY_CRAFTING_TABLE:
-			std::cout << "Interacted with Crafting Table Inventory" << std::endl;
 			slotOffset = INVENTORY_CRAFTING_TABLE_SIZE;
 			break;
 		case INVENTORY_CHEST:
-			std::cout << "Interacted with Chest Inventory" << std::endl;
 			slotOffset = INVENTORY_CHEST_SIZE;
 			break;
 		// Player Inventory
 		default:
+			if (slotId == 0) {
+				std::cout << "Crafting Result" << std::endl;
+			} else if (slotId <= 4) {
+				std::cout << "Crafting Area" << std::endl;
+				player->crafting[slotId-1] = testItem;
+			} else if (slotId <= 8) {
+				slotId -= 5;
+				std::cout << "Armor Area" << std::endl;
+				player->armor[slotId] = testItem;
+			} else {
+				slotId -= 9;
+				std::cout << "Main inventory" << std::endl;
+				player->inventory[slotId] = testItem;
+			}
 			break;
 	}
-	
-	// If we've clicked outside, throw the items to the ground and clear the slot.
-	if (slotId == CLICK_OUTSIDE) {
-		hoveringItem = Item {-1,0,0};
-		return;
-	}
 
-	// We are interacting with the player inventory,
-	// if we are greater than the offset
-	if (slotId > slotOffset) {
-		slotId -= slotOffset;
-	}
-
-	// Player inventory handling
-	// Shift Click Behavior
-	if (shift) {
-		// Get item
-		Item temp = player->inventory[slotId];
-		// Empty slot
-		player->inventory[slotId] = {-1,0,0};
-		if (slotId >= INVENTORY_HOTBAR) {
-			SpreadToSlots(temp.id,temp.amount,temp.damage,2);
-		} else {
-			SpreadToSlots(temp.id,temp.amount,temp.damage,1);
-		}
-	}
-
-	// If something is being held
-	if (hoveringItem.id < BLOCK_STONE) {
-		Item temp = hoveringItem;
-		hoveringItem = player->inventory[slotId];
-		player->inventory[slotId] = temp;
+	if (slotId < slotOffset) {
+		std::cout << "Clicking in other inventory (" << int(slotId) << ")" << std::endl;
 	} else {
-		Item temp = player->inventory[slotId];
-		player->inventory[slotId] = hoveringItem;
-		hoveringItem = temp;
+		slotId -= slotOffset;
+		std::cout << "Clicking in player inventory (" << int(slotId) << ")" << std::endl;
 	}
-	lastClickedSlot = slotId;
+	UpdateInventory(response);
 }
 
 // Clear the clients inventory
 void Client::ClearInventory() {
+    for (int i = 0; i < 5; ++i) {
+        player->crafting[i] = Item{-1, 0, 0};
+    }
+    for (int i = 0; i < 4; ++i) {
+        player->armor[i] = Item{-1, 0, 0};
+    }
     // Fill inventory with empty slots
     for (int i = 0; i < INVENTORY_MAX_SLOTS; ++i) {
         player->inventory[i] = Item{-1, 0, 0};
@@ -666,7 +670,7 @@ void Client::OpenWindow(int8_t type) {
             windowIndex--;
             return;
     }
-    activeWindow = type;
+    activeWindowType = type;
     return;
 }
 

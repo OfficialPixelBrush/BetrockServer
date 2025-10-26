@@ -467,14 +467,20 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 // Handle the Client closing a Window
 bool Client::HandleCloseWindow() {
 	int8_t windowId = EntryToByte(message, offset);
+	std::cout << int(windowId) << std::endl;
 	// Ignore inventory
 	if (windowId == 0) return true;
 	
 	if (windowId == windowIndex) {
-		activeWindow = INVENTORY_NONE;
 		windowIndex--;
 	} else {
 		CloseLatestWindow();
+	}
+
+	// Ensure we can never go lower than the default inventory
+	if (windowIndex <= 0) {
+		windowIndex = 0;
+		activeWindowType = INVENTORY_NONE;
 	}
 	return true;
 }
