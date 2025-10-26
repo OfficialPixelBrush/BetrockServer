@@ -498,8 +498,13 @@ bool Client::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, i
 
 // Update the clients shown inventory
 bool Client::UpdateInventory(std::vector<uint8_t> &response) {
+	Item tempItem = {15,64,0};
 	std::vector<Item> v;
 	switch(activeWindowType) {
+		case INVENTORY_CHEST:
+			for (int i = 0; i < INVENTORY_CHEST_SIZE; i++) v.push_back(tempItem);
+			for (auto &item : player->inventory) v.push_back(item);
+			break;
 		case INVENTORY_NONE:
 		default:
 			// Crafting slot cannot be controlled by the server-side
@@ -598,6 +603,8 @@ void Client::ClickedSlot(
 		slotId -= slotOffset;
 		std::cout << "Clicking in player inventory (" << int(slotId) << ")" << std::endl;
 	}
+	
+	lastClickedSlot = slotId;
 	UpdateInventory(response);
 }
 
