@@ -286,3 +286,51 @@ std::string Beta173Feature::PickMobToSpawn(JavaRandom* rand) {
     }
     return "";
 }
+
+bool Beta173Feature::GenerateClay(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock, int numberOfBlocks) {
+    int8_t blockType = world->GetBlockType(Int3{xBlock, yBlock, zBlock});
+    if(blockType != BLOCK_WATER_STILL && blockType != BLOCK_WATER_FLOWING) {
+        return false;
+    }
+    float var6 = rand->nextFloat() * (float)M_PI;
+    double var7 = (double)((float)(xBlock + 8) + std::sin(var6) * (float)numberOfBlocks / 8.0F);
+    double var9 = (double)((float)(xBlock + 8) - std::sin(var6) * (float)numberOfBlocks / 8.0F);
+    double world1 = (double)((float)(zBlock + 8) + std::cos(var6) * (float)numberOfBlocks / 8.0F);
+    double world3 = (double)((float)(zBlock + 8) - std::cos(var6) * (float)numberOfBlocks / 8.0F);
+    double world5 = (double)(yBlock + rand->nextInt(3) + 2);
+    double world7 = (double)(yBlock + rand->nextInt(3) + 2);
+
+    for(int world9 = 0; world9 <= numberOfBlocks; ++world9) {
+        double rand0 = var7 + (var9 - var7) * (double)world9 / (double)numberOfBlocks;
+        double rand2 = world5 + (world7 - world5) * (double)world9 / (double)numberOfBlocks;
+        double rand4 = world1 + (world3 - world1) * (double)world9 / (double)numberOfBlocks;
+        double rand6 = rand->nextDouble() * (double)numberOfBlocks / 16.0D;
+        double rand8 = (double)(std::sin((float)world9 * (float)M_PI / (float)numberOfBlocks) + 1.0F) * rand6 + 1.0D;
+        double xBlock0 = (double)(std::sin((float)world9 * (float)M_PI / (float)numberOfBlocks) + 1.0F) * rand6 + 1.0D;
+        int xBlock2 = int(std::floor(rand0 - rand8 / 2.0D));
+        int xBlock3 = int(std::floor(rand0 + rand8 / 2.0D));
+        int xBlock4 = int(std::floor(rand2 - xBlock0 / 2.0D));
+        int xBlock5 = int(std::floor(rand2 + xBlock0 / 2.0D));
+        int xBlock6 = int(std::floor(rand4 - rand8 / 2.0D));
+        int xBlock7 = int(std::floor(rand4 + rand8 / 2.0D));
+
+        for(int xBlock8 = xBlock2; xBlock8 <= xBlock3; ++xBlock8) {
+            for(int xBlock9 = xBlock4; xBlock9 <= xBlock5; ++xBlock9) {
+                for(int yBlock0 = xBlock6; yBlock0 <= xBlock7; ++yBlock0) {
+                    double yBlock1 = ((double)xBlock8 + 0.5D - rand0) / (rand8 / 2.0D);
+                    double yBlock3 = ((double)xBlock9 + 0.5D - rand2) / (xBlock0 / 2.0D);
+                    double yBlock5 = ((double)yBlock0 + 0.5D - rand4) / (rand8 / 2.0D);
+                    if(yBlock1 * yBlock1 + yBlock3 * yBlock3 + yBlock5 * yBlock5 < 1.0D) {
+                        int yBlock7 = world->GetBlockType(Int3{xBlock8, xBlock9, yBlock0});
+                        if(yBlock7 == BLOCK_SAND) {
+                            world->PlaceBlock(Int3{xBlock8, xBlock9, yBlock0}, BLOCK_CLAY);
+                            std::cout << Int3{xBlock8, xBlock9, yBlock0} << std::endl;
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}

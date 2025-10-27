@@ -13,4 +13,5 @@ class Beta173Feature {
         bool GenerateDungeon(World* world, JavaRandom* rand, int x, int y, int z);
         Item GenerateDungeonChestLoot(JavaRandom* rand);
         std::string PickMobToSpawn(JavaRandom* rand);
+        bool GenerateClay(World* world, JavaRandom* rand, int x, int y, int z, int numberOfBlocks = 0);
 };
