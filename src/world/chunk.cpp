@@ -1,6 +1,8 @@
 #include "chunk.h"
 
 int8_t Chunk::GetHeightValue(uint8_t x, uint8_t z) {
+    x = x%15;
+    z = z%15;
     return this->heightMap[z << 4 | x] & 255;
 }
 
@@ -161,6 +163,7 @@ void Chunk::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
 }
 
 int8_t Chunk::GetBlockType(Int3 pos) {
+    if (pos.y < 0 || pos.y >= CHUNK_HEIGHT) return BLOCK_AIR;
     Block* b = this->GetBlock(pos);
     if (!b) return BLOCK_AIR;
     return b->type;

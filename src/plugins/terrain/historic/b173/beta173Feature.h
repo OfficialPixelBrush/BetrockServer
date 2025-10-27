@@ -14,4 +14,6 @@ class Beta173Feature {
         Item GenerateDungeonChestLoot(JavaRandom* rand);
         std::string PickMobToSpawn(JavaRandom* rand);
         bool GenerateClay(World* world, JavaRandom* rand, int x, int y, int z, int numberOfBlocks = 0);
+        bool GenerateMinable(World* world, JavaRandom* rand, int x, int y, int z, int numberOfBlocks = 0);
+        bool GenerateTree(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock);
 };

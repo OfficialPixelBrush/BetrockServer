@@ -412,16 +412,25 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
     return terrainMap;
 }
 
+Biome GeneratorBeta173::GetBiomeAt(int worldX, int worldZ) {
+    int localX = worldX % CHUNK_WIDTH_X;
+    int localZ = worldZ % CHUNK_WIDTH_Z;
+    if(localX < 0) localX += CHUNK_WIDTH_X;
+    if(localZ < 0) localZ += CHUNK_WIDTH_Z;
+    return biomeMap[localX + localZ * CHUNK_WIDTH_X];
+}
+
+
 bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     //BlockSand.fallInstantly = true;
     int blockX = cX * CHUNK_WIDTH_X;
     int blockZ = cZ * CHUNK_WIDTH_Z;
-    //BiomeGenBase var6 = this->worldObj.getWorldChunkManager().getBiomeGenAt(blockX + CHUNK_WIDTH_X, blockZ + CHUNK_WIDTH_Z);
+    Biome biome = GetBiomeAt(blockX + 16, blockZ + 16);
     this->rand->setSeed(this->world->seed);
     long xOffset = this->rand->nextLong() / 2L * 2L + 1L;
     long zOffset = this->rand->nextLong() / 2L * 2L + 1L;
     this->rand->setSeed(((long(cX) * xOffset) + (long(cZ) * zOffset)) ^ this->world->seed);
-    //double quarter = 0.25D;
+    double fraction = 0.25D;
     [[maybe_unused]] int xCoordinate;
     [[maybe_unused]] int yCoordinate;
     [[maybe_unused]] int zCoordinate;
@@ -462,118 +471,117 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
         zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
-        //(new WorldGenMinable(BLOCK_DIRT, 32)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_DIRT).GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 32);
     }
 
     for(int i = 0; i < 10; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16);
         yCoordinate = this->rand->nextInt(128);
         zCoordinate = blockZ + this->rand->nextInt(16);
-        //(new WorldGenMinable(BLOCK_GRAVEL, 32)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_GRAVEL).GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 32);
     }
 
     for(int i = 0; i < 20; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16);
         yCoordinate = this->rand->nextInt(128);
         zCoordinate = blockZ + this->rand->nextInt(16);
-        //(new WorldGenMinable(BLOCK_ORE_COAL, 16)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_ORE_COAL).GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 16);
     }
 
     for(int i = 0; i < 20; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16);
         yCoordinate = this->rand->nextInt(64);
         zCoordinate = blockZ + this->rand->nextInt(16);
-        //(new WorldGenMinable(BLOCK_ORE_IRON, 8)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_ORE_IRON).GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 8);
     }
 
     for(int i = 0; i < 2; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16);
         yCoordinate = this->rand->nextInt(32);
         zCoordinate = blockZ + this->rand->nextInt(16);
-        //(new WorldGenMinable(BLOCK_ORE_GOLD, 8)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_ORE_GOLD).GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 8);
     }
 
     for(int i = 0; i < 8; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16);
         yCoordinate = this->rand->nextInt(16);
         zCoordinate = blockZ + this->rand->nextInt(16);
-        //(new WorldGenMinable(BLOCK_ORE_REDSTONE, 7)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_ORE_REDSTONE_OFF).GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 7);
     }
 
     for(int i = 0; i < 1; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16);
         yCoordinate = this->rand->nextInt(16);
         zCoordinate = blockZ + this->rand->nextInt(16);
-        //(new WorldGenMinable(BLOCK_ORE_DIAMOND, 7)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_ORE_DIAMOND).GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 7);
     }
 
     for(int i = 0; i < 1; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16);
         yCoordinate = this->rand->nextInt(16) + this->rand->nextInt(16);
         zCoordinate = blockZ + this->rand->nextInt(16);
-        //(new WorldGenMinable(BLOCK_ORE_LAPIS_LAZULI, 6)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_ORE_LAPIS_LAZULI).GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 6);
     }
+
+    fraction = 0.5D;
+    int mobSpanwerNoiseValue = (int)((this->mobSpawnerNoiseGen->GenerateOctaves((double)blockX * fraction, (double)blockZ * fraction) / 8.0D + this->rand->nextDouble() * 4.0D + 4.0D) / 3.0D);
+    int treeChance = 0;
+    if(this->rand->nextInt(10) == 0) {
+        ++treeChance;
+    }
+
+    switch(biome) {
+        case BIOME_FOREST:
+            treeChance += mobSpanwerNoiseValue + 5;
+            break;
+        case BIOME_RAINFOREST:
+            treeChance += mobSpanwerNoiseValue + 5;
+            break;
+        case BIOME_SEASONALFOREST:
+            treeChance += mobSpanwerNoiseValue + 2;
+            break;
+        case BIOME_TAIGA:
+            treeChance += mobSpanwerNoiseValue + 5;
+            break;
+        case BIOME_DESERT:
+            treeChance -= 20;
+            break;
+        case BIOME_TUNDRA:
+            treeChance -= 20;
+            break;
+        default:
+        case BIOME_PLAINS:
+            treeChance -= 20;
+            break;
+    }
+
+    for(int i = 0; i < treeChance; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        Beta173Feature().GenerateTree(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+        /*
+        WorldGenerator var18 = biome.getRandomWorldGenForTrees(this->rand);
+        var18.func_420_a(1.0D, 1.0D, 1.0D);
+        var18.generate(this->worldObj, this->rand, xCoordinate, this->worldObj.getHeightValue(xCoordinate, zCoordinate), zCoordinate);
+        */
+    }
+
 
     /*
-
-    quarter = 0.5D;
-    xCoordinate = (int)((this->mobSpawnerNoise.func_647_a((double)blockX * quarter, (double)blockZ * quarter) / 8.0D + this->rand->nextDouble() * 4.0D + 4.0D) / 3.0D);
-    yCoordinate = 0;
-    if(this->rand->nextInt(10) == 0) {
-        ++yCoordinate;
-    }
-
-    if(var6 == BiomeGenBase.forest) {
-        yCoordinate += xCoordinate + 5;
-    }
-
-    if(var6 == BiomeGenBase.rainforest) {
-        yCoordinate += xCoordinate + 5;
-    }
-
-    if(var6 == BiomeGenBase.seasonalForest) {
-        yCoordinate += xCoordinate + 2;
-    }
-
-    if(var6 == BiomeGenBase.taiga) {
-        yCoordinate += xCoordinate + 5;
-    }
-
-    if(var6 == BiomeGenBase.desert) {
-        yCoordinate -= 20;
-    }
-
-    if(var6 == BiomeGenBase.tundra) {
-        yCoordinate -= 20;
-    }
-
-    if(var6 == BiomeGenBase.plains) {
-        yCoordinate -= 20;
-    }
-
-    int var17;
-    for(zCoordinate = 0; zCoordinate < yCoordinate; ++zCoordinate) {
-        var16 = blockX + this->rand->nextInt(16) + 8;
-        var17 = blockZ + this->rand->nextInt(16) + 8;
-        WorldGenerator var18 = var6.getRandomWorldGenForTrees(this->rand);
-        var18.func_420_a(1.0D, 1.0D, 1.0D);
-        var18.generate(this->worldObj, this->rand, var16, this->worldObj.getHeightValue(var16, var17), var17);
-    }
-
     byte cX7 = 0;
-    if(var6 == BiomeGenBase.forest) {
+    if(biome == BiomeGenBase.forest) {
         cX7 = 2;
     }
 
-    if(var6 == BiomeGenBase.seasonalForest) {
+    if(biome == BiomeGenBase.seasonalForest) {
         cX7 = 4;
     }
 
-    if(var6 == BiomeGenBase.taiga) {
+    if(biome == BiomeGenBase.taiga) {
         cX7 = 2;
     }
 
-    if(var6 == BiomeGenBase.plains) {
+    if(biome == BiomeGenBase.plains) {
         cX7 = 3;
     }
 
@@ -587,23 +595,23 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     }
 
     byte cX8 = 0;
-    if(var6 == BiomeGenBase.forest) {
+    if(biome == BiomeGenBase.forest) {
         cX8 = 2;
     }
 
-    if(var6 == BiomeGenBase.rainforest) {
+    if(biome == BiomeGenBase.rainforest) {
         cX8 = 10;
     }
 
-    if(var6 == BiomeGenBase.seasonalForest) {
+    if(biome == BiomeGenBase.seasonalForest) {
         cX8 = 2;
     }
 
-    if(var6 == BiomeGenBase.taiga) {
+    if(biome == BiomeGenBase.taiga) {
         cX8 = 1;
     }
 
-    if(var6 == BiomeGenBase.plains) {
+    if(biome == BiomeGenBase.plains) {
         cX8 = 10;
     }
 
@@ -611,7 +619,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     int cX1;
     for(var17 = 0; var17 < cX8; ++var17) {
         byte cX6 = 1;
-        if(var6 == BiomeGenBase.rainforest && this->rand->nextInt(3) != 0) {
+        if(biome == BiomeGenBase.rainforest && this->rand->nextInt(3) != 0) {
             cX6 = 2;
         }
 
@@ -622,7 +630,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     }
 
     cX8 = 0;
-    if(var6 == BiomeGenBase.desert) {
+    if(biome == BiomeGenBase.desert) {
         cX8 = 2;
     }
 
@@ -669,7 +677,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     }
 
     var17 = 0;
-    if(var6 == BiomeGenBase.desert) {
+    if(biome == BiomeGenBase.desert) {
         var17 += 10;
     }
 

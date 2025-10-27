@@ -46,6 +46,7 @@ class GeneratorBeta173 : public Generator {
         std::vector<double> GenerateTerrainNoise(std::vector<double> terrainMap, int x, int y, int z, int xMax, int yMax, int zMax);
         std::vector<Biome> GenerateBiomeMap(std::vector<Biome> biomeMap, int x, int z, int xMax, int zMax);
         void ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c);
+        Biome GetBiomeAt(int worldX, int worldZ);
     public:
         GeneratorBeta173(int64_t seed, World* world);
         ~GeneratorBeta173() = default;

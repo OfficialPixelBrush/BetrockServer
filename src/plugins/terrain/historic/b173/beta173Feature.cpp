@@ -333,3 +333,131 @@ bool Beta173Feature::GenerateClay(World* world, JavaRandom* rand, int xBlock, in
 
     return true;
 }
+
+bool Beta173Feature::GenerateMinable(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock, int numberOfBlocks) {
+    float var6 = rand->nextFloat() * (float)M_PI;
+    double var7 = (double)((float)(xBlock + 8) + std::sin(var6) * (float)numberOfBlocks / 8.0F);
+    double var9 = (double)((float)(xBlock + 8) - std::sin(var6) * (float)numberOfBlocks / 8.0F);
+    double var11 = (double)((float)(zBlock + 8) + std::cos(var6) * (float)numberOfBlocks / 8.0F);
+    double var13 = (double)((float)(zBlock + 8) - std::cos(var6) * (float)numberOfBlocks / 8.0F);
+    double var15 = (double)(yBlock + rand->nextInt(3) + 2);
+    double var17 = (double)(yBlock + rand->nextInt(3) + 2);
+
+    for(int var19 = 0; var19 <= numberOfBlocks; ++var19) {
+        double var20 = var7 + (var9 - var7) * (double)var19 / (double)numberOfBlocks;
+        double var22 = var15 + (var17 - var15) * (double)var19 / (double)numberOfBlocks;
+        double var24 = var11 + (var13 - var11) * (double)var19 / (double)numberOfBlocks;
+        double var26 = rand->nextDouble() * (double)numberOfBlocks / 16.0D;
+        double var28 = (double)(std::sin((float)var19 * (float)M_PI / (float)numberOfBlocks) + 1.0F) * var26 + 1.0D;
+        double var30 = (double)(std::sin((float)var19 * (float)M_PI / (float)numberOfBlocks) + 1.0F) * var26 + 1.0D;
+        int var32 = int(std::floor(var20 - var28 / 2.0D));
+        int var33 = int(std::floor(var22 - var30 / 2.0D));
+        int var34 = int(std::floor(var24 - var28 / 2.0D));
+        int var35 = int(std::floor(var20 + var28 / 2.0D));
+        int var36 = int(std::floor(var22 + var30 / 2.0D));
+        int var37 = int(std::floor(var24 + var28 / 2.0D));
+
+        for(int var38 = var32; var38 <= var35; ++var38) {
+            double var39 = ((double)var38 + 0.5D - var20) / (var28 / 2.0D);
+            if(var39 * var39 < 1.0D) {
+                for(int var41 = var33; var41 <= var36; ++var41) {
+                    double var42 = ((double)var41 + 0.5D - var22) / (var30 / 2.0D);
+                    if(var39 * var39 + var42 * var42 < 1.0D) {
+                        for(int var44 = var34; var44 <= var37; ++var44) {
+                            double var45 = ((double)var44 + 0.5D - var24) / (var28 / 2.0D);
+                            if(var39 * var39 + var42 * var42 + var45 * var45 < 1.0D && world->GetBlockType(Int3{var38, var41, var44}) == BLOCK_STONE) {
+                                world->SetBlockType(int8_t(this->id), Int3{var38, var41, var44});
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+bool Beta173Feature::GenerateTree(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock) {
+    int treeHeight = rand->nextInt(3) + 4;
+    bool canPlace = true;
+    if(yBlock >= 1 && yBlock + treeHeight + 1 <= CHUNK_HEIGHT) {
+        int yI;
+        int xI;
+        int zI;
+        int blockType;
+        for(yI = yBlock; yI <= yBlock + 1 + treeHeight; ++yI) {
+            int8_t width = 1;
+            if(yI == yBlock) {
+                width = 0;
+            }
+
+            if(yI >= yBlock + 1 + treeHeight - 2) {
+                width = 2;
+            }
+
+            for(xI = xBlock - width; xI <= xBlock + width && canPlace; ++xI) {
+                for(zI = zBlock - width; zI <= zBlock + width && canPlace; ++zI) {
+                    if(yI >= 0 && yI < CHUNK_HEIGHT) {
+                        blockType = world->GetBlockType(Int3{xI, yI, zI});
+                        if(blockType != 0 && blockType != BLOCK_LEAVES) {
+                            canPlace = false;
+                        }
+                    } else {
+                        canPlace = false;
+                    }
+                }
+            }
+        }
+
+        if(!canPlace) {
+            return false;
+        }
+        yI = world->GetBlockType(Int3{xBlock, yBlock - 1, zBlock});
+        if(
+            (yI == BLOCK_GRASS || yI == BLOCK_DIRT) &&
+            yBlock < CHUNK_HEIGHT - treeHeight - 1
+        ) {
+            world->SetBlockType(BLOCK_DIRT, Int3{xBlock, yBlock - 1, zBlock});
+
+            int yIt;
+            for(yIt = yBlock - 3 + treeHeight; yIt <= yBlock + treeHeight; ++yIt) {
+                xI = yIt - (yBlock + treeHeight);
+                zI = 1 - xI / 2;
+
+                for(blockType = xBlock - zI; blockType <= xBlock + zI; ++blockType) {
+                    int var13 = blockType - xBlock;
+
+                    for(int var14 = zBlock - zI; var14 <= zBlock + zI; ++var14) {
+                        int var15 = var14 - zBlock;
+                        if ((
+                                (
+                                    std::abs(var13) != zI ||
+                                    std::abs(var15) != zI ||
+                                    (
+                                        rand->nextInt(2) != 0 && xI != 0
+                                    )
+                                )
+                            ) && !IsOpaque(world->GetBlockType(Int3{blockType, yIt, var14}))
+                        ) {
+                            world->SetBlockType(BLOCK_LEAVES, Int3{blockType, yIt, var14});
+                        }
+                    }
+                }
+            }
+
+            for(yIt = 0; yIt < treeHeight; ++yIt) {
+                xI = world->GetBlockType(Int3{xBlock, yBlock + yIt, zBlock});
+                if(xI == 0 || xI == BLOCK_LEAVES) {
+                    world->SetBlockType(BLOCK_LOG, Int3{xBlock, yBlock + yIt, zBlock});
+                }
+            }
+
+            return true;
+        } else {
+            return false;
+        }
+    } else {
+        return false;
+    }
+}
