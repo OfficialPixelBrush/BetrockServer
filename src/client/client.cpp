@@ -439,9 +439,13 @@ bool Client::TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &
     return false;
 }
 
+#define RANGE_DEFAULT 0
+#define RANGE_HOTBAR 1
+#define RANGE_INVENTORY 2
+
 // Spread the item to any available slots
 bool Client::SpreadToSlots(int16_t id, int8_t amount, int16_t damage, int8_t preferredRange) {
-    if (preferredRange == 1 || preferredRange == 0) {
+    if ((preferredRange == RANGE_HOTBAR) || (preferredRange == RANGE_DEFAULT)) {
         for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST; i++) {
             if (TryToPutInSlot(i, id, amount, damage)) {
                 return true;
@@ -449,7 +453,7 @@ bool Client::SpreadToSlots(int16_t id, int8_t amount, int16_t damage, int8_t pre
         }
     }
 
-    if (preferredRange == 2 || preferredRange == 0) {
+    if ((preferredRange == RANGE_INVENTORY) || (preferredRange == RANGE_DEFAULT)) {
         for (int8_t i = INVENTORY_ROW_1; i <= INVENTORY_ROW_LAST; i++) {
             if (TryToPutInSlot(i, id, amount, damage)) {
                 return true;
@@ -497,14 +501,20 @@ bool Client::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, i
 }
 
 // Update the clients shown inventory
-bool Client::UpdateInventory(std::vector<uint8_t> &response) {
-	Item tempItem = {15,64,0};
+bool Client::UpdateInventory(std::vector<uint8_t> &response, Int3 targetBlockPosition) {
+	World* world = Betrock::Server::Instance().GetWorld(player->dimension);
 	std::vector<Item> v;
 	switch(activeWindowType) {
 		case INVENTORY_CHEST:
-			for (int i = 0; i < INVENTORY_CHEST_SIZE; i++) v.push_back(tempItem);
-			for (auto &item : player->inventory) v.push_back(item);
+		{
+			TileEntity* te = world->GetTileEntity(targetBlockPosition);
+			if (!te) return false;
+			ChestTile* ct = dynamic_cast<ChestTile*>(te);
+			if (!ct) return false;
+			for (auto &item : ct->GetInventory()) v.push_back(item);
+			//for (auto &item : player->inventory) v.push_back(item);
 			break;
+		}
 		case INVENTORY_NONE:
 		default:
 			// Crafting slot cannot be controlled by the server-side
@@ -550,6 +560,41 @@ void Client::ClickedSlot(
 	[[maybe_unused]] int8_t amount,
 	[[maybe_unused]] int16_t damage)
 {
+	// Only handle Player inventory for now
+	if (windowId == 0) {
+		slotId -= 9;
+		// Shift Click Behavior
+		if (shift) {
+			// Get item
+			Item temp = player->inventory[slotId];
+			// Empty slot
+			player->inventory[slotId] = {-1,0,0};
+			if (slotId >= INVENTORY_HOTBAR) {
+				SpreadToSlots(temp.id,temp.amount,temp.damage,2);
+			} else {
+				SpreadToSlots(temp.id,temp.amount,temp.damage,1);
+			}
+		}
+		
+		// If we've clicked outside, throw the items to the ground and clear the slot.
+		if (slotId == CLICK_OUTSIDE) {
+			hoveringItem = Item {-1,0,0};
+			return;
+		}
+
+		// If something is being held
+		if (hoveringItem.id < BLOCK_STONE) {
+			Item temp = hoveringItem;
+			hoveringItem = player->inventory[slotId];
+			player->inventory[slotId] = temp;
+		} else {
+			Item temp = player->inventory[slotId];
+			player->inventory[slotId] = hoveringItem;
+			hoveringItem = temp;
+		}
+		lastClickedSlot = slotId;
+	}
+	/*
 	// We're interacting with a window we're not
 	// currently looking at; something messed up!
 	if (windowId != windowIndex) {
@@ -606,6 +651,7 @@ void Client::ClickedSlot(
 	
 	lastClickedSlot = slotId;
 	UpdateInventory(response);
+	*/
 }
 
 // Clear the clients inventory
@@ -647,7 +693,7 @@ void Client::DecrementHotbar(std::vector<uint8_t> &response) {
 			i->damage = 0;
 		}
 	}
-	Respond::SetSlot(response, 0, GetHotbarSlot(), i->id, i->amount, i->damage);
+	Respond::SetSlot(response, 0, GetHotbarSlot()+9, i->id, i->amount, i->damage);
 }
 
 // Check if the passed chunk position is visible to the client

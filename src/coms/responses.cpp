@@ -270,6 +270,7 @@ void Respond::SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slo
 }
 
 void Respond::WindowItems(std::vector<uint8_t> &response, int8_t window, std::vector<Item> payload) {
+    if (payload.empty()) return;
     response.push_back((uint8_t)Packet::WindowItems);
     response.push_back(window); // Player Inventory
     AppendShortToVector(response, payload.size());

@@ -162,10 +162,7 @@ void Chunk::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
 
 int8_t Chunk::GetBlockType(Int3 pos) {
     Block* b = this->GetBlock(pos);
-    if (!b) {
-        //std::cout << "NO BLOCK AT " << pos << std::endl;
-        return BLOCK_AIR;
-    }
+    if (!b) return BLOCK_AIR;
     return b->type;
 }
 
@@ -178,6 +175,15 @@ void Chunk::SetBlockType(int8_t blockType, Int3 pos) {
 
 void Chunk::AddTileEntity(std::unique_ptr<TileEntity>&& te) {
     tileEntities.push_back(std::move(te));
+}
+
+TileEntity* Chunk::GetTileEntity(Int3 pos) {
+    for (auto& ts : tileEntities) {
+        if (ts->position == pos) {
+            return ts.get();
+        }
+    }
+    return nullptr;
 }
 
 std::vector<TileEntity*> Chunk::GetTileEntities() {

@@ -30,13 +30,12 @@ enum Inventory {
 #define INVENTORY_BOOTS 8
 
 // Inventory + Hotbar local
-#define INVENTORY_HOTBAR 0
-#define INVENTORY_HOTBAR_LAST 8
-
-#define INVENTORY_ROW_1 9
-#define INVENTORY_ROW_2 18
-#define INVENTORY_ROW_3 27
-#define INVENTORY_ROW_LAST 35
+#define INVENTORY_ROW_1 0
+#define INVENTORY_ROW_2 9
+#define INVENTORY_ROW_3 9*2
+#define INVENTORY_ROW_LAST 9*3-1
+#define INVENTORY_HOTBAR 9*3
+#define INVENTORY_HOTBAR_LAST 9*4-1
 
 #define INVENTORY_MAX_SLOTS 9*4
 

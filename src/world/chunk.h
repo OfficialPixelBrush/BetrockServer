@@ -44,6 +44,7 @@ class Chunk {
         void SetBlockType(int8_t blockType, Int3 pos);
         int8_t GetBlockType(Int3 pos);
         void AddTileEntity(std::unique_ptr<TileEntity>&& te);
+        TileEntity* GetTileEntity(Int3 pos);
         std::vector<TileEntity*> GetTileEntities();
         std::vector<SignTile*> GetSigns();
         std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z>     GetBlockTypes();

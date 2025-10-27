@@ -113,6 +113,8 @@ enum Items {
     ITEM_MAP,
     ITEM_SHEARS,
     ITEM_MAX,
+    ITEM_RECORD_13 = 2256,
+    ITEM_RECORD_CAT = 2257
 };
 
 bool IsHoe(uint8_t id);

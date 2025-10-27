@@ -91,4 +91,5 @@ class World {
         int8_t GetHeightValue(int32_t x, int32_t z);
         Int3 FindSpawnableBlock(Int3 position);
         void AddTileEntity(std::unique_ptr<TileEntity>&& te);
+        TileEntity* GetTileEntity(Int3 pos);
 };

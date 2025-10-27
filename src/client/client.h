@@ -118,7 +118,7 @@ class Client : public std::enable_shared_from_this<Client> {
         void DisconnectClient(std::string disconnectMessage = "", bool tellOthers = false, bool tellPlayer = true);
 
         bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
-        bool UpdateInventory(std::vector<uint8_t> &response);
+        bool UpdateInventory(std::vector<uint8_t> &response, Int3 targetBlockPosition = Int3{0,0,0});
         int16_t GetHotbarSlot();
         Item GetHeldItem();
         bool CanDecrementHotbar();

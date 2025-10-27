@@ -393,6 +393,8 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 				// Gotta recreate the 3-size chest bug somehow!
 				case BLOCK_CHEST:
 					OpenWindow(INVENTORY_CHEST);
+					SendResponse(true);
+					UpdateInventory(response, pos);
 					return true;
 				case BLOCK_FURNACE:
 				case BLOCK_FURNACE_LIT:
@@ -457,7 +459,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	// Immediately give back the item if we're in creative mode
 	if (player->creativeMode) {
 		Item i = GetHeldItem();
-		Respond::SetSlot(response,0,GetHotbarSlot(),i.id,i.amount,i.damage);
+		Respond::SetSlot(response,0,GetHotbarSlot()+9,i.id,i.amount,i.damage);
 	} else {
 		DecrementHotbar(response);
 	}
@@ -467,7 +469,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 // Handle the Client closing a Window
 bool Client::HandleCloseWindow() {
 	int8_t windowId = EntryToByte(message, offset);
-	std::cout << int(windowId) << std::endl;
+	//std::cout << int(windowId) << std::endl;
 	// Ignore inventory
 	if (windowId == 0) return true;
 	
@@ -495,7 +497,7 @@ bool Client::HandleWindowClick() {
 	[[maybe_unused]] int16_t itemId		= EntryToShort(message,offset);
 	[[maybe_unused]] int8_t itemCount	= 1;
 	[[maybe_unused]] int16_t itemUses	= 0;
-	std::cout << int(window) << " (" << int(slot) << ")" << std::endl;
+	//std::cout << int(window) << " (" << int(slot) << ")" << std::endl;
 	if (itemId > 0) {
 		itemCount		= EntryToByte(message, offset);
 		itemUses		= EntryToShort(message,offset);

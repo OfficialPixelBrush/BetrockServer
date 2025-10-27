@@ -89,7 +89,6 @@ add_executable(
 
     src/objects/entity.cpp
     src/objects/player.cpp
-    src/objects/tileEntity.cpp
 
     src/world/chunk.cpp
     src/world/region.cpp

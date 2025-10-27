@@ -777,3 +777,12 @@ void World::AddTileEntity(std::unique_ptr<TileEntity>&& te) {
     if (!c) return;
     c->AddTileEntity(std::move(te));
 }
+
+TileEntity* World::GetTileEntity(Int3 pos) {
+    Chunk* c = this->GetChunk(
+        pos.x >> 4,
+        pos.z >> 4
+    );
+    if (!c) return nullptr;
+    return c->GetTileEntity(pos);
+}
