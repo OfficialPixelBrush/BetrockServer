@@ -324,7 +324,6 @@ bool Beta173Feature::GenerateClay(World* world, JavaRandom* rand, int xBlock, in
                         int yBlock7 = world->GetBlockType(Int3{xBlock8, xBlock9, yBlock0});
                         if(yBlock7 == BLOCK_SAND) {
                             world->PlaceBlock(Int3{xBlock8, xBlock9, yBlock0}, BLOCK_CLAY);
-                            std::cout << Int3{xBlock8, xBlock9, yBlock0} << std::endl;
                         }
                     }
                 }
