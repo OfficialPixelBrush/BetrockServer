@@ -51,7 +51,8 @@ class World {
         World(const std::string &extra = "");
 
         // Block-related
-        void PlaceBlock(Int3 position, int8_t type = BLOCK_AIR, int8_t meta = 0, bool sendUpdate = true);
+        void PlaceBlock(Int3 position, int8_t type = BLOCK_AIR, int8_t meta = 0);
+        void PlaceBlockUpdate(Int3 position, int8_t type = BLOCK_AIR, int8_t meta = 0, bool sendUpdate = true);
         void PlaceSponge(Int3 position);
         Block* BreakBlock(Int3 position, bool sendUpdate = true);
         bool BlockExists(Int3 position);

@@ -217,9 +217,14 @@ void World::PlaceSponge(Int3 position) {
     }
 }
 
+
+void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
+    PlaceBlockUpdate(position,type,meta,false);
+}
+
 // Place a block at the passed position
 // This position must be within a currently loaded Chunk
-void World::PlaceBlock(Int3 position, int8_t type, int8_t meta, bool sendUpdate) {
+void World::PlaceBlockUpdate(Int3 position, int8_t type, int8_t meta, bool sendUpdate) {
     LimitBlockCoordinates(position);
     // Get Block Position within Chunk
     Block* b = GetBlock(position);

@@ -377,7 +377,7 @@ int GeneratorLua::lua_PlaceBlock(lua_State *L) {
     
     Block b = gen->DecodeBlock();
     
-    gen->world->PlaceBlock(position,b.type,b.meta,false);
+    gen->world->PlaceBlock(position,b.type,b.meta);
     return 0;
 }
 
