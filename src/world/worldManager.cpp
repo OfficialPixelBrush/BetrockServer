@@ -176,35 +176,40 @@ Chunk* WorldManager::GetChunk(int32_t cX, int32_t cZ, Generator* generator) {
         c->state = ChunkState::Populated;
         return c;
     }
-    // Everythzing else has failed, so generate a new chunk!
+    // Everything else has failed, so generate a new chunk!
     c = world.AddChunk(cX, cZ, generator->GenerateChunk(cX, cZ));
 
-    if(world.ChunkExists(cX + 1, cZ + 1) && world.ChunkExists(cX, cZ + 1) && world.ChunkExists(cX + 1, cZ)) {
-        if (generator->PopulateChunk(cX, cZ)) {
-            c->state = ChunkState::Populated;
-        }
+    auto tryPopulate = [&](int32_t x, int32_t z) -> bool {
+        Chunk* chunk = world.GetChunk(x, z);
+        // Neighbor not loaded yet
+        if (!chunk) return false;
+        // Already populated
+        if (chunk->state == ChunkState::Populated) return true;
+        // Attempt population
+        if (!generator->PopulateChunk(x, z)) return false;
+        // Chunk is marked as populated if this succeeds
+        chunk->state = ChunkState::Populated;
+        return true;
+    };
+
+    // Populate this chunk if neighbors exist
+    if (world.ChunkExists(cX + 1, cZ + 1) && world.ChunkExists(cX, cZ + 1) && world.ChunkExists(cX + 1, cZ)) {
+        tryPopulate(cX, cZ);
     }
 
-    if(world.ChunkExists(cX - 1, cZ + 1) && world.ChunkExists(cX, cZ + 1) && world.ChunkExists(cX - 1, cZ)) {
-        Chunk* cAlt = world.GetChunk(cX - 1, cZ);
-        if (cAlt && generator->PopulateChunk(cX - 1, cZ)) {
-            cAlt->state = ChunkState::Populated;
-        }
+    // Populate neighbor chunks if conditions are met
+    if (world.ChunkExists(cX - 1, cZ + 1) && world.ChunkExists(cX, cZ + 1) && world.ChunkExists(cX - 1, cZ)) {
+        tryPopulate(cX - 1, cZ);
     }
 
-    if(world.ChunkExists(cX + 1, cZ - 1) && world.ChunkExists(cX, cZ - 1) && world.ChunkExists(cX + 1, cZ)) {
-        Chunk* cAlt = world.GetChunk(cX, cZ - 1);
-        if (cAlt && generator->PopulateChunk(cX, cZ - 1)) {
-            cAlt->state = ChunkState::Populated;
-        }
+    if (world.ChunkExists(cX + 1, cZ - 1) && world.ChunkExists(cX, cZ - 1) && world.ChunkExists(cX + 1, cZ)) {
+        tryPopulate(cX, cZ - 1);
     }
 
-    if(world.ChunkExists(cX - 1, cZ - 1) && world.ChunkExists(cX, cZ - 1) && world.ChunkExists(cX - 1, cZ)) {
-        Chunk* cAlt = world.GetChunk(cX - 1, cZ - 1);
-        if (cAlt && generator->PopulateChunk(cX - 1, cZ - 1)) {
-            cAlt->state = ChunkState::Populated;
-        }
+    if (world.ChunkExists(cX - 1, cZ - 1) && world.ChunkExists(cX, cZ - 1) && world.ChunkExists(cX - 1, cZ)) {
+        tryPopulate(cX - 1, cZ - 1);
     }
+
     return c;
 }
 

@@ -382,6 +382,8 @@ void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
     newChunks.clear();
 	//SendResponse(true);
     DetermineVisibleChunks(true);
+	// Give us some time to teleport
+	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     Respond::PlayerPositionLook(response, player.get());
 }
 
@@ -393,6 +395,8 @@ void Client::TeleportKeepView(std::vector<uint8_t> &response, Vec3 position) {
     newChunks.clear();
 	//SendResponse(true);
     DetermineVisibleChunks(true);
+	// Give us some time to teleport
+	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));
     Respond::PlayerPosition(response, player.get());
 }
 
