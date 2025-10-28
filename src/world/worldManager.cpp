@@ -180,21 +180,31 @@ Chunk* WorldManager::GetChunk(int32_t cX, int32_t cZ, Generator* generator) {
     c = world.AddChunk(cX, cZ, generator->GenerateChunk(cX, cZ));
 
     if(world.ChunkExists(cX + 1, cZ + 1) && world.ChunkExists(cX, cZ + 1) && world.ChunkExists(cX + 1, cZ)) {
-        generator->PopulateChunk(cX, cZ);
+        if (generator->PopulateChunk(cX, cZ)) {
+            c->state = ChunkState::Populated;
+        }
     }
 
     if(world.ChunkExists(cX - 1, cZ + 1) && world.ChunkExists(cX, cZ + 1) && world.ChunkExists(cX - 1, cZ)) {
-        generator->PopulateChunk(cX - 1, cZ);
+        Chunk* cAlt = world.GetChunk(cX - 1, cZ);
+        if (cAlt && generator->PopulateChunk(cX - 1, cZ)) {
+            cAlt->state = ChunkState::Populated;
+        }
     }
 
     if(world.ChunkExists(cX + 1, cZ - 1) && world.ChunkExists(cX, cZ - 1) && world.ChunkExists(cX + 1, cZ)) {
-        generator->PopulateChunk(cX, cZ - 1);
+        Chunk* cAlt = world.GetChunk(cX, cZ - 1);
+        if (cAlt && generator->PopulateChunk(cX, cZ - 1)) {
+            cAlt->state = ChunkState::Populated;
+        }
     }
 
     if(world.ChunkExists(cX - 1, cZ - 1) && world.ChunkExists(cX, cZ - 1) && world.ChunkExists(cX - 1, cZ)) {
-        generator->PopulateChunk(cX - 1, cZ - 1);
+        Chunk* cAlt = world.GetChunk(cX - 1, cZ - 1);
+        if (cAlt && generator->PopulateChunk(cX - 1, cZ - 1)) {
+            cAlt->state = ChunkState::Populated;
+        }
     }
-    c->state = ChunkState::Populated;
     return c;
 }
 

@@ -95,58 +95,55 @@ void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
 
 // Send the chunks from the newChunks queue to the player
 void Client::SendNewChunks() {
-	// Send chunks in batches of 5
+	// Send chunks in batches of 10
 	// TODO: Dynamically size this based on remaining space in response
-	int sentThisCycle = 5;
+	int sentThisCycle = 10;
 	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
 	std::unique_lock<std::mutex> lock(newChunksMutex, std::try_to_lock);
 	if (!lock.owns_lock()) {
 		return;
 	}
 
-	while(sentThisCycle > 0) {
-		if(newChunks.empty()) {
-			break;
-		}
-		auto nc = newChunks.begin();
-		if (!wm->world.IsChunkPopulated(nc->x, nc->z)) {
-			//++nc;
-			break;
-		}
-		auto chunkData = wm->world.GetChunkData(*nc);
-		if (!chunkData) {
-			// We'll just drop this chunk
-			newChunks.erase(nc);
-			continue;
-		}
-		auto signs = wm->world.GetChunkSigns(*nc);
+	for (auto it = newChunks.begin(); it != newChunks.end() && sentThisCycle > 0; ) {
+        // Skip chunks that aren't fully populated yet
+        if (!wm->world.IsChunkPopulated(it->x, it->z)) {
+            ++it; // move to next chunk
+            continue;
+        }
 
-		// Send chunk to player
-		size_t compressedSize = 0;
-		auto chunk = CompressChunk(chunkData.get(), compressedSize);
+        auto chunkData = wm->world.GetChunkData(*it);
+        if (!chunkData) {
+            // Failed to get chunk data, remove from queue
+            it = newChunks.erase(it);
+            continue;
+        }
 
-		if (chunk) {
-			visibleChunks.push_back(Int3{nc->x,0,nc->z});
-			Respond::PreChunk(response, nc->x, nc->z, 1);
+        auto signs = wm->world.GetChunkSigns(*it);
 
-			Respond::Chunk(
-				response, 
-				Int3{nc->x<<4,0,nc->z<<4}, 
-				CHUNK_WIDTH_X - 1, 
-				CHUNK_HEIGHT - 1, 
-				CHUNK_WIDTH_Z - 1, 
-				compressedSize, 
-				chunk.get()
-			);
-			for (auto s : signs) {
-				Respond::UpdateSign(
-					response,
-					s->position,
-					s->lines
-				);
-			}
-		}
-		newChunks.erase(nc);
-		sentThisCycle--;
-	}
+        // Compress and send chunk
+        size_t compressedSize = 0;
+        auto chunk = CompressChunk(chunkData.get(), compressedSize);
+        if (chunk) {
+            visibleChunks.push_back(Int3{it->x, 0, it->z});
+
+            Respond::PreChunk(response, it->x, it->z, 1);
+            Respond::Chunk(
+                response,
+                Int3{it->x << 4, 0, it->z << 4},
+                CHUNK_WIDTH_X - 1,
+                CHUNK_HEIGHT - 1,
+                CHUNK_WIDTH_Z - 1,
+                compressedSize,
+                chunk.get()
+            );
+
+            for (auto& s : signs) {
+                Respond::UpdateSign(response, s->position, s->lines);
+            }
+        }
+
+        // Remove the chunk from the queue and decrement send counter
+        it = newChunks.erase(it);
+        --sentThisCycle;
+    }
 }
