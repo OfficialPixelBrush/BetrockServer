@@ -96,11 +96,312 @@ void Beta173BigTree::Configure(double treeHeight, double branchLength, double tr
 
 bool Beta173BigTree::Generate(
     [[maybe_unused]] World* world,
-    JavaRandom* rand,
+    JavaRandom* otherRand,
     [[maybe_unused]] int xBlock,
     [[maybe_unused]] int yBlock,
     [[maybe_unused]] int zBlock) {
     // Waste one rand cycle to get closer to being accurate
-    rand->nextLong();
-    return true;
+    
+    this->world = world;
+    long seed = otherRand->nextLong();
+    this->rand->setSeed(seed);
+    this->basePos = Int3{xBlock, yBlock, zBlock};
+    if(this->totalHeight == 0) {
+        this->totalHeight = 5 + this->rand->nextInt(this->maximumTreeHeight);
+    }
+
+    if(!this->ValidPlacement()) {
+        return false;
+    } else {
+        this->GenerateBranchPositions();
+        this->GenerateLeafClusters();
+        this->GenerateTrunk();
+        this->GenerateBranches();
+        return true;
+    }
+}
+
+void Beta173BigTree::GenerateBranchPositions() {
+    this->height = (int)((double)this->totalHeight * this->heightFactor);
+    if(this->height >= this->totalHeight) {
+        this->height = this->totalHeight - 1;
+    }
+
+    int var1 = (int)(1.382D + std::pow(this->trunkShape * (double)this->totalHeight / 13.0D, 2.0D));
+    if(var1 < 1) {
+        var1 = 1;
+    }
+
+    std::vector<std::array<int, 4>> var2(var1 * this->totalHeight);
+    int var3 = this->basePos.y + this->totalHeight - this->trunkThickness;
+    int var4 = 1;
+    int var5 = this->basePos.y + this->height;
+    int var6 = var3 - this->basePos.y;
+    var2[0][0] = this->basePos.x;
+    var2[0][1] = var3;
+    var2[0][2] = this->basePos.z;
+    var2[0][3] = var5;
+    --var3;
+
+    while(true) {
+        while(var6 >= 0) {
+            int var7 = 0;
+            float var8 = this->func_431_a(var6);
+            if(var8 < 0.0F) {
+                --var3;
+                --var6;
+            } else {
+                for(double var9 = 0.5D; var7 < var1; ++var7) {
+                    double var11 = this->branchLength * (double)var8 * ((double)this->rand->nextFloat() + 0.328D);
+                    double var13 = (double)this->rand->nextFloat() * 2.0D * 3.14159D;
+                    int var15 = std::floor(var11 * std::sin(var13) + (double)this->basePos.x + var9);
+                    int var16 = std::floor(var11 * std::cos(var13) + (double)this->basePos.z + var9);
+                    Int3 var17 = Int3{var15, var3, var16};
+                    Int3 var18 = Int3{var15, var3 + this->trunkThickness, var16};
+                    if(this->checkIfPathClear(var17, var18) == -1) {
+                        Int3 var19 = Int3{this->basePos.x, this->basePos.y, this->basePos.z};
+                        double var20 = std::sqrt(std::pow((double)std::abs(this->basePos.x - var17.x), 2.0D) + std::pow((double)std::abs(this->basePos.z - var17.z), 2.0D));
+                        double var22 = var20 * this->field_752_i;
+                        if((double)var17.y - var22 > (double)var5) {
+                            var19.y = var5;
+                        } else {
+                            var19.y = (int)((double)var17.y - var22);
+                        }
+
+                        if(this->checkIfPathClear(var19, var17) == -1) {
+                            var2[var4][0] = var15;
+                            var2[var4][1] = var3;
+                            var2[var4][2] = var16;
+                            var2[var4][3] = var19.y;
+                            ++var4;
+                        }
+                    }
+                }
+
+                --var3;
+                --var6;
+            }
+        }
+
+        this->branchStartEnd = std::vector<std::array<int, 4>>(var4);
+        std::copy(var2.begin(), var2.begin() + var4, this->branchStartEnd.begin());
+        return;
+    }
+}
+
+void Beta173BigTree::func_426_a(int var1, int var2, int var3, float var4, int8_t var5, int var6) {
+    int var7 = int(double(var4) + 0.618);
+    int8_t var8 = branchOrientation[var5];
+    int8_t var9 = branchOrientation[var5 + 3];
+    Int3 var10{var1, var2, var3};
+    Int3 var11{0, 0, 0};
+
+    for (int var12 = -var7; var12 <= var7; ++var12) {
+        var11[var5] = var10[var5];
+        var11[var8] = var10[var8] + var12;
+
+        for (int var13 = -var7; var13 <= var7; ++var13) {
+            double var15 = std::sqrt(std::pow(std::abs(var12) + 0.5, 2.0) + std::pow(std::abs(var13) + 0.5, 2.0));
+
+            if (var15 > (double)(var4)) {
+                continue;
+            }
+
+            var11[var9] = var10[var9] + var13;
+            int var14 = this->world->GetBlockType(var11);
+
+            if (var14 == 0 || var14 == 18) {
+                this->world->PlaceBlock(var11, var6);
+            }
+        }
+    }
+}
+
+float Beta173BigTree::func_431_a(int var1) {
+    if((double)var1 < (double)((float)this->totalHeight) * 0.3D) {
+        return -1.618F;
+    } else {
+        float var2 = (float)this->totalHeight / 2.0F;
+        float var3 = (float)this->totalHeight / 2.0F - (float)var1;
+        float var4;
+        if(var3 == 0.0F) {
+            var4 = var2;
+        } else if(std::abs(var3) >= var2) {
+            var4 = 0.0F;
+        } else {
+            var4 = (float)std::sqrt(std::pow((double)std::abs(var2), 2.0D) - std::pow((double)std::abs(var3), 2.0D));
+        }
+
+        var4 *= 0.5F;
+        return var4;
+    }
+}
+
+float Beta173BigTree::func_429_b(int var1) {
+    return var1 >= 0 && var1 < this->trunkThickness ? (var1 != 0 && var1 != this->trunkThickness - 1 ? 3.0F : 2.0F) : -1.0F;
+}
+
+void Beta173BigTree::func_423_a(int var1, int var2, int var3) {
+    int var4 = var2;
+
+    for(int var5 = var2 + this->trunkThickness; var4 < var5; ++var4) {
+        float var6 = this->func_429_b(var4 - var2);
+        this->func_426_a(var1, var4, var3, var6, (int8_t)1, 18);
+    }
+
+}
+
+void Beta173BigTree::drawBlockLine(Int3 var1, Int3 var2, int blockType) {
+    Int3 var4 = Int3{0, 0, 0};
+    int8_t var5 = 0;
+
+    int8_t var6;
+    for(var6 = 0; var5 < 3; ++var5) {
+        var4[var5] = var2[var5] - var1[var5];
+        if(std::abs(var4[var5]) > std::abs(var4[var6])) {
+            var6 = var5;
+        }
+    }
+
+    if(var4[var6] != 0) {
+        int8_t var7 = branchOrientation[var6];
+        int8_t var8 = branchOrientation[var6 + 3];
+        int8_t var9;
+        if(var4[var6] > 0) {
+            var9 = 1;
+        } else {
+            var9 = -1;
+        }
+
+        double var10 = (double)var4[var7] / (double)var4[var6];
+        double var12 = (double)var4[var8] / (double)var4[var6];
+        Int3 var14 = Int3{0, 0, 0};
+        int var15 = 0;
+
+        for(int var16 = var4[var6] + var9; var15 != var16; var15 += var9) {
+            var14[var6] = std::floor((double)(var1[var6] + var15) + 0.5D);
+            var14[var7] = std::floor((double)var1[var7] + (double)var15 * var10 + 0.5D);
+            var14[var8] = std::floor((double)var1[var8] + (double)var15 * var12 + 0.5D);
+            this->world->PlaceBlock(var14, blockType);
+        }
+
+    }
+}
+
+void Beta173BigTree::GenerateLeafClusters() {
+    size_t var1 = 0;
+
+    for(size_t var2 = this->branchStartEnd.size(); var1 < var2; ++var1) {
+        int var3 = this->branchStartEnd[var1][0];
+        int var4 = this->branchStartEnd[var1][1];
+        int var5 = this->branchStartEnd[var1][2];
+        this->func_423_a(var3, var4, var5);
+    }
+
+}
+
+bool Beta173BigTree::canGenerateBranchAtHeight(int var1) {
+    return (double)var1 >= (double)this->totalHeight * 0.2D;
+}
+
+void Beta173BigTree::GenerateTrunk() {
+    int var1 = this->basePos.x;
+    int var2 = this->basePos.y;
+    int var3 = this->basePos.y + this->height;
+    int var4 = this->basePos.z;
+    Int3 var5 = Int3{var1, var2, var4};
+    Int3 var6 = Int3{var1, var3, var4};
+    this->drawBlockLine(var5, var6, 17);
+    if(this->branchDensity == 2) {
+        ++var5[0];
+        ++var6[0];
+        this->drawBlockLine(var5, var6, 17);
+        ++var5[2];
+        ++var6[2];
+        this->drawBlockLine(var5, var6, 17);
+        var5[0] += -1;
+        var6[0] += -1;
+        this->drawBlockLine(var5, var6, 17);
+    }
+
+}
+
+void Beta173BigTree::GenerateBranches() {
+    size_t var1 = 0;
+    size_t var2 = this->branchStartEnd.size();
+
+    for(Int3 var3 = Int3{this->basePos.x, this->basePos.y, this->basePos.z}; var1 < var2; ++var1) {
+        Int3 var4 = Int3{this->branchStartEnd[var1][0], this->branchStartEnd[var1][1], this->branchStartEnd[var1][2]};
+        int varBaseY = this->branchStartEnd[var1][3];  
+        Int3 var5 = Int3{var4[0], var4[1], var4[2]};
+        var3[1] = varBaseY;
+        int var6 = var3[1] - this->basePos.y;
+        if(this->canGenerateBranchAtHeight(var6)) {
+            this->drawBlockLine(var3, var5, 17);
+        }
+    }
+
+}
+
+int Beta173BigTree::checkIfPathClear(Int3 var1, Int3 var2) {
+    Int3 var3 = Int3{0, 0, 0};
+    int8_t var4 = 0;
+
+    int8_t var5;
+    for(var5 = 0; var4 < 3; ++var4) {
+        var3[var4] = var2[var4] - var1[var4];
+        if(std::abs(var3[var4]) > std::abs(var3[var5])) {
+            var5 = var4;
+        }
+    }
+
+    if(var3[var5] == 0) {
+        return -1;
+    } else {
+        int8_t var6 = branchOrientation[var5];
+        int8_t var7 = branchOrientation[var5 + 3];
+        int8_t var8;
+        if(var3[var5] > 0) {
+            var8 = 1;
+        } else {
+            var8 = -1;
+        }
+
+        double var9 = (double)var3[var6] / (double)var3[var5];
+        double var11 = (double)var3[var7] / (double)var3[var5];
+        Int3 var13 = Int3{0, 0, 0};
+        int var14 = 0;
+
+        int var15;
+        for(var15 = var3[var5] + var8; var14 != var15; var14 += var8) {
+            var13[var5] = var1[var5] + var14;
+            var13[var6] = std::floor((double)var1[var6] + (double)var14 * var9);
+            var13[var7] = std::floor((double)var1[var7] + (double)var14 * var11);
+            int var16 = this->world->GetBlockType(var13);
+            if(var16 != 0 && var16 != 18) {
+                break;
+            }
+        }
+
+        return var14 == var15 ? -1 : std::abs(var14);
+    }
+}
+
+bool Beta173BigTree::ValidPlacement() {
+    Int3 var1 = Int3{this->basePos.x, this->basePos.y, this->basePos.z};
+    Int3 var2 = Int3{this->basePos.x, this->basePos.y + this->totalHeight - 1, this->basePos.z};
+    int var3 = this->world->GetBlockType(Int3{this->basePos.x, this->basePos.y - 1, this->basePos.z});
+    if(var3 != 2 && var3 != 3) {
+        return false;
+    } else {
+        int var4 = this->checkIfPathClear(var1, var2);
+        if(var4 == -1) {
+            return true;
+        } else if(var4 < 6) {
+            return false;
+        } else {
+            this->totalHeight = var4;
+            return true;
+        }
+    }
 }

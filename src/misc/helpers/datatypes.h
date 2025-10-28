@@ -76,6 +76,14 @@ struct Vec3 {
         oss << *this; // Use the overloaded << operator
         return oss.str();
     }
+
+    double& operator[](int i) {
+        return *(&x + i);
+    }
+    
+    const double& operator[](int i) const {
+        return *(&x + i);
+    }
 };
 
 struct Int3 {
@@ -101,6 +109,14 @@ struct Int3 {
         std::ostringstream oss;
         oss << *this; // Use the overloaded << operator
         return oss.str();
+    }
+
+    int& operator[](int i) {
+        return *(&x + i);
+    }
+
+    const int& operator[](int i) const {
+        return *(&x + i);
     }
 };
 

@@ -13,9 +13,9 @@ class Beta173Tree {
 
 class Beta173BigTree : public Beta173Tree {
     private:
-        //static final byte[] branchOrientation = new byte[]{(byte)2, (byte)0, (byte)0, (byte)1, (byte)2, (byte)1};
-        //Random rand = new Random();
-        //World world;
+        int8_t branchOrientation[6] = {2, 0, 0, 1, 2, 1};
+        std::unique_ptr<JavaRandom> rand;
+        World* world;
         Int3 basePos = Int3{0, 0, 0};
         int totalHeight = 0;
         int height;
@@ -27,9 +27,24 @@ class Beta173BigTree : public Beta173Tree {
         int branchDensity = 1;
         int maximumTreeHeight = 12;
         int trunkThickness = 4;
-        //int[][] branchStartEnd;
+        std::vector<std::array<int, 4>> branchStartEnd;;
+
+        bool ValidPlacement();
+        void GenerateBranchPositions();
+        void GenerateLeafClusters();
+        void GenerateTrunk();
+        void GenerateBranches();
+        float func_431_a(int var1);
+        float func_429_b(int var1);
+        void func_423_a(int var1, int var2, int var3);
+        void drawBlockLine(Int3 var1, Int3 var2, int var3);
+        int checkIfPathClear(Int3 var1, Int3 var2);
+        void func_426_a(int var1, int var2, int var3, float var4, int8_t var5, int var6);
+        bool canGenerateBranchAtHeight(int var1);
     public:
-        Beta173BigTree() {};
+        Beta173BigTree() {
+            this->rand = std::make_unique<JavaRandom>();
+        };
         ~Beta173BigTree() = default;
         bool Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock);
         void Configure(double treeHeight, double branchLength, double trunkShape);
