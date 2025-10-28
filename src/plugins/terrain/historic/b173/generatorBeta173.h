@@ -15,7 +15,7 @@ class GeneratorBeta173 : public Generator {
         std::unique_ptr<NoiseOctaves<NoisePerlin>> stoneNoiseGen;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> continentalnessNoiseGen;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> depthNoiseGen;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> mobSpawnerNoiseGen;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> treeDensityNoiseGen;
 
         // Simplex Noise Generators
         std::unique_ptr<NoiseOctaves<NoiseSimplex>> temperatureNoiseGen;

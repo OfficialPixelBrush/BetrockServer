@@ -15,7 +15,7 @@ GeneratorBeta173::GeneratorBeta173(int64_t seed, World* world) : Generator(seed,
     stoneNoiseGen           = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
     continentalnessNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 10);
     depthNoiseGen           = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-    mobSpawnerNoiseGen      = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
+    treeDensityNoiseGen      = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
 
     // Init Biome Noise
     std::unique_ptr<JavaRandom> rand1 = std::make_unique<JavaRandom>(this->seed * 9871L);
@@ -524,41 +524,41 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     }
 
     fraction = 0.5D;
-    int mobSpanwerNoiseValue = int(
-        (this->mobSpawnerNoiseGen->GenerateOctaves(
+    int treeDensitySample = int(
+        (this->treeDensityNoiseGen->GenerateOctaves(
             double(blockX) * fraction, double(blockZ) * fraction) / 8.0D + this->rand->nextDouble() * 4.0D + 4.0D) / 3.0D
     );
-    int treeChance = 0;
+    int numberOfTrees = 0;
     if(this->rand->nextInt(10) == 0) {
-        ++treeChance;
+        ++numberOfTrees;
     }
 
     switch(biome) {
         case BIOME_FOREST:
-            treeChance += mobSpanwerNoiseValue + 5;
+            numberOfTrees += treeDensitySample + 5;
             break;
         case BIOME_RAINFOREST:
-            treeChance += mobSpanwerNoiseValue + 5;
+            numberOfTrees += treeDensitySample + 5;
             break;
         case BIOME_SEASONALFOREST:
-            treeChance += mobSpanwerNoiseValue + 2;
+            numberOfTrees += treeDensitySample + 2;
             break;
         case BIOME_TAIGA:
-            treeChance += mobSpanwerNoiseValue + 5;
+            numberOfTrees += treeDensitySample + 5;
             break;
         case BIOME_DESERT:
-            treeChance -= 20;
+            numberOfTrees -= 20;
             break;
         case BIOME_TUNDRA:
-            treeChance -= 20;
+            numberOfTrees -= 20;
             break;
         default:
         case BIOME_PLAINS:
-            treeChance -= 20;
+            numberOfTrees -= 20;
             break;
     }
 
-    for(int i = 0; i < treeChance; ++i) {
+    for(int i = 0; i < numberOfTrees; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16) + 8;
         zCoordinate = blockZ + this->rand->nextInt(16) + 8;
 
