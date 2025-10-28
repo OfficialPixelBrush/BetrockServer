@@ -561,7 +561,44 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     for(int i = 0; i < treeChance; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16) + 8;
         zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-        Beta173Feature().GenerateTree(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+
+        enum TreeState {
+            TREE_NONE,
+            TREE_SMALL,
+            TREE_BIG,
+            TREE_TAIGA_SMALL,
+            TREE_TAIGA_BIG
+        };
+
+        TreeState ts = TREE_NONE;
+        // Decide on a biome-appropriate tree
+        switch(biome) {
+            default:
+                rand->nextInt(10) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
+                break;
+            case BIOME_FOREST:
+                rand->nextInt(5) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
+                break;
+            case BIOME_RAINFOREST:
+                rand->nextInt(3) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
+                break;
+            case BIOME_TAIGA:
+                rand->nextInt(3) == 0 ? ts = TREE_TAIGA_BIG : ts = TREE_TAIGA_SMALL;
+                break;
+        }
+        // Generate the appropriate tree
+        switch(ts) {
+            case TREE_SMALL:
+                Beta173Tree().Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+                break;
+            case TREE_BIG:
+                Beta173BigTree bt = Beta173BigTree();
+                bt.Configure(1.0D, 1.0D, 1.0D);
+                bt.Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+            default:
+                break;
+        }
+        
         /*
         WorldGenerator var18 = biome.getRandomWorldGenForTrees(this->rand);
         var18.func_420_a(1.0D, 1.0D, 1.0D);

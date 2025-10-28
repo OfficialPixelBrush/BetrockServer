@@ -2,6 +2,7 @@
 #include "biomes.h"
 #include "beta173Caver.h"
 #include "beta173Feature.h"
+#include "beta173Tree.h"
 
 class GeneratorBeta173 : public Generator {
     private:
