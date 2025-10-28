@@ -11,7 +11,7 @@ bool debugSentPacketType = false;
 bool debugNumberOfPacketBytes = false;
 bool debugPlayerStatus = false;
 
-bool debugDisableSave = false;
+bool debugDisableSave = true;
 bool debugDisablePrintChunk = false;
 
 bool debugPunchBlockInfo = false;
