@@ -65,6 +65,10 @@ class Server {
 
 	uint64_t GetUpTime() const noexcept;
 
+	int32_t GetMaximumPlayers() const noexcept;
+
+	std::string GetMotd() const noexcept;
+
 	WorldManagerMap &GetWorldManagers() noexcept;
 
 	// get the world manager for the world with the coresponding world_id.
@@ -204,6 +208,7 @@ class Server {
 	std::vector<std::string> operators;
 	std::vector<std::string> whitelist;
 	bool whitelistEnabled = false;
+	std::string motd = "A Minecraft Server";
 
 	std::mutex connectedClientsMutex;
 	std::mutex entityIdMutex;

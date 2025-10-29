@@ -540,47 +540,48 @@ bool Client::HandleDisconnect() {
 // Handle the 1.6+ Server List Packet
 void Client::HandleLegacyPing() {
 	response.push_back((uint8_t)Packet::Disconnect);
-	response.push_back(0x00);
-	response.push_back(0x23);
+	int32_t maximumPlayers = Betrock::Server::Instance().GetMaximumPlayers();
+	std::vector<std::string> strings = {
+		std::to_string(PROTOCOL_VERSION),
+		"b1.7.3",
+		Betrock::Server::Instance().GetMotd(),
+		std::to_string(Betrock::Server::Instance().GetConnectedClients().size()),
+		std::to_string(maximumPlayers == -1 ? 0 : maximumPlayers)
+	};
+
+	// Acounts for $1 already being there
+	size_t combinedSize = 3;
+	for (size_t i = 0; i < strings.size(); i++) {
+		combinedSize += strings[i].size();
+		if (i < strings.size() - 1) {
+			// Account for null characters
+			combinedSize++;
+		}
+	}
+
+	// Length of string
+	response.push_back((combinedSize >> 8) & 0xFF);
+	response.push_back((combinedSize & 0xFF));
+
+	// $1 start
 	response.push_back(0x00);
 	response.push_back(0xA7);
 	response.push_back(0x00);
 	response.push_back('1');
 	response.push_back(0x00);
 	response.push_back(0x00);
-	response.push_back(0x00);
-	std::string protocol = std::to_string(PROTOCOL_VERSION);
-	for (size_t i = 0; i < protocol.size(); i++) {
-		response.push_back(protocol[i]);
-		response.push_back(0);
-	}
-	response.push_back(0);
-	response.push_back(0);
-	std::string gameVersion = std::string("b1.7.3");
-	for (size_t i = 0; i < gameVersion.size(); i++) {
-		response.push_back(gameVersion[i]);
-		response.push_back(0);
-	}
-	response.push_back(0);
-	response.push_back(0);
-	std::string motd = std::string("A Minecraft Server");
-	for (size_t i = 0; i < motd.size(); i++) {
-		response.push_back(motd[i]);
-		response.push_back(0);
-	}
-	response.push_back(0);
-	response.push_back(0);
-	std::string connectedPlayerCount = std::to_string(Betrock::Server::Instance().GetConnectedClients().size());
-	for (size_t i = 0; i < connectedPlayerCount.size(); i++) {
-		response.push_back(connectedPlayerCount[i]);
-		response.push_back(0);
-	}
-	response.push_back(0);
-	response.push_back(0);
-	std::string maxPlayerCount = "0";
-	for (size_t i = 0; i < maxPlayerCount.size(); i++) {
-		response.push_back(maxPlayerCount[i]);
-		response.push_back(0);
+	
+	// Remaining data
+	for (size_t i = 0; i < strings.size(); i++) {
+		for (auto c : strings[i]) {
+			response.push_back(0x00);
+			response.push_back(c);
+		}
+		if (i < strings.size() - 1) {
+			// Account for null characters
+			response.push_back(0x00);
+			response.push_back(0x00);
+		}
 	}
 
 	SendResponse(true);
