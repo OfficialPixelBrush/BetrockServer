@@ -17,6 +17,13 @@ bool Client::HandleHandshake() {
 		DisconnectClient("Not on whitelist!");
 		return false;
 	}
+	// If we find a client with the username already connected,
+	// don't let them in, as this causes rendering bugs
+	Client* oc = server.FindClientByUsername(player->username);
+	if (oc != this) {
+		DisconnectClient("Client already on server");
+		return false;
+	}
 	Respond::Handshake(response);
 	SetConnectionStatus(ConnectionStatus::LoggingIn);
 	return true;
@@ -449,10 +456,10 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 			//	break;
 			case BLOCK_CHEST:
 				world->AddTileEntity(std::make_unique<ChestTile>(pos));
-				world->PlaceBlock(pos,b.type,b.meta);
+				world->PlaceBlockUpdate(pos,b.type,b.meta);
 				break;
 			default:
-				world->PlaceBlock(pos,b.type,b.meta);
+				world->PlaceBlockUpdate(pos,b.type,b.meta);
 				break;
 		}
 	}
