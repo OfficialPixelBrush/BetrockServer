@@ -389,3 +389,20 @@ bool Beta173Feature::GenerateMinable(World* world, JavaRandom* rand, int xBlock,
 
     return true;
 }
+
+bool Beta173Feature::GenerateFlowers(World* world, JavaRandom* rand, int blockX, int blockY, int blockZ) {
+    for(int i = 0; i < CHUNK_HEIGHT/2; ++i) {
+        int offsetX = blockX + rand->nextInt(8) - rand->nextInt(8);
+        int offsetY = blockY + rand->nextInt(4) - rand->nextInt(4);
+        int offsetZ = blockZ + rand->nextInt(8) - rand->nextInt(8);
+        if(
+            world->GetBlockType(Int3{offsetX, offsetY, offsetZ}) == BLOCK_AIR &&
+            true
+            //((BlockFlower)Block.blocksList[this.plantBlockId]).canBlockStay(var1, var7, var8, var9)
+        ) {
+            world->SetBlockType(this->id, Int3{offsetX, offsetY, offsetZ});
+        }
+    }
+
+    return true;
+}

@@ -7,7 +7,7 @@ class Beta173Tree {
     public:
         Beta173Tree() {};
         virtual ~Beta173Tree() = default;
-        virtual bool Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock);
+        virtual bool Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock, bool birch = false);
         virtual void Configure([[maybe_unused]] double treeHeight, [[maybe_unused]] double branchLength, [[maybe_unused]] double trunkShape) { };
 };
 
@@ -46,6 +46,6 @@ class Beta173BigTree : public Beta173Tree {
             this->rand = std::make_unique<JavaRandom>();
         };
         ~Beta173BigTree() = default;
-        bool Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock);
+        bool Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock, bool birch = false);
         void Configure(double treeHeight, double branchLength, double trunkShape);
 };

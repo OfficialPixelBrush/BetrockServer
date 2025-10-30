@@ -566,6 +566,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
             TREE_NONE,
             TREE_SMALL,
             TREE_BIG,
+            TREE_BIRCH,
             TREE_TAIGA_SMALL,
             TREE_TAIGA_BIG
         };
@@ -577,7 +578,11 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
                 rand->nextInt(10) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
                 break;
             case BIOME_FOREST:
-                rand->nextInt(5) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
+                if (rand->nextInt(5) != 0) {
+                    rand->nextInt(3) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
+                    break;
+                }
+                ts = TREE_BIRCH;
                 break;
             case BIOME_RAINFOREST:
                 rand->nextInt(3) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
@@ -590,6 +595,9 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         switch(ts) {
             case TREE_SMALL:
                 Beta173Tree().Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+                break;
+            case TREE_BIRCH:
+                Beta173Tree().Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate, true);
                 break;
             case TREE_BIG:
                 {
@@ -604,33 +612,30 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     }
 
 
+    int8_t numberOfFlowers = 0;
+    switch (biome) {
+        case BIOME_TAIGA:
+        case BIOME_FOREST:
+            numberOfFlowers = 2;
+            break;
+        case BIOME_SEASONALFOREST:
+            numberOfFlowers = 4;
+            break;
+        case BIOME_PLAINS:
+            numberOfFlowers = 3;
+            break;
+        default:
+            break;
+    }
+
+    for(int8_t i = 0; i < numberOfFlowers; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        //Beta173Feature(BLOCK_DANDELION).GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+    }
+
     /*
-    byte cX7 = 0;
-    if(biome == BiomeGenBase.forest) {
-        cX7 = 2;
-    }
-
-    if(biome == BiomeGenBase.seasonalForest) {
-        cX7 = 4;
-    }
-
-    if(biome == BiomeGenBase.taiga) {
-        cX7 = 2;
-    }
-
-    if(biome == BiomeGenBase.plains) {
-        cX7 = 3;
-    }
-
-    int var19;
-    int cX5;
-    for(var16 = 0; var16 < cX7; ++var16) {
-        var17 = blockX + this->rand->nextInt(16) + 8;
-        cX5 = this->rand->nextInt(128);
-        var19 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenFlowers(Block.plantYellow.blockID)).generate(this->worldObj, this->rand, var17, cX5, var19);
-    }
-
     byte cX8 = 0;
     if(biome == BiomeGenBase.forest) {
         cX8 = 2;

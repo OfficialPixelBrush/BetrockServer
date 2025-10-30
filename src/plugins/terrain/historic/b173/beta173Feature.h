@@ -15,4 +15,5 @@ class Beta173Feature {
         std::string PickMobToSpawn(JavaRandom* rand);
         bool GenerateClay(World* world, JavaRandom* rand, int x, int y, int z, int numberOfBlocks = 0);
         bool GenerateMinable(World* world, JavaRandom* rand, int x, int y, int z, int numberOfBlocks = 0);
+        bool GenerateFlowers(World* world, JavaRandom* rand, int x, int y, int z);
 };

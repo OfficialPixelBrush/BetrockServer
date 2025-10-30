@@ -1,7 +1,8 @@
 #include "beta173Tree.h"
 
-bool Beta173Tree::Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock) {
+bool Beta173Tree::Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock, bool birch) {
     int treeHeight = rand->nextInt(3) + 4;
+    if (birch) treeHeight++;
     bool canPlace = true;
     if(yBlock >= 1 && yBlock + treeHeight + 1 <= CHUNK_HEIGHT) {
         int yI;
@@ -62,7 +63,7 @@ bool Beta173Tree::Generate(World* world, JavaRandom* rand, int xBlock, int yBloc
                                 )
                             ) && !IsOpaque(world->GetBlockType(Int3{blockType, yIt, var14}))
                         ) {
-                            world->SetBlockType(BLOCK_LEAVES, Int3{blockType, yIt, var14});
+                            world->PlaceBlock(Int3{blockType, yIt, var14}, BLOCK_LEAVES, birch ? 2 : 0);
                         }
                     }
                 }
@@ -71,7 +72,7 @@ bool Beta173Tree::Generate(World* world, JavaRandom* rand, int xBlock, int yBloc
             for(yIt = 0; yIt < treeHeight; ++yIt) {
                 xI = world->GetBlockType(Int3{xBlock, yBlock + yIt, zBlock});
                 if(xI == 0 || xI == BLOCK_LEAVES) {
-                    world->SetBlockType(BLOCK_LOG, Int3{xBlock, yBlock + yIt, zBlock});
+                    world->PlaceBlock(Int3{xBlock, yBlock + yIt, zBlock}, BLOCK_LOG, birch ? 2 : 0);
                 }
             }
 
@@ -99,7 +100,9 @@ bool Beta173BigTree::Generate(
     JavaRandom* otherRand,
     [[maybe_unused]] int xBlock,
     [[maybe_unused]] int yBlock,
-    [[maybe_unused]] int zBlock) {
+    [[maybe_unused]] int zBlock,
+    [[maybe_unused]] bool birch
+) {
     // Waste one rand cycle to get closer to being accurate
     
     this->world = world;
