@@ -41,6 +41,7 @@ class Chunk {
         bool CanBlockSeeTheSky(int32_t x, int8_t y, int32_t z);
         void SetLight(bool skyLight, Int3 pos, int8_t newLight);
         int8_t GetLight(bool skyLight, Int3 pos);
+        int8_t GetTotalLight(Int3 pos);
         void SetBlockType(int8_t blockType, Int3 pos);
         int8_t GetBlockType(Int3 pos);
         void AddTileEntity(std::unique_ptr<TileEntity>&& te);

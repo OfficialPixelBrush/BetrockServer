@@ -5,6 +5,12 @@ Beta173Feature::Beta173Feature(int16_t id) {
     this->id = id;
 }
 
+Beta173Feature::Beta173Feature(int16_t id, int8_t meta) {
+    // Set the to-be-generated block
+    this->id = id;
+    this->meta = meta;
+}
+
 // Generate a lake
 bool Beta173Feature::GenerateLake(World* world, JavaRandom* rand, int blockX, int blockY, int blockZ) {
     blockX -= 8;
@@ -397,12 +403,37 @@ bool Beta173Feature::GenerateFlowers(World* world, JavaRandom* rand, int blockX,
         int offsetZ = blockZ + rand->nextInt(8) - rand->nextInt(8);
         if(
             world->GetBlockType(Int3{offsetX, offsetY, offsetZ}) == BLOCK_AIR &&
-            true
-            //((BlockFlower)Block.blocksList[this.plantBlockId]).canBlockStay(var1, var7, var8, var9)
+            CanStay(this->id, world, Int3{offsetX, offsetY, offsetZ})
         ) {
             world->SetBlockType(this->id, Int3{offsetX, offsetY, offsetZ});
         }
     }
 
     return true;
+}
+
+bool Beta173Feature::GenerateTallgrass(World* world, JavaRandom* rand, int blockX, int blockY, int blockZ) {
+    while(true) {
+        int blockType = world->GetBlockType(Int3{blockX, blockY, blockZ});
+        if((blockType != 0 && blockType != BLOCK_LEAVES) || blockY <= 0) {
+            for(int y = 0; y < CHUNK_HEIGHT; ++y) {
+                int offsetX = blockX + rand->nextInt(8) - rand->nextInt(8);
+                int offsetY = blockY + rand->nextInt(4) - rand->nextInt(4);
+                int offsetZ = blockZ + rand->nextInt(8) - rand->nextInt(8);
+                if(
+                    world->GetBlockType(Int3{offsetX, offsetY, offsetZ}) == BLOCK_AIR &&
+                    CanStay(this->id, world, Int3{offsetX, offsetY, offsetZ})
+                ) {
+                    Block* b = world->GetBlock(Int3{offsetX, offsetY, offsetZ});
+                    if (!b) continue;
+                    b->type = this->id;
+                    b->meta = this->meta;
+                }
+            }
+
+            return true;
+        }
+
+        --blockY;
+    }
 }

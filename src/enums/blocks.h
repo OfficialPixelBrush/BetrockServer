@@ -19,6 +19,7 @@ bool IsInstantlyBreakable(int16_t id);
 bool IsInteractable(int16_t id);
 bool HasInventory(int16_t id);
 bool KeepDamageOnDrop(int8_t type);
+bool CanStay(int8_t type, World* world, Int3 pos);
 bool NoDrop(Item item);
 Item GetDrop(Item item);
 uint8_t GetSignOrientation(float playerYaw);

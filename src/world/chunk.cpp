@@ -152,6 +152,24 @@ int8_t Chunk::GetLight(bool skyLight, Int3 pos) {
     return b->lightBlock;
 }
 
+int8_t Chunk::GetTotalLight(Int3 pos) {
+    int8_t totalLight = GetLight(true, pos);
+    /*
+    if(totalLight > 0) {
+        isLit = true;
+    }
+    */
+
+    // Assume 0
+    //totalLight -= var4;
+    int8_t blockLight = GetLight(false, pos);
+    if(blockLight > totalLight) {
+        totalLight = blockLight;
+    }
+
+    return totalLight;
+}
+
 void Chunk::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
     Block* b = this->GetBlock(pos);
     if (!b) return;

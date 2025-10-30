@@ -732,6 +732,14 @@ int8_t World::GetLight(bool skyLight, Int3 pos) {
     }
 }
 
+int8_t World::GetTotalLight(Int3 pos) {
+    Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+    if (!c) return 0;
+    pos.x &= 15;
+    pos.z &= 15;
+    return c->GetTotalLight(pos);
+}
+
 void World::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
     if(pos.y < 0) {
         return;
@@ -790,4 +798,13 @@ TileEntity* World::GetTileEntity(Int3 pos) {
     );
     if (!c) return nullptr;
     return c->GetTileEntity(pos);
+}
+
+bool World::CanBlockSeeTheSky(Int3 pos) {
+    Chunk* c = this->GetChunk(
+        pos.x >> 4,
+        pos.z >> 4
+    );
+    if (!c) return false;
+    return c->CanBlockSeeTheSky(pos);
 }

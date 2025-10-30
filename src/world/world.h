@@ -70,6 +70,8 @@ class World {
         void AddToLightQueue(bool skyLight, Int3 posA, Int3 posB);
         void SetLight(bool skyLight, Int3 pos,int8_t newLight);
         int8_t GetLight(bool skyLight, Int3 pos);
+        int8_t GetTotalLight(Int3 pos);
+        bool CanBlockSeeTheSky(Int3 pos);
 
         // Chunk-related
         std::unique_ptr<char[]> GetChunkData(Int3 position);

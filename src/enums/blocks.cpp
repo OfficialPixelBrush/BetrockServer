@@ -3,7 +3,8 @@
 
 // Roughly based on how they're defined in Infdev 20100327
 bool IsOpaque(int16_t id) {
-    if (id == BLOCK_AIR ||
+    return !(
+        id == BLOCK_AIR ||
         id == BLOCK_LEAVES ||
         id == BLOCK_TALLGRASS ||
         id == BLOCK_TORCH ||
@@ -15,26 +16,21 @@ bool IsOpaque(int16_t id) {
         id == BLOCK_ROSE ||
         id == BLOCK_FIRE ||
         id == BLOCK_FARMLAND
-    ) {
-        return false;
-    }
-    return true;
+    );
 }
 
 // Returns true for all translucent blocks
 // So blocks that aren't 100% transparent
 bool IsTranslucent(int16_t id) {
-    if (id == BLOCK_WATER_FLOWING ||
+    return
+        id == BLOCK_WATER_FLOWING ||
         id == BLOCK_WATER_STILL ||
         id == BLOCK_LAVA_FLOWING ||
         id == BLOCK_LAVA_STILL ||
         id == BLOCK_LEAVES ||
         id == BLOCK_ICE ||
-        id == BLOCK_MOB_SPAWNER)
-    {
-        return true;
-    }
-    return false;
+        id == BLOCK_MOB_SPAWNER
+    ;
 }
 
 // Returns how much the skylight is filtered by the specified block
@@ -67,7 +63,8 @@ uint8_t GetTranslucency(int16_t id) {
 
 // Returns true for all blocks that are completely or partially transparent
 bool IsTransparent(int16_t id) {
-    if (id == BLOCK_AIR ||
+    return
+        id == BLOCK_AIR ||
         id == BLOCK_SAPLING ||
         id == BLOCK_RAIL_POWERED ||
         id == BLOCK_RAIL_DETECTOR ||
@@ -102,17 +99,14 @@ bool IsTransparent(int16_t id) {
         id == BLOCK_DOOR_IRON ||
         id == BLOCK_DOOR_WOOD ||
         id == BLOCK_TRAPDOOR
-        )
-    {
-        return true;
-    }
-    return false;
+    ;
 }
 
 // TODO: Turn into int8_t for different light levels
 // Returns true for all blocks that are emissive
 bool IsEmissive(int16_t id) {
-    if (id == BLOCK_LAVA_FLOWING ||
+    return
+        id == BLOCK_LAVA_FLOWING ||
         id == BLOCK_LAVA_STILL ||
         id == BLOCK_TORCH ||
         id == BLOCK_FIRE ||
@@ -121,43 +115,40 @@ bool IsEmissive(int16_t id) {
         id == BLOCK_REDSTONE_TORCH_ON ||
         id == BLOCK_GLOWSTONE ||
         id == BLOCK_NETHER_PORTAL ||
-        id == BLOCK_PUMPKIN_LIT)
-    {
-        return true;
-    }
-    return false;
+        id == BLOCK_PUMPKIN_LIT
+    ;
 }
 
 // Returns the level of emissiveness for each block
 uint8_t GetEmissiveness(int16_t id) {
-    if (id == BLOCK_LAVA_FLOWING ||
-        id == BLOCK_LAVA_STILL ||
-        id == BLOCK_FIRE ||
-        id == BLOCK_GLOWSTONE ||
-        id == BLOCK_PUMPKIN_LIT)
-    {
-        return 15;
-    } else if (id == BLOCK_TORCH) {
-        return 14;
-    } else if (id == BLOCK_FURNACE_LIT) {
-        return 13;
-    } else if (id == BLOCK_NETHER_PORTAL) {
-        return 11;
-    } else if (id == BLOCK_ORE_REDSTONE_ON) {
-        return 9;
-    } else if (id == BLOCK_REDSTONE_TORCH_ON) {
-        return 7;
-    // Apparently brown mushrooms glow,
-    // They have maintained this since Indev 0.31
-    } else if (id == BLOCK_MUSHROOM_BROWN) {
-        return 1;
+    switch(id) {
+        case BLOCK_LAVA_FLOWING:
+        case BLOCK_LAVA_STILL:
+        case BLOCK_FIRE:
+        case BLOCK_GLOWSTONE:
+        case BLOCK_PUMPKIN_LIT:
+            return 15;
+        case BLOCK_TORCH:
+            return 14;
+        case BLOCK_FURNACE_LIT:
+            return 13;
+        case BLOCK_NETHER_PORTAL:
+            return 11;
+        case BLOCK_ORE_REDSTONE_ON:
+            return 9;
+        case BLOCK_REDSTONE_TORCH_ON:
+            return 7;
+        case BLOCK_MUSHROOM_BROWN:
+            return 1;
+        default:
+            return 0;
     }
-    return 0;
 }
 
 // Returns true for all blocks that are instantly breakable
 bool IsInstantlyBreakable(int16_t id) {
-    if (id == BLOCK_SAPLING ||
+    return
+        id == BLOCK_SAPLING ||
         id == BLOCK_DEADBUSH ||
         id == BLOCK_TALLGRASS ||
         id == BLOCK_DANDELION || 
@@ -173,16 +164,14 @@ bool IsInstantlyBreakable(int16_t id) {
         id == BLOCK_REDSTONE_TORCH_ON ||
         id == BLOCK_SUGARCANE ||
         id == BLOCK_REDSTONE_REPEATER_OFF ||
-        id == BLOCK_REDSTONE_REPEATER_ON)
-    {
-        return true;
-    }
-    return false;
+        id == BLOCK_REDSTONE_REPEATER_ON
+    ;
 }
 
 // Returns true if the passed block is interactable, and should thus cancel any block-placements
 bool IsInteractable(int16_t id) {
-    if (id == BLOCK_BED ||
+    return
+        id == BLOCK_BED ||
         id == BLOCK_DOOR_IRON ||
         id == BLOCK_DOOR_WOOD ||
         id == BLOCK_TRAPDOOR ||
@@ -193,26 +182,22 @@ bool IsInteractable(int16_t id) {
         id == BLOCK_FURNACE_LIT ||
         id == BLOCK_CHEST ||
         id == BLOCK_DISPENSER
-    ) {
-        return true;
-    }
-    return false;
+    ;
 }
 
 // Returns true if the destroyed item maintains its NBT data upon being dropped
 bool KeepDamageOnDrop(int8_t id) {
-    if (id == BLOCK_WOOL ||
+    return
+        id == BLOCK_WOOL ||
         id == BLOCK_SLAB ||
         id == BLOCK_DOUBLE_SLAB
-    ) {
-        return true;
-    }
-    return false;
+    ;
 }
 
 // Returns true for all blocks that do not drop anything when they're destroyed
 bool NoDrop(Item item) {
-    if (item.id == BLOCK_BEDROCK ||
+    return
+        item.id == BLOCK_BEDROCK ||
         item.id == BLOCK_WATER_FLOWING ||
         item.id == BLOCK_WATER_STILL || 
         item.id == BLOCK_LAVA_FLOWING ||
@@ -226,10 +211,7 @@ bool NoDrop(Item item) {
         item.id == BLOCK_ICE ||
         item.id == BLOCK_NETHER_PORTAL ||
         item.id == BLOCK_CAKE
-    ) {
-        return true;
-    }
-    return false;
+    ;
 }
 
 // Returns the items that're dropped when a block is destroyed
@@ -337,15 +319,11 @@ bool HasInventory(int16_t id) {
 }
 
 bool IsLiquid(int16_t id) {
-    if (
-        id == BLOCK_WATER_STILL ||
-        id == BLOCK_WATER_FLOWING ||
-        id == BLOCK_LAVA_STILL ||
-        id == BLOCK_LAVA_FLOWING
-    ) {
-        return true;
-    }
-    return false;
+    return  id == BLOCK_WATER_STILL ||
+            id == BLOCK_WATER_FLOWING ||
+            id == BLOCK_LAVA_STILL ||
+            id == BLOCK_LAVA_FLOWING
+    ;
 }
 
 // TODO: Do this right
@@ -628,4 +606,34 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_
 		}
 	}
 	return b;
+}
+
+bool CanGrow(int8_t type, int8_t otherType) {
+    if (
+        type == BLOCK_DANDELION ||
+        type == BLOCK_TALLGRASS
+    ) {
+        return  otherType == BLOCK_GRASS ||
+                otherType == BLOCK_DIRT ||
+                otherType == BLOCK_FARMLAND
+        ;
+    }
+    return false;
+}
+
+// Check if a block can exist in the position its in
+bool CanStay(int8_t type, World* world, Int3 pos) {
+    if (
+        type == BLOCK_DANDELION ||
+        type == BLOCK_TALLGRASS
+    ) {
+        return (
+            (
+                world->GetTotalLight(pos) >= 8 ||
+                world->CanBlockSeeTheSky(pos)
+            ) && 
+            CanGrow(type, world->GetBlockType(Int3{pos.x,pos.y-1,pos.z}))
+        );
+    }
+    return false;
 }

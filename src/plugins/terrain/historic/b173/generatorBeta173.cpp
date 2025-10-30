@@ -49,11 +49,9 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     GenerateTerrain(cX, cZ, c, this->temperature);
     // Replace some of the stone with Biome-appropriate blocks
     ReplaceBlocksForBiome(cX, cZ, c);
-    this->caver->GenerateCavesForChunk(this->world, cX, cZ, c);
-    // TODO: Replace this with actual beta lighting
-    //this->world->UpdateLightingInfdev(cX,cZ);
-    //blockX.func_353_b();
-    
+    // Carve caves
+    this->caver->GenerateCavesForChunk(this->world, cX, cZ, c);    
+    // Generate heightmap
     c->GenerateHeightMap();
     c->state = ChunkState::Generated;
     c->modified = true;
@@ -632,45 +630,44 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         xCoordinate = blockX + this->rand->nextInt(16) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
         zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-        //Beta173Feature(BLOCK_DANDELION).GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_DANDELION).GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+    }
+
+    int8_t amountOfTallgrass = 0;
+    switch(biome) {
+        case BIOME_SEASONALFOREST:
+        case BIOME_FOREST:
+            amountOfTallgrass = 2;
+            break;
+        case BIOME_PLAINS:
+        case BIOME_RAINFOREST:
+            amountOfTallgrass = 10;
+            break;
+        case BIOME_TAIGA:
+            amountOfTallgrass = 1;
+            break;
+        default:
+            break;
+    }
+
+    for(int8_t i = 0; i < amountOfTallgrass; ++i) {
+        // Normal Grass
+        int8_t grassMeta = 1;
+        if(
+            biome == BIOME_RAINFOREST &&
+            this->rand->nextInt(3) != 0
+        ) {
+            // Fern
+            grassMeta = 2;
+        }
+
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        Beta173Feature(BLOCK_TALLGRASS, grassMeta).GenerateTallgrass(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     /*
-    byte cX8 = 0;
-    if(biome == BiomeGenBase.forest) {
-        cX8 = 2;
-    }
-
-    if(biome == BiomeGenBase.rainforest) {
-        cX8 = 10;
-    }
-
-    if(biome == BiomeGenBase.seasonalForest) {
-        cX8 = 2;
-    }
-
-    if(biome == BiomeGenBase.taiga) {
-        cX8 = 1;
-    }
-
-    if(biome == BiomeGenBase.plains) {
-        cX8 = 10;
-    }
-
-    int cX0;
-    int cX1;
-    for(var17 = 0; var17 < cX8; ++var17) {
-        byte cX6 = 1;
-        if(biome == BiomeGenBase.rainforest && this->rand->nextInt(3) != 0) {
-            cX6 = 2;
-        }
-
-        var19 = blockX + this->rand->nextInt(16) + 8;
-        cX0 = this->rand->nextInt(128);
-        cX1 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenTallGrass(Block.tallGrass.blockID, cX6)).generate(this->worldObj, this->rand, var19, cX0, cX1);
-    }
-
     cX8 = 0;
     if(biome == BiomeGenBase.desert) {
         cX8 = 2;
