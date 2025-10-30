@@ -31,7 +31,7 @@ bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
 }
 
 bool World::ChunkExists(int32_t x, int32_t z) {
-    std::unique_lock lock(chunkMutex);
+    std::shared_lock lock(chunkMutex);
     return chunks.contains(GetChunkHash(x,z));
 }
 
@@ -93,7 +93,7 @@ void World::Save() {
 
 // Gets the Chunk Pointer from Memory
 Chunk* World::GetChunk(int32_t x, int32_t z) {
-    std::unique_lock lock(chunkMutex);
+    std::shared_lock lock(chunkMutex);
     auto it = chunks.find(GetChunkHash(x, z));
     if (it != chunks.end() && it->second != nullptr)
         return it->second.get();
@@ -253,7 +253,7 @@ void World::SpreadLight(bool skyLight, Int3 pos, int limit) {
 
 // This is just called "a" in the Source Code
 void World::AddToLightQueue(bool skyLight, Int3 posA, Int3 posB) {
-    std::lock_guard<std::mutex> lock(stackMutex);  // Ensure thread safety
+    std::unique_lock<std::shared_mutex> lock(stackMutex);  // Ensure thread safety
     this->lightingToUpdate.emplace(LightUpdate(skyLight,posA,posB));
 }
 
@@ -261,7 +261,7 @@ void World::UpdateLightingInfdev() {
     while(true) {
         LightUpdate currentUpdate;
         {
-            std::lock_guard<std::mutex> lock(stackMutex);
+            std::unique_lock<std::shared_mutex> lock(stackMutex);
             if (lightingToUpdate.empty()) break;
             currentUpdate = lightingToUpdate.top();
             lightingToUpdate.pop();

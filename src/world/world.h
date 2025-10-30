@@ -3,6 +3,7 @@
 #include <vector>
 #include <unordered_map>
 #include <mutex>
+#include <shared_mutex>
 #include <fstream>
 #include <memory>
 #include <cstdint>
@@ -43,8 +44,8 @@ class World {
         std::random_device dev;
         std::mt19937 rng;
         bool RandomTick(Block* b, Int3& pos);
-        std::mutex stackMutex;
-        std::mutex chunkMutex;
+        mutable std::shared_mutex stackMutex;
+        mutable std::shared_mutex chunkMutex;
     public:
         int64_t seed;
         void UpdateLightingInfdev();
