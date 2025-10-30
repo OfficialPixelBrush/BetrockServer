@@ -74,16 +74,29 @@ void Player::Save() {
         if (item.id == SLOT_EMPTY) {
             continue;
         }
-            /*
         nbtInventory->Put(
             NbtItem(
-                NbtConvertToSlot(i),
+                InventoryMappingLocalToNbt(INVENTORY_SECTION_MAIN, i),
                 item.id,
                 item.amount,
                 item.damage
             )
         );
-            */
+    }
+
+    for (int i = 0; i < 4; i++) {
+        Item item = armor[i];
+        if (item.id == SLOT_EMPTY) {
+            continue;
+        }
+        nbtInventory->Put(
+            NbtItem(
+                InventoryMappingLocalToNbt(INVENTORY_SECTION_ARMOR, i),
+                item.id,
+                item.amount,
+                item.damage
+            )
+        );
     }
 
 	// Yeet to file
@@ -142,14 +155,43 @@ bool Player::Load() {
         [[maybe_unused]] int16_t itemId = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"))->GetData();
         [[maybe_unused]] int8_t  itemCount = std::dynamic_pointer_cast<ByteTag>(slot->Get("Count"))->GetData();
         [[maybe_unused]] int16_t itemDamage = std::dynamic_pointer_cast<ShortTag>(slot->Get("Damage"))->GetData();
-        //std::cout << int(slotNumber) << + " -> " << int(NbtConvertToSlot(slotNumber)) << std::endl;
-        /*
-        inventory[NbtConvertToSlot(slotNumber)] = {
-            itemId,
-            itemCount,
-            itemDamage
-        };
-        */
+        if (slotNumber >= 100) {
+            armor[InventoryMappingNbtToLocal(INVENTORY_SECTION_ARMOR, slotNumber)] = {
+                itemId,
+                itemCount,
+                itemDamage
+            };
+        } else {
+            inventory[InventoryMappingNbtToLocal(INVENTORY_SECTION_MAIN, slotNumber)] = {
+                itemId,
+                itemCount,
+                itemDamage
+            };
+        }
     }
     return true;
+}
+
+int8_t Player::InventoryMappingLocalToNbt(INVENTORY_SECTION section, int8_t slotId) {
+    switch(section) {
+        case INVENTORY_SECTION_MAIN:
+            return slotId;
+        case INVENTORY_SECTION_ARMOR:
+            return slotId+100;
+        default:
+        case INVENTORY_SECTION_CRAFTING:
+            return 0;
+    }
+}
+
+int8_t Player::InventoryMappingNbtToLocal(INVENTORY_SECTION section, int8_t slotId) {
+    switch(section) {
+        case INVENTORY_SECTION_MAIN:
+            return slotId;
+        case INVENTORY_SECTION_ARMOR:
+            return slotId-100;
+        default:
+        case INVENTORY_SECTION_CRAFTING:
+            return 0;
+    }
 }

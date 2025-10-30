@@ -11,7 +11,16 @@
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62
 
+enum INVENTORY_SECTION {
+    INVENTORY_SECTION_MAIN = 0,
+    INVENTORY_SECTION_ARMOR = 1,
+    INVENTORY_SECTION_CRAFTING = 2
+};
+
 class Player : public Entity {
+    private:
+        int8_t InventoryMappingLocalToNbt(INVENTORY_SECTION section, int8_t slot);
+        int8_t InventoryMappingNbtToLocal(INVENTORY_SECTION section, int8_t slot);
     public:
         std::string username = "";
 
