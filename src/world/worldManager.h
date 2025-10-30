@@ -53,6 +53,8 @@ class WorldManager {
         void SaveNbt();
         void LoadNbt();
         void FreeAndSave();
+        Int3 FindSpawnableBlock(Int3 position);
+        bool CanCoordinateBeSpawn(Int3 position);
 };
 
 std::string ConvertIndexIntoExtra(int8_t worldId);

@@ -152,6 +152,26 @@ void WorldManager::WorkerThread() {
     }
 }
 
+// Match the Beta 1.7.3 Spawn block behavior
+Int3 WorldManager::FindSpawnableBlock(Int3 position) {
+    JavaRandom jr;
+	auto &server = Betrock::Server::Instance();
+    // Try random offsets until we find a valid spawn coordinate
+    while (!CanCoordinateBeSpawn(position)) {
+        position.x += jr.nextInt(64) - jr.nextInt(64);
+        position.z += jr.nextInt(64) - jr.nextInt(64);
+    }
+
+    server.SetSpawnPoint(position);
+    return position;
+}
+
+bool WorldManager::CanCoordinateBeSpawn(Int3 position) {
+    // Generate chunk beforehand
+    int8_t blockType = world.GetFirstUncoveredBlock(position);
+    return blockType == BLOCK_SAND;
+}
+
 // This gets a chunk from the world if it isn't already in memory
 // If a chunk file already exists for it, the file is just loaded into memory
 // If the file is an old-format chunk, its loaded into memory and saved as a new-format chunk on the next save-cycle

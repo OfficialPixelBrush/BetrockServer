@@ -8,6 +8,7 @@
 // The Save interval in ticks
 // This matches what Minecraft does
 // 6000 = 5 minutes
+// TODO: Apparently minecraft saves every 40 ticks???
 #define SAVE_INTERVAL 6000 
 
 void HandleGracefulSignal(int) {
@@ -43,38 +44,43 @@ int main() {
 	// Init the plugins
 	server.InitPlugins();
 
-	WorldManager *wm = server.GetWorldManager(0);
-	World *overworld = server.GetWorld(0);
-
 	// Generate spawn area
-	// TODO: Figure this shit out!!!
-	int issuedChunks = 0;
-	if (overworld->GetNumberOfChunks() == 0) {
-		logger.Info("Preparing level \"" + std::string(Betrock::GlobalConfig::Instance().Get("level-name")) + "\"");
-		//wm->ForceGenerateChunk(0, 0);
-		for (int x = -1; x <= 1; x++) {
-			for (int z = -1; z <= 1; z++) {
-				wm->ForceGenerateChunk(x, z);
-				issuedChunks++;
+	short radius = 196;
+	auto lastTime = std::chrono::steady_clock::now();
+	int worldIndex = 0;
+
+	//for (int worldIndex = 0; worldIndex < worldManagers.size(); ++worldIndex) {
+		logger.Info("Preparing start region for level " + std::to_string(worldIndex));
+
+		WorldManager *wm = server.GetWorldManager(0);
+		World *overworld = server.GetWorld(0);
+
+		for (int x = -radius; x <= radius && server.IsAlive(); x += 16) {
+			for (int z = -radius; z <= radius && server.IsAlive(); z += 16) {
+				auto now = std::chrono::steady_clock::now();
+				auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTime).count();
+
+				if (elapsed > 1000) {
+					int total = (radius * 2 + 1) * (radius * 2 + 1);
+					int done = (x + radius) * (radius * 2 + 1) + z + radius + 1;
+					int percent = (done * 100) / total;
+					logger.Info("Preparing spawn area: " + std::to_string(percent) + "%");
+					lastTime = now;
+				}
+
+				wm->ForceGenerateChunk(x >> 4, z >> 4);
+
+				std::this_thread::sleep_for(std::chrono::milliseconds(5));
 			}
 		}
-	}
-	logger.Info("Preparing start region");
-	while (true) {
-		// Wait for chunks to be generated
-        std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-		logger.Info("Preparing spawn area: " + std::to_string(
-			int((float(issuedChunks-wm->QueueSize())/float(issuedChunks))*100.0f)
-		) + "%");
-		if (wm->QueueSize() < 1) {
-			break;
-		}
-	}
 
-	Int3 spawnPoint = overworld->FindSpawnableBlock(Int3{8, 127, 8});
+	Int3 spawn = wm->FindSpawnableBlock(Int3{0, 64, 0});
+	spawn.y += 2;
+	server.SetSpawnPoint(spawn);
+	//}
+
 	//auto spawnPoint = Int3{0,200,0};
 	//spawnPoint.y += STANCE_OFFSET;
-	server.SetSpawnPoint(spawnPoint);
 
 	// Create threads for sending and receiving data
 	std::thread join_thread(&Betrock::Server::ServerJoin);

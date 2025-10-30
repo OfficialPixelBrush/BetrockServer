@@ -56,20 +56,20 @@ bool World::IsChunkPopulated(int32_t x, int32_t z) {
 World::World(const std::string& extra)
     : dev(), rng(dev())
 {
-    std::cout << "CWD: " << std::filesystem::current_path() << "\n";
+    //std::cout << "CWD: " << std::filesystem::current_path() << "\n";
 
     dirPath = std::filesystem::current_path() / std::string(Betrock::GlobalConfig::Instance().Get("level-name"));
 
     // Create dirPath first
     if (!std::filesystem::create_directories(dirPath)) {
-        std::cout << "Failed to create: " << dirPath << std::endl;
+        //std::cout << "Failed to create: " << dirPath << std::endl;
     }
 
     // Then dimension sub-directories
     if (!extra.empty()) {
         dirPath /= extra;
         if (!std::filesystem::create_directories(dirPath)) {
-            std::cout << "Failed to create: " << dirPath << std::endl;
+            //std::cout << "Failed to create: " << dirPath << std::endl;
         }
     }
 
@@ -497,26 +497,15 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     return bytes;
 }
 
-// Find the highest possible non-solid block that can see the sky
-Int3 World::FindSpawnableBlock(Int3 position) {
-    Int3 spawn = position;
-
-    for (int y = CHUNK_HEIGHT-1; y >= 0; --y) {
-        spawn.y = y;
-        Block* b = GetBlock(spawn);
-        if (!b) {
-            // There is no chunk to check for blocks
-            return position;
-        }
-        int8_t type = b->type;
-        if (type != BLOCK_AIR) {
-            // The position above this block is air
-            return spawn;
-        }
+int8_t World::GetFirstUncoveredBlock(Int3 position) {
+    for(
+        position.y = 63;
+        GetBlockType(Int3{position.x, position.y + 1, position.z}) != BLOCK_AIR;
+        ++position.y
+    ) {
     }
 
-    std::cout << "Found no suitable place to spawn, defaulting." << std::endl;
-    return position;
+    return GetBlockType(position);
 }
 
 // Load a Chunk into Memory from an NBT-Format file
@@ -691,6 +680,7 @@ void World::TickChunks() {
 
 // Tick the passed block
 bool World::RandomTick(Block* b, Int3& pos) {
+    if (!b) return false;
     switch(b->type) {
         case BLOCK_GRASS:
         {

@@ -564,6 +564,12 @@ void Client::ClickedSlot(
 	[[maybe_unused]] int8_t amount,
 	[[maybe_unused]] int16_t damage)
 {
+	// If we've clicked outside, throw the items to the ground and clear the slot.
+	if (slotId == CLICK_OUTSIDE) {
+		hoveringItem = Item {-1,0,0};
+		return;
+	}
+	
 	// Only handle Player inventory for now
 	if (windowId == 0) {
 		slotId -= 9;
@@ -578,12 +584,6 @@ void Client::ClickedSlot(
 			} else {
 				SpreadToSlots(temp.id,temp.amount,temp.damage,1);
 			}
-		}
-		
-		// If we've clicked outside, throw the items to the ground and clear the slot.
-		if (slotId == CLICK_OUTSIDE) {
-			hoveringItem = Item {-1,0,0};
-			return;
 		}
 
 		// If something is being held

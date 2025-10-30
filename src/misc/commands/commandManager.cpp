@@ -35,7 +35,7 @@ void CommandManager::Init() {
 	Register(std::make_shared<CommandPopulated>());
 	Register(std::make_shared<CommandInterface>());
 	Register(std::make_shared<CommandRegion>());
-    std::cout << "Registered " << registeredCommands.size() << " command(s)!" << std::endl;
+    //std::cout << "Registered " << registeredCommands.size() << " command(s)!" << std::endl;
 }
 
 // Register a single command
