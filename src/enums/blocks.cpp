@@ -386,7 +386,7 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_
     ) {
         Block* belowBlock = world->GetBlock(pos-Int3{0,1,0});
         if (belowBlock && belowBlock->type == BLOCK_GRASS) {
-            world->PlaceBlock(pos-Int3{0,1,0},BLOCK_FARMLAND);
+            world->PlaceBlockUpdate(pos-Int3{0,1,0},BLOCK_FARMLAND);
         }
         id = SLOT_EMPTY;
         return b;
@@ -461,7 +461,41 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_
                 b.meta = 3;
                 break;
         }
-        world->PlaceBlock(pos+Int3{0,1,0},b.type,b.meta | 0b1000);
+        world->PlaceBlockUpdate(pos+Int3{0,1,0},b.type,b.meta | 0b1000);
+        return b;
+    }
+    if (id == ITEM_BED) {
+        Int3 headboardOffset = Int3{0,0,0};
+        // Determine the direction
+        switch(playerDirection) {
+            case zPlus:
+                headboardOffset = Int3{0,0,1};
+                b.meta = 0;
+                break;
+            case xMinus:
+                headboardOffset = Int3{-1,0,0};
+                b.meta = 1;
+                break;
+            case zMinus:
+                headboardOffset = Int3{0,0,-1};
+                b.meta = 2;
+                break;
+            case xPlus:
+                headboardOffset = Int3{1,0,0};
+                b.meta = 3;
+                break;
+        }    
+        Block* headboardBlock = world->GetBlock(pos+headboardOffset);
+        // TODO: Any non-solid block should work
+        if (headboardBlock->type != BLOCK_AIR ||
+            face != yPlus
+        ) {
+            b.type = SLOT_EMPTY;
+            return b;
+        }
+        // Determine the door type
+        b.type = BLOCK_BED;
+        world->PlaceBlockUpdate(pos+headboardOffset,b.type,b.meta | 0b1000);
         return b;
     }
 	if (id == ITEM_REDSTONE_REPEATER ||
