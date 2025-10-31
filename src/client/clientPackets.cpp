@@ -372,6 +372,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	// Since we get the players' desired block from
 	// The Server-side inventory anyways
 	int16_t id = EntryToShort(message, offset);
+	
 	//int8_t amount = 0;
 	//int16_t damage = 0;
 	if (id >= 0) {
@@ -389,28 +390,28 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	if (IsInteractable(targetedBlock->type)) {
 		if (!HasInventory(targetedBlock->type)) {
 			world->InteractWithBlock(pos);
-		} else {
-			switch(targetedBlock->type) {
-				case BLOCK_CRAFTING_TABLE:
-					OpenWindow(INVENTORY_CRAFTING_TABLE);
-					return true;
-				// TODO: Figure out how to handle large chests
-				// Possibly by checking for surrounding chests,
-				// then adding up their capacities?
-				// Gotta recreate the 3-size chest bug somehow!
-				case BLOCK_CHEST:
-					OpenWindow(INVENTORY_CHEST);
-					SendResponse(true);
-					UpdateInventory(response, pos);
-					return true;
-				case BLOCK_FURNACE:
-				case BLOCK_FURNACE_LIT:
-					OpenWindow(INVENTORY_FURNACE);
-					return true;
-				case BLOCK_DISPENSER:
-					OpenWindow(INVENTORY_DISPENSER);
-					return true;
-			}
+			return true;
+		}
+		switch(targetedBlock->type) {
+			case BLOCK_CRAFTING_TABLE:
+				OpenWindow(INVENTORY_CRAFTING_TABLE);
+				break;
+			// TODO: Figure out how to handle large chests
+			// Possibly by checking for surrounding chests,
+			// then adding up their capacities?
+			// Gotta recreate the 3-size chest bug somehow!
+			case BLOCK_CHEST:
+				OpenWindow(INVENTORY_CHEST);
+				SendResponse(true);
+				UpdateInventory(response, pos);
+				break;
+			case BLOCK_FURNACE:
+			case BLOCK_FURNACE_LIT:
+				OpenWindow(INVENTORY_FURNACE);
+				break;
+			case BLOCK_DISPENSER:
+				OpenWindow(INVENTORY_DISPENSER);
+				break;
 		}
 		return true;
 	}
@@ -420,14 +421,13 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	// its state updated such as eating food, shooting bows, using buckets, etc.
 
 	// Apparently this also handles the player standing inside the block its trying to place in
+	// This is apparently for the player trying to *use* the item(?)
 	if (x == -1 && y == -1 && z == -1 && face == -1) {
 		return false;
 	}
 
 	// Place a block if we can
-	if (!CanDecrementHotbar()) {
-		return false;
-	}
+	if (!CanDecrementHotbar()) return false;
 
 	// Check if the server-side inventory item is valid
 	Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
@@ -438,22 +438,17 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		targetedBlock->meta == i.damage &&
 		face == yPlus
 	) {
-		world->PlaceBlock(pos,BLOCK_DOUBLE_SLAB,i.damage);
+		world->PlaceBlockUpdate(pos,BLOCK_DOUBLE_SLAB,i.damage);
 	} else {
 		// Get the block we need to place
 		BlockToFace(pos,face);
 		Block b = GetPlacedBlock(world,pos,face,player->yaw,GetPlayerOrientation(),i.id,i.damage);
-		if (b.type == SLOT_EMPTY) {
-			return false;
-		}
+		if (!IsValidPlacement(b.type, pos)) return false;
+		if (b.type == SLOT_EMPTY) return false;
 		switch(b.type) {
 			case BLOCK_SPONGE:
 				world->PlaceSponge(pos);
 				break;
-			//case ITEM_BED:
-			//	world->PlaceBlock(pos,b.type,b.meta);
-			//	BlockToFace(pos,face);
-			//	break;
 			case BLOCK_CHEST:
 				world->AddTileEntity(std::make_unique<ChestTile>(pos));
 				world->PlaceBlockUpdate(pos,b.type,b.meta);

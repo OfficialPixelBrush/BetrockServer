@@ -667,79 +667,76 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         Beta173Feature(BLOCK_TALLGRASS, grassMeta).GenerateTallgrass(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
-    /*
-    cX8 = 0;
-    if(biome == BiomeGenBase.desert) {
-        cX8 = 2;
-    }
+    int8_t numberOfDeadbushes = 0;
+    if(biome == BIOME_DESERT) numberOfDeadbushes = 2;
 
-    for(var17 = 0; var17 < cX8; ++var17) {
-        cX5 = blockX + this->rand->nextInt(16) + 8;
-        var19 = this->rand->nextInt(128);
-        cX0 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenDeadBush(Block.deadBush.blockID)).generate(this->worldObj, this->rand, cX5, var19, cX0);
+    for(int i = 0; i < numberOfDeadbushes; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        //(new WorldGenDeadBush(Block.deadBush.blockID)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
     }
 
     if(this->rand->nextInt(2) == 0) {
-        var17 = blockX + this->rand->nextInt(16) + 8;
-        cX5 = this->rand->nextInt(128);
-        var19 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenFlowers(Block.plantRed.blockID)).generate(this->worldObj, this->rand, var17, cX5, var19);
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        Beta173Feature(BLOCK_ROSE).GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     if(this->rand->nextInt(4) == 0) {
-        var17 = blockX + this->rand->nextInt(16) + 8;
-        cX5 = this->rand->nextInt(128);
-        var19 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenFlowers(Block.mushroomBrown.blockID)).generate(this->worldObj, this->rand, var17, cX5, var19);
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        Beta173Feature(BLOCK_MUSHROOM_BROWN).GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     if(this->rand->nextInt(8) == 0) {
-        var17 = blockX + this->rand->nextInt(16) + 8;
-        cX5 = this->rand->nextInt(128);
-        var19 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenFlowers(Block.mushroomRed.blockID)).generate(this->worldObj, this->rand, var17, cX5, var19);
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        Beta173Feature(BLOCK_MUSHROOM_RED).GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
-    for(var17 = 0; var17 < 10; ++var17) {
-        cX5 = blockX + this->rand->nextInt(16) + 8;
-        var19 = this->rand->nextInt(128);
-        cX0 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenReed()).generate(this->worldObj, this->rand, cX5, var19, cX0);
+    for(int i = 0; i < 10; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        //(new WorldGenReed()).generate(this->worldObj, this->rand, cX5, var19, cX0);
     }
 
     if(this->rand->nextInt(32) == 0) {
-        var17 = blockX + this->rand->nextInt(16) + 8;
-        cX5 = this->rand->nextInt(128);
-        var19 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenPumpkin()).generate(this->worldObj, this->rand, var17, cX5, var19);
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        //(new WorldGenPumpkin()).generate(this->worldObj, this->rand, var17, cX5, var19);
     }
 
-    var17 = 0;
-    if(biome == BiomeGenBase.desert) {
-        var17 += 10;
+    int8_t numberOfCacti = 0;
+    if(biome == BIOME_DESERT) {
+        numberOfCacti += 10;
     }
 
-    for(cX5 = 0; cX5 < var17; ++cX5) {
-        var19 = blockX + this->rand->nextInt(16) + 8;
-        cX0 = this->rand->nextInt(128);
-        cX1 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenCactus()).generate(this->worldObj, this->rand, var19, cX0, cX1);
+    for(int i = 0; i < numberOfCacti; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        //(new WorldGenCactus()).generate(this->worldObj, this->rand, var19, cX0, cX1);
     }
 
-    for(cX5 = 0; cX5 < 50; ++cX5) {
-        var19 = blockX + this->rand->nextInt(16) + 8;
-        cX0 = this->rand->nextInt(this->rand->nextInt(120) + 8);
-        cX1 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenLiquids(Block.waterMoving.blockID)).generate(this->worldObj, this->rand, var19, cX0, cX1);
+    for(int i = 0; i < 50; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(this->rand->nextInt(120) + 8);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        //(new WorldGenLiquids(Block.waterMoving.blockID)).generate(this->worldObj, this->rand, var19, cX0, cX1);
     }
 
-    for(cX5 = 0; cX5 < 20; ++cX5) {
-        var19 = blockX + this->rand->nextInt(16) + 8;
-        cX0 = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(112) + 8) + 8);
-        cX1 = blockZ + this->rand->nextInt(16) + 8;
-        (new WorldGenLiquids(Block.lavaMoving.blockID)).generate(this->worldObj, this->rand, var19, cX0, cX1);
-    }*/
+    for(int i = 0; i < 20; ++i) {
+        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        yCoordinate = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(112) + 8) + 8);
+        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        //(new WorldGenLiquids(Block.lavaMoving.blockID)).generate(this->worldObj, this->rand, var19, cX0, cX1);
+    }
 
     //this->generatedTemperatures = this->worldObj.getWorldChunkManager().getTemperatures(this->generatedTemperatures, blockX + 8, blockZ + 8, 16, 16);
 

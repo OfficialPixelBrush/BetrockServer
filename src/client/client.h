@@ -107,6 +107,7 @@ class Client : public std::enable_shared_from_this<Client> {
         void ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage);
         void ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId);
         void ClearInventory();
+        bool IsValidPlacement(int8_t type, Int3& pos);
     public:
         void SetConnectionStatus(ConnectionStatus status) { this->connectionStatus = status; }
         ConnectionStatus GetConnectionStatus() { return this->connectionStatus; }

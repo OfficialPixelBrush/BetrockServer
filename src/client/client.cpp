@@ -736,3 +736,14 @@ void Client::CloseLatestWindow() {
     windowIndex--;
     return;
 }
+
+bool Client::IsValidPlacement(int8_t type, Int3& pos) {
+	if (!IsSolid(type)) return true;
+	AABB testBox {
+		Vec3{0,0,0},
+		Vec3{1,1,1}
+	};
+
+	// Player has collided
+	return !player->CheckCollision(Int3ToVec3(pos),testBox);
+}

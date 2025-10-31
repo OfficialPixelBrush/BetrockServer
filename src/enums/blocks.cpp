@@ -645,7 +645,14 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_
 
 bool CanGrow(int8_t type, int8_t otherType) {
     if (
+        type == BLOCK_MUSHROOM_BROWN ||
+        type == BLOCK_MUSHROOM_RED
+    ) {
+        return IsOpaque(otherType);
+    }
+    if (
         type == BLOCK_DANDELION ||
+        type == BLOCK_ROSE ||
         type == BLOCK_TALLGRASS
     ) {
         return  otherType == BLOCK_GRASS ||
@@ -659,7 +666,16 @@ bool CanGrow(int8_t type, int8_t otherType) {
 // Check if a block can exist in the position its in
 bool CanStay(int8_t type, World* world, Int3 pos) {
     if (
+        type == BLOCK_MUSHROOM_BROWN ||
+        type == BLOCK_MUSHROOM_RED
+    ) {
+        if ((pos.y >= 0) && (pos.y < CHUNK_HEIGHT)) {
+            return (world->GetTotalLight(pos) < 13 && CanGrow(type, world->GetBlockType(pos - Int3{0,-1,0})));
+        }
+    }
+    if (
         type == BLOCK_DANDELION ||
+        type == BLOCK_ROSE ||
         type == BLOCK_TALLGRASS
     ) {
         return (
