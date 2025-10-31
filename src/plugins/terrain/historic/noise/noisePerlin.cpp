@@ -28,16 +28,16 @@ double NoisePerlin::GenerateNoiseBase(double x, double y, double z) {
     // The farlands are caused by this getting cast to a 32-Bit Integer.
     // Change these ints to longs to fix the farlands.
     // TODO: Apparently not? Fix this PLEASE
-    int xInt = (int)x;
-    int yInt = (int)y;
-    int zInt = (int)z;
+    int64_t xInt = (int64_t)x;
+    int64_t yInt = (int64_t)y;
+    int64_t zInt = (int64_t)z;
     if(x < (double)xInt) --xInt;
     if(y < (double)yInt) --yInt;
     if(z < (double)zInt) --zInt;
 
-    int xIndex = xInt & 255;
-    int yIndex = yInt & 255;
-    int zIndex = zInt & 255;
+    int64_t xIndex = xInt & 255;
+    int64_t yIndex = yInt & 255;
+    int64_t zIndex = zInt & 255;
 
     x -= (double)xInt;
     y -= (double)yInt;
@@ -45,8 +45,8 @@ double NoisePerlin::GenerateNoiseBase(double x, double y, double z) {
     double w = fade(x);
     double v = fade(y);
     double u = fade(z);
-    int permXY = this->permutations[xIndex] + yIndex;
-    int permXYZ = this->permutations[permXY] + zIndex;
+    int64_t permXY = this->permutations[xIndex] + yIndex;
+    int64_t permXYZ = this->permutations[permXY] + zIndex;
     // Some of the following code is weird,
     // probably because it got optimized by Java to use
     // fewer variables or Notch did this to be efficient

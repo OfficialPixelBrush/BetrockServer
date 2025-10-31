@@ -688,7 +688,8 @@ bool World::RandomTick(Block* b, Int3& pos) {
             // Random offset
             pos = pos + Int3{dist(rng),dist(rng),dist(rng)};
             Block* nb = GetBlock(pos);
-            if (nb && nb->type == BLOCK_DIRT) {
+            if (!nb) break;
+            if (nb->type == BLOCK_DIRT) {
                 Block* ab = GetBlock(pos+Int3{0,1,0});
                 if (ab && ab->type == BLOCK_AIR) {
                     nb->type = BLOCK_GRASS;
