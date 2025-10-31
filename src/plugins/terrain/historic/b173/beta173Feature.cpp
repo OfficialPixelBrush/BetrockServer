@@ -437,3 +437,26 @@ bool Beta173Feature::GenerateTallgrass(World* world, JavaRandom* rand, int block
         --blockY;
     }
 }
+
+bool Beta173Feature::GenerateDeadbush(World* world, JavaRandom* rand, int blockX, int blockY, int blockZ) {
+    while(true) {
+        int blockType = world->GetBlockType(Int3{blockX, blockY, blockZ});
+        if((blockType != 0 && blockType != BLOCK_LEAVES) || blockY <= 0) {
+            for(int i = 0; i < 4; ++i) {
+                int offsetX = blockX + rand->nextInt(8) - rand->nextInt(8);
+                int offsetY = blockY + rand->nextInt(4) - rand->nextInt(4);
+                int offsetZ = blockZ + rand->nextInt(8) - rand->nextInt(8);
+                if(
+                    world->GetBlockType(Int3{offsetX, offsetY, offsetZ}) == BLOCK_AIR &&
+                    CanStay(this->id, world, Int3{offsetX, offsetY, offsetZ}))
+                {
+                    world->SetBlockType(this->id, Int3{offsetX, offsetY, offsetZ});
+                }
+            }
+
+            return true;
+        }
+
+        --blockY;
+    }
+}

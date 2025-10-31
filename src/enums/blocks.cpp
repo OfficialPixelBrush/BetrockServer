@@ -15,7 +15,8 @@ bool IsOpaque(int16_t id) {
         id == BLOCK_DANDELION ||
         id == BLOCK_ROSE ||
         id == BLOCK_FIRE ||
-        id == BLOCK_FARMLAND
+        id == BLOCK_FARMLAND ||
+        id == BLOCK_SNOW_LAYER
     );
 }
 
@@ -329,7 +330,10 @@ bool IsLiquid(int16_t id) {
 
 // TODO: Do this right
 bool IsSolid(int16_t id) {
-    return IsOpaque(id);
+    return
+        IsOpaque(id) ||
+        id == BLOCK_LEAVES
+    ;
 } 
 
 // Determine in which direction a block needs to be placed
@@ -644,12 +648,14 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_
 }
 
 bool CanGrow(int8_t type, int8_t otherType) {
+    // Mushroom-type Blocks
     if (
         type == BLOCK_MUSHROOM_BROWN ||
         type == BLOCK_MUSHROOM_RED
     ) {
         return IsOpaque(otherType);
     }
+    // Flower-type blocks
     if (
         type == BLOCK_DANDELION ||
         type == BLOCK_ROSE ||
@@ -659,6 +665,18 @@ bool CanGrow(int8_t type, int8_t otherType) {
                 otherType == BLOCK_DIRT ||
                 otherType == BLOCK_FARMLAND
         ;
+    }
+    // Deadbushes
+    if (
+        type == BLOCK_DEADBUSH
+    ) {
+        return otherType == BLOCK_SAND;
+    }
+    // Crops
+    if (
+        type == BLOCK_CROP_WHEAT
+    ) {
+        return otherType == BLOCK_FARMLAND;
     }
     return false;
 }
@@ -673,9 +691,11 @@ bool CanStay(int8_t type, World* world, Int3 pos) {
             return (world->GetTotalLight(pos) < 13 && CanGrow(type, world->GetBlockType(pos - Int3{0,-1,0})));
         }
     }
+    // Flower-like blocks
     if (
         type == BLOCK_DANDELION ||
         type == BLOCK_ROSE ||
+        type == BLOCK_DEADBUSH ||
         type == BLOCK_TALLGRASS
     ) {
         return (

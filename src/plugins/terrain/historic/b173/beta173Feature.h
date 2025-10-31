@@ -19,4 +19,5 @@ class Beta173Feature {
         bool GenerateMinable(World* world, JavaRandom* rand, int x, int y, int z, int numberOfBlocks = 0);
         bool GenerateFlowers(World* world, JavaRandom* rand, int x, int y, int z);
         bool GenerateTallgrass(World* world, JavaRandom* rand, int x, int y, int z);
+        bool GenerateDeadbush(World* world, JavaRandom* rand, int x, int y, int z);
 };

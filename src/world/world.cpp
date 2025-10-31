@@ -753,3 +753,19 @@ bool World::CanBlockSeeTheSky(Int3 pos) {
     if (!c) return false;
     return c->CanBlockSeeTheSky(pos);
 }
+
+int World::GetHighestSolidOrLiquidBlock(int32_t x, int32_t z) {
+    Chunk* c = this->GetChunk(
+        x >> 4,
+        z >> 4
+    );
+    if (!c) return -1;
+    for (int y = CHUNK_HEIGHT -1; y > 0; --y) {
+        int8_t blockType = this->GetBlockType(Int3{x,y,z});
+        if (blockType == BLOCK_AIR) continue;
+        if (IsSolid(blockType) || IsLiquid(blockType)) {
+            return y+1;
+        }
+    }
+    return -1;
+}

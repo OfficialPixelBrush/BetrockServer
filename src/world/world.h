@@ -97,4 +97,5 @@ class World {
         int8_t GetFirstUncoveredBlock(Int3& position);
         void AddTileEntity(std::unique_ptr<TileEntity>&& te);
         TileEntity* GetTileEntity(Int3 pos);
+        int GetHighestSolidOrLiquidBlock(int32_t x, int32_t z);
 };

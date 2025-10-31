@@ -38,7 +38,6 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
 
     // Generate Biomes
 	this->biomeMap = GenerateBiomeMap(
-        this->biomeMap,
         cX * CHUNK_WIDTH_X,
         cZ * CHUNK_WIDTH_Z,
         CHUNK_WIDTH_X,
@@ -46,7 +45,7 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     );
 
     // Generate the Terrain, minus any caves, as just stone 
-    GenerateTerrain(cX, cZ, c, this->temperature);
+    GenerateTerrain(cX, cZ, c);
     // Replace some of the stone with Biome-appropriate blocks
     ReplaceBlocksForBiome(cX, cZ, c);
     // Carve caves
@@ -158,7 +157,7 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
 }
 
 // Generate the Terrain, minus any caves, as just stone 
-void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<double>& temperature) {
+void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c) {
     const int     xMax = CHUNK_WIDTH_X / 4 + 1; // 3
     const uint8_t yMax = CHUNK_HEIGHT  / 8 + 1; // 14
     const int     zMax = CHUNK_WIDTH_Z / 4 + 1; // 3
@@ -211,7 +210,7 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
                             uint8_t blockType = BLOCK_AIR;
 
                             // If water is too cold, turn into ice
-                            double temp = temperature[(macroX * 4 + subX) * 16 + macroZ * 4 + subZ];
+                            double temp = this->temperature[(macroX * 4 + subX) * 16 + macroZ * 4 + subZ];
                             int yLevel = macroY * 8 + subY;
                             if(yLevel < WATER_LEVEL) {
                                 if(temp < 0.5D && yLevel >= WATER_LEVEL - 1) {
@@ -248,17 +247,51 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
     }
 }
 
+std::vector<double> GeneratorBeta173::GenerateTemperature(int bx, int bz, int xMax, int zMax) {
+    if(this->temperature.empty() || this->temperature.size() < size_t(xMax * zMax)) {
+        this->temperature.resize(xMax * zMax, 0.0);
+    }
+
+    this->temperature = this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, zMax, (double)0.025F, (double)0.025F, 0.25D);
+    this->weirdness = this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, zMax, 0.25D, 0.25D, 0.5882352941176471D);
+    int index = 0;
+
+    for(int x = 0; x < xMax; ++x) {
+        for(int z = 0; z < zMax; ++z) {
+            double var9 = this->weirdness[index] * 1.1D + 0.5D;
+            double scale = 0.01D;
+            double max = 1.0D - scale;
+            double temp = (this->temperature[index] * 0.15D + 0.7D) * max + var9 * scale;
+            temp = 1.0D - (1.0D - temp) * (1.0D - temp);
+            if(temp < 0.0D) {
+                temp = 0.0D;
+            }
+
+            if(temp > 1.0D) {
+                temp = 1.0D;
+            }
+
+            this->temperature[index] = temp;
+            ++index;
+        }
+    }
+
+    return this->temperature;
+}
+
 // Generate Biomes based on simplex noise
-std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(std::vector<Biome> biomeMap, int bx, int bz, int xMax, int zMax) {
+std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(int bx, int bz, int xMax, int zMax) {
     // Init Biome map
-    if(biomeMap.empty() || int(biomeMap.size()) < xMax * zMax) {
-        biomeMap.resize(xMax * zMax, BIOME_NONE);
+    if(this->biomeMap.empty() || int(this->biomeMap.size()) < xMax * zMax) {
+        this->biomeMap.resize(xMax * zMax, BIOME_NONE);
     }
 
     // Get noise values
-    this->temperature = this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, zMax, (double)0.025F, (double)0.025F, 0.25D);
-    this->humidity = this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)bx, (double)bz, xMax, zMax, (double)0.05F, (double)0.05F, 1.0D / 3.0D);
-    this->weirdness = this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, zMax, 0.25D, 0.25D, 0.5882352941176471D);
+    // We found an oversight in the original code! zMax is NEVER used for getting the noise range!
+    // Although this is irrelevant for all intents and purposes, as xMax always equals zMax
+    this->temperature = this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, xMax, (double)0.025F, (double)0.025F, 0.25D);
+    this->humidity = this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)bx, (double)bz, xMax, xMax, (double)0.05F, (double)0.05F, 1.0D / 3.0D);
+    this->weirdness = this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, xMax, 0.25D, 0.25D, 0.5882352941176471D);
     int index = 0;
 
     // Iterate over each block column
@@ -282,33 +315,11 @@ std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(std::vector<Biome> biomeMa
             this->temperature[index] = temp;
             this->humidity[index] = humi;
             // Get the biome from the lookup
-            biomeMap[index] = GetBiomeFromLookup(temp, humi);
+            this->biomeMap[index] = GetBiomeFromLookup(temp, humi);
             index++;
         }
     }
-
-    /*
-    std::cout << "# " << bx/CHUNK_WIDTH_X << ", " << bz/CHUNK_WIDTH_Z << std::endl;
-    std::cout << "[";
-    for (int x = 0; x < CHUNK_WIDTH_X; x++) {
-        for (int z = 0; z < CHUNK_WIDTH_Z; z++) {
-            //for (int y = CHUNK_HEIGHT - 1; y >= 0; y--) {
-            //   if (c->blocks[(z + x *CHUNK_WIDTH_X) * CHUNK_HEIGHT + y].type == BLOCK_STONE) {
-            //std::cout << gravelNoise[z + x *CHUNK_WIDTH_X];
-            std::cout << weirdness[z + x *CHUNK_WIDTH_X];
-            if ((z + x *CHUNK_WIDTH_X) < CHUNK_WIDTH_X*CHUNK_WIDTH_Z -1) {
-                    //if ((z + x *CHUNK_WIDTH_X) * CHUNK_HEIGHT + y < CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT -1) {
-                        std::cout << ",";
-                    }
-            //        break;
-            //    }
-            //}
-        }
-    }
-    std::cout << "]," << std::endl;
-    */
-
-    return biomeMap;
+    return this->biomeMap;
 }
 
 // Make terrain noise
@@ -674,7 +685,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         xCoordinate = blockX + this->rand->nextInt(16) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
         zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-        //(new WorldGenDeadBush(Block.deadBush.blockID)).generate(this->worldObj, this->rand, xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_DEADBUSH).GenerateDeadbush(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     if(this->rand->nextInt(2) == 0) {
@@ -702,14 +713,14 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         xCoordinate = blockX + this->rand->nextInt(16) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
         zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-        //(new WorldGenReed()).generate(this->worldObj, this->rand, cX5, var19, cX0);
+        //(new WorldGenReed()).generate(this->worldObj, this->rand, x, z, int offsetX);
     }
 
     if(this->rand->nextInt(32) == 0) {
         xCoordinate = blockX + this->rand->nextInt(16) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
         zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-        //(new WorldGenPumpkin()).generate(this->worldObj, this->rand, var17, cX5, var19);
+        //(new WorldGenPumpkin()).generate(this->worldObj, this->rand, temperature7, x, z);
     }
 
     int8_t numberOfCacti = 0;
@@ -721,39 +732,48 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         xCoordinate = blockX + this->rand->nextInt(16) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
         zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-        //(new WorldGenCactus()).generate(this->worldObj, this->rand, var19, cX0, cX1);
+        //(new WorldGenCactus()).generate(this->worldObj, this->rand, z, int offsetX, offsetZ);
     }
 
     for(int i = 0; i < 50; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16) + 8;
         yCoordinate = this->rand->nextInt(this->rand->nextInt(120) + 8);
         zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-        //(new WorldGenLiquids(Block.waterMoving.blockID)).generate(this->worldObj, this->rand, var19, cX0, cX1);
+        //(new WorldGenLiquids(Block.waterMoving.blockID)).generate(this->worldObj, this->rand, z, int offsetX, offsetZ);
     }
 
     for(int i = 0; i < 20; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16) + 8;
         yCoordinate = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(112) + 8) + 8);
         zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-        //(new WorldGenLiquids(Block.lavaMoving.blockID)).generate(this->worldObj, this->rand, var19, cX0, cX1);
+        //(new WorldGenLiquids(Block.lavaMoving.blockID)).generate(this->worldObj, this->rand, z, int offsetX, offsetZ);
     }
 
-    //this->generatedTemperatures = this->worldObj.getWorldChunkManager().getTemperatures(this->generatedTemperatures, blockX + 8, blockZ + 8, 16, 16);
+	this->temperature = GenerateTemperature(
+        blockX + 8,
+        blockZ + 8,
+        CHUNK_WIDTH_X,
+        CHUNK_WIDTH_Z
+    );
 
     // Place Snow in cold regions
-    /*
-    for(cX5 = blockX + 8; cX5 < blockX + 8 + 16; ++cX5) {
-        for(var19 = blockZ + 8; var19 < blockZ + 8 + 16; ++var19) {
-            cX0 = cX5 - (blockX + 8);
-            cX1 = var19 - (blockZ + 8);
-            int cX2 = this->worldObj.getTopSolidOrLiquidBlock(cX5, var19);
-            double cX3 = this->generatedTemperatures[cX0 * 16 + cX1] - (double)(cX2 - 64) / 64.0D * 0.3D;
-            if(cX3 < 0.5D && cX2 > 0 && cX2 < 128 && this->worldObj.isAirBlock(cX5, cX2, var19) && this->worldObj.getBlockMaterial(cX5, cX2 - 1, var19).getIsSolid() && this->worldObj.getBlockMaterial(cX5, cX2 - 1, var19) != Material.ice) {
-                this->worldObj.setBlockWithNotify(cX5, cX2, var19, Block.snow.blockID);
+    for(int x = blockX + 8; x < blockX + 8 + 16; ++x) {
+        for(int z = blockZ + 8; z < blockZ + 8 + 16; ++z) {
+            int offsetX = x - (blockX + 8);
+            int offsetZ = z - (blockZ + 8);
+            int highestBlock = world->GetHighestSolidOrLiquidBlock(x, z);
+            double temp = this->temperature[offsetX * 16 + offsetZ] - (double)(highestBlock - 64) / 64.0D * 0.3D;
+            if(temp < 0.5D &&
+                highestBlock > 0 &&
+                highestBlock < CHUNK_HEIGHT &&
+                world->GetBlockType(Int3{x, highestBlock, z}) == BLOCK_AIR &&
+                IsSolid(world->GetBlockType(Int3{x, highestBlock - 1, z})) &&
+                world->GetBlockType(Int3{x, highestBlock - 1, z}) != BLOCK_ICE
+            ) {
+                world->SetBlockType(BLOCK_SNOW_LAYER, Int3{x, highestBlock, z});
             }
         }
     }
-        */
 
     //BlockSand.fallInstantly = false;
     return true;
