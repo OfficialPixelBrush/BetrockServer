@@ -197,6 +197,7 @@ bool KeepDamageOnDrop(int8_t id) {
 // Returns true for all blocks that do not drop anything when they're destroyed
 bool NoDrop(Item item) {
     return
+        item.id == BLOCK_AIR ||
         item.id == BLOCK_BEDROCK ||
         item.id == BLOCK_WATER_FLOWING ||
         item.id == BLOCK_WATER_STILL || 

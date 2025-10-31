@@ -153,7 +153,7 @@ void WorldManager::WorkerThread() {
 }
 
 // Match the Beta 1.7.3 Spawn block behavior
-Int3 WorldManager::FindSpawnableBlock(Int3 position) {
+Int3 WorldManager::FindSpawnableBlock(Int3& position) {
     JavaRandom jr;
 	auto &server = Betrock::Server::Instance();
     // Try random offsets until we find a valid spawn coordinate
@@ -166,7 +166,7 @@ Int3 WorldManager::FindSpawnableBlock(Int3 position) {
     return position;
 }
 
-bool WorldManager::CanCoordinateBeSpawn(Int3 position) {
+bool WorldManager::CanCoordinateBeSpawn(Int3& position) {
     // Generate chunk beforehand
     int8_t blockType = world.GetFirstUncoveredBlock(position);
     return blockType == BLOCK_SAND;

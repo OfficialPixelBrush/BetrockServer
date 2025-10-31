@@ -102,7 +102,8 @@ int main() {
 			}
 		}
 
-	Int3 spawn = wm->FindSpawnableBlock(Int3{0, 64, 0});
+	Int3 spawn = Int3{0, 64, 0};
+	wm->FindSpawnableBlock(spawn);
 	spawn.y += 2;
 	server.SetSpawnPoint(spawn);
 	//}

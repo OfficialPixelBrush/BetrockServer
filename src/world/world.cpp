@@ -451,7 +451,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     return bytes;
 }
 
-int8_t World::GetFirstUncoveredBlock(Int3 position) {
+int8_t World::GetFirstUncoveredBlock(Int3& position) {
     for(
         position.y = 63;
         GetBlockType(Int3{position.x, position.y + 1, position.z}) != BLOCK_AIR;
