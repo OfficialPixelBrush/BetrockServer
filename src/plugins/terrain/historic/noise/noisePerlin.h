@@ -14,5 +14,11 @@ class NoisePerlin : public NoiseGenerator {
         NoisePerlin(JavaRandom* rand);
         double GenerateNoise(double x, double y);
         double GenerateNoise(double x, double y, double z);
-        void GenerateNoise(std::vector<double>& var1, double var2, double var4, double var6, int var8, int var9, int var10, double var11, double var13, double var15, double var17);
+        void GenerateNoise(
+            std::vector<double>& noiseField,
+            double xOffset, double yOffset, double zOffset,
+            int xSize, int ySize, int zSize,
+            double xScale, double yScale, double zScale,
+            double amplitude
+        );
 };

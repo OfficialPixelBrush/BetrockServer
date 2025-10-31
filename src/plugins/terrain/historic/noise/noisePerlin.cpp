@@ -82,32 +82,32 @@ double NoisePerlin::GenerateNoise(double x, double y, double z) {
     return this->GenerateNoiseBase(x, y, z);
 }
 
-void NoisePerlin::GenerateNoise(std::vector<double>& var1, double var2, double var4, double var6, int var8, int var9, int var10, double var11, double var13, double var15, double var17) {
-    int var10001;
-    int var19;
-    int var22;
+void NoisePerlin::GenerateNoise(std::vector<double>& noiseField, double xOffset, double yOffset, double zOffset, int xSize, int ySize, int zSize, double xScale, double yScale, double zScale, double amplitude) {
+    int zSize001;
+    int noiseField9;
+    int xOffset2;
     double var31;
     double var35;
     int var37;
     double var38;
-    int var40;
-    int var41;
-    double var42;
+    int yOffset0;
+    int yOffset1;
+    double yOffset2;
     int var75;
-    if(var9 == 1) {
+    if(ySize == 1) {
         /*
-        bool var64 = false;
-        bool var65 = false;
-        bool var21 = false;
-        bool var68 = false;
+        bool zOffset4 = false;
+        bool zOffset5 = false;
+        bool xOffset1 = false;
+        bool zOffset8 = false;
         */
         double var70 = 0.0D;
         double var73 = 0.0D;
         var75 = 0;
-        double var77 = 1.0D / var17;
+        double var77 = 1.0D / amplitude;
 
-        for(int var30 = 0; var30 < var8; ++var30) {
-            var31 = (var2 + (double)var30) * var11 + this->xCoord;
+        for(int var30 = 0; var30 < xSize; ++var30) {
+            var31 = (xOffset + (double)var30) * xScale + this->xCoord;
             int var78 = (int)var31;
             if(var31 < (double)var78) {
                 --var78;
@@ -117,69 +117,69 @@ void NoisePerlin::GenerateNoise(std::vector<double>& var1, double var2, double v
             var31 -= (double)var78;
             var35 = var31 * var31 * var31 * (var31 * (var31 * 6.0D - 15.0D) + 10.0D);
 
-            for(var37 = 0; var37 < var10; ++var37) {
-                var38 = (var6 + (double)var37) * var15 + this->zCoord;
-                var40 = (int)var38;
-                if(var38 < (double)var40) {
-                    --var40;
+            for(var37 = 0; var37 < zSize; ++var37) {
+                var38 = (zOffset + (double)var37) * zScale + this->zCoord;
+                yOffset0 = (int)var38;
+                if(var38 < (double)yOffset0) {
+                    --yOffset0;
                 }
 
-                var41 = var40 & 255;
-                var38 -= (double)var40;
-                var42 = var38 * var38 * var38 * (var38 * (var38 * 6.0D - 15.0D) + 10.0D);
-                var19 = this->permutations[var34] + 0;
-                int var66 = this->permutations[var19] + var41;
-                int var67 = this->permutations[var34 + 1] + 0;
-                var22 = this->permutations[var67] + var41;
-                var70 = lerp(var35, altGrad(this->permutations[var66], var31, var38), grad(this->permutations[var22], var31 - 1.0D, 0.0D, var38));
-                var73 = lerp(var35, grad(this->permutations[var66 + 1], var31, 0.0D, var38 - 1.0D), grad(this->permutations[var22 + 1], var31 - 1.0D, 0.0D, var38 - 1.0D));
-                double var79 = lerp(var42, var70, var73);
-                var10001 = var75++;
-                var1[var10001] += var79 * var77;
+                yOffset1 = yOffset0 & 255;
+                var38 -= (double)yOffset0;
+                yOffset2 = var38 * var38 * var38 * (var38 * (var38 * 6.0D - 15.0D) + 10.0D);
+                noiseField9 = this->permutations[var34] + 0;
+                int zOffset6 = this->permutations[noiseField9] + yOffset1;
+                int zOffset7 = this->permutations[var34 + 1] + 0;
+                xOffset2 = this->permutations[zOffset7] + yOffset1;
+                var70 = lerp(var35, altGrad(this->permutations[zOffset6], var31, var38), grad(this->permutations[xOffset2], var31 - 1.0D, 0.0D, var38));
+                var73 = lerp(var35, grad(this->permutations[zOffset6 + 1], var31, 0.0D, var38 - 1.0D), grad(this->permutations[xOffset2 + 1], var31 - 1.0D, 0.0D, var38 - 1.0D));
+                double var79 = lerp(yOffset2, var70, var73);
+                zSize001 = var75++;
+                noiseField[zSize001] += var79 * var77;
             }
         }
 
     } else {
-        var19 = 0;
-        double var20 = 1.0D / var17;
-        var22 = -1;
+        noiseField9 = 0;
+        double xOffset0 = 1.0D / amplitude;
+        xOffset2 = -1;
         /*
-        bool var23 = false;
-        bool var24 = false;
-        bool var25 = false;
-        bool var26 = false;
-        bool var27 = false;
-        bool var28 = false;
+        bool xOffset3 = false;
+        bool xOffset4 = false;
+        bool xOffset5 = false;
+        bool xOffset6 = false;
+        bool xOffset7 = false;
+        bool xOffset8 = false;
         */
-        double var29 = 0.0D;
+        double xOffset9 = 0.0D;
         var31 = 0.0D;
         double var33 = 0.0D;
         var35 = 0.0D;
 
-        for(var37 = 0; var37 < var8; ++var37) {
-            var38 = (var2 + (double)var37) * var11 + this->xCoord;
-            var40 = (int)var38;
-            if(var38 < (double)var40) {
-                --var40;
+        for(var37 = 0; var37 < xSize; ++var37) {
+            var38 = (xOffset + (double)var37) * xScale + this->xCoord;
+            yOffset0 = (int)var38;
+            if(var38 < (double)yOffset0) {
+                --yOffset0;
             }
 
-            var41 = var40 & 255;
-            var38 -= (double)var40;
-            var42 = var38 * var38 * var38 * (var38 * (var38 * 6.0D - 15.0D) + 10.0D);
+            yOffset1 = yOffset0 & 255;
+            var38 -= (double)yOffset0;
+            yOffset2 = var38 * var38 * var38 * (var38 * (var38 * 6.0D - 15.0D) + 10.0D);
 
-            for(int var44 = 0; var44 < var10; ++var44) {
-                double var45 = (var6 + (double)var44) * var15 + this->zCoord;
-                int var47 = (int)var45;
-                if(var45 < (double)var47) {
-                    --var47;
+            for(int yOffset4 = 0; yOffset4 < zSize; ++yOffset4) {
+                double yOffset5 = (zOffset + (double)yOffset4) * zScale + this->zCoord;
+                int yOffset7 = (int)yOffset5;
+                if(yOffset5 < (double)yOffset7) {
+                    --yOffset7;
                 }
 
-                int var48 = var47 & 255;
-                var45 -= (double)var47;
-                double var49 = var45 * var45 * var45 * (var45 * (var45 * 6.0D - 15.0D) + 10.0D);
+                int yOffset8 = yOffset7 & 255;
+                yOffset5 -= (double)yOffset7;
+                double yOffset9 = yOffset5 * yOffset5 * yOffset5 * (yOffset5 * (yOffset5 * 6.0D - 15.0D) + 10.0D);
 
-                for(int var51 = 0; var51 < var9; ++var51) {
-                    double var52 = (var4 + (double)var51) * var13 + this->yCoord;
+                for(int var51 = 0; var51 < ySize; ++var51) {
+                    double var52 = (yOffset + (double)var51) * yScale + this->yCoord;
                     int var54 = (int)var52;
                     if(var52 < (double)var54) {
                         --var54;
@@ -188,25 +188,25 @@ void NoisePerlin::GenerateNoise(std::vector<double>& var1, double var2, double v
                     int var55 = var54 & 255;
                     var52 -= (double)var54;
                     double var56 = var52 * var52 * var52 * (var52 * (var52 * 6.0D - 15.0D) + 10.0D);
-                    if(var51 == 0 || var55 != var22) {
-                        var22 = var55;
-                        int var69 = this->permutations[var41] + var55;
-                        int var71 = this->permutations[var69] + var48;
-                        int var72 = this->permutations[var69 + 1] + var48;
-                        int var74 = this->permutations[var41 + 1] + var55;
-                        var75 = this->permutations[var74] + var48;
-                        int var76 = this->permutations[var74 + 1] + var48;
-                        var29 = lerp(var42, grad(this->permutations[var71], var38, var52, var45), grad(this->permutations[var75], var38 - 1.0D, var52, var45));
-                        var31 = lerp(var42, grad(this->permutations[var72], var38, var52 - 1.0D, var45), grad(this->permutations[var76], var38 - 1.0D, var52 - 1.0D, var45));
-                        var33 = lerp(var42, grad(this->permutations[var71 + 1], var38, var52, var45 - 1.0D), grad(this->permutations[var75 + 1], var38 - 1.0D, var52, var45 - 1.0D));
-                        var35 = lerp(var42, grad(this->permutations[var72 + 1], var38, var52 - 1.0D, var45 - 1.0D), grad(this->permutations[var76 + 1], var38 - 1.0D, var52 - 1.0D, var45 - 1.0D));
+                    if(var51 == 0 || var55 != xOffset2) {
+                        xOffset2 = var55;
+                        int zOffset9 = this->permutations[yOffset1] + var55;
+                        int var71 = this->permutations[zOffset9] + yOffset8;
+                        int var72 = this->permutations[zOffset9 + 1] + yOffset8;
+                        int var74 = this->permutations[yOffset1 + 1] + var55;
+                        var75 = this->permutations[var74] + yOffset8;
+                        int var76 = this->permutations[var74 + 1] + yOffset8;
+                        xOffset9 = lerp(yOffset2, grad(this->permutations[var71], var38, var52, yOffset5), grad(this->permutations[var75], var38 - 1.0D, var52, yOffset5));
+                        var31 = lerp(yOffset2, grad(this->permutations[var72], var38, var52 - 1.0D, yOffset5), grad(this->permutations[var76], var38 - 1.0D, var52 - 1.0D, yOffset5));
+                        var33 = lerp(yOffset2, grad(this->permutations[var71 + 1], var38, var52, yOffset5 - 1.0D), grad(this->permutations[var75 + 1], var38 - 1.0D, var52, yOffset5 - 1.0D));
+                        var35 = lerp(yOffset2, grad(this->permutations[var72 + 1], var38, var52 - 1.0D, yOffset5 - 1.0D), grad(this->permutations[var76 + 1], var38 - 1.0D, var52 - 1.0D, yOffset5 - 1.0D));
                     }
 
-                    double var58 = lerp(var56, var29, var31);
-                    double var60 = lerp(var56, var33, var35);
-                    double var62 = lerp(var49, var58, var60);
-                    var10001 = var19++;
-                    var1[var10001] += var62 * var20;
+                    double var58 = lerp(var56, xOffset9, var31);
+                    double zOffset0 = lerp(var56, var33, var35);
+                    double zOffset2 = lerp(yOffset9, var58, zOffset0);
+                    zSize001 = noiseField9++;
+                    noiseField[zSize001] += zOffset2 * xOffset0;
                 }
             }
         }

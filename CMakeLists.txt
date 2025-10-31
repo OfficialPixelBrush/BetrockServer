@@ -135,6 +135,11 @@ set(CMAKE_SYSTEM_NAME Linux)
 
 # If we're being extra pedantic
 target_compile_options(BetrockServer PRIVATE
+    # Make math more java-like
+    -fexcess-precision=standard
+    -fno-fast-math
+    -ffloat-store
+    # Make code more secure
     -Wall
     -Wextra
     #-Wpedantic           # Enforce strict ISO compliance
