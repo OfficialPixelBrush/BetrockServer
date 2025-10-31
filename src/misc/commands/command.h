@@ -90,3 +90,4 @@ DEFINE_COMMAND(CommandUsage,    "usage",    "Shows the current memory usage in m
 DEFINE_COMMAND(CommandSummon,   "summon",   "Summon a player entity"                                , "<player>"                                , true,  false);
 DEFINE_COMMAND(CommandPopulated,"populated","Check the population status of the current chunk"      , ""                                        , true,  false);
 DEFINE_COMMAND(CommandRegion,   "region",   "Test the region infrastructure"                        , "<action>"                                , true,  false);
+DEFINE_COMMAND(CommandSeed,     "seed",     "Get the world seed"                                    , ""                                        , true,  false);

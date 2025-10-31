@@ -12,10 +12,10 @@ void CalculateColumnLight(int8_t x, int8_t z, Chunk* c, int8_t& unobstructedLaye
         if (!b) {
             continue;
         }
-        b->lightBlock = 0x0;
+        SetBlockLight(b,0);
         // If the skylight is already 0, we can skip all further math and set skylight to 0 directly
         if (skyLight == 0x0) {
-            b->lightSky = 0x0;
+            SetSkyLight(b,0);
         }
         // First we set the blocklight
         //b->lightBlock = GetEmissiveness(b->type);
@@ -26,7 +26,7 @@ void CalculateColumnLight(int8_t x, int8_t z, Chunk* c, int8_t& unobstructedLaye
             }
             skyLight-=1;
         }
-        b->lightSky = skyLight;
+        SetSkyLight(b, skyLight);
     }
 }
 
@@ -41,7 +41,7 @@ void CalculateSpreadLight(int8_t y, Chunk* c) {
             if (!b) {
                 continue;
             }
-            uint8_t currentLight = b->lightSky;
+            uint8_t currentLight = GetSkyLight(b);
             
             if (currentLight > 1) {
                 // Spread light to adjacent blocks
@@ -53,12 +53,12 @@ void CalculateSpreadLight(int8_t y, Chunk* c) {
                         }
                         //GetTranslucency(b->type, currentLight);
                         if (!IsTransparent(b->type)) {
-                            nb->lightSky = 0x0;
+                            SetSkyLight(nb,0);
                             return;
                         }
-                        if (nb->lightSky + 2 <= currentLight) {
+                        if (GetSkyLight(nb) + 2 <= currentLight) {
                             // Light diminishes
-                            nb->lightSky = currentLight-1;
+                            SetSkyLight(nb, currentLight-1);
                         }
                     }
                 };
@@ -78,9 +78,9 @@ void PropagateLight(World* world, Int3 position, int8_t lightLevel, bool source)
     Block* b = world->GetBlock(position);
     if (!IsTransparent(b->type)) return;
 
-    if (b->lightBlock >= lightLevel && !source) return;
+    if (GetBlockLight(b) >= lightLevel && !source) return;
 
-    b->lightBlock = lightLevel; // Assign before recursion
+    SetBlockLight(b, lightLevel); // Assign before recursion
 
     PropagateLight(world, position + Int3{ 1, 0, 0 }, lightLevel - 1, false);
     PropagateLight(world, position + Int3{-1, 0, 0 }, lightLevel - 1, false);

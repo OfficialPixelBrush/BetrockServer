@@ -92,6 +92,7 @@ class World {
         // Misc
         void Save();
         int GetNumberOfChunks();
+        int GetNumberOfPopulatedChunks();
         int8_t GetHeightValue(int32_t x, int32_t z);
         int8_t GetFirstUncoveredBlock(Int3 position);
         void AddTileEntity(std::unique_ptr<TileEntity>&& te);

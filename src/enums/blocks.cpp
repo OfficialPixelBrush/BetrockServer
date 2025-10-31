@@ -374,7 +374,7 @@ uint8_t GetSignOrientation(float playerYaw) {
 
 // Figure out which block should be placed based on the passed parameters
 Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_t playerDirection, int16_t id, int16_t damage) {
-	Block b = Block{(int8_t)id,(int8_t)damage,0,0};
+	Block b = Block{(int8_t)id,(int8_t)damage,0};
 
 	// Handle items that place as blocks
     if (id == ITEM_HOE_DIAMOMD ||
@@ -636,4 +636,26 @@ bool CanStay(int8_t type, World* world, Int3 pos) {
         );
     }
     return false;
+}
+
+int8_t GetBlockLight(Block* b) {
+    if (!b) return 0;
+    return b->light >> 4;
+}
+
+void SetBlockLight(Block* b, int8_t value) {
+    if (!b) return;
+    b->light &= 0x0F;
+    b->light |= ((value & 0xF) << 4);
+}
+
+int8_t GetSkyLight(Block* b) {
+    if (!b) return 0;
+    return b->light & 0x0F;
+}
+
+void SetSkyLight(Block* b, int8_t value) {
+    if (!b) return;
+    b->light &= 0xF0;
+    b->light |= (value & 0xF);
 }

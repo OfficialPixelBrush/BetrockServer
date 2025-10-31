@@ -16,9 +16,36 @@ void HandleGracefulSignal(int) {
 	Betrock::Server::Instance().PrepareForShutdown();
 }
 
+void UsageReport() {
+	auto &server = Betrock::Server::Instance();
+	std::ofstream logFile;
+	logFile.open("usage.csv");
+	[[maybe_unused]] int pseudoTicks = 0;
+	logFile << "Ticks,Players,Chunks,Populated,Usage (MB)"<< std::endl;
+	while(server.IsAlive()) {
+		World *overworld = server.GetWorld(0);
+		std::string usage = GetUsedMemoryMBString();
+		std::cout << usage << std::endl;
+		logFile << pseudoTicks << ",";
+		logFile << server.GetConnectedClients().size() << ",";
+		if (overworld) {
+			logFile << overworld->GetNumberOfChunks() << ",";
+			logFile << overworld->GetNumberOfPopulatedChunks() << ",";
+		} else {
+			logFile << 0 << "," << 0 << ",";
+		}
+		logFile << usage << std::endl;
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED));
+		pseudoTicks++;
+		//Respond::ChatMessage(response, usage);
+	}
+	logFile.close();
+}
+
 int main() {
 	auto &server = Betrock::Server::Instance();
 	auto &logger = Betrock::Logger::Instance();
+	//std::thread usageThread(UsageReport);
 
 	signal(SIGINT, HandleGracefulSignal);  // Handle Ctrl+C
 	signal(SIGTERM, HandleGracefulSignal); // Handle termination signals
@@ -90,20 +117,7 @@ int main() {
 	int64_t lastSave = 0;
 	int64_t lastTimeUpdate = 0;
 
-	std::ofstream logFile;
-	logFile.open("usage.csv");
-
 	while (server.IsAlive()) {
-		if (debugReportUsage) {
-			std::string usage = GetUsedMemoryMBString();
-			std::cout << usage << std::endl;
-			logFile << server.GetUpTime() << ",";
-			logFile << server.GetConnectedClients().size() << ",";
-			logFile << overworld->GetNumberOfChunks() << ",";
-			logFile << usage << std::endl;
-			Respond::ChatMessage(response, usage);
-		}
-
 		// Server is alive
 		server.AddUpTime(1);
 
@@ -127,7 +141,6 @@ int main() {
 		// Sleep for one tick
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED));
 	}
-	logFile.close();
 
 	server.Stop();
 	join_thread.join();

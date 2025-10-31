@@ -9,6 +9,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
+# This could be funny to do in the future :p
+#set(CMAKE_C_FLAGS "-m32 -march=pentium -static")
+#set(CMAKE_CXX_FLAGS "-m32 -march=pentium -static")
+#set(CMAKE_EXE_LINKER_FLAGS "-static")
+
 find_package(Lua REQUIRED)
 
 file(COPY "${CMAKE_SOURCE_DIR}/src/scripts/"

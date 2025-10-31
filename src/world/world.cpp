@@ -7,6 +7,17 @@ int World::GetNumberOfChunks() {
     return chunks.size();
 }
 
+int World::GetNumberOfPopulatedChunks() {
+    int populatedChunks = 0;
+    for (const auto& [key, chunkPtr] : chunks) {
+        if (chunkPtr && chunkPtr->state == ChunkState::Populated) {
+            populatedChunks++;
+        }
+    }
+    return populatedChunks;
+}
+
+
 int8_t World::GetHeightValue(int32_t x, int32_t z) {
     Chunk* c = GetChunk(x >> 4, z >> 4);
     if (!c) return 0;
@@ -233,9 +244,9 @@ void World::PlaceBlockUpdate(Int3 position, int8_t type, int8_t meta, bool sendU
     }
     b->type = type;
     b->meta = meta;
-    b->lightBlock = GetEmissiveness(b->type);
+    SetBlockLight(b, GetEmissiveness(b->type));
     // This needs to be recalculated
-    b->lightSky = (IsTranslucent(b->type) || IsTransparent(b->type))*0xF;
+    ::SetSkyLight(b, (IsTranslucent(b->type) || IsTransparent(b->type))*0xF);
     /*
     if (IsEmissive(b->type)) {
         PropagateLight(this,position,b->lightBlock,true);
@@ -263,7 +274,7 @@ void World::SpreadLight(bool skyLight, Int3 pos, int newLightLevel) {
 
 // This is just called "a" in the Source Code
 void World::AddToLightQueue(bool skyLight, Int3 posA, Int3 posB) {
-    std::unique_lock<std::shared_mutex> lock(stackMutex);  // Ensure thread safety
+    std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);  // Ensure thread safety
     this->lightingToUpdate.emplace(LightUpdate(skyLight,posA,posB));
 }
 
@@ -356,7 +367,7 @@ int8_t World::GetSkyLight(Int3 position) {
     // Get Block Position within Chunk
     Block* b = GetBlock(position);
     if (b) {
-        return b->lightSky;
+        return ::GetSkyLight(b);
     }
     return 0;
 }
@@ -366,7 +377,7 @@ void World::SetSkyLight(Int3 position, int8_t level) {
     // Get Block Position within Chunk
     Block* b = GetBlock(position);
     if (b) {
-        b->lightSky = level;
+        ::SetSkyLight(b, level);
     }
 }
 
@@ -419,7 +430,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
                 Block* b1 = c->GetBlock(cX,cY*2,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
                 if (!b1 || !b2) continue;
-                bytes[index] = (b2->lightBlock << 4 | b1->lightBlock);
+                bytes[index] = (GetBlockLight(b2) << 4 | GetBlockLight(b1));
                 index++;
             }
         }
@@ -432,7 +443,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
                 Block* b1 = c->GetBlock(cX,cY*2,cZ);
                 Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
                 if (!b1 || !b2) continue;
-                bytes[index] = (b2->lightSky << 4 | b1->lightSky);
+                bytes[index] = (::GetSkyLight(b2) << 4 | ::GetSkyLight(b1));
                 index++;
             }
         }
@@ -543,15 +554,15 @@ Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
             i >= blockDataSize+nibbleDataSize &&
             i <  blockDataSize+(nibbleDataSize*2))
         {
-            c->blocks[(i%nibbleDataSize)*2  ].lightBlock = (chunkData[i]     )&0xF;
-            c->blocks[(i%nibbleDataSize)*2+1].lightBlock = (chunkData[i] >> 4)&0xF;
+            SetBlockLight(&c->blocks[(i%nibbleDataSize)*2  ], (chunkData[i]     )&0xF);
+            SetBlockLight(&c->blocks[(i%nibbleDataSize)*2+1], (chunkData[i] >> 4)&0xF);
         } else if (
             // Sky Light
             i >= blockDataSize+(nibbleDataSize*2) &&
             i <  blockDataSize+(nibbleDataSize*3))
         {
-            c->blocks[(i%nibbleDataSize)*2  ].lightSky = (chunkData[i]     )&0xF;
-            c->blocks[(i%nibbleDataSize)*2+1].lightSky = (chunkData[i] >> 4)&0xF;
+            ::SetSkyLight(&c->blocks[(i%nibbleDataSize)*2  ], (chunkData[i]     )&0xF);
+            ::SetSkyLight(&c->blocks[(i%nibbleDataSize)*2+1], (chunkData[i] >> 4)&0xF);
         }
     }
     c->state = ChunkState::Populated;

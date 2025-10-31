@@ -36,8 +36,9 @@ struct Item {
 struct Block {
     int8_t type = 0;
     int8_t meta = 0;
-    int8_t lightBlock = 0;
-    int8_t lightSky = 0;
+    // Blocklight 0xF0
+    // Skylight   0x0F
+    int8_t light = 0;
 
     friend std::ostream& operator<<(std::ostream& os, const Block& b) {
         os << "(" << int(b.type) << ":" << int(b.meta) << ")";
