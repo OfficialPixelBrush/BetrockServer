@@ -211,7 +211,7 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
 }
 
 void World::PlaceSponge(Int3 position) {
-    PlaceBlock(position, BLOCK_SPONGE);
+    PlaceBlockUpdate(position, BLOCK_SPONGE);
     for (int x = -2; x <= 2; x++) {
         for (int z = -2; z <= 2; z++) {
             for (int y = -2; y <= 2; y++) {
@@ -221,7 +221,7 @@ void World::PlaceSponge(Int3 position) {
                     b->type == BLOCK_WATER_STILL ||
                     b->type == BLOCK_WATER_FLOWING
                 ) {
-                    PlaceBlock(position + Int3{x,y,z}, BLOCK_AIR);
+                    PlaceBlockUpdate(position + Int3{x,y,z}, BLOCK_AIR);
                 }
             }
         }
