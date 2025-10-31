@@ -245,10 +245,20 @@ void World::PlaceBlockUpdate(Int3 position, int8_t type, int8_t meta, bool sendU
 }
 
 // This is just called "a" in the Source Code
-void World::SpreadLight(bool skyLight, Int3 pos, int limit) {
-    if(this->BlockExists(pos) && this->GetLight(skyLight, pos) != limit) {
-        this->AddToLightQueue(skyLight, pos, pos);
+void World::SpreadLight(bool skyLight, Int3 pos, int newLightLevel) {
+    if (!BlockExists(pos)) return;
+
+    int oldLevel = GetLight(skyLight, pos);
+    if (newLightLevel <= oldLevel) return; // no improvement, skip
+
+    // Update block light
+    if (Chunk* c = GetChunk(pos.x >> 4, pos.z >> 4)) {
+        c->SetLight(skyLight, {pos.x & 15, pos.y, pos.z & 15}, newLightLevel);
     }
+
+    // Enqueue for further propagation
+    std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
+    lightingToUpdate.push(LightUpdate(skyLight, pos, Int3{}));
 }
 
 // This is just called "a" in the Source Code
@@ -258,116 +268,49 @@ void World::AddToLightQueue(bool skyLight, Int3 posA, Int3 posB) {
 }
 
 void World::UpdateLightingInfdev() {
-    while(true) {
-        LightUpdate currentUpdate;
-        {
-            std::unique_lock<std::shared_mutex> lock(stackMutex);
-            if (lightingToUpdate.empty()) break;
-            currentUpdate = lightingToUpdate.top();
+    std::queue<LightUpdate> queue;
+
+    {   // transfer updates to local queue
+        std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
+        while (!lightingToUpdate.empty()) {
+            queue.push(lightingToUpdate.front());
             lightingToUpdate.pop();
         }
+    }
 
-        for(int blockX = currentUpdate.posA.x; blockX <= currentUpdate.posB.x; ++blockX) {
-            for(int blockZ = currentUpdate.posA.z; blockZ <= currentUpdate.posB.z; ++blockZ) {
-                if(this->BlockExists(Int3{blockX, 0, blockZ})) {
-                    for(int blockY = currentUpdate.posA.y; blockY <= currentUpdate.posB.y; ++blockY) {
-                        if(blockY >= 0 && blockY < CHUNK_HEIGHT) {
-                            int skyLightLevel = this->GetLight(currentUpdate.skyLight, Int3{blockX, blockY, blockZ});
-                            int blockType = this->GetBlockType(Int3{blockX, blockY, blockZ});
-                            int translucencyLevel = GetTranslucency(blockType);
-                            if(translucencyLevel == 0) translucencyLevel = 1;
+    while (!queue.empty()) {
+        LightUpdate current = queue.front();
+        queue.pop();
 
-                            int lightLevel = 0;
-                            int inChunkBlockX;
-                            int inChunkBlockZ;
-                            if(!currentUpdate.skyLight) {
-                                lightLevel = GetEmissiveness(blockType);
-                            } else {
-                                bool updateSkylight;
-                                // Check if block is within world bounds
-                                if(blockX >= -32000000 && blockZ >= -32000000 && blockX < 32000000 && blockZ <= 32000000) {
-                                    // Block is in void
-                                    if(blockY < 0) {
-                                        updateSkylight = false;
-                                    // Block is above build limit
-                                    } else if(blockY >= CHUNK_HEIGHT) {
-                                        updateSkylight = true;
-                                    // Chunk doesn't exist
-                                    } else if(!this->ChunkExists(blockX >> 4, blockZ >> 4)) {
-                                        updateSkylight = false;
-                                    } else {
-                                        Chunk* currentChunk = this->GetChunk(blockX >> 4, blockZ >> 4);
-                                        inChunkBlockX = blockX & 15;
-                                        inChunkBlockZ = blockZ & 15;
-                                        updateSkylight = currentChunk->CanBlockSeeTheSky(inChunkBlockX, blockY, inChunkBlockZ);
-                                    }
-                                } else {
-                                    updateSkylight = false;
-                                }
+        Int3 pos = current.posA;
+        if (!BlockExists(pos)) continue;
 
-                                if(updateSkylight) lightLevel = 15;
-                            }
+        int currentLevel = GetLight(current.skyLight, pos);
+        int translucency = std::max(uint8_t(1), GetTranslucency(GetBlockType(pos)));
 
-                            int var12;
-                            int var18;
-                            // Opaque Block
-                            if(translucencyLevel >= 15 && lightLevel == 0) {
-                                // Probably not actually the block type, but just reused by java
-                                blockType = 0;
-                            } else {
-                                blockType = this->GetLight(currentUpdate.skyLight, Int3{blockX - 1, blockY, blockZ});
-                                int var10 = this->GetLight(currentUpdate.skyLight, Int3{blockX + 1, blockY, blockZ});
-                                inChunkBlockX = this->GetLight(currentUpdate.skyLight, Int3{blockX, blockY - 1, blockZ});
-                                var12 = this->GetLight(currentUpdate.skyLight, Int3{blockX, blockY + 1, blockZ});
-                                inChunkBlockZ = this->GetLight(currentUpdate.skyLight, Int3{blockX, blockY, blockZ - 1});
-                                var18 = this->GetLight(currentUpdate.skyLight, Int3{blockX, blockY, blockZ + 1});
-                                blockType = blockType;
-                                if(var10 > blockType) blockType = var10;
-                                if(inChunkBlockX > blockType) blockType = inChunkBlockX;
-                                if(var12 > blockType) blockType = var12;
-                                if(inChunkBlockZ > blockType) blockType = inChunkBlockZ;
-                                if(var18 > blockType) blockType = var18;
+        // Spread to 6 neighbors
+        static const Int3 dirs[6] = {
+            { 1, 0, 0}, {-1, 0, 0},
+            { 0, 1, 0}, { 0,-1, 0},
+            { 0, 0, 1}, { 0, 0,-1}
+        };
 
-                                blockType -= translucencyLevel;
-                                if(blockType < 0) blockType = 0;
-                                if(lightLevel > blockType) blockType = lightLevel;
-                            }
+        for (const auto& d : dirs) {
+            Int3 n = { pos.x + d.x, pos.y + d.y, pos.z + d.z };
+            if (!BlockExists(n)) continue;
 
-                            if(skyLightLevel != blockType) {
-                                var18 = blockZ;
-                                inChunkBlockZ = blockY;
-                                var12 = blockX;
-                                bool var17 = currentUpdate.skyLight;
-                                //World var16 = var2;
-                                // Check if in world bounds
-                                if(blockX >= -32000000 && blockZ >= -32000000 && blockX < 32000000 && blockZ <= 32000000 && blockY >= 0 && blockY < 128 && this->ChunkExists(blockX >> 4, blockZ >> 4)) {
-                                    Chunk* c = this->GetChunk(blockX >> 4, blockZ >> 4);
-                                    if (!c) continue;
-                                    c->SetLight(var17, Int3{blockX & 15, blockY, blockZ & 15}, blockType);
+            int neighborLevel = GetLight(current.skyLight, n);
+            int newLevel = std::max(0, currentLevel - translucency);
 
-                                    //for(skyLightLevel = 0; skyLightLevel < var16.worldAccesses.size(); ++skyLightLevel) {
-                                    //    ((IWorldAccess)var16.worldAccesses.get(skyLightLevel)).markBlockAndNeighborsNeedsUpdate(var12, inChunkBlockZ, var18);
-                                    //}
-                                }
-
-                                --blockType;
-                                if(blockType < 0) blockType = 0;
-
-                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX - 1, blockY, blockZ}, blockType);
-                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX + 1, blockY, blockZ}, blockType);
-                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX, blockY - 1, blockZ}, blockType);
-                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX, blockY + 1, blockZ}, blockType);
-                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX, blockY, blockZ - 1}, blockType);
-                                this->SpreadLight(currentUpdate.skyLight, Int3{blockX, blockY, blockZ + 1}, blockType);
-                            }
-                        }
-                    }
+            if (newLevel > neighborLevel) {
+                if (Chunk* c = GetChunk(n.x >> 4, n.z >> 4)) {
+                    c->SetLight(current.skyLight, {n.x & 15, n.y, n.z & 15}, newLevel);
+                    queue.push(LightUpdate(current.skyLight, n, Int3{}));
                 }
             }
         }
     }
 }
-
 
 // Remove the block and turn it into air
 Block* World::BreakBlock(Int3 position, bool sendUpdate) {

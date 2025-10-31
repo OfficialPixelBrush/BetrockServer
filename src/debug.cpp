@@ -13,5 +13,6 @@ bool debugPlayerStatus = false;
 
 bool debugDisableSave = false;
 bool debugDisablePrintChunk = false;
+bool debugReportUsage = false;
 
 bool debugPunchBlockInfo = false;

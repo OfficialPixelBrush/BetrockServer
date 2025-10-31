@@ -490,9 +490,7 @@ std::string CommandLoaded::Execute([[maybe_unused]] std::vector<std::string> com
 std::string CommandUsage::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
-	std::stringstream ss;
-	ss << std::fixed << std::setprecision(2) << GetUsedMemoryMB();
-	return ss.str() + "MB";
+	return GetUsedMemoryMBString() + "MB";
 }
 
 // Summon a player entity

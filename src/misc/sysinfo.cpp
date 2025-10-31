@@ -40,3 +40,9 @@ double GetUsedMemoryMB() { //Note: this value is in KB!
     fclose(file);
     return ((double)result/1024.0);
 }
+
+std::string GetUsedMemoryMBString() {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2) << GetUsedMemoryMB();
+    return ss.str();
+}

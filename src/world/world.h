@@ -9,7 +9,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <random>
-#include <stack>
+#include <queue>
 
 #include "helper.h"
 #include "blocks.h"
@@ -38,13 +38,13 @@ class World {
         std::mutex regionMutex;
 
         std::unordered_map<long, std::unique_ptr<Chunk>> chunks;
-        std::stack<LightUpdate>lightingToUpdate;
+        std::queue<LightUpdate>lightingToUpdate;
         std::filesystem::path dirPath;
         void RemoveChunk(int32_t x, int32_t z);
         std::random_device dev;
         std::mt19937 rng;
         bool RandomTick(Block* b, Int3& pos);
-        mutable std::shared_mutex stackMutex;
+        mutable std::shared_mutex lightUpdateMutex;
         mutable std::shared_mutex chunkMutex;
     public:
         int64_t seed;

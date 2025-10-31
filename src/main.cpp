@@ -4,6 +4,7 @@
 #include "server.h"
 #include "biomes.h"
 #include "gamerules.h"
+#include "sysinfo.h"
 
 // The Save interval in ticks
 // This matches what Minecraft does
@@ -89,7 +90,20 @@ int main() {
 	int64_t lastSave = 0;
 	int64_t lastTimeUpdate = 0;
 
+	std::ofstream logFile;
+	logFile.open("usage.csv");
+
 	while (server.IsAlive()) {
+		if (debugReportUsage) {
+			std::string usage = GetUsedMemoryMBString();
+			std::cout << usage << std::endl;
+			logFile << server.GetUpTime() << ",";
+			logFile << server.GetConnectedClients().size() << ",";
+			logFile << overworld->GetNumberOfChunks() << ",";
+			logFile << usage << std::endl;
+			Respond::ChatMessage(response, usage);
+		}
+
 		// Server is alive
 		server.AddUpTime(1);
 
@@ -113,6 +127,7 @@ int main() {
 		// Sleep for one tick
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED));
 	}
+	logFile.close();
 
 	server.Stop();
 	join_thread.join();
