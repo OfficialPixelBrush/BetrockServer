@@ -81,6 +81,7 @@ int main() {
 
 	// Generate spawn area
 	short radius = 196;
+	auto startTime = std::chrono::steady_clock::now();
 	auto lastTime = std::chrono::steady_clock::now();
 	int worldIndex = 0;
 
@@ -117,6 +118,13 @@ int main() {
 
 	//auto spawnPoint = Int3{0,200,0};
 	//spawnPoint.y += STANCE_OFFSET;
+
+	logger.Info("Done (" + std::to_string(
+		std::chrono::duration_cast<std::chrono::milliseconds>(
+			std::chrono::steady_clock::now() - startTime
+		).count()
+	) + "ms)!");
+
 
 	// Create threads for sending and receiving data
 	std::thread join_thread(&Betrock::Server::ServerJoin);
