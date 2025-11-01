@@ -21,9 +21,10 @@ void UsageReport() {
 	std::ofstream logFile;
 	logFile.open("usage.csv");
 	[[maybe_unused]] int pseudoTicks = 0;
-	logFile << "Ticks,Players,Chunks,Populated,Usage (MB)"<< std::endl;
+	logFile << "Ticks,Players,Chunks,Populated,Queued,Busy,Usage (MB)"<< std::endl;
 	while(server.IsAlive()) {
 		World *overworld = server.GetWorld(0);
+		WorldManager *wm = server.GetWorldManager(0);
 		std::string usage = GetUsedMemoryMBString();
 		std::cout << usage << std::endl;
 		logFile << pseudoTicks << ",";
@@ -31,6 +32,12 @@ void UsageReport() {
 		if (overworld) {
 			logFile << overworld->GetNumberOfChunks() << ",";
 			logFile << overworld->GetNumberOfPopulatedChunks() << ",";
+		} else {
+			logFile << 0 << "," << 0 << ",";
+		}
+		if (wm) {
+			logFile << wm->GetQueueSize() << ",";
+			logFile << wm->GetBusyWorkers() << ",";
 		} else {
 			logFile << 0 << "," << 0 << ",";
 		}
@@ -45,7 +52,7 @@ void UsageReport() {
 int main() {
 	auto &server = Betrock::Server::Instance();
 	auto &logger = Betrock::Logger::Instance();
-	//std::thread usageThread(UsageReport);
+	//7std::thread usageThread(UsageReport);
 
 	signal(SIGINT, HandleGracefulSignal);  // Handle Ctrl+C
 	signal(SIGTERM, HandleGracefulSignal); // Handle termination signals
@@ -145,5 +152,6 @@ int main() {
 
 	server.Stop();
 	join_thread.join();
+	//usageThread.join();
 	return 0;
 }

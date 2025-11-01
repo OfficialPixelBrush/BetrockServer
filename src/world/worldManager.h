@@ -17,10 +17,13 @@
 
 class Client;  // Forward declaration
 
+#define MAX_GENERATION_ATTEMPTS 25
+
 class QueueChunk {
     public:
         Int3 position;
         std::vector<std::weak_ptr<Client>> requestedClients;
+        int generationAttempt = 0;
         QueueChunk() : position(Int3()), requestedClients() {}
         QueueChunk(Int3 position, const std::shared_ptr<Client>& requestClient = nullptr);
         void AddClient(const std::shared_ptr<Client>& requestClient);
@@ -36,6 +39,7 @@ class WorldManager {
         std::condition_variable queueCV;
         std::vector<std::thread> workers;
         const int workerCount = std::thread::hardware_concurrency();  // Use number of CPU cores
+        std::atomic<int> busyWorkers = 0;
         void WorkerThread();
         Chunk* GetChunk(int32_t cX, int32_t cZ, Generator* generator);
     public:
@@ -49,12 +53,13 @@ class WorldManager {
         void SetName(std::string name);
         std::string GetName();
         bool IsQueueEmpty();
-        int QueueSize();
         void SaveNbt();
         void LoadNbt();
         void FreeAndSave();
         Int3 FindSpawnableBlock(Int3& position);
         bool CanCoordinateBeSpawn(Int3& position);
+        int32_t GetQueueSize();
+        int32_t GetBusyWorkers();
 };
 
 std::string ConvertIndexIntoExtra(int8_t worldId);

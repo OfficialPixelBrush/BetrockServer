@@ -40,11 +40,6 @@ bool WorldManager::IsQueueEmpty() {
     return chunkQueue.empty();
 }
 
-// Returns how many entries are in the Queue
-int WorldManager::QueueSize() {
-    return chunkQueue.size();
-}
-
 // Sets the seed of both the WorldManager and the world
 void WorldManager::SetSeed(int64_t seed) {
     this->seed = seed;
@@ -54,6 +49,16 @@ void WorldManager::SetSeed(int64_t seed) {
 // Gets the current Seed
 int64_t WorldManager::GetSeed() {
     return this->seed;
+}
+
+
+// Returns how many entries are in the Queue
+int32_t WorldManager::GetQueueSize() {
+    return chunkQueue.size();
+}
+
+int32_t WorldManager::GetBusyWorkers() {
+    return busyWorkers.load(std::memory_order_relaxed);
 }
 
 // This is run when the WorldManager is started.
@@ -125,18 +130,25 @@ void WorldManager::WorkerThread() {
             chunkPositions.erase(GetChunkHash(cq.position.x, cq.position.z));
         }
 
+        busyWorkers.fetch_add(1, std::memory_order_relaxed);
 
         Chunk* c = GetChunk(cq.position.x, cq.position.z, generator.get());
 
         if (!c) {
+            busyWorkers.fetch_sub(1, std::memory_order_relaxed);
             continue; // Something went wrong; skip this one
         }
 
         if (c->state != ChunkState::Populated) {
             std::scoped_lock lock(queueMutex);
-            chunkQueue.push_back(cq);
+            cq.generationAttempt++;
+            // Only put a chunk back in if its not been retried too often
+            if (cq.generationAttempt < MAX_GENERATION_ATTEMPTS) {
+                chunkQueue.push_back(cq);
+            }
             chunkPositions.insert(GetChunkHash(cq.position.x, cq.position.z));
             queueCV.notify_one();
+            busyWorkers.fetch_sub(1, std::memory_order_relaxed);
             continue;
         }
 
@@ -148,7 +160,8 @@ void WorldManager::WorkerThread() {
                 }
             }
         }
-        //std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Sleep for 1/10th a second
+        busyWorkers.fetch_sub(1, std::memory_order_relaxed);
+        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Sleep for 1/10th a second
     }
 }
 
