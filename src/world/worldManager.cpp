@@ -175,6 +175,7 @@ Int3 WorldManager::FindSpawnableBlock(Int3& position) {
         position.x += jr.nextInt(64) - jr.nextInt(64);
         position.z += jr.nextInt(64) - jr.nextInt(64);
     }
+    position.y = CHUNK_HEIGHT;
     world.GetFirstUncoveredBlock(position);
 
     return position;
