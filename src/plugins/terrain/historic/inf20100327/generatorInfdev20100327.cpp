@@ -170,10 +170,10 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
 
 bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* world, JavaRandom* rand, int var3, int var4, int macroX) {
     float macroZ = rand->nextFloat() * (float)M_PI;
-    double var7 = (double)((float)(var3 + 8) + std::sin(macroZ) * 2.0F);
-    double blockY = (double)((float)(var3 + 8) - std::sin(macroZ) * 2.0F);
-    double world1 = (double)((float)(macroX + 8) + std::cos(macroZ) * 2.0F);
-    double world3 = (double)((float)(macroX + 8) - std::cos(macroZ) * 2.0F);
+    double var7 = (double)((float)(var3 + 8) + MathHelper::sin(macroZ) * 2.0F);
+    double blockY = (double)((float)(var3 + 8) - MathHelper::sin(macroZ) * 2.0F);
+    double world1 = (double)((float)(macroX + 8) + MathHelper::cos(macroZ) * 2.0F);
+    double world3 = (double)((float)(macroX + 8) - MathHelper::cos(macroZ) * 2.0F);
     double world5 = (double)(var4 + rand->nextInt(3) + 2);
     double world7 = (double)(var4 + rand->nextInt(3) + 2);
 
@@ -182,8 +182,8 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* worl
         double rand2 = world5 + (world7 - world5) * (double)var3 / 16.0D;
         double rand4 = world1 + (world3 - world1) * (double)var3 / 16.0D;
         double rand6 = rand->nextDouble();
-        double rand8 = (double)(std::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
-        double var30 = (double)(std::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
+        double rand8 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
+        double var30 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
 
         for(var4 = (int)(rand0 - rand8 / 2.0D); var4 <= (int)(rand0 + rand8 / 2.0D); ++var4) {
             for(macroX = (int)(rand2 - var30 / 2.0D); macroX <= (int)(rand2 + var30 / 2.0D); ++macroX) {

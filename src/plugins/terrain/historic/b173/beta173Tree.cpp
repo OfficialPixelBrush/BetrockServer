@@ -157,8 +157,8 @@ void Beta173BigTree::GenerateBranchPositions() {
                 for(double var9 = 0.5D; var7 < var1; ++var7) {
                     double var11 = this->branchLength * (double)var8 * ((double)this->rand->nextFloat() + 0.328D);
                     double var13 = (double)this->rand->nextFloat() * 2.0D * 3.14159D;
-                    int var15 = std::floor(var11 * std::sin(var13) + (double)this->basePos.x + var9);
-                    int var16 = std::floor(var11 * std::cos(var13) + (double)this->basePos.z + var9);
+                    int var15 = MathHelper::floor_double(var11 * double(MathHelper::sin(var13)) + (double)this->basePos.x + var9);
+                    int var16 = MathHelper::floor_double(var11 * double(MathHelper::cos(var13)) + (double)this->basePos.z + var9);
                     Int3 var17 = Int3{var15, var3, var16};
                     Int3 var18 = Int3{var15, var3 + this->trunkThickness, var16};
                     if(this->checkIfPathClear(var17, var18) == -1) {
@@ -282,9 +282,9 @@ void Beta173BigTree::drawBlockLine(Int3 var1, Int3 var2, int blockType) {
         int var15 = 0;
 
         for(int var16 = var4[var6] + var9; var15 != var16; var15 += var9) {
-            var14[var6] = std::floor((double)(var1[var6] + var15) + 0.5D);
-            var14[var7] = std::floor((double)var1[var7] + (double)var15 * var10 + 0.5D);
-            var14[var8] = std::floor((double)var1[var8] + (double)var15 * var12 + 0.5D);
+            var14[var6] = MathHelper::floor_double((double)(var1[var6] + var15) + 0.5D);
+            var14[var7] = MathHelper::floor_double((double)var1[var7] + (double)var15 * var10 + 0.5D);
+            var14[var8] = MathHelper::floor_double((double)var1[var8] + (double)var15 * var12 + 0.5D);
             this->world->PlaceBlock(var14, blockType);
         }
 
@@ -378,8 +378,8 @@ int Beta173BigTree::checkIfPathClear(Int3 var1, Int3 var2) {
         int var15;
         for(var15 = var3[var5] + var8; var14 != var15; var14 += var8) {
             var13[var5] = var1[var5] + var14;
-            var13[var6] = std::floor((double)var1[var6] + (double)var14 * var9);
-            var13[var7] = std::floor((double)var1[var7] + (double)var14 * var11);
+            var13[var6] = MathHelper::floor_double((double)var1[var6] + (double)var14 * var9);
+            var13[var7] = MathHelper::floor_double((double)var1[var7] + (double)var14 * var11);
             int var16 = this->world->GetBlockType(var13);
             if(var16 != 0 && var16 != 18) {
                 break;

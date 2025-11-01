@@ -84,13 +84,13 @@ void Beta173Caver::CarveCave(
     int var25 = rand2->nextInt(tunnelLength / 2) + tunnelLength / 4;
 
     for(bool var26 = rand2->nextInt(6) == 0; tunnelStep < tunnelLength; ++tunnelStep) {
-        double var27 = 1.5D + (double)(std::sin((float)tunnelStep * (float)M_PI / (float)tunnelLength) * tunnelRadius * 1.0F);
+        double var27 = 1.5D + (double)(MathHelper::sin((float)tunnelStep * (float)M_PI / (float)tunnelLength) * tunnelRadius * 1.0F);
         double var29 = var27 * verticalScale;
-        float var31 = std::cos(carvePitch);
-        float var32 = std::sin(carvePitch);
-        xOffset += (double)(std::cos(carveYaw) * var31);
+        float var31 = MathHelper::cos(carvePitch);
+        float var32 = MathHelper::sin(carvePitch);
+        xOffset += (double)(MathHelper::cos(carveYaw) * var31);
         yOffset += (double)var32;
-        zOffset += (double)(std::sin(carveYaw) * var31);
+        zOffset += (double)(MathHelper::sin(carveYaw) * var31);
         if(var26) {
             carvePitch *= 0.92F;
         } else {
@@ -119,12 +119,12 @@ void Beta173Caver::CarveCave(
             }
 
             if(xOffset >= chunkCenterX - 16.0D - var27 * 2.0D && zOffset >= chunkCenterZ - 16.0D - var27 * 2.0D && xOffset <= chunkCenterX + 16.0D + var27 * 2.0D && zOffset <= chunkCenterZ + 16.0D + var27 * 2.0D) {
-                int xMin = floor(xOffset - var27) - cX * 16 - 1;
-                int xMax = floor(xOffset + var27) - cX * 16 + 1;
-                int yMin = floor(yOffset - var29) - 1;
-                int yMax = floor(yOffset + var29) + 1;
-                int zMin = floor(zOffset - var27) - cZ * 16 - 1;
-                int zMax = floor(zOffset + var27) - cZ * 16 + 1;
+                int xMin = MathHelper::floor_double(xOffset - var27) - cX * 16 - 1;
+                int xMax = MathHelper::floor_double(xOffset + var27) - cX * 16 + 1;
+                int yMin = MathHelper::floor_double(yOffset - var29) - 1;
+                int yMax = MathHelper::floor_double(yOffset + var29) + 1;
+                int zMin = MathHelper::floor_double(zOffset - var27) - cZ * 16 - 1;
+                int zMax = MathHelper::floor_double(zOffset + var27) - cZ * 16 + 1;
                 // Limiting to chunk boundaries
                 if(xMin < 0) xMin = 0;
                 if(xMax > 16) xMax = 16;

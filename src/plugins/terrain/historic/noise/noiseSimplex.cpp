@@ -19,70 +19,75 @@ NoiseSimplex::NoiseSimplex(JavaRandom* rand) {
     }
 }
 
-void NoiseSimplex::GenerateNoise(std::vector<double>& var1, double var2, double var4, int var6, int var7, double var8, double var10, double var12) {
-    int var14 = 0;
+void NoiseSimplex::GenerateNoise(
+    std::vector<double>& noiseField,
+    double xOffset, double yOffset,
+    int width, int height,
+    double xScale, double yScale,
+    double amplitude
+) {
+    int index = 0;
 
-    for(int var15 = 0; var15 < var6; ++var15) {
-        double var16 = (var2 + (double)var15) * var8 + this->xCoord;
+    for(int xI = 0; xI < width; ++xI) {
+        double xPos = (xOffset + (double)xI) * xScale + this->xCoord;
 
-        for(int var18 = 0; var18 < var7; ++var18) {
-            double var19 = (var4 + (double)var18) * var10 + this->yCoord;
-            double var27 = (var16 + var19) * field_4315_f;
-            int var29 = wrap(var16 + var27);
-            int var30 = wrap(var19 + var27);
-            double var31 = (double)(var29 + var30) * field_4314_g;
-            double var33 = (double)var29 - var31;
-            double var35 = (double)var30 - var31;
-            double var37 = var16 - var33;
-            double var39 = var19 - var35;
-            uint8_t var41;
-            uint8_t var42;
-            if(var37 > var39) {
-                var41 = 1;
-                var42 = 0;
+        for(int yI = 0; yI < height; ++yI) {
+            double yPos = (yOffset + (double)yI) * yScale + this->yCoord;
+            double skew = (xPos + yPos) * skewing;
+            int x0 = wrap(xPos + skew);
+            int y0 = wrap(yPos + skew);
+            double unskewed = (double)(x0 + y0) * unskewing;
+            double x0a = (double)x0 - unskewed;
+            double y0a = (double)y0 - unskewed;
+            double x0b = xPos - x0a;
+            double y0b = yPos - y0a;
+            int8_t i;
+            int8_t j;
+            if(x0b > y0b) {
+                i = 1;
+                j = 0;
             } else {
-                var41 = 0;
-                var42 = 1;
+                i = 0;
+                j = 1;
             }
 
-            double var43 = var37 - (double)var41 + field_4314_g;
-            double var45 = var39 - (double)var42 + field_4314_g;
-            double var47 = var37 - 1.0D + 2.0D * field_4314_g;
-            double var49 = var39 - 1.0D + 2.0D * field_4314_g;
-            int var51 = var29 & 255;
-            int var52 = var30 & 255;
-            int var53 = this->permutations[var51 + this->permutations[var52]] % 12;
-            int var54 = this->permutations[var51 + var41 + this->permutations[var52 + var42]] % 12;
-            int var55 = this->permutations[var51 + 1 + this->permutations[var52 + 1]] % 12;
-            double var56 = 0.5D - var37 * var37 - var39 * var39;
-            double var21;
-            if(var56 < 0.0D) {
-                var21 = 0.0D;
+            double x0c = x0b - (double)i + unskewing;
+            double y0c = y0b - (double)j + unskewing;
+            double x1c = x0b - 1.0D + 2.0D * unskewing;
+            double y1c = y0b - 1.0D + 2.0D * unskewing;
+            int xInt = x0 & 255;
+            int yInt = y0 & 255;
+            int grad0 = this->permutations[xInt + this->permutations[yInt]] % 12;
+            int grad1 = this->permutations[xInt + i + this->permutations[yInt + j]] % 12;
+            int grad2 = this->permutations[xInt + 1 + this->permutations[yInt + 1]] % 12;
+            double term0 = 0.5D - x0b * x0b - y0b * y0b;
+            double contrib0;
+            if(term0 < 0.0D) {
+                contrib0 = 0.0D;
             } else {
-                var56 *= var56;
-                var21 = var56 * var56 * func_4114_a(gradients[var53], var37, var39);
+                term0 *= term0;
+                contrib0 = term0 * term0 * dotProd(gradients[grad0], x0b, y0b);
             }
 
-            double var58 = 0.5D - var43 * var43 - var45 * var45;
-            double var23;
-            if(var58 < 0.0D) {
-                var23 = 0.0D;
+            double term1 = 0.5D - x0c * x0c - y0c * y0c;
+            double contrib1;
+            if(term1 < 0.0D) {
+                contrib1 = 0.0D;
             } else {
-                var58 *= var58;
-                var23 = var58 * var58 * func_4114_a(gradients[var54], var43, var45);
+                term1 *= term1;
+                contrib1 = term1 * term1 * dotProd(gradients[grad1], x0c, y0c);
             }
 
-            double var60 = 0.5D - var47 * var47 - var49 * var49;
-            double var25;
-            if(var60 < 0.0D) {
-                var25 = 0.0D;
+            double term2 = 0.5D - x1c * x1c - y1c * y1c;
+            double contrib2;
+            if(term2 < 0.0D) {
+                contrib2 = 0.0D;
             } else {
-                var60 *= var60;
-                var25 = var60 * var60 * func_4114_a(gradients[var55], var47, var49);
+                term2 *= term2;
+                contrib2 = term2 * term2 * dotProd(gradients[grad2], x1c, y1c);
             }
 
-            int var10001 = var14++;
-            var1[var10001] += 70.0D * (var21 + var23 + var25) * var12;
+            noiseField[index++] += 70.0D * (contrib0 + contrib1 + contrib2) * amplitude;
         }
     }
 }
