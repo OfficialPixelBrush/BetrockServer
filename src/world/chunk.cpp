@@ -125,10 +125,18 @@ void Chunk::CheckSkylightNeighborHeight(int x, int z, int height) {
     this->modified = true;
 }
 
-Block* Chunk::GetBlock(Int3 pos) {
+Block Chunk::GetBlock(Int3 pos) {
+    int blockIndex = pos.y + pos.z*CHUNK_HEIGHT + (pos.x*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
+    int8_t meta = 0;
+    blockIndex % 2 == 0 ? meta = blockMeta[blockIndex/2] : meta = blockMeta[blockIndex/2+1];
+    return Block {
+        blockType[blockIndex],
+        meta,
+        blockLight[blockIndex],
+    }
     return &blocks[(int32_t)(pos.y + pos.z*CHUNK_HEIGHT + (pos.x*CHUNK_HEIGHT*CHUNK_WIDTH_Z))];
 }
-Block* Chunk::GetBlock(int32_t x, int8_t y, int32_t z) {
+Block Chunk::GetBlock(int32_t x, int8_t y, int32_t z) {
     return GetBlock(Int3{x,y,z});
 }
 
@@ -182,9 +190,7 @@ void Chunk::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
 
 int8_t Chunk::GetBlockType(Int3 pos) {
     if (pos.y < 0 || pos.y >= CHUNK_HEIGHT) return BLOCK_AIR;
-    Block* b = this->GetBlock(pos);
-    if (!b) return BLOCK_AIR;
-    return b->type;
+    return this->blockType[(pos.z * CHUNK_WIDTH_X + pos.x) * CHUNK_HEIGHT + pos.y];
 }
 
 void Chunk::SetBlockType(int8_t blockType, Int3 pos) {

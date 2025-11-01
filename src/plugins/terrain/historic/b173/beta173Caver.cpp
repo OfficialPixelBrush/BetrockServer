@@ -141,8 +141,8 @@ void Beta173Caver::CarveCave(
                         for(int blockY = yMax + 1; !waterIsPresent && blockY >= yMin - 1; --blockY) {
                             blockIndex = (blockX * CHUNK_WIDTH_Z + blockZ) * CHUNK_HEIGHT + blockY;
                             if(blockY >= 0 && blockY < CHUNK_HEIGHT) {
-                                if(c->blocks[blockIndex].type == BLOCK_WATER_FLOWING ||
-                                    c->blocks[blockIndex].type == BLOCK_WATER_STILL) {
+                                if(c->blockType[blockIndex] == BLOCK_WATER_FLOWING ||
+                                    c->blockType[blockIndex] == BLOCK_WATER_STILL) {
                                     waterIsPresent = true;
                                 }
 
@@ -166,7 +166,7 @@ void Beta173Caver::CarveCave(
                                 for(int var48 = yMax - 1; var48 >= yMin; --var48) {
                                     double var49 = ((double)var48 + 0.5D - yOffset) / var29;
                                     if(var49 > -0.7D && var57 * var57 + var49 * var49 + var44 * var44 < 1.0D) {
-                                        uint8_t blockType = c->blocks[blockIndex].type;
+                                        uint8_t blockType = c->blockType[blockIndex];
                                         if(blockType == BLOCK_GRASS) {
                                             var47 = true;
                                         }
@@ -175,11 +175,11 @@ void Beta173Caver::CarveCave(
                                             blockType == BLOCK_DIRT ||
                                             blockType == BLOCK_GRASS) {
                                             if(var48 < 10) {
-                                                c->blocks[blockIndex].type = (uint8_t)BLOCK_LAVA_FLOWING;
+                                                c->blockType[blockIndex] = (uint8_t)BLOCK_LAVA_FLOWING;
                                             } else {
-                                                c->blocks[blockIndex].type = BLOCK_AIR;
-                                                if(var47 && c->blocks[blockIndex - 1].type == BLOCK_DIRT) {
-                                                    c->blocks[blockIndex - 1].type = (uint8_t)BLOCK_GRASS;
+                                                c->blockType[blockIndex] = BLOCK_AIR;
+                                                if(var47 && c->blockType[blockIndex - 1] == BLOCK_DIRT) {
+                                                    c->blockType[blockIndex - 1] = (uint8_t)BLOCK_GRASS;
                                                 }
                                             }
                                         }
