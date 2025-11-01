@@ -564,11 +564,18 @@ std::string CommandRegion::Execute(std::vector<std::string> command, [[maybe_unu
 	return ERROR_REASON_PARAMETERS;
 }
 
-
-
 // Get the world seed
 std::string CommandSeed::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	return std::to_string(Betrock::Server::Instance().GetWorld(0)->seed);
+}
+
+// Get the latest entity id
+std::string CommandEntity::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+	DEFINE_PERMSCHECK(client);
+	auto& server = Betrock::Server::Instance();
+	std::scoped_lock lock(server.GetEntityIdMutex());
+	
+	return "Last ID was " + std::to_string(server.GetLatestEntityId());
 }

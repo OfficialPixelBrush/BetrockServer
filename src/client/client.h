@@ -36,6 +36,7 @@ enum class ConnectionStatus {
 
 class Client : public std::enable_shared_from_this<Client> {
     private:
+        std::string username;
         std::unique_ptr<Player> player;
         int32_t previousOffset = 0;
         int32_t offset = 0;
@@ -108,6 +109,7 @@ class Client : public std::enable_shared_from_this<Client> {
         void ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId);
         void ClearInventory();
         bool IsValidPlacement(int8_t type, Int3& pos);
+        bool CreatePlayer();
     public:
         void SetConnectionStatus(ConnectionStatus status) { this->connectionStatus = status; }
         ConnectionStatus GetConnectionStatus() { return this->connectionStatus; }
@@ -124,6 +126,7 @@ class Client : public std::enable_shared_from_this<Client> {
         Item GetHeldItem();
         bool CanDecrementHotbar();
         void DecrementHotbar(std::vector<uint8_t> &response);
+        std::string GetUsername() { return username; };
 
         Player* GetPlayer() { return this->player.get(); };
         void Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw = 0, float pitch = 0);

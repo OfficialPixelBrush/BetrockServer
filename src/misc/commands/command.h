@@ -91,3 +91,4 @@ DEFINE_COMMAND(CommandSummon,   "summon",   "Summon a player entity"            
 DEFINE_COMMAND(CommandPopulated,"populated","Check the population status of the current chunk"      , ""                                        , true,  false);
 DEFINE_COMMAND(CommandRegion,   "region",   "Test the region infrastructure"                        , "<action>"                                , true,  false);
 DEFINE_COMMAND(CommandSeed,     "seed",     "Get the world seed"                                    , ""                                        , true,  false);
+DEFINE_COMMAND(CommandEntity,   "entity",   "Get the latest entity id"                              , ""                                        , true,  false);

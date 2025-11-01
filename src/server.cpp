@@ -61,15 +61,12 @@ void Server::AddUpTime(uint64_t upTime) { this->upTime += upTime; }
 
 void Server::SetSpawnPoint(const Int3 &spawnPoint) noexcept { this->spawnPoint = spawnPoint; }
 
-Client *Server::FindClientByUsername(std::string_view username) const {
-	auto client = std::ranges::find_if(std::ranges::views::all(this->connectedClients),
-									   [&username](const auto &c) { return c->GetPlayer()->username == username; });
+Client* Server::FindClientByUsername(std::string_view username) const {
+	auto client = std::ranges::find_if(connectedClients, [&username](const auto& c) {
+		return c->GetUsername() == username;
+	});
 
-	if (client == this->connectedClients.end()) {
-		return nullptr;
-	}
-
-	return std::to_address(*client);
+	return client == connectedClients.end() ? nullptr : std::to_address(*client);
 }
 
 void Server::AddWorldManager(int8_t worldId) {

@@ -99,7 +99,10 @@ void Client::HandlePacket() {
 
 		// Get the current Dimension
 		// TODO: We probably don't need to run this on every single packet!
-		World* world = Betrock::Server::Instance().GetWorld(player->dimension);
+		World* world;
+		if (player) {
+			world = Betrock::Server::Instance().GetWorld(player->dimension);
+		}
 		
 		// Ensure proper packet order
 		if ((packetType == Packet::Handshake && GetConnectionStatus() == ConnectionStatus::Handshake) ||
@@ -186,7 +189,9 @@ void Client::HandlePacket() {
 			SetConnectionStatus(ConnectionStatus::Disconnected);
 		}
 	}
-	SendNewChunks();
+	if (player) {
+		SendNewChunks();
+	}
 
 	BroadcastToClients(broadcastResponse);
 	BroadcastToClients(broadcastOthersResponse, this);
@@ -202,17 +207,6 @@ void Client::HandlePacket() {
 // It also creates the player object that is used for everything
 void Client::HandleClient() {
   	auto &server = Betrock::Server::Instance();
-	player = std::make_unique<Player>(
-		server.GetLatestEntityId(),
-		Int3ToVec3(server.GetSpawnPoint()),
-		server.GetSpawnDimension(),
-		// TODO: Maybe set these later?
-		server.GetSpawnWorld(),
-		Int3ToVec3(server.GetSpawnPoint()),
-		server.GetSpawnDimension(),
-		server.GetSpawnWorld()
-	);
-	ClearInventory();
 
 	// While the player is connected, read packets from them
 	while (server.IsAlive() && GetConnectionStatus() > ConnectionStatus::Disconnected) {
@@ -746,4 +740,20 @@ bool Client::IsValidPlacement(int8_t type, Int3& pos) {
 
 	// Player has collided
 	return !player->CheckCollision(Int3ToVec3(pos),testBox);
+}
+
+bool Client::CreatePlayer() {
+	auto &server = Betrock::Server::Instance();
+	player = std::make_unique<Player>(
+		server.GetLatestEntityId(),
+		Int3ToVec3(server.GetSpawnPoint()),
+		server.GetSpawnDimension(),
+		// TODO: Maybe set these later?
+		server.GetSpawnWorld(),
+		Int3ToVec3(server.GetSpawnPoint()),
+		server.GetSpawnDimension(),
+		server.GetSpawnWorld()
+	);
+	ClearInventory();
+	return true;
 }

@@ -11,15 +11,15 @@ bool Client::HandleKeepAlive() {
 
 // Engage with the handshake packet
 bool Client::HandleHandshake() {
-	player->username = EntryToString16(message, offset);
+	username = EntryToString16(message, offset);
 	auto &server = Betrock::Server::Instance();
-	if (server.IsWhitelistEnabled() && !server.IsWhitelist(player->username)) {
+	if (server.IsWhitelistEnabled() && !server.IsWhitelist(username)) {
 		DisconnectClient("Not on whitelist!");
 		return false;
 	}
 	// If we find a client with the username already connected,
 	// don't let them in, as this causes rendering bugs
-	Client* oc = server.FindClientByUsername(player->username);
+	Client* oc = server.FindClientByUsername(username);
 	if (oc != this) {
 		DisconnectClient("Client already on server");
 		return false;
@@ -47,12 +47,16 @@ bool Client::HandleLoginRequest(World* world) {
 		return false;
 	}
 
-	std::string username = EntryToString16(message,offset);
+	// Player is now certifiably valid, so we create him
+	CreatePlayer();
 
-	if (username != player->username) {
-		DisconnectClient("Client has mismatched username.");
+	// TODO: Check if this matches the handshake username
+	player->username = EntryToString16(message,offset);
+	world = Betrock::Server::Instance().GetWorld(player->dimension);
+	if (player->username != username) {
+		DisconnectClient("Non-matching username!");
 		return false;
-	} 
+	}
 	
 	EntryToLong(message,offset); // Get map seed
 	EntryToByte(message,offset); // Get dimension
@@ -64,8 +68,8 @@ bool Client::HandleLoginRequest(World* world) {
 
 	// Accept the Login
 	Respond::Login(response,player->entityId,world->seed,0);
-	Betrock::Logger::Instance().Info(username + " logged in with entity id " + std::to_string(player->entityId) + " at " + player->position.str());
-	Respond::ChatMessage(broadcastResponse, "§e" + username + " joined the game.");
+	Betrock::Logger::Instance().Info(player->username + " logged in with entity id " + std::to_string(player->entityId) + " at " + player->position.str());
+	Respond::ChatMessage(broadcastResponse, "§e" + player->username + " joined the game.");
 
   	const auto &spawnPoint = server.GetSpawnPoint();
 
@@ -115,6 +119,7 @@ bool Client::HandleLoginRequest(World* world) {
     for (auto other : Betrock::Server::Instance().GetConnectedClients()) {
 		if (other.get() == this) { continue; }
 		auto otherPlayer = other->GetPlayer();
+
 		Respond::NamedEntitySpawn(
 			response,
 			otherPlayer->entityId,

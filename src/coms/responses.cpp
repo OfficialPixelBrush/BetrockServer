@@ -123,6 +123,8 @@ void Respond::NamedEntitySpawn(std::vector<uint8_t> &response, int32_t& entityId
     AppendIntegerToVector(response, position.z);
     response.push_back(yaw);
     response.push_back(pitch);
+    // Must never be <0, otherwise the client gets rendering issues!
+    currentItem < 0 ? currentItem = 0 : currentItem;
     AppendShortToVector(response, currentItem);
 }
 
