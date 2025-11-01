@@ -170,7 +170,7 @@ Int3 WorldManager::FindSpawnableBlock(Int3& position) {
     JavaRandom jr;
 	auto &server = Betrock::Server::Instance();
     // Try random offsets until we find a valid spawn coordinate
-    while (!CanCoordinateBeSpawn(position)) {
+    for (int attempts = 0; attempts < 100 && !CanCoordinateBeSpawn(position); ++attempts) {
         position.x += jr.nextInt(64) - jr.nextInt(64);
         position.z += jr.nextInt(64) - jr.nextInt(64);
     }
