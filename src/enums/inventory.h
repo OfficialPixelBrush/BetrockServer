@@ -37,7 +37,10 @@ enum Inventory {
 #define INVENTORY_HOTBAR 9*3
 #define INVENTORY_HOTBAR_LAST 9*4-1
 
-#define INVENTORY_MAX_SLOTS 9*4
+#define INVENTORY_MAIN_SIZE 9*4
+#define INVENTORY_ARMOR_SIZE 4
+// The result slot is not counted on the storage side
+#define INVENTORY_CRAFTING_SIZE 4
 
 // Equipment slots
 #define EQUIPMENT_SLOT_HELD 0

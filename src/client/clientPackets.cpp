@@ -97,60 +97,14 @@ bool Client::HandleLoginRequest(World* world) {
 		UpdateInventory(response);
 	}
 
-	// Create the player for other players
-	Respond::NamedEntitySpawn(
-		broadcastOthersResponse,
-		player->entityId,
-		player->username,
-		Vec3ToInt3(player->position),
-		player->yaw,
-		player->pitch,
-		player->inventory[INVENTORY_HOTBAR].id
-	);
-	Respond::EntityTeleport(
-		broadcastOthersResponse,
-		player->entityId,
-		Vec3ToEntityInt3(player->position),
-		ConvertFloatToPackedByte(player->yaw),
-		ConvertFloatToPackedByte(player->pitch)
-	);
+	SendPlayerEntity(broadcastOthersResponse, this, player.get());
 
 	// Spawn the other players for the new client
     for (auto other : Betrock::Server::Instance().GetConnectedClients()) {
 		if (other.get() == this) { continue; }
 		auto otherPlayer = other->GetPlayer();
 
-		Respond::NamedEntitySpawn(
-			response,
-			otherPlayer->entityId,
-			otherPlayer->username,
-			Vec3ToInt3(otherPlayer->position),
-			otherPlayer->yaw,
-			otherPlayer->pitch,
-			other->GetHeldItem().id
-		);
-
-		// Note: Even though we already send a packet that
-		// tells the client what item the player holds,
-		// this packet needs to be sent regardless
-		// because otherwise the sky inverts
-		Respond::EntityEquipment(
-			response,
-			otherPlayer->entityId,
-			0,
-			other->GetHeldItem().id,
-			other->GetHeldItem().damage
-		);
-		
-		// Apparently needed to entities show up where they need to
-		Respond::EntityTeleport(
-			response,
-			otherPlayer->entityId,
-			Vec3ToEntityInt3(otherPlayer->position),
-			ConvertFloatToPackedByte(otherPlayer->yaw),
-			ConvertFloatToPackedByte(otherPlayer->pitch)
-		);
-
+		SendPlayerEntity(response, other.get(), otherPlayer);
     }
 	Respond::ChatMessage(response, std::string("This Server runs on ") + std::string(PROJECT_NAME_VERSION_FULL));
 	SendResponse(true);

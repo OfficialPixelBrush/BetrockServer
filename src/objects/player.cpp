@@ -69,7 +69,7 @@ void Player::Save() {
 	auto nbtInventory = std::make_shared<ListTag>("Inventory");
 	root->Put(nbtInventory);
 
-    for (int i = 0; i < INVENTORY_MAX_SLOTS; i++) {
+    for (int i = 0; i < INVENTORY_MAIN_SIZE; i++) {
         Item item = inventory[i];
         if (item.id == SLOT_EMPTY) {
             continue;
@@ -84,7 +84,7 @@ void Player::Save() {
         );
     }
 
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
         Item item = armor[i];
         if (item.id == SLOT_EMPTY) {
             continue;

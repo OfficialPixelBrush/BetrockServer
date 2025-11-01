@@ -127,6 +127,7 @@ class Client : public std::enable_shared_from_this<Client> {
         bool CanDecrementHotbar();
         void DecrementHotbar(std::vector<uint8_t> &response);
         std::string GetUsername() { return username; };
+        void SendPlayerEntity(std::vector<uint8_t> &resp, Client* c, Player* p);
 
         Player* GetPlayer() { return this->player.get(); };
         void Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw = 0, float pitch = 0);

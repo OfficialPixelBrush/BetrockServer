@@ -654,14 +654,14 @@ void Client::ClickedSlot(
 
 // Clear the clients inventory
 void Client::ClearInventory() {
-    for (int i = 0; i < 5; ++i) {
+    for (int i = 0; i < INVENTORY_CRAFTING_SIZE; ++i) {
         player->crafting[i] = Item{-1, 0, 0};
     }
-    for (int i = 0; i < 4; ++i) {
+    for (int i = 0; i < INVENTORY_ARMOR_SIZE; ++i) {
         player->armor[i] = Item{-1, 0, 0};
     }
     // Fill inventory with empty slots
-    for (int i = 0; i < INVENTORY_MAX_SLOTS; ++i) {
+    for (int i = 0; i < INVENTORY_MAIN_SIZE; ++i) {
         player->inventory[i] = Item{-1, 0, 0};
     }
 }
@@ -756,4 +756,50 @@ bool Client::CreatePlayer() {
 	);
 	ClearInventory();
 	return true;
+}
+
+
+void Client::SendPlayerEntity(std::vector<uint8_t> &resp, Client* c, Player* p) {
+	Respond::NamedEntitySpawn(
+		resp,
+		p->entityId,
+		p->username,
+		Vec3ToInt3(p->position),
+		p->yaw,
+		p->pitch,
+		c->GetHeldItem().id
+	);
+
+	// Note: Even though we already send a packet that
+	// tells the client what item the player holds,
+	// this packet needs to be sent regardless
+	// because otherwise the sky inverts
+	Respond::EntityEquipment(
+		resp,
+		p->entityId,
+		0,
+		c->GetHeldItem().id,
+		c->GetHeldItem().damage
+	);
+
+	for (int i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
+		if (p->armor[i].id > 0) {
+			Respond::EntityEquipment(
+				resp,
+				p->entityId,
+				0,
+				p->armor[i].id,
+				p->armor[i].damage
+			);
+		}
+	}
+	
+	// Apparently needed to entities show up where they need to
+	Respond::EntityTeleport(
+		resp,
+		p->entityId,
+		Vec3ToEntityInt3(p->position),
+		ConvertFloatToPackedByte(p->yaw),
+		ConvertFloatToPackedByte(p->pitch)
+	);
 }
