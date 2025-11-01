@@ -168,14 +168,15 @@ void WorldManager::WorkerThread() {
 // Match the Beta 1.7.3 Spawn block behavior
 Int3 WorldManager::FindSpawnableBlock(Int3& position) {
     JavaRandom jr;
-	auto &server = Betrock::Server::Instance();
+	//auto &server = Betrock::Server::Instance();
     // Try random offsets until we find a valid spawn coordinate
-    for (int attempts = 0; attempts < 100 && !CanCoordinateBeSpawn(position); ++attempts) {
+    int attempts;
+    for (attempts = 0; attempts < 100 && !CanCoordinateBeSpawn(position); ++attempts) {
         position.x += jr.nextInt(64) - jr.nextInt(64);
         position.z += jr.nextInt(64) - jr.nextInt(64);
     }
+    world.GetFirstUncoveredBlock(position);
 
-    server.SetSpawnPoint(position);
     return position;
 }
 
