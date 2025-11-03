@@ -13,7 +13,6 @@
 #include "generatorLua.h"
 #include "coms.h"
 #include "client.h"
-#include "lighting.h"
 
 class Client;  // Forward declaration
 

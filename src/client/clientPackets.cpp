@@ -260,15 +260,17 @@ bool Client::HandlePlayerDigging(World* world) {
 	EntryToByte(message, offset);
 
 	Int3 pos = Int3(x,y,z);
-	Block* targetedBlock = world->GetBlock(pos);
+	int8_t blockType = world->GetBlockType(pos);
+	int8_t blockMeta = world->GetBlockMeta(pos);
+	//Block* targetedBlock = world->GetBlock(pos);
 	
 	if (debugPunchBlockInfo) {
-		Betrock::Logger::Instance().Debug(IdToLabel((int)targetedBlock->type) + " " + targetedBlock->str() + " at " + pos.str());
+		//Betrock::Logger::Instance().Debug(IdToLabel((int)targetedBlock->type) + " " + targetedBlock->str() + " at " + pos.str());
 	}
 
 	// If the block is broken or instantly breakable
-	if (status == 2 || player->creativeMode || IsInstantlyBreakable(targetedBlock->type)) {
-		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,targetedBlock->type);
+	if (status == 2 || player->creativeMode || IsInstantlyBreakable(blockType)) {
+		Respond::Soundeffect(broadcastOthersResponse,BLOCK_BREAK,pos,blockType);
 		if (doTileDrops && !player->creativeMode) {
 			// TODO: This works now,
 			// but results in entities piling up
@@ -284,18 +286,18 @@ bool Client::HandlePlayerDigging(World* world) {
 				0,0,0
 			);
 			*/
-			Item item = Item{targetedBlock->type,1,targetedBlock->meta};
+			Item item = Item{blockType,1,blockMeta};
 			if (!player->creativeMode) {
 				item = GetDrop(item);
 			}
 			Give(response,item.id,item.amount,item.damage);
 		}
 		// Special handling for multi-block blocks
-		if (targetedBlock->type == BLOCK_DOOR_WOOD ||
-			targetedBlock->type == BLOCK_DOOR_IRON)
+		if (blockType == BLOCK_DOOR_WOOD ||
+			blockType == BLOCK_DOOR_IRON)
 		{
 			Int3 nPos = pos;
-			if (targetedBlock->meta & 0b1000) {
+			if (blockMeta & 0b1000) {
 				// Interacted with Top
 				// Update Bottom
 				nPos = pos + Int3{0,-1,0};
@@ -304,17 +306,16 @@ bool Client::HandlePlayerDigging(World* world) {
 				// Update Top
 				nPos = pos + Int3{0,1,0};
 			}
-			Block* bb = world->GetBlock(nPos);
-			if (bb && bb->type==targetedBlock->type) {
-				world->BreakBlock(nPos);
+			if (world->GetBlockType(nPos)==blockType) {
+				world->PlaceBlockUpdate(nPos, BLOCK_AIR, 0);
 			}
 		}
 		// Only get rid of the block here to avoid unreferenced pointers
-		world->BreakBlock(pos);
+		world->PlaceBlockUpdate(pos, BLOCK_AIR, 0);
 	}
 
 	// Check if the targeted block is interactable
-	if (IsInteractable(targetedBlock->type)) {
+	if (IsInteractable(blockType)) {
 		world->InteractWithBlock(pos);
 		return true;
 	}
@@ -342,16 +343,17 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	}
 
 	Int3 pos = Int3{x,y,z};
-	Block* targetedBlock = world->GetBlock(pos);
-	if (!targetedBlock) { return false; }
+	int8_t blockType = world->GetBlockType(pos);
+	int8_t blockMeta = world->GetBlockMeta(pos);
+	if (blockType == BLOCK_AIR) { return false; }
 
 	// Check if the targeted block is interactable
-	if (IsInteractable(targetedBlock->type)) {
-		if (!HasInventory(targetedBlock->type)) {
+	if (IsInteractable(blockType)) {
+		if (!HasInventory(blockType)) {
 			world->InteractWithBlock(pos);
 			return true;
 		}
-		switch(targetedBlock->type) {
+		switch(blockType) {
 			case BLOCK_CRAFTING_TABLE:
 				OpenWindow(INVENTORY_CRAFTING_TABLE);
 				break;
@@ -393,8 +395,8 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	
 	// Special handling for Slabs
 	if (
-		targetedBlock->type == BLOCK_SLAB &&
-		targetedBlock->meta == i.damage &&
+		blockType == BLOCK_SLAB &&
+		blockMeta == i.damage &&
 		face == yPlus
 	) {
 		world->PlaceBlockUpdate(pos,BLOCK_DOUBLE_SLAB,i.damage);

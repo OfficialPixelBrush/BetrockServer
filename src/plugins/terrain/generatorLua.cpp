@@ -403,17 +403,12 @@ int GeneratorLua::lua_GetBlock(lua_State *L) {
         lua_pushnil(L);
         return 1;
     }
-    Block* b = gen->world->GetBlock(position);
-    if (!b) {
-        lua_pushnil(L);
-        return 1;
-    }
 
     // Create a table and push it to Lua stack
     lua_newtable(L);
-    lua_pushnumber(L, b->type);
+    lua_pushnumber(L, gen->world->GetBlockType(position));
     lua_rawseti(L, -2, 1);
-    lua_pushnumber(L, b->meta);
+    lua_pushnumber(L, gen->world->GetBlockMeta(position));
     lua_rawseti(L, -2, 2);
 
     return 1;

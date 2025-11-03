@@ -35,31 +35,35 @@ bool IsTranslucent(int16_t id) {
 }
 
 // Returns how much the skylight is filtered by the specified block
-uint8_t GetTranslucency(int16_t id) {
-    // Let all light through
-    if (id == BLOCK_AIR ||
-        id == BLOCK_LAVA_FLOWING ||
-        id == BLOCK_LAVA_STILL ||
-        id == BLOCK_FARMLAND ||
-        id == BLOCK_GLASS ||
-        id == BLOCK_TORCH
-    ) {
-        return 0;
-    }
-    
+uint8_t GetTranslucency(int16_t id) {    
     // Water seems to drop the skylight brightness by 3 levels with each block
-    if (id == BLOCK_WATER_FLOWING ||
-        id == BLOCK_WATER_STILL) {
+    if (
+        id == BLOCK_WATER_FLOWING ||
+        id == BLOCK_WATER_STILL ||
+        id == BLOCK_ICE
+    ) {
         return 3;
     }
 
     // Meanwhile, leaves seem to drop the skylight by 1 with each block, until reaching 12
-    if (id == BLOCK_LEAVES) {
+    if (
+        id == BLOCK_LEAVES ||
+        id == BLOCK_COBWEB
+    ) {
         return 1;
     }
 
-    // All other blocks let no light through
-    return 255;
+    // All opaque blocks let no light through
+    if (
+        IsOpaque(id) ||
+        id == BLOCK_LAVA_FLOWING ||
+        id == BLOCK_LAVA_STILL
+    ) {
+        return 255;
+    }
+
+    // All other blocks let light through
+    return 0;
 }
 
 // Returns true for all blocks that are completely or partially transparent
@@ -388,8 +392,7 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_
         id == ITEM_HOE_STONE ||
         id == ITEM_HOE_WOOD
     ) {
-        Block* belowBlock = world->GetBlock(pos-Int3{0,1,0});
-        if (belowBlock && belowBlock->type == BLOCK_GRASS) {
+        if (world->GetBlockType(pos-Int3{0,1,0}) == BLOCK_GRASS) {
             world->PlaceBlockUpdate(pos-Int3{0,1,0},BLOCK_FARMLAND);
         }
         id = SLOT_EMPTY;
@@ -433,9 +436,8 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_
         id == ITEM_DOOR_IRON
     ) {
         // Check the block above this one
-        Block* aboveBlock = world->GetBlock(pos+Int3{0,1,0});
         // TODO: Any non-solid block should work
-        if (aboveBlock->type != BLOCK_AIR ||
+        if (world->GetBlockType(pos+Int3{0,1,0}) != BLOCK_AIR ||
             face != yPlus
         ) {
             b.type = SLOT_EMPTY;
@@ -488,10 +490,9 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_
                 headboardOffset = Int3{1,0,0};
                 b.meta = 3;
                 break;
-        }    
-        Block* headboardBlock = world->GetBlock(pos+headboardOffset);
+        }
         // TODO: Any non-solid block should work
-        if (headboardBlock->type != BLOCK_AIR ||
+        if (world->GetBlockType(pos+headboardOffset) != BLOCK_AIR ||
             face != yPlus
         ) {
             b.type = SLOT_EMPTY;
@@ -707,26 +708,4 @@ bool CanStay(int8_t type, World* world, Int3 pos) {
         );
     }
     return false;
-}
-
-int8_t GetBlockLight(Block* b) {
-    if (!b) return 0;
-    return b->light >> 4;
-}
-
-void SetBlockLight(Block* b, int8_t value) {
-    if (!b) return;
-    b->light &= 0x0F;
-    b->light |= ((value & 0xF) << 4);
-}
-
-int8_t GetSkyLight(Block* b) {
-    if (!b) return 0;
-    return b->light & 0x0F;
-}
-
-void SetSkyLight(Block* b, int8_t value) {
-    if (!b) return;
-    b->light &= 0xF0;
-    b->light |= (value & 0xF);
 }

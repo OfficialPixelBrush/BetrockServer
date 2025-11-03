@@ -22,6 +22,9 @@ Int3 LocalToGlobalPosition(Int3 chunkPos, Int3 blockPos);
 Int3 BlockToChunkPosition(Vec3 position);
 Int3 BlockToChunkPosition(Int3 position);
 
+Int3 BlockIndexToPosition(int32_t index);
+int32_t PositionToBlockIndex(Int3 pos);
+
 int8_t ConvertFloatToPackedByte(float value);
 
 bool Between(int value, int a, int b);

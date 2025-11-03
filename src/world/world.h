@@ -43,7 +43,7 @@ class World {
         void RemoveChunk(int32_t x, int32_t z);
         std::random_device dev;
         std::mt19937 rng;
-        bool RandomTick(Block* b, Int3& pos);
+        bool RandomTick(Int3& pos);
         mutable std::shared_mutex lightUpdateMutex;
         mutable std::shared_mutex chunkMutex;
     public:
@@ -55,19 +55,25 @@ class World {
         void PlaceBlock(Int3 position, int8_t type = BLOCK_AIR, int8_t meta = 0);
         void PlaceBlockUpdate(Int3 position, int8_t type = BLOCK_AIR, int8_t meta = 0, bool sendUpdate = true);
         void PlaceSponge(Int3 position);
-        Block* BreakBlock(Int3 position, bool sendUpdate = true);
         bool BlockExists(Int3 position);
-        Block* GetBlock(Int3 position);
-        void SetBlockType(int8_t blockType, Int3 pos);
+
         int8_t GetBlockType(Int3 pos);
-        void SetBlockMeta(int8_t blockMeta, Int3 pos);
+        void SetBlockType(int8_t blockType, Int3 pos);
         int8_t GetBlockMeta(Int3 pos);
-        void UpdateBlock(Int3 position, Block* b);
+        void SetBlockMeta(int8_t blockMeta, Int3 pos);
+
+        void SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos);
+
+        int8_t GetBlockLight(Int3 pos);
+        void SetBlockLight(int8_t value, Int3 pos);
+        int8_t GetSkyLight(Int3 pos);
+        void SetSkyLight(int8_t value, Int3 pos);
+
+
+        void UpdateBlock(Int3 position);
         bool InteractWithBlock(Int3 pos);
 
         // Light-related
-        int8_t GetSkyLight(Int3 position);
-        void SetSkyLight(Int3 position, int8_t level);
         void SpreadLight(bool skyLight, Int3 pos, int limit);
         void AddToLightQueue(bool skyLight, Int3 posA, Int3 posB);
         void SetLight(bool skyLight, Int3 pos,int8_t newLight);

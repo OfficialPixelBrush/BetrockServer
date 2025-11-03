@@ -149,10 +149,8 @@ bool Chunk::CanBlockSeeTheSky(int32_t x, int8_t y, int32_t z) {
 }
 
 int8_t Chunk::GetLight(bool skyLight, Int3 pos) {
-    Block* b = this->GetBlock(pos);
-    if (!b) return 0;
-    if (skyLight) return GetSkyLight(b);
-    return GetBlockLight(b);
+    if (skyLight) return GetSkyLight(pos);
+    return GetBlockLight(pos);
 }
 
 int8_t Chunk::GetTotalLight(Int3 pos) {
@@ -174,13 +172,11 @@ int8_t Chunk::GetTotalLight(Int3 pos) {
 }
 
 void Chunk::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
-    Block* b = this->GetBlock(pos);
-    if (!b) return;
     if (skyLight) {
-        SetSkyLight(b, newLight);
+        SetSkyLight(newLight, pos);
         return;
     }
-    SetBlockLight(b, newLight);
+    SetBlockLight(newLight, pos);
 }
 
 int8_t Chunk::GetBlockType(Int3 pos) {
@@ -208,6 +204,41 @@ void Chunk::SetBlockMeta(int8_t blockType, Int3 pos) {
     Block* b = this->GetBlock(pos);
     if (!b) return;
     b->meta = blockType;
+}
+
+
+int8_t Chunk::GetBlockLight(Int3 pos) {
+    Block* b = this->GetBlock(pos);
+    if (!b) return 0;
+    return b->light >> 4;
+}
+
+void Chunk::SetBlockLight(int8_t value, Int3 pos) {
+    Block* b = this->GetBlock(pos);
+    if (!b) return;
+    b->light &= 0x0F;
+    b->light |= ((value & 0xF) << 4);
+}
+
+int8_t Chunk::GetSkyLight(Int3 pos) {
+    Block* b = this->GetBlock(pos);
+    if (!b) return 0;
+    return b->light & 0x0F;
+}
+
+void Chunk::SetSkyLight(int8_t value, Int3 pos) {
+    Block* b = this->GetBlock(pos);
+    if (!b) return;
+    b->light &= 0xF0;
+    b->light |= (value & 0xF);
+}
+
+void Chunk::SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos) {
+    Block* b = this->GetBlock(pos);
+    if (!b) return;
+    b->type = blockType;
+    b->meta = blockMeta;
+    //RelightBlock(pos.x, pos.y, pos.z);
 }
 
 void Chunk::AddTileEntity(std::unique_ptr<TileEntity>&& te) {
@@ -297,14 +328,14 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
     // Block Light
     auto blockLightData = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("BlockLight"))->GetData();
     for (size_t i = 0; i < nibbleDataSize; i++) {
-        SetBlockLight(&blocks[i*2  ], (blockLightData[i]     )&0xF);
-        SetBlockLight(&blocks[i*2+1], (blockLightData[i] >> 4)&0xF);
+        SetBlockLight((blockLightData[i]     )&0xF, BlockIndexToPosition(i*2 ));
+        SetBlockLight((blockLightData[i] >> 4)&0xF, BlockIndexToPosition(i*2+1));
     }
     // Sky Light
     auto skyLightData = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("SkyLight"))->GetData();
     for (size_t i = 0; i < nibbleDataSize; i++) {
-        SetSkyLight(&blocks[i*2  ], (skyLightData[i]     )&0xF);
-        SetSkyLight(&blocks[i*2+1], (skyLightData[i] >> 4)&0xF);
+        SetSkyLight((skyLightData[i]     )&0xF, BlockIndexToPosition(i*2 ));
+        SetSkyLight((skyLightData[i] >> 4)&0xF, BlockIndexToPosition(i*2+1));
     }
 
     // Load Tile Entity Data
@@ -348,9 +379,7 @@ std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> Chunk::GetBloc
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (uint8_t cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                Block* b = GetBlock(cX,cY,cZ);
-                if (!b) continue;
-                data[index++] = b->type;
+                data[index++] = GetBlockType(Int3{cX,cY,cZ});
             }
         }
     }
@@ -388,12 +417,8 @@ std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> Chunk::Get
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 // Default to safe values
-                uint8_t b1v = 0;
-                uint8_t b2v = 0;
-                Block* b1 = GetBlock(cX,cY*2  ,cZ);
-                Block* b2 = GetBlock(cX,cY*2+1,cZ);
-                if (b1) b1v = GetBlockLight(b1);
-                if (b2) b2v = GetBlockLight(b2);
+                uint8_t b1v = GetBlockLight(Int3{cX,cY*2  ,cZ});
+                uint8_t b2v = GetBlockLight(Int3{cX,cY*2+1,cZ});
                 data[index++] = int8_t(b2v << 4 | b1v);
             }
         }
@@ -411,12 +436,8 @@ std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> Chunk::Get
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 // Default to safe values
-                uint8_t b1v = 0;
-                uint8_t b2v = 0;
-                Block* b1 = GetBlock(cX,cY*2  ,cZ);
-                Block* b2 = GetBlock(cX,cY*2+1,cZ);
-                if (b1) b1v = GetSkyLight(b1);
-                if (b2) b2v = GetSkyLight(b2);
+                uint8_t b1v = GetSkyLight(Int3{cX,cY*2  ,cZ});
+                uint8_t b2v = GetSkyLight(Int3{cX,cY*2+1,cZ});
                 data[index++] = int8_t(b2v << 4 | b1v);
             }
         }

@@ -461,8 +461,7 @@ bool Beta173TaigaTree::Generate(World* world, JavaRandom* rand, int xBlock, int 
                                 ) && !IsOpaque(world->GetBlockType(Int3{var14, var13, var16}))
                             ) {
                                 // Spruce leaves
-                                world->SetBlockType(BLOCK_LEAVES, Int3{var14, var13, var16});
-                                world->SetBlockMeta(1, Int3{var14, var13, var16});
+                                world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{var14, var13, var16});
                             }
                         }
                     }
@@ -477,8 +476,7 @@ bool Beta173TaigaTree::Generate(World* world, JavaRandom* rand, int xBlock, int 
                 for(int var13 = 0; var13 < var6 - 1; ++var13) {
                     int8_t blockType = world->GetBlockType(Int3{xBlock, yBlock + var13, zBlock});
                     if(blockType == BLOCK_AIR || blockType == BLOCK_LEAVES) {
-                        world->SetBlockType(BLOCK_LOG, Int3{xBlock, yBlock + var13, zBlock});
-                        world->SetBlockMeta(1, Int3{xBlock, yBlock + var13, zBlock});
+                        world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{xBlock, yBlock + var13, zBlock});
                     }
                 }
 
@@ -551,8 +549,7 @@ bool Beta173TaigaAltTree::Generate(World* world, JavaRandom* rand, int xBlock, i
                                     std::abs(var20) != var21 ||
                                     var21 <= 0
                                 ) && !IsOpaque(world->GetBlockType(Int3{var17, var16, var19}))) {
-                                world->SetBlockType(BLOCK_LEAVES, Int3{var17, var16, var19});
-                                world->SetBlockMeta(1, Int3{var17, var16, var19});
+                                world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{var17, var16, var19});
                             }
                         }
                     }
@@ -574,8 +571,7 @@ bool Beta173TaigaAltTree::Generate(World* world, JavaRandom* rand, int xBlock, i
                 for(var16 = 0; var16 < var6 - var15; ++var16) {
                     var17 = world->GetBlockType(Int3{xBlock, yBlock + var16, zBlock});
                     if(var17 == 0 || var17 == BLOCK_LEAVES) {
-                        world->SetBlockType(BLOCK_LOG, Int3{xBlock, yBlock + var16, zBlock});
-                        world->SetBlockMeta(1, Int3{xBlock, yBlock + var16, zBlock});
+                        world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{xBlock, yBlock + var16, zBlock});
                     }
                 }
 

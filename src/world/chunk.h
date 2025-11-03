@@ -42,10 +42,18 @@ class Chunk {
         void SetLight(bool skyLight, Int3 pos, int8_t newLight);
         int8_t GetLight(bool skyLight, Int3 pos);
         int8_t GetTotalLight(Int3 pos);
+
         void SetBlockType(int8_t blockType, Int3 pos);
         int8_t GetBlockType(Int3 pos);
         void SetBlockMeta(int8_t blockMeta, Int3 pos);
         int8_t GetBlockMeta(Int3 pos);
+        void SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos);
+
+        void SetBlockLight(int8_t value, Int3 pos);
+        int8_t GetBlockLight(Int3 pos);
+        void SetSkyLight(int8_t value, Int3 pos);
+        int8_t GetSkyLight(Int3 pos);
+
         void AddTileEntity(std::unique_ptr<TileEntity>&& te);
         TileEntity* GetTileEntity(Int3 pos);
         std::vector<TileEntity*> GetTileEntities();

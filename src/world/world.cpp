@@ -215,11 +215,10 @@ void World::PlaceSponge(Int3 position) {
     for (int x = -2; x <= 2; x++) {
         for (int z = -2; z <= 2; z++) {
             for (int y = -2; y <= 2; y++) {
-                Block* b = GetBlock(position + Int3{x,y,z});
-                if (!b) continue;
+                int8_t blockType = GetBlockType(position + Int3{x,y,z});
                 if (
-                    b->type == BLOCK_WATER_STILL ||
-                    b->type == BLOCK_WATER_FLOWING
+                    blockType == BLOCK_WATER_STILL ||
+                    blockType == BLOCK_WATER_FLOWING
                 ) {
                     PlaceBlockUpdate(position + Int3{x,y,z}, BLOCK_AIR);
                 }
@@ -235,24 +234,10 @@ void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) {
 
 // Place a block at the passed position
 // This position must be within a currently loaded Chunk
-void World::PlaceBlockUpdate(Int3 position, int8_t type, int8_t meta, bool sendUpdate) {
-    LimitBlockCoordinates(position);
+void World::PlaceBlockUpdate(Int3 pos, int8_t type, int8_t meta, bool sendUpdate) {
     // Get Block Position within Chunk
-    Block* b = GetBlock(position);
-    if (!b) {
-        return;
-    }
-    b->type = type;
-    b->meta = meta;
-    SetBlockLight(b, GetEmissiveness(b->type));
-    // This needs to be recalculated
-    ::SetSkyLight(b, (IsTranslucent(b->type) || IsTransparent(b->type))*0xF);
-    /*
-    if (IsEmissive(b->type)) {
-        PropagateLight(this,position,b->lightBlock,true);
-    }
-    */
-    if (sendUpdate) UpdateBlock(position,b);
+    SetBlockTypeAndMeta(type, meta, pos);
+    if (sendUpdate) UpdateBlock(pos);
 }
 
 // This is just called "a" in the Source Code
@@ -323,62 +308,41 @@ void World::UpdateLightingInfdev() {
     }
 }
 
-// Remove the block and turn it into air
-Block* World::BreakBlock(Int3 position, bool sendUpdate) {
-    LimitBlockCoordinates(position);
-    // Break Block Position within Chunk
-    Block* b = GetBlock(position);
-    if (!b) {
-        return nullptr;
-    }
-    b->type = 0;
-    b->meta = 0;
-    if (sendUpdate) UpdateBlock(position,b);
-    return b;
-}
-
-void World::UpdateBlock(Int3 position, Block* b) {
-    if (!b) {
-        return;
-    }
+void World::UpdateBlock(Int3 position) {
     std::vector<uint8_t> response;
-    Respond::BlockChange(response,position,b->type,b->meta);
+    Respond::BlockChange(
+        response,
+        position,
+        GetBlockType(position),
+        GetBlockMeta(position)
+    );
     BroadcastToClients(response);
 }
 
-// Get the Block at the passed position
-Block* World::GetBlock(Int3 position) {
-    LimitBlockCoordinates(position);
-    // Get Block Position within Chunk
-    int32_t cX = position.x >> 4;
-    int32_t cZ = position.z >> 4;
-    int8_t bX = position.x & 0xF;
-    int8_t bZ = position.z & 0xF;
-    Chunk* c = GetChunk(cX,cZ);
-    if (!c) {
-        return nullptr;
-    }
-    c->modified = true;
-    return c->GetBlock(bX,position.y,bZ);
+int8_t World::GetBlockLight(Int3 position) {
+    Chunk* c = GetChunk(position.x,position.z);
+    if (!c) return 0;
+    return c->GetBlockLight(position);
+}
+
+void World::SetBlockLight(int8_t level, Int3 position) {
+    Chunk* c = GetChunk(position.x,position.z);
+    if (!c) return;
+    c->SetBlockLight(level, position);
 }
 
 // Get the Skylight of a Block at the passed position
 int8_t World::GetSkyLight(Int3 position) {
-    // Get Block Position within Chunk
-    Block* b = GetBlock(position);
-    if (b) {
-        return ::GetSkyLight(b);
-    }
-    return 0;
+    Chunk* c = GetChunk(position.x,position.z);
+    if (!c) return 0;
+    return c->GetSkyLight(position);
 }
 
 // Set the Skylight of a Block at the passed position
-void World::SetSkyLight(Int3 position, int8_t level) {
-    // Get Block Position within Chunk
-    Block* b = GetBlock(position);
-    if (b) {
-        ::SetSkyLight(b, level);
-    }
+void World::SetSkyLight(int8_t level, Int3 position) {
+    Chunk* c = GetChunk(position.x,position.z);
+    if (!c) return;
+    c->SetSkyLight(level, position);
 }
 
 std::vector<SignTile*> World::GetChunkSigns(Int3 position) {
@@ -402,9 +366,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (uint8_t cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                Block* b = c->GetBlock(cX,cY,cZ);
-                if (!b) continue;
-                bytes[index] = b->type;
+                bytes[index] = c->GetBlockType(Int3{cX,cY,cZ});
                 index++;
             }
         }
@@ -427,10 +389,9 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block* b1 = c->GetBlock(cX,cY*2,cZ);
-                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
-                if (!b1 || !b2) continue;
-                bytes[index] = (GetBlockLight(b2) << 4 | GetBlockLight(b1));
+                int8_t b1 = c->GetBlockLight(Int3{cX,cY*2  ,cZ});
+                int8_t b2 = c->GetBlockLight(Int3{cX,cY*2+1,cZ});
+                bytes[index] = (b2 << 4 | b1);
                 index++;
             }
         }
@@ -440,10 +401,9 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block* b1 = c->GetBlock(cX,cY*2,cZ);
-                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
-                if (!b1 || !b2) continue;
-                bytes[index] = (::GetSkyLight(b2) << 4 | ::GetSkyLight(b1));
+                int8_t b1 = c->GetSkyLight(Int3{cX,cY*2  ,cZ});
+                int8_t b2 = c->GetSkyLight(Int3{cX,cY*2+1,cZ});
+                bytes[index] = (b2 << 4 | b1);
                 index++;
             }
         }
@@ -554,15 +514,15 @@ Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
             i >= blockDataSize+nibbleDataSize &&
             i <  blockDataSize+(nibbleDataSize*2))
         {
-            SetBlockLight(&c->blocks[(i%nibbleDataSize)*2  ], (chunkData[i]     )&0xF);
-            SetBlockLight(&c->blocks[(i%nibbleDataSize)*2+1], (chunkData[i] >> 4)&0xF);
+            SetBlockLight((chunkData[i]     )&0xF, BlockIndexToPosition((i%nibbleDataSize)*2  ));
+            SetBlockLight((chunkData[i] >> 4)&0xF, BlockIndexToPosition((i%nibbleDataSize)*2+1));
         } else if (
             // Sky Light
             i >= blockDataSize+(nibbleDataSize*2) &&
             i <  blockDataSize+(nibbleDataSize*3))
         {
-            ::SetSkyLight(&c->blocks[(i%nibbleDataSize)*2  ], (chunkData[i]     )&0xF);
-            ::SetSkyLight(&c->blocks[(i%nibbleDataSize)*2+1], (chunkData[i] >> 4)&0xF);
+            SetSkyLight((chunkData[i]     )&0xF, BlockIndexToPosition((i%nibbleDataSize)*2  ));
+            SetSkyLight((chunkData[i] >> 4)&0xF, BlockIndexToPosition((i%nibbleDataSize)*2+1));
         }
     }
     c->state = ChunkState::Populated;
@@ -575,17 +535,15 @@ Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
 }
 
 bool World::InteractWithBlock(Int3 pos) {
-    Block* b = GetBlock(pos);
-    if (!b) {
-        return false;
+    int8_t blockType = GetBlockType(pos);
+    int8_t blockMeta = GetBlockMeta(pos);
+    if (blockType == BLOCK_TRAPDOOR) {
+        blockMeta ^= 0b100;
     }
-    if (b->type == BLOCK_TRAPDOOR) {
-        b->meta ^= 0b100;
-    }
-    if (b->type == BLOCK_DOOR_WOOD) {
-        b->meta ^= 0b100;
+    if (blockType == BLOCK_DOOR_WOOD) {
+        blockMeta ^= 0b100;
         Int3 nPos = pos;
-        if (b->meta & 0b1000) {
+        if (blockMeta & 0b1000) {
             // Interacted with Top
             // Update Bottom
             nPos = pos + Int3{0,-1,0};
@@ -594,13 +552,16 @@ bool World::InteractWithBlock(Int3 pos) {
             // Update Top
             nPos = pos + Int3{0,1,0};
         }
-        Block* bb = GetBlock(nPos);
-        if (bb && bb->type==b->type) {
-            bb->meta ^= 0b100;
-            UpdateBlock(nPos,bb);
+        int8_t otherBlockType = GetBlockType(nPos);
+        int8_t otherBlockMeta = GetBlockMeta(nPos);
+        if (otherBlockType == blockType) {
+            otherBlockMeta ^= 0b100;
+            SetBlockTypeAndMeta(otherBlockType, otherBlockMeta, nPos);
+            UpdateBlock(nPos);
         }
     }
-    UpdateBlock(pos,b);
+    SetBlockTypeAndMeta(blockType, blockMeta, pos);
+    UpdateBlock(pos);
     return true;
 }
 
@@ -624,42 +585,19 @@ void World::TickChunks() {
                 chunkPos.z<<4 | blockPos.z
             };
             // If the block was changed, send this to the clients
-            if (!RandomTick(b,pos)) continue;
-            
-            Block* nb = GetBlock(pos);
-            if (nb) UpdateBlock(pos,nb);
+            int8_t blockType = b->type;
+            int8_t blockMeta = b->meta;
+            if (!RandomTick(pos)) continue;
+            if (blockType != b->type || blockMeta != b->meta) {
+                UpdateBlock(pos);
+            }
         }
     }
 }
 
 // Tick the passed block
-bool World::RandomTick(Block* b, Int3& pos) {
-    if (!b) return false;
-    switch(b->type) {
-        case BLOCK_GRASS:
-        {
-            std::uniform_int_distribution<int> dist(-2,2);
-            // Random offset
-            pos = pos + Int3{dist(rng),dist(rng),dist(rng)};
-            Block* nb = GetBlock(pos);
-            if (!nb) break;
-            if (nb->type == BLOCK_DIRT) {
-                Block* ab = GetBlock(pos+Int3{0,1,0});
-                if (ab && ab->type == BLOCK_AIR) {
-                    nb->type = BLOCK_GRASS;
-                    return true;
-                }
-            }
-            break;
-        }
-        case BLOCK_CROP_WHEAT:
-        {
-            if (b->meta < MAX_CROP_SIZE) {
-                b->meta++;
-            }
-            return true;
-        }
-    }
+bool World::RandomTick([[maybe_unused]] Int3& pos) {
+    // Redo this, please
     return false;
 }
 
@@ -752,6 +690,20 @@ int8_t World::GetBlockType(Int3 pos) {
         pos.x &= 15;
         pos.z &= 15;
         return c->GetBlockType(pos);
+    }
+}
+
+void World::SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos) {
+    if(pos.y < 0) {
+        return;
+    } else if(pos.y >= CHUNK_HEIGHT) {
+        return;
+    } else {
+        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        if (!c) return;
+        pos.x &= 15;
+        pos.z &= 15;
+        return c->SetBlockTypeAndMeta(blockType, blockMeta, pos);
     }
 }
 

@@ -94,6 +94,20 @@ Int3 BlockToChunkPosition(Vec3 position) {
 	return BlockToChunkPosition(intPos);
 }
 
+Int3 BlockIndexToPosition(int32_t index) {
+    Int3 pos;
+    pos.y = index % CHUNK_HEIGHT;
+    index /= CHUNK_HEIGHT;
+    pos.z = index % CHUNK_WIDTH_X;
+    index /= CHUNK_WIDTH_X;
+    pos.x = index;
+    return pos;
+}
+
+int32_t PositionToBlockIndex(Int3 pos) {
+    return (pos.z * CHUNK_WIDTH_X + pos.x) * CHUNK_HEIGHT + pos.y;
+}
+
 // Turn a float value into a byte, mapping the range 0-255 to 0°-360°
 int8_t ConvertFloatToPackedByte(float value) {
 	return static_cast<int8_t>((value/360.0f)*255.0f);

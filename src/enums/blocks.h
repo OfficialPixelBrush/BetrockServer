@@ -26,11 +26,6 @@ uint8_t GetSignOrientation(float playerYaw);
 Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_t playerDirection, int16_t id, int16_t damage);
 void BlockToFace(Int3& pos, int8_t& direction);
 
-int8_t GetBlockLight(Block* b);
-void SetBlockLight(Block* b, int8_t value);
-int8_t GetSkyLight(Block* b);
-void SetSkyLight(Block* b, int8_t value);
-
 #define MAX_CROP_SIZE 7
 
 enum Blocks {

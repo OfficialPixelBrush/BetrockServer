@@ -424,10 +424,7 @@ bool Beta173Feature::GenerateTallgrass(World* world, JavaRandom* rand, int block
                     world->GetBlockType(Int3{offsetX, offsetY, offsetZ}) == BLOCK_AIR &&
                     CanStay(this->id, world, Int3{offsetX, offsetY, offsetZ})
                 ) {
-                    Block* b = world->GetBlock(Int3{offsetX, offsetY, offsetZ});
-                    if (!b) continue;
-                    b->type = this->id;
-                    b->meta = this->meta;
+                    world->SetBlockTypeAndMeta(this->id, this->meta, Int3{offsetX, offsetY, offsetZ});
                 }
             }
 

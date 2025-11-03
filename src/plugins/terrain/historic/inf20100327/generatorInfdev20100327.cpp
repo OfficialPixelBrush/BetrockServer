@@ -191,11 +191,8 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* worl
                     double var35 = ((double)var4 + 0.5D - rand0) / (rand8 / 2.0D);
                     double var37 = ((double)macroX + 0.5D - rand2) / (var30 / 2.0D);
                     double var39 = ((double)var41 + 0.5D - rand4) / (rand8 / 2.0D);
-                    Block* b = world->GetBlock(Int3{var4, macroX, var41});
-                    if (!b) continue;
-                    if(var35 * var35 + var37 * var37 + var39 * var39 < 1.0D && b->type == BLOCK_STONE) {
-                        b->type = blockType;
-                        b->meta = 0;
+                    if(var35 * var35 + var37 * var37 + var39 * var39 < 1.0D && world->GetBlockType(Int3{var4, macroX, var41}) == BLOCK_STONE) {
+                        world->SetBlockTypeAndMeta(blockType, 0, Int3{var4, macroX, var41});
                     }
                 }
             }
@@ -281,11 +278,9 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 			}
 
 			if(canPlaceTree) {
-                Block* b = world->GetBlock(Int3{var7, heightValue - 1, blockY});
-                if (!b) break;
-				treeY = b->type;
+				treeY = world->GetBlockType(Int3{var7, heightValue - 1, blockY});
 				if((treeY == BLOCK_GRASS || treeY == BLOCK_DIRT) && heightValue < CHUNK_HEIGHT - var10 - 1) {
-				    b->type = BLOCK_DIRT;
+				    world->SetBlockType(BLOCK_DIRT, Int3{var7, heightValue - 1, blockY});
 
 					int cX2;
 					for(cX2 = heightValue - 3 + var10; cX2 <= heightValue + var10; ++cX2) {
@@ -297,28 +292,22 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 
 							for(treeY = blockY - var15; treeY <= blockY + var15; ++treeY) {
 								int var17 = treeY - blockY;
-                                Block* b = world->GetBlock(Int3{blockId, cX2, treeY});
-                                if (!b) continue;
 								if (
                                     (
                                         (std::abs(cX1) != var15) ||
                                         (std::abs(var17) != var15) ||
                                         (this->rand->nextInt(2) != 0 && var14 != 0)
-                                    ) && !IsOpaque(b->type)
+                                    ) && !IsOpaque(world->GetBlockType(Int3{blockId, cX2, treeY}))
                                 ) {
-                                    b->type = BLOCK_LEAVES;
-                                    b->meta = 0;
+                                    world->SetBlockTypeAndMeta(BLOCK_LEAVES, 0, Int3{blockId, cX2, treeY});
 								}
 							}
 						}
 					}
 
 					for(cX2 = 0; cX2 < var10; ++cX2) {
-                        Block* b = world->GetBlock(Int3{var7, heightValue + cX2, blockY});
-                        if (!b) continue;
-						if(!IsOpaque(b->type)) {
-                            b->type = BLOCK_LOG;
-                            b->meta = 0;
+						if(!IsOpaque(world->GetBlockType(Int3{var7, heightValue + cX2, blockY}))) {
+                            world->SetBlockTypeAndMeta(BLOCK_LOG, 0, Int3{var7, heightValue + cX2, blockY});
 						}
 					}
 				}
