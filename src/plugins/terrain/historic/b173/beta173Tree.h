@@ -49,3 +49,17 @@ class Beta173BigTree : public Beta173Tree {
         bool Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock, bool birch = false);
         void Configure(double treeHeight, double branchLength, double trunkShape);
 };
+
+class Beta173TaigaTree : public Beta173Tree {
+    public:
+        Beta173TaigaTree() {};
+        ~Beta173TaigaTree() = default;
+        bool Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock, bool birch = false);
+};
+
+class Beta173TaigaAltTree : public Beta173Tree {
+    public:
+        Beta173TaigaAltTree() {};
+        ~Beta173TaigaAltTree() = default;
+        bool Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock, bool birch = false);
+};

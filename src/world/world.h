@@ -60,6 +60,8 @@ class World {
         Block* GetBlock(Int3 position);
         void SetBlockType(int8_t blockType, Int3 pos);
         int8_t GetBlockType(Int3 pos);
+        void SetBlockMeta(int8_t blockMeta, Int3 pos);
+        int8_t GetBlockMeta(Int3 pos);
         void UpdateBlock(Int3 position, Block* b);
         bool InteractWithBlock(Int3 pos);
 

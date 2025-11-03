@@ -44,6 +44,8 @@ class Chunk {
         int8_t GetTotalLight(Int3 pos);
         void SetBlockType(int8_t blockType, Int3 pos);
         int8_t GetBlockType(Int3 pos);
+        void SetBlockMeta(int8_t blockMeta, Int3 pos);
+        int8_t GetBlockMeta(Int3 pos);
         void AddTileEntity(std::unique_ptr<TileEntity>&& te);
         TileEntity* GetTileEntity(Int3 pos);
         std::vector<TileEntity*> GetTileEntities();

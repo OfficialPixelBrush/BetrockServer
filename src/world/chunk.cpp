@@ -126,7 +126,10 @@ void Chunk::CheckSkylightNeighborHeight(int x, int z, int height) {
 }
 
 Block* Chunk::GetBlock(Int3 pos) {
-    return &blocks[(int32_t)(pos.y + pos.z*CHUNK_HEIGHT + (pos.x*CHUNK_HEIGHT*CHUNK_WIDTH_Z))];
+    if (pos.x < 0 || pos.y < 0 || pos.z < 0 ||
+        pos.x >= CHUNK_WIDTH_X || pos.y >= CHUNK_HEIGHT || pos.z >= CHUNK_WIDTH_Z)
+        return nullptr;
+    return &blocks[pos.y + pos.z * CHUNK_HEIGHT + pos.x * CHUNK_HEIGHT * CHUNK_WIDTH_Z];
 }
 Block* Chunk::GetBlock(int32_t x, int8_t y, int32_t z) {
     return GetBlock(Int3{x,y,z});
@@ -192,6 +195,19 @@ void Chunk::SetBlockType(int8_t blockType, Int3 pos) {
     if (!b) return;
     b->type = blockType;
     RelightBlock(pos.x, pos.y, pos.z);
+}
+
+int8_t Chunk::GetBlockMeta(Int3 pos) {
+    if (pos.y < 0 || pos.y >= CHUNK_HEIGHT) return 0;
+    Block* b = this->GetBlock(pos);
+    if (!b) return 0;
+    return b->meta;
+}
+
+void Chunk::SetBlockMeta(int8_t blockType, Int3 pos) {
+    Block* b = this->GetBlock(pos);
+    if (!b) return;
+    b->meta = blockType;
 }
 
 void Chunk::AddTileEntity(std::unique_ptr<TileEntity>&& te) {

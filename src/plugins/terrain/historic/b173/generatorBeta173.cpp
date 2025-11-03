@@ -576,8 +576,8 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
             TREE_SMALL,
             TREE_BIG,
             TREE_BIRCH,
-            TREE_TAIGA_SMALL,
-            TREE_TAIGA_BIG
+            TREE_TAIGA,
+            TREE_TAIGA_ALT
         };
 
         TreeState ts = TREE_NONE;
@@ -597,7 +597,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
                 rand->nextInt(3) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
                 break;
             case BIOME_TAIGA:
-                rand->nextInt(3) == 0 ? ts = TREE_TAIGA_BIG : ts = TREE_TAIGA_SMALL;
+                rand->nextInt(3) == 0 ? ts = TREE_TAIGA : ts = TREE_TAIGA_ALT;
                 break;
         }
         // Generate the appropriate tree
@@ -615,6 +615,12 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
                     bt.Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
                     break;
                 }
+            case TREE_TAIGA:
+                Beta173TaigaTree().Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+                break;
+            case TREE_TAIGA_ALT:
+                Beta173TaigaAltTree().Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+                break;
             default:
                 break;
         }

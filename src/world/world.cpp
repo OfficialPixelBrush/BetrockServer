@@ -699,10 +699,38 @@ void World::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
     }
 }
 
+void World::SetBlockMeta(int8_t blockMeta, Int3 pos) {
+    if(pos.y < 0) {
+        return;
+    } else if(pos.y >= CHUNK_HEIGHT) {
+        return;
+    } else {
+        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        if (!c) return;
+        pos.x &= 15;
+        pos.z &= 15;
+        return c->SetBlockMeta(blockMeta, pos);
+    }
+}
+
+int8_t World::GetBlockMeta(Int3 pos) {
+    if(pos.y < 0) {
+        return 0;
+    } else if(pos.y >= CHUNK_HEIGHT) {
+        return 0;
+    } else {
+        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        if (!c) return 0;
+        pos.x &= 15;
+        pos.z &= 15;
+        return c->GetBlockMeta(pos);
+    }
+}
+
 void World::SetBlockType(int8_t blockType, Int3 pos) {
     if(pos.y < 0) {
         return;
-    } else if(pos.y >= 128) {
+    } else if(pos.y >= CHUNK_HEIGHT) {
         return;
     } else {
         Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
@@ -715,9 +743,9 @@ void World::SetBlockType(int8_t blockType, Int3 pos) {
 
 int8_t World::GetBlockType(Int3 pos) {
     if(pos.y < 0) {
-        return 15;
-    } else if(pos.y >= 128) {
-        return 15;
+        return BLOCK_AIR;
+    } else if(pos.y >= CHUNK_HEIGHT) {
+        return BLOCK_AIR;
     } else {
         Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
         if (!c) return 0;

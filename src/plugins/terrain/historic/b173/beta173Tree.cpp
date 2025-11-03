@@ -408,3 +408,183 @@ bool Beta173BigTree::ValidPlacement() {
         }
     }
 }
+
+bool Beta173TaigaTree::Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock, [[maybe_unused]] bool birch) {
+    int var6 = rand->nextInt(5) + 7;
+    int var7 = var6 - rand->nextInt(2) - 3;
+    int var8 = var6 - var7;
+    int var9 = 1 + rand->nextInt(var8 + 1);
+    bool var10 = true;
+    if(yBlock >= 1 && yBlock + var6 + 1 <= CHUNK_HEIGHT) {
+        int var18;
+        for(int var11 = yBlock; var11 <= yBlock + 1 + var6 && var10; ++var11) {
+            //bool var12 = true;
+            if(var11 - yBlock < var7) {
+                var18 = 0;
+            } else {
+                var18 = var9;
+            }
+
+            for(int var13 = xBlock - var18; var13 <= xBlock + var18 && var10; ++var13) {
+                for(int var14 = zBlock - var18; var14 <= zBlock + var18 && var10; ++var14) {
+                    if(var11 >= 0 && var11 < CHUNK_HEIGHT) {
+                        int8_t blockType = world->GetBlockType(Int3{var13, var11, var14});
+                        if(blockType != BLOCK_AIR && blockType != BLOCK_LEAVES) {
+                            var10 = false;
+                        }
+                    } else {
+                        var10 = false;
+                    }
+                }
+            }
+        }
+
+        if(!var10) {
+            return false;
+        } else {
+            int8_t blockType = world->GetBlockType(Int3{xBlock, yBlock - 1, zBlock});
+            if((blockType == BLOCK_GRASS || blockType == BLOCK_DIRT) && yBlock < CHUNK_HEIGHT - var6 - 1) {
+                world->SetBlockType(BLOCK_DIRT, Int3{xBlock, yBlock - 1, zBlock});
+                var18 = 0;
+
+                for(int var13 = yBlock + var6; var13 >= yBlock + var7; --var13) {
+                    for(int var14 = xBlock - var18; var14 <= xBlock + var18; ++var14) {
+                        int var15 = var14 - xBlock;
+
+                        for(int var16 = zBlock - var18; var16 <= zBlock + var18; ++var16) {
+                            int var17 = var16 - zBlock;
+                            if(
+                                (
+                                    std::abs(var15) != var18 ||
+                                    std::abs(var17) != var18 ||
+                                    var18 <= 0
+                                ) && !IsOpaque(world->GetBlockType(Int3{var14, var13, var16}))
+                            ) {
+                                // Spruce leaves
+                                world->SetBlockType(BLOCK_LEAVES, Int3{var14, var13, var16});
+                                world->SetBlockMeta(1, Int3{var14, var13, var16});
+                            }
+                        }
+                    }
+
+                    if(var18 >= 1 && var13 == yBlock + var7 + 1) {
+                        --var18;
+                    } else if(var18 < var9) {
+                        ++var18;
+                    }
+                }
+
+                for(int var13 = 0; var13 < var6 - 1; ++var13) {
+                    int8_t blockType = world->GetBlockType(Int3{xBlock, yBlock + var13, zBlock});
+                    if(blockType == BLOCK_AIR || blockType == BLOCK_LEAVES) {
+                        world->SetBlockType(BLOCK_LOG, Int3{xBlock, yBlock + var13, zBlock});
+                        world->SetBlockMeta(1, Int3{xBlock, yBlock + var13, zBlock});
+                    }
+                }
+
+                return true;
+            } else {
+                return false;
+            }
+        }
+    } else {
+        return false;
+    }
+}
+
+bool Beta173TaigaAltTree::Generate(World* world, JavaRandom* rand, int xBlock, int yBlock, int zBlock, [[maybe_unused]] bool birch) {
+    int var6 = rand->nextInt(4) + 6;
+    int var7 = 1 + rand->nextInt(2);
+    int var8 = var6 - var7;
+    int var9 = 2 + rand->nextInt(2);
+    bool var10 = true;
+    if(yBlock >= 1 && yBlock + var6 + 1 <= CHUNK_HEIGHT) {
+        int var11;
+        int var13;
+        int var15;
+        int var21;
+        for(var11 = yBlock; var11 <= yBlock + 1 + var6 && var10; ++var11) {
+            //bool var12 = true;
+            if(var11 - yBlock < var7) {
+                var21 = 0;
+            } else {
+                var21 = var9;
+            }
+
+            for(var13 = xBlock - var21; var13 <= xBlock + var21 && var10; ++var13) {
+                for(int var14 = zBlock - var21; var14 <= zBlock + var21 && var10; ++var14) {
+                    if(var11 >= 0 && var11 < CHUNK_HEIGHT) {
+                        var15 = world->GetBlockType(Int3{var13, var11, var14});
+                        if(var15 != 0 && var15 != BLOCK_LEAVES) {
+                            var10 = false;
+                        }
+                    } else {
+                        var10 = false;
+                    }
+                }
+            }
+        }
+
+        if(!var10) {
+            return false;
+        } else {
+            var11 = world->GetBlockType(Int3{xBlock, yBlock - 1, zBlock});
+            if((var11 == BLOCK_GRASS || var11 == BLOCK_DIRT) && yBlock < CHUNK_HEIGHT - var6 - 1) {
+                world->SetBlockType(BLOCK_DIRT, Int3{xBlock, yBlock - 1, zBlock});
+                var21 = rand->nextInt(2);
+                var13 = 1;
+                int8_t var22 = 0;
+
+                int var16;
+                int var17;
+                for(var15 = 0; var15 <= var8; ++var15) {
+                    var16 = yBlock + var6 - var15;
+
+                    for(var17 = xBlock - var21; var17 <= xBlock + var21; ++var17) {
+                        int var18 = var17 - xBlock;
+
+                        for(int var19 = zBlock - var21; var19 <= zBlock + var21; ++var19) {
+                            int var20 = var19 - zBlock;
+                            if(
+                                (
+                                    std::abs(var18) != var21 ||
+                                    std::abs(var20) != var21 ||
+                                    var21 <= 0
+                                ) && !IsOpaque(world->GetBlockType(Int3{var17, var16, var19}))) {
+                                world->SetBlockType(BLOCK_LEAVES, Int3{var17, var16, var19});
+                                world->SetBlockMeta(1, Int3{var17, var16, var19});
+                            }
+                        }
+                    }
+
+                    if(var21 >= var13) {
+                        var21 = var22;
+                        var22 = 1;
+                        ++var13;
+                        if(var13 > var9) {
+                            var13 = var9;
+                        }
+                    } else {
+                        ++var21;
+                    }
+                }
+
+                var15 = rand->nextInt(3);
+
+                for(var16 = 0; var16 < var6 - var15; ++var16) {
+                    var17 = world->GetBlockType(Int3{xBlock, yBlock + var16, zBlock});
+                    if(var17 == 0 || var17 == BLOCK_LEAVES) {
+                        world->SetBlockType(BLOCK_LOG, Int3{xBlock, yBlock + var16, zBlock});
+                        world->SetBlockMeta(1, Int3{xBlock, yBlock + var16, zBlock});
+                    }
+                }
+
+                return true;
+            } else {
+                return false;
+            }
+        }
+    } else {
+        return false;
+    }
+}
