@@ -43,6 +43,20 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
         CHUNK_WIDTH_X,
         CHUNK_WIDTH_Z
     );
+    
+    /*
+    if (cX >= -1 && cZ >= -1 && cX <= 1 && cZ <= 1) {
+        std::cout << "# " << cX << ", " << cZ << std::endl;
+        std::cout << "[";
+        for (size_t i = 0; i < this->temperature.size(); i++) {
+            std::cout << this->temperature[i];
+            if (i < this->temperature.size() - 1) {
+                std::cout << ", ";
+            }
+        }
+        std::cout << "]," << std::endl;
+    }
+    */
 
     // Generate the Terrain, minus any caves, as just stone 
     GenerateTerrain(cX, cZ, c);

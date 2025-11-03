@@ -57,7 +57,7 @@ void LimitBlockCoordinates(Int3 &position);
 template <typename T>
 void PrintVector(std::vector<T>& values) {
     std::cout << "[";
-    for (int i = 0; i < values.size(); i++) {
+    for (size_t i = 0; i < values.size(); i++) {
         std::cout << values[i];
         if (i < values.size() - 1) {
             std::cout << ", ";
