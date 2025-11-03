@@ -17,6 +17,8 @@ void HandleGracefulSignal(int) {
 }
 
 void UsageReport() {
+	// Exit out if we don't want to log usage metrics
+	if (!debugReportUsage) return;
 	auto &server = Betrock::Server::Instance();
 	std::ofstream logFile;
 	logFile.open("usage.csv");
@@ -52,7 +54,7 @@ void UsageReport() {
 int main() {
 	auto &server = Betrock::Server::Instance();
 	auto &logger = Betrock::Logger::Instance();
-	//7std::thread usageThread(UsageReport);
+	std::thread usageThread(UsageReport);
 
 	signal(SIGINT, HandleGracefulSignal);  // Handle Ctrl+C
 	signal(SIGTERM, HandleGracefulSignal); // Handle termination signals
@@ -160,6 +162,6 @@ int main() {
 
 	server.Stop();
 	join_thread.join();
-	//usageThread.join();
+	usageThread.join();
 	return 0;
 }
