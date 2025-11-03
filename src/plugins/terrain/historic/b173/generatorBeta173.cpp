@@ -18,12 +18,12 @@ GeneratorBeta173::GeneratorBeta173(int64_t seed, World* world) : Generator(seed,
     treeDensityNoiseGen      = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
 
     // Init Biome Noise
-    std::unique_ptr<JavaRandom> rand1 = std::make_unique<JavaRandom>(this->seed * 9871L);
-    temperatureNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand1.get(), 4);
-    std::unique_ptr<JavaRandom> rand2 = std::make_unique<JavaRandom>(this->seed * 39811L);
-    humidityNoiseGen    = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand2.get(), 4);
-    std::unique_ptr<JavaRandom> rand3 = std::make_unique<JavaRandom>(this->seed * 543321L);
-    weirdnessNoiseGen   = std::make_unique<NoiseOctaves<NoiseSimplex>>(rand3.get(), 2);
+    auto randTemp = std::make_unique<JavaRandom>(this->seed * 9871L);
+    auto randHum  = std::make_unique<JavaRandom>(this->seed * 39811L);
+    auto randWeird = std::make_unique<JavaRandom>(this->seed * 543321L);
+    temperatureNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randTemp.get(), 4);
+    humidityNoiseGen    = std::make_unique<NoiseOctaves<NoiseSimplex>>(randHum.get(), 4);
+    weirdnessNoiseGen   = std::make_unique<NoiseOctaves<NoiseSimplex>>(randWeird.get(), 2);
 
     // Init Caver
     caver = std::make_unique<Beta173Caver>();
@@ -289,8 +289,8 @@ std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(int bx, int bz, int xMax, 
     // Get noise values
     // We found an oversight in the original code! zMax is NEVER used for getting the noise range!
     // Although this is irrelevant for all intents and purposes, as xMax always equals zMax
-    this->temperature = this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, xMax, (double)0.025F, (double)0.025F, 0.25D);
-    this->humidity = this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)bx, (double)bz, xMax, xMax, (double)0.05F, (double)0.05F, 1.0D / 3.0D);
+    this->temperature = this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, xMax, 0.025D, 0.025D, 0.25D);
+    this->humidity = this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)bx, (double)bz, xMax, xMax, 0.05D, 0.05D, 1.0D / 3.0D);
     this->weirdness = this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, xMax, 0.25D, 0.25D, 0.5882352941176471D);
     int index = 0;
 
@@ -534,9 +534,14 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 
     fraction = 0.5D;
     int treeDensitySample = int(
-        (this->treeDensityNoiseGen->GenerateOctaves(
-            double(blockX) * fraction, double(blockZ) * fraction) / 8.0D + this->rand->nextDouble() * 4.0D + 4.0D) / 3.0D
+        (
+            this->treeDensityNoiseGen->GenerateOctaves(
+                double(blockX) * fraction,
+                double(blockZ) * fraction
+            ) / 8.0D + this->rand->nextDouble() * 4.0D + 4.0D
+        ) / 3.0D
     );
+
     int numberOfTrees = 0;
     if(this->rand->nextInt(10) == 0) {
         ++numberOfTrees;
@@ -544,26 +549,19 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 
     switch(biome) {
         case BIOME_FOREST:
-            numberOfTrees += treeDensitySample + 5;
-            break;
         case BIOME_RAINFOREST:
+        case BIOME_TAIGA:
             numberOfTrees += treeDensitySample + 5;
             break;
         case BIOME_SEASONALFOREST:
             numberOfTrees += treeDensitySample + 2;
             break;
-        case BIOME_TAIGA:
-            numberOfTrees += treeDensitySample + 5;
-            break;
         case BIOME_DESERT:
-            numberOfTrees -= 20;
-            break;
         case BIOME_TUNDRA:
+        case BIOME_PLAINS:
             numberOfTrees -= 20;
             break;
         default:
-        case BIOME_PLAINS:
-            numberOfTrees -= 20;
             break;
     }
 
@@ -583,43 +581,46 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         TreeState ts = TREE_NONE;
         // Decide on a biome-appropriate tree
         switch(biome) {
-            default:
-                rand->nextInt(10) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
-                break;
             case BIOME_FOREST:
-                if (rand->nextInt(5) != 0) {
-                    rand->nextInt(3) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
-                    break;
+                if (rand->nextInt(5) == 0) {
+                    ts = TREE_BIRCH;
+                } else {
+                    ts = (rand->nextInt(3) == 0) ? TREE_BIG : TREE_SMALL;
                 }
-                ts = TREE_BIRCH;
                 break;
             case BIOME_RAINFOREST:
-                rand->nextInt(3) == 0 ? ts = TREE_BIG : ts = TREE_SMALL;
+                ts = (rand->nextInt(3) == 0) ? TREE_BIG : TREE_SMALL;
                 break;
             case BIOME_TAIGA:
-                rand->nextInt(3) == 0 ? ts = TREE_TAIGA : ts = TREE_TAIGA_ALT;
+                ts = (rand->nextInt(3) == 0) ? TREE_TAIGA : TREE_TAIGA_ALT;
+                break;
+            default:
+                ts = (rand->nextInt(10) == 0) ? TREE_BIG : TREE_SMALL;
                 break;
         }
+
+        yCoordinate = world->GetHeightValue(xCoordinate, zCoordinate);
+
         // Generate the appropriate tree
         switch(ts) {
             case TREE_SMALL:
-                Beta173Tree().Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+                Beta173Tree().Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
                 break;
             case TREE_BIRCH:
-                Beta173Tree().Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate, true);
+                Beta173Tree().Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, true);
                 break;
             case TREE_BIG:
                 {
-                    Beta173BigTree bt = Beta173BigTree();
+                    Beta173BigTree bt;
                     bt.Configure(1.0D, 1.0D, 1.0D);
-                    bt.Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+                    bt.Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
                     break;
                 }
             case TREE_TAIGA:
-                Beta173TaigaTree().Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+                Beta173TaigaTree().Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
                 break;
             case TREE_TAIGA_ALT:
-                Beta173TaigaAltTree().Generate(this->world, this->rand.get(), xCoordinate, world->GetHeightValue(xCoordinate,zCoordinate), zCoordinate);
+                Beta173TaigaAltTree().Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
                 break;
             default:
                 break;
