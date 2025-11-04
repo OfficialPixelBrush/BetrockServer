@@ -86,6 +86,7 @@ int main() {
 	auto startTime = std::chrono::steady_clock::now();
 	auto lastTime = std::chrono::steady_clock::now();
 	int worldIndex = 0;
+	int totalQueuedChunks = 0;
 
 	//for (int worldIndex = 0; worldIndex < worldManagers.size(); ++worldIndex) {
 		logger.Info("Preparing start region for level " + std::to_string(worldIndex));
@@ -95,22 +96,23 @@ int main() {
 
 		for (int x = -radius; x <= radius && server.IsAlive(); x += 16) {
 			for (int z = -radius; z <= radius && server.IsAlive(); z += 16) {
-				auto now = std::chrono::steady_clock::now();
-				auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTime).count();
-
-				if (elapsed > 1000) {
-					int total = (radius * 2 + 1) * (radius * 2 + 1);
-					int done = (x + radius) * (radius * 2 + 1) + z + radius + 1;
-					int percent = (done * 100) / total;
-					logger.Info("Preparing spawn area: " + std::to_string(percent) + "%");
-					lastTime = now;
-				}
-
 				wm->ForceGenerateChunk(x >> 4, z >> 4);
-
-				std::this_thread::sleep_for(std::chrono::milliseconds(5));
+				totalQueuedChunks++;
 			}
 		}
+
+	while(!wm->IsQueueEmpty()) {
+		auto now = std::chrono::steady_clock::now();
+		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTime).count();
+
+		if (elapsed > 1000) {
+			int done = totalQueuedChunks - wm->GetQueueSize();
+			int percent = (done * 100) / totalQueuedChunks;
+			logger.Info("Preparing spawn area: " + std::to_string(percent) + "%");
+			lastTime = now;
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+	}
 
 	Int3 spawn = Int3{0, 64, 0};
 	wm->FindSpawnableBlock(spawn);
