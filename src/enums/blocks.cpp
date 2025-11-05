@@ -520,13 +520,13 @@ bool CanGrow(int8_t type, int8_t otherType) {
             return IsOpaque(otherType);
         case BLOCK_DANDELION:
         case BLOCK_ROSE:
-        case BLOCK_DEADBUSH:
+        case BLOCK_TALLGRASS:
             return
                 otherType == BLOCK_GRASS ||
                 otherType == BLOCK_DIRT ||
                 otherType == BLOCK_FARMLAND
             ;
-        case BLOCK_TALLGRASS:
+        case BLOCK_DEADBUSH:
             return otherType == BLOCK_SAND;
         case BLOCK_CROP_WHEAT:
             return otherType == BLOCK_FARMLAND;
