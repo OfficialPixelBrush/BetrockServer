@@ -22,6 +22,7 @@
 #include "packets.h"
 #include "sounds.h"
 #include "animations.h"
+#include "drops.h"
 
 #define PACKET_MAX 4096
 

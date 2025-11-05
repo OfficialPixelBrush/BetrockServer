@@ -73,6 +73,7 @@ add_executable(
     src/coms/coms.cpp
     src/coms/responses.cpp
 
+    src/enums/drops.cpp
     src/enums/blocks.cpp
     src/enums/items.cpp
     src/enums/labels.cpp

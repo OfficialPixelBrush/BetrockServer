@@ -37,32 +37,20 @@ bool IsTranslucent(int16_t id) {
 // Returns how much the skylight is filtered by the specified block
 uint8_t GetTranslucency(int16_t id) {    
     // Water seems to drop the skylight brightness by 3 levels with each block
-    if (
-        id == BLOCK_WATER_FLOWING ||
-        id == BLOCK_WATER_STILL ||
-        id == BLOCK_ICE
-    ) {
-        return 3;
+    switch(id) {
+        case BLOCK_WATER_FLOWING:
+        case BLOCK_WATER_STILL:
+        case BLOCK_ICE:
+            return 3;
+        case BLOCK_LEAVES:
+        case BLOCK_COBWEB:
+            return 1;
+        case BLOCK_LAVA_FLOWING:
+        case BLOCK_LAVA_STILL:
+            return 255;
+        default:
+            if (IsOpaque(id)) return 255;
     }
-
-    // Meanwhile, leaves seem to drop the skylight by 1 with each block, until reaching 12
-    if (
-        id == BLOCK_LEAVES ||
-        id == BLOCK_COBWEB
-    ) {
-        return 1;
-    }
-
-    // All opaque blocks let no light through
-    if (
-        IsOpaque(id) ||
-        id == BLOCK_LAVA_FLOWING ||
-        id == BLOCK_LAVA_STILL
-    ) {
-        return 255;
-    }
-
-    // All other blocks let light through
     return 0;
 }
 
@@ -190,146 +178,23 @@ bool IsInteractable(int16_t id) {
     ;
 }
 
-// Returns true if the destroyed item maintains its NBT data upon being dropped
-bool KeepDamageOnDrop(int8_t id) {
-    return
-        id == BLOCK_WOOL ||
-        id == BLOCK_SLAB ||
-        id == BLOCK_DOUBLE_SLAB
-    ;
-}
-
-// Returns true for all blocks that do not drop anything when they're destroyed
-bool NoDrop(Item item) {
-    return
-        item.id == BLOCK_AIR ||
-        item.id == BLOCK_BEDROCK ||
-        item.id == BLOCK_WATER_FLOWING ||
-        item.id == BLOCK_WATER_STILL || 
-        item.id == BLOCK_LAVA_FLOWING ||
-        item.id == BLOCK_LAVA_STILL ||
-        item.id == BLOCK_GLASS ||
-        item.id == BLOCK_COBWEB ||
-        item.id == BLOCK_DEADBUSH ||
-        item.id == BLOCK_TALLGRASS ||
-        item.id == BLOCK_FIRE ||
-        item.id == BLOCK_MOB_SPAWNER ||
-        item.id == BLOCK_ICE ||
-        item.id == BLOCK_NETHER_PORTAL ||
-        item.id == BLOCK_CAKE
-    ;
-}
-
-// Returns the items that're dropped when a block is destroyed
-Item GetDrop(Item item) {
-    if (NoDrop(item)) {
-        return Item{ -1, 0, 0 };
-    }
-    int16_t damage = item.damage;
-    if (!KeepDamageOnDrop(item.id)) {
-        item.damage = 0;
-    }
-    // By default, give back one of the same block
-    switch(item.id) {
-        case BLOCK_CROP_WHEAT:
-            if (damage < MAX_CROP_SIZE) {
-                item.id = ITEM_SEEDS_WHEAT;
-            } else {
-                item.id = ITEM_WHEAT;
-            }
-            break;
-        case BLOCK_STONE:
-            item.id = BLOCK_COBBLESTONE;
-            break;
-        case BLOCK_GRASS:
-            item.id = BLOCK_DIRT;
-            break;
-        case BLOCK_SUGARCANE:
-            item.id = ITEM_SUGARCANE;
-            break;
-        case BLOCK_ORE_COAL:
-            item.id = ITEM_COAL;
-            break;
-        case BLOCK_LEAVES:
-            item.id = BLOCK_SAPLING;
-            item.amount = 1;
-            break;
-        case BLOCK_ORE_LAPIS_LAZULI:
-            item.id = ITEM_DYE;
-            // 4-8
-            item.amount = 4;
-            item.damage = 4;
-            break;
-        case BLOCK_BED:
-            item.id = ITEM_BED;
-            break;
-        case BLOCK_REDSTONE:
-            item.id = ITEM_REDSTONE;
-            break;
-        case BLOCK_ORE_DIAMOND:
-            item.id = ITEM_DIAMOND;
-            break;
-        case BLOCK_SIGN:
-        case BLOCK_SIGN_WALL:
-            item.id = ITEM_SIGN;
-            break;
-        case BLOCK_DOOR_WOOD:
-            item.id = ITEM_DOOR_WOOD;
-            break;
-        case BLOCK_DOOR_IRON:
-            item.id = ITEM_DOOR_IRON;
-            break;
-        case BLOCK_ORE_REDSTONE_OFF:
-        case BLOCK_ORE_REDSTONE_ON:
-            item.id = ITEM_REDSTONE;
-            // 4-5
-            item.amount = 4;
-            break;
-        case BLOCK_REDSTONE_TORCH_OFF:
-        case BLOCK_REDSTONE_TORCH_ON:
-            item.id = BLOCK_REDSTONE_TORCH_ON;
-            break;
-        case BLOCK_CLAY:
-            item.id = ITEM_CLAY;
-            // ???
-            item.amount = 4;
-            break;
-        case BLOCK_GLOWSTONE:
-            item.id = ITEM_GLOWSTONE_DUST;
-            // 2-4
-            item.amount = 2;
-            break;
-        case BLOCK_REDSTONE_REPEATER_ON:
-        case BLOCK_REDSTONE_REPEATER_OFF:
-            item.id = BLOCK_REDSTONE_REPEATER_OFF;
-            break;
-        case BLOCK_DOUBLE_SLAB:
-            item.id = BLOCK_SLAB;
-            item.amount = 2;
-            break;
-    }
-    return item;
-}
-
 bool HasInventory(int16_t id) {
-    if (
-        id == BLOCK_CHEST ||
-        id == BLOCK_CRAFTING_TABLE ||
-        id == BLOCK_FURNACE ||
-        id == BLOCK_FURNACE_LIT ||
-        id == BLOCK_DISPENSER
-    ) {
-        return true;
-    }
-    return false;
+    return (
+            id == BLOCK_CHEST ||
+            id == BLOCK_CRAFTING_TABLE ||
+            id == BLOCK_FURNACE ||
+            id == BLOCK_FURNACE_LIT ||
+            id == BLOCK_DISPENSER
+    );
 }
 
 bool IsLiquid(int16_t id) {
-    return  id == BLOCK_WATER_STILL ||
-            id == BLOCK_WATER_FLOWING ||
-            id == BLOCK_LAVA_STILL ||
-            id == BLOCK_LAVA_FLOWING
-    ;
+    return (
+        id == BLOCK_WATER_STILL ||
+        id == BLOCK_WATER_FLOWING ||
+        id == BLOCK_LAVA_STILL ||
+        id == BLOCK_LAVA_FLOWING
+    );
 }
 
 // TODO: Do this right
@@ -649,63 +514,50 @@ Block GetPlacedBlock(World* world, Int3 pos, int8_t face, float playerYaw, int8_
 }
 
 bool CanGrow(int8_t type, int8_t otherType) {
-    // Mushroom-type Blocks
-    if (
-        type == BLOCK_MUSHROOM_BROWN ||
-        type == BLOCK_MUSHROOM_RED
-    ) {
-        return IsOpaque(otherType);
-    }
-    // Flower-type blocks
-    if (
-        type == BLOCK_DANDELION ||
-        type == BLOCK_ROSE ||
-        type == BLOCK_TALLGRASS
-    ) {
-        return  otherType == BLOCK_GRASS ||
+    switch(type) {
+        case BLOCK_MUSHROOM_BROWN:
+        case BLOCK_MUSHROOM_RED:
+            return IsOpaque(otherType);
+        case BLOCK_DANDELION:
+        case BLOCK_ROSE:
+        case BLOCK_DEADBUSH:
+            return
+                otherType == BLOCK_GRASS ||
                 otherType == BLOCK_DIRT ||
                 otherType == BLOCK_FARMLAND
-        ;
-    }
-    // Deadbushes
-    if (
-        type == BLOCK_DEADBUSH
-    ) {
-        return otherType == BLOCK_SAND;
-    }
-    // Crops
-    if (
-        type == BLOCK_CROP_WHEAT
-    ) {
-        return otherType == BLOCK_FARMLAND;
+            ;
+        case BLOCK_TALLGRASS:
+            return otherType == BLOCK_SAND;
+        case BLOCK_CROP_WHEAT:
+            return otherType == BLOCK_FARMLAND;
+        default:
+            break;
     }
     return false;
 }
 
 // Check if a block can exist in the position its in
 bool CanStay(int8_t type, World* world, Int3 pos) {
-    if (
-        type == BLOCK_MUSHROOM_BROWN ||
-        type == BLOCK_MUSHROOM_RED
-    ) {
-        if ((pos.y >= 0) && (pos.y < CHUNK_HEIGHT)) {
-            return (world->GetTotalLight(pos) < 13 && CanGrow(type, world->GetBlockType(pos - Int3{0,-1,0})));
-        }
-    }
-    // Flower-like blocks
-    if (
-        type == BLOCK_DANDELION ||
-        type == BLOCK_ROSE ||
-        type == BLOCK_DEADBUSH ||
-        type == BLOCK_TALLGRASS
-    ) {
-        return (
-            (
-                world->GetTotalLight(pos) >= 8 ||
-                world->CanBlockSeeTheSky(pos)
-            ) && 
-            CanGrow(type, world->GetBlockType(Int3{pos.x,pos.y-1,pos.z}))
-        );
+    switch(type) {
+        case BLOCK_MUSHROOM_BROWN:
+        case BLOCK_MUSHROOM_RED:
+            if ((pos.y >= 0) && (pos.y < CHUNK_HEIGHT)) {
+                return (world->GetTotalLight(pos) < 13 && CanGrow(type, world->GetBlockType(pos - Int3{0,-1,0})));
+            }
+            break;
+        case BLOCK_DANDELION:
+        case BLOCK_ROSE:
+        case BLOCK_DEADBUSH:
+        case BLOCK_TALLGRASS:
+            return (
+                (
+                    world->GetTotalLight(pos) >= 8 ||
+                    world->CanBlockSeeTheSky(pos)
+                ) && 
+                CanGrow(type, world->GetBlockType(Int3{pos.x,pos.y-1,pos.z}))
+            );
+        default:
+            break;
     }
     return false;
 }
