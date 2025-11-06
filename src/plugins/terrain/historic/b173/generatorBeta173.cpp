@@ -66,6 +66,13 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     this->caver->GenerateCavesForChunk(this->world, cX, cZ, c);    
     // Generate heightmap
     c->GenerateHeightMap();
+    
+    // Testing for pack.png seed
+    //std::cout << std::hex;
+    if (cX == 5 && cZ == -5) {
+        //c->PrintHeightmap();
+    }
+
     c->state = ChunkState::Generated;
     c->modified = true;
     return c;
@@ -453,7 +460,6 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     long xOffset = this->rand->nextLong() / 2L * 2L + 1L;
     long zOffset = this->rand->nextLong() / 2L * 2L + 1L;
     this->rand->setSeed(((long(cX) * xOffset) + (long(cZ) * zOffset)) ^ this->world->seed);
-    double fraction = 0.25D;
     [[maybe_unused]] int xCoordinate;
     [[maybe_unused]] int yCoordinate;
     [[maybe_unused]] int zCoordinate;
@@ -546,7 +552,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         Beta173Feature(BLOCK_ORE_LAPIS_LAZULI).GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 6);
     }
 
-    fraction = 0.5D;
+    double fraction = 0.5D;
     int treeDensitySample = int(
         (
             this->treeDensityNoiseGen->GenerateOctaves(

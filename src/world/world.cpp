@@ -282,7 +282,7 @@ void World::UpdateLightingInfdev() {
         if (!BlockExists(pos)) continue;
 
         int currentLevel = GetLight(current.skyLight, pos);
-        int translucency = std::max(uint8_t(1), GetTranslucency(GetBlockType(pos)));
+        int translucency = std::max(uint8_t(1), GetOpacity(GetBlockType(pos)));
 
         // Spread to 6 neighbors
         static const Int3 dirs[6] = {

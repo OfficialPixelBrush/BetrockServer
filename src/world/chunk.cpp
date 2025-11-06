@@ -23,8 +23,17 @@ void Chunk::GenerateHeightMap() {
             this->UpdateSkylight_do(x, z);
         }
     }
+}
 
-    this->modified = true;
+void Chunk::PrintHeightmap() {
+    for (int x = 0; x < 16; ++x) {
+        std::cout << "[";
+        for (int z = 0; z < 16; ++z) {
+            std::cout << "0x" << int(this->heightMap[(z & 15) << 4 | (x & 15)]);
+            if (z < 15) std::cout << ",";
+        }
+        std::cout << "]," << std::endl;
+    }
 }
 
 void Chunk::RelightBlock(int x, int y, int z) {
@@ -35,7 +44,7 @@ void Chunk::RelightBlock(int x, int y, int z) {
     }
 
     // We decrement heightValue until we hit a fully opaque block
-    while(heightValue > 0 && GetTranslucency(this->GetBlockType(Int3{x, heightValue - 1, z})) == 0) {
+    while(heightValue > 0 && GetOpacity(this->GetBlockType(Int3{x, heightValue - 1, z})) == 0) {
         //int bType = this->GetBlockType(Int3{x, heightValue - 1, z});
         //std::cout << Int3{x, heightValue - 1, z} << IdToLabel(bType) << ": " << (int)GetTranslucency(bType) << std::endl;
         --heightValue;
@@ -82,7 +91,7 @@ void Chunk::RelightBlock(int x, int y, int z) {
 
         while(heightValue > 0 && iz > 0) {
             --heightValue;
-            heightMapValue = GetTranslucency(
+            heightMapValue = GetOpacity(
                 this->GetBlockType(Int3{x, heightValue, z})
             );
             if(heightMapValue == 0) {
@@ -127,7 +136,7 @@ Block* Chunk::GetBlock(Int3 pos) {
     if (pos.x < 0 || pos.y < 0 || pos.z < 0 ||
         pos.x >= CHUNK_WIDTH_X || pos.y >= CHUNK_HEIGHT || pos.z >= CHUNK_WIDTH_Z)
         return nullptr;
-    return &blocks[pos.y + pos.z * CHUNK_HEIGHT + pos.x * CHUNK_HEIGHT * CHUNK_WIDTH_Z];
+    return &blocks[PositionToBlockIndex(pos)];
 }
 Block* Chunk::GetBlock(int32_t x, int8_t y, int32_t z) {
     return GetBlock(Int3{x,y,z});

@@ -35,6 +35,7 @@ class Chunk {
         Chunk(World* world, int32_t cX, int32_t cZ) : world(world), xPos(cX), zPos(cZ) {}
         int8_t GetHeightValue(uint8_t x, uint8_t z);
         void GenerateHeightMap();
+        void PrintHeightmap();
         Block* GetBlock(Int3 pos);
         Block* GetBlock(int32_t x, int8_t y, int32_t z);
         bool CanBlockSeeTheSky(Int3 pos);

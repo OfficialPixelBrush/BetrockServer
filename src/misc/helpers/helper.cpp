@@ -98,14 +98,16 @@ Int3 BlockIndexToPosition(int32_t index) {
     Int3 pos;
     pos.y = index % CHUNK_HEIGHT;
     index /= CHUNK_HEIGHT;
-    pos.z = index % CHUNK_WIDTH_X;
-    index /= CHUNK_WIDTH_X;
+
+    pos.z = index % CHUNK_WIDTH_Z;
+    index /= CHUNK_WIDTH_Z;
+
     pos.x = index;
     return pos;
 }
 
 int32_t PositionToBlockIndex(Int3 pos) {
-    return (pos.z * CHUNK_WIDTH_X + pos.x) * CHUNK_HEIGHT + pos.y;
+    return pos.y + pos.z * CHUNK_HEIGHT + pos.x * (CHUNK_HEIGHT * CHUNK_WIDTH_Z);
 }
 
 // Turn a float value into a byte, mapping the range 0-255 to 0°-360°

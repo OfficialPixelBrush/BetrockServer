@@ -23,7 +23,7 @@ bool Beta173Tree::Generate(World* world, JavaRandom* rand, int xBlock, int yBloc
                 for(zI = zBlock - width; zI <= zBlock + width && canPlace; ++zI) {
                     if(yI >= 0 && yI < CHUNK_HEIGHT) {
                         blockType = world->GetBlockType(Int3{xI, yI, zI});
-                        if(blockType != 0 && blockType != BLOCK_LEAVES) {
+                        if(blockType != BLOCK_AIR && blockType != BLOCK_LEAVES) {
                             canPlace = false;
                         }
                     } else {

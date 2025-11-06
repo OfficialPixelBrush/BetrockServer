@@ -1,7 +1,7 @@
 #include "blocks.h"
 #include "world.h"
 
-// Roughly based on how they're defined in Infdev 20100327
+// Roughly based on how they're defined in Beta 1.7.3
 bool IsOpaque(int16_t id) {
     return !(
         id == BLOCK_AIR ||
@@ -35,7 +35,7 @@ bool IsTranslucent(int16_t id) {
 }
 
 // Returns how much the skylight is filtered by the specified block
-uint8_t GetTranslucency(int16_t id) {    
+uint8_t GetOpacity(int16_t id) {    
     // Water seems to drop the skylight brightness by 3 levels with each block
     switch(id) {
         case BLOCK_WATER_FLOWING:
