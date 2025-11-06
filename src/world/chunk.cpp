@@ -5,18 +5,18 @@ int8_t Chunk::GetHeightValue(uint8_t x, uint8_t z) {
 }
 
 void Chunk::GenerateHeightMap() {
-    int y = 127;
+    int lowestBlock = CHUNK_HEIGHT-1;
     int x,z;
     for(x = 0; x < CHUNK_WIDTH_X; ++x) {
         for(z = 0; z < CHUNK_WIDTH_Z; ++z) {
-            this->heightMap[z << 4 | x] = -128;
-            this->RelightBlock(x, 127, z);
+            this->heightMap[z << 4 | x] = -CHUNK_HEIGHT;
+            this->RelightBlock(x, CHUNK_HEIGHT-1, z);
             if((this->heightMap[z << 4 | x] & 255) < y) {
-                y = this->heightMap[z << 4 | x] & 255;
+                lowestBlock = this->heightMap[z << 4 | x] & 255;
             }
         }
     }
-    this->lowestBlockHeight = y;
+    this->lowestBlockHeight = lowestBlock;
 
     for(x = 0; x < 16; ++x) {
         for(z = 0; z < 16; ++z) {
