@@ -582,6 +582,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     for(int i = 0; i < numberOfTrees; ++i) {
         xCoordinate = blockX + this->rand->nextInt(16) + 8;
         zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        yCoordinate = world->GetHeightValue(xCoordinate, zCoordinate);
 
         enum TreeState {
             TREE_NONE,
@@ -613,8 +614,6 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
                 break;
         }
 
-        yCoordinate = world->GetHeightValue(xCoordinate, zCoordinate);
-
         // Generate the appropriate tree
         switch(ts) {
             case TREE_SMALL:
@@ -640,7 +639,6 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
                 break;
         }
     }
-
 
     int8_t numberOfFlowers = 0;
     switch (biome) {

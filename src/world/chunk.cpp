@@ -1,16 +1,14 @@
 #include "chunk.h"
 
 int8_t Chunk::GetHeightValue(uint8_t x, uint8_t z) {
-    x = x%15;
-    z = z%15;
-    return this->heightMap[z << 4 | x] & 255;
+    return this->heightMap[(z & 15) << 4 | (x & 15)];
 }
 
 void Chunk::GenerateHeightMap() {
     int y = 127;
     int x,z;
-    for(x = 0; x < 16; ++x) {
-        for(z = 0; z < 16; ++z) {
+    for(x = 0; x < CHUNK_WIDTH_X; ++x) {
+        for(z = 0; z < CHUNK_WIDTH_Z; ++z) {
             this->heightMap[z << 4 | x] = -128;
             this->RelightBlock(x, 127, z);
             if((this->heightMap[z << 4 | x] & 255) < y) {

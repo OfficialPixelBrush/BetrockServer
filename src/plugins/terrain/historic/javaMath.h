@@ -5,8 +5,8 @@
 // Library for emulating Java/Java Edition math functions
 
 // Linear Interpolation
-inline double lerp(double a, double b, double t) {
-    return b + a * (t - b);
+inline double lerp(double t, double a, double b) {
+    return a + t * (b - a);
 }
 
 inline double grad(int var0, double var1, double var3, double var5) {
