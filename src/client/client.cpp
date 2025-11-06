@@ -220,7 +220,7 @@ void Client::HandleClient() {
 
 	// If the server is dead, it'll take care of all this
 	if (server.IsAlive()) {
-		player->Save();
+		if (player) player->Save();
 		{
 			std::scoped_lock lockConnectedClients(server.GetConnectedClientMutex());
 			auto &clients = server.GetConnectedClients();
@@ -315,12 +315,14 @@ void Client::DisconnectClient(std::string disconnectMessage, bool tellOthers, bo
 		SendResponse(true);
 	}
 	// Inform other clients
-	if (tellOthers) {
-		Respond::ChatMessage(broadcastOthersResponse, "§e" + player->username + " left the game.");
+	if (player) {
+		if (tellOthers) {
+			Respond::ChatMessage(broadcastOthersResponse, "§e" + player->username + " left the game.");
+		}
+		Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
+		BroadcastToClients(broadcastOthersResponse,this);
+		Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
 	}
-	Respond::DestroyEntity(broadcastOthersResponse,player->entityId);
-	BroadcastToClients(broadcastOthersResponse,this);
-	Betrock::Logger::Instance().Info(player->username + " has disconnected. (" + disconnectMessage + ")");
 }
 
 // Add something to the current clients upcoming response packet

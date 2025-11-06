@@ -556,8 +556,47 @@ bool CanStay(int8_t type, World* world, Int3 pos) {
                 ) && 
                 CanGrow(type, world->GetBlockType(Int3{pos.x,pos.y-1,pos.z}))
             );
+        case BLOCK_CACTUS:
+            {
+                if (
+                    IsSolid(world->GetBlockType(pos+Int3{-1,0,0})) ||
+                    IsSolid(world->GetBlockType(pos+Int3{ 1,0,0})) ||
+                    IsSolid(world->GetBlockType(pos+Int3{0,0,-1})) ||
+                    IsSolid(world->GetBlockType(pos+Int3{0,0, 1}))
+                ) {
+                    return false;
+                }
+                int8_t blockType = world->GetBlockType(pos+Int3{0,-1,0});
+                return (blockType == BLOCK_CACTUS || blockType == BLOCK_SAND);
+            }
+        case BLOCK_SUGARCANE:
+            {
+                int8_t blockType = world->GetBlockType(pos+Int3{0,-1,0});
+                if (blockType == type) return true;
+                if (blockType != BLOCK_GRASS && blockType != BLOCK_DIRT) return false;
+                return (
+                    world->GetBlockType(pos+Int3{-1,-1, 0}) == BLOCK_WATER_STILL ||
+                    world->GetBlockType(pos+Int3{-1,-1, 0}) == BLOCK_WATER_FLOWING ||
+                    world->GetBlockType(pos+Int3{ 1,-1, 0}) == BLOCK_WATER_STILL ||
+                    world->GetBlockType(pos+Int3{ 1,-1, 0}) == BLOCK_WATER_FLOWING ||
+                    world->GetBlockType(pos+Int3{ 0,-1,-1}) == BLOCK_WATER_STILL ||
+                    world->GetBlockType(pos+Int3{ 0,-1,-1}) == BLOCK_WATER_FLOWING ||
+                    world->GetBlockType(pos+Int3{ 0,-1, 1}) == BLOCK_WATER_STILL ||
+                    world->GetBlockType(pos+Int3{ 0,-1, 1}) == BLOCK_WATER_FLOWING
+                );
+            }
         default:
             break;
     }
-    return false;
+    // If nothing is set here, assume it can stay
+    return true;
+}
+
+bool CanBePlaced(int8_t type, World* world, Int3 pos) {
+    switch(type) {
+        case BLOCK_SUGARCANE:
+            return CanStay(type,world,pos);
+        default:
+            return true;
+    }
 }

@@ -457,3 +457,49 @@ bool Beta173Feature::GenerateDeadbush(World* world, JavaRandom* rand, int blockX
         --blockY;
     }
 }
+
+bool Beta173Feature::GenerateSugarcane(World* world, JavaRandom* rand, int blockX, int blockY, int blockZ) {
+    for(int i = 0; i < 20; ++i) {
+        int xOffset = blockX + rand->nextInt(4) - rand->nextInt(4);
+        int zOffset = blockZ + rand->nextInt(4) - rand->nextInt(4);
+        if(
+            world->GetBlockType(Int3{xOffset, blockY, zOffset}) == BLOCK_AIR &&
+            (
+                world->GetBlockType(Int3{xOffset - 1, blockY - 1, zOffset    }) == BLOCK_WATER_STILL ||
+                world->GetBlockType(Int3{xOffset - 1, blockY - 1, zOffset    }) == BLOCK_WATER_FLOWING ||
+                world->GetBlockType(Int3{xOffset + 1, blockY - 1, zOffset    }) == BLOCK_WATER_STILL ||
+                world->GetBlockType(Int3{xOffset + 1, blockY - 1, zOffset    }) == BLOCK_WATER_FLOWING ||
+                world->GetBlockType(Int3{xOffset    , blockY - 1, zOffset - 1}) == BLOCK_WATER_STILL ||
+                world->GetBlockType(Int3{xOffset    , blockY - 1, zOffset - 1}) == BLOCK_WATER_FLOWING ||
+                world->GetBlockType(Int3{xOffset    , blockY - 1, zOffset + 1}) == BLOCK_WATER_STILL ||
+                world->GetBlockType(Int3{xOffset    , blockY - 1, zOffset + 1}) == BLOCK_WATER_FLOWING
+            )
+        ) {
+            int height = 2 + rand->nextInt(rand->nextInt(3) + 1);
+
+            for(int h = 0; h < height; ++h) {
+                if(CanStay(BLOCK_SUGARCANE, world, Int3{xOffset, blockY + h, zOffset})) {
+                    world->SetBlockType(BLOCK_SUGARCANE, Int3{xOffset, blockY + h, zOffset});
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+bool Beta173Feature::GeneratePumpkins(World* world, JavaRandom* rand, int blockX, int blockY, int blockZ) {
+    for(int i = 0; i < 64; ++i) {
+        int xOffset = blockX + rand->nextInt(8) - rand->nextInt(8);
+        int yOffset = blockY + rand->nextInt(4) - rand->nextInt(4);
+        int zOffset = blockZ + rand->nextInt(8) - rand->nextInt(8);
+        if(
+            world->GetBlockType(Int3{xOffset, yOffset, zOffset}) == BLOCK_AIR &&
+            world->GetBlockType(Int3{xOffset, yOffset - 1, zOffset}) == BLOCK_GRASS &&
+            CanBePlaced(BLOCK_PUMPKIN, world, Int3{xOffset, yOffset, zOffset})
+        ) {
+            world->SetBlockTypeAndMeta(BLOCK_PUMPKIN, rand->nextInt(4), Int3{xOffset, yOffset, zOffset});
+        }
+    }
+    return true;
+}

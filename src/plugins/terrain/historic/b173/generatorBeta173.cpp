@@ -659,9 +659,9 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     }
 
     for(int8_t i = 0; i < numberOfFlowers; ++i) {
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
         Beta173Feature(BLOCK_DANDELION).GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
@@ -693,9 +693,9 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
             grassMeta = 2;
         }
 
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
         Beta173Feature(BLOCK_TALLGRASS, grassMeta).GenerateTallgrass(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
@@ -703,45 +703,45 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     if(biome == BIOME_DESERT) numberOfDeadbushes = 2;
 
     for(int i = 0; i < numberOfDeadbushes; ++i) {
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
         Beta173Feature(BLOCK_DEADBUSH).GenerateDeadbush(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     if(this->rand->nextInt(2) == 0) {
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
         Beta173Feature(BLOCK_ROSE).GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     if(this->rand->nextInt(4) == 0) {
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
         Beta173Feature(BLOCK_MUSHROOM_BROWN).GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     if(this->rand->nextInt(8) == 0) {
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
         Beta173Feature(BLOCK_MUSHROOM_RED).GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     for(int i = 0; i < 10; ++i) {
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-        //(new WorldGenReed()).generate(this->worldObj, this->rand, x, z, int offsetX);
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+        Beta173Feature(BLOCK_SUGARCANE).GenerateSugarcane(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     if(this->rand->nextInt(32) == 0) {
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-        //(new WorldGenPumpkin()).generate(this->worldObj, this->rand, temperature7, x, z);
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+        Beta173Feature(BLOCK_SUGARCANE).GeneratePumpkins(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     int8_t numberOfCacti = 0;
@@ -750,23 +750,23 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
     }
 
     for(int i = 0; i < numberOfCacti; ++i) {
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
         //(new WorldGenCactus()).generate(this->worldObj, this->rand, z, int offsetX, offsetZ);
     }
 
     for(int i = 0; i < 50; ++i) {
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(this->rand->nextInt(120) + 8);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
         //(new WorldGenLiquids(Block.waterMoving.blockID)).generate(this->worldObj, this->rand, z, int offsetX, offsetZ);
     }
 
     for(int i = 0; i < 20; ++i) {
-        xCoordinate = blockX + this->rand->nextInt(16) + 8;
+        xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(112) + 8) + 8);
-        zCoordinate = blockZ + this->rand->nextInt(16) + 8;
+        zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
         //(new WorldGenLiquids(Block.lavaMoving.blockID)).generate(this->worldObj, this->rand, z, int offsetX, offsetZ);
     }
 
