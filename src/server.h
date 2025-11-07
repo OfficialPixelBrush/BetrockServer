@@ -1,7 +1,7 @@
 #pragma once
+#include <atomic>
 #include <cstdint>
 #include <mutex>
-#include <stdatomic.h>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -197,8 +197,8 @@ class Server {
 	int32_t latestEntityId = 0;
 	int32_t maximumPlayers = NO_LIMIT;
 	int chunkDistance = 10;
-	atomic_uint64_t serverTime = 0;
-	atomic_uint64_t upTime = 0;
+	std::atomic_uint64_t serverTime = 0;
+	std::atomic_uint64_t upTime = 0;
 	WorldManagerMap worldManagers;
 	std::unordered_map<int8_t, std::jthread> worldManagerThreads;
 	std::vector<std::unique_ptr<Plugin>> plugins;
