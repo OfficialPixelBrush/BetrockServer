@@ -240,72 +240,196 @@ void World::PlaceBlockUpdate(Int3 pos, int8_t type, int8_t meta, bool sendUpdate
     if (sendUpdate) UpdateBlock(pos);
 }
 
-// This is just called "a" in the Source Code
+static constexpr int MAX_LIGHTING_UPDATES = 1'000'000;
+static constexpr int SCHEDULE_DUP_SCAN = 5;
+static constexpr int UPDATING_ITER_LIMIT = 500;
+static constexpr int MAX_CONCURRENT_SCHEDULED = 50;
+
+// ---- SpreadLight (unchanged semantics; ensure it pushes to back) ----
 void World::SpreadLight(bool skyLight, Int3 pos, int newLightLevel) {
     if (!BlockExists(pos)) return;
 
     int oldLevel = GetLight(skyLight, pos);
     if (newLightLevel <= oldLevel) return; // no improvement, skip
 
-    // Update block light
+    // Update block light in chunk if chunk is present
     if (Chunk* c = GetChunk(pos.x >> 4, pos.z >> 4)) {
         c->SetLight(skyLight, {pos.x & 15, pos.y, pos.z & 15}, newLightLevel);
     }
 
-    // Enqueue for further propagation
-    std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
-    lightingToUpdate.push(LightUpdate(skyLight, pos, Int3{}));
-}
-
-// This is just called "a" in the Source Code
-void World::AddToLightQueue(bool skyLight, Int3 posA, Int3 posB) {
-    std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);  // Ensure thread safety
-    this->lightingToUpdate.emplace(LightUpdate(skyLight,posA,posB));
-}
-
-void World::UpdateLightingInfdev() {
-    std::queue<LightUpdate> queue;
-
-    {   // transfer updates to local queue
+    // Enqueue for further propagation (push to back to follow Java semantics of add -> remove last)
+    {
         std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
-        while (!lightingToUpdate.empty()) {
-            queue.push(lightingToUpdate.front());
-            lightingToUpdate.pop();
+        if ((int)lightingToUpdate.size() >= MAX_LIGHTING_UPDATES) {
+            // drop silently to avoid unbounded memory; you can log if desired
+        } else {
+            lightingToUpdate.emplace_back(LightUpdate{skyLight, pos, Int3{}});
         }
     }
+}
 
-    while (!queue.empty()) {
-        LightUpdate current = queue.front();
-        queue.pop();
+void World::ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool checkDuplicates) {
+    //worldProvider.hasNoSky()
+    if (true && skyLight) return;
 
-        Int3 pos = current.posA;
-        if (!BlockExists(pos)) continue;
+    ++lightingUpdatesScheduled;
+    try {
+        if (lightingUpdatesScheduled >= MAX_CONCURRENT_SCHEDULED) {
+            --lightingUpdatesScheduled;
+            return;
+        }
 
-        int currentLevel = GetLight(current.skyLight, pos);
-        int translucency = std::max(uint8_t(1), GetOpacity(GetBlockType(pos)));
+        int midX = (pos1.x + pos2.x) / 2;
+        int midZ = (pos1.z + pos2.z) / 2;
 
-        // Spread to 6 neighbors
-        static const Int3 dirs[6] = {
-            { 1, 0, 0}, {-1, 0, 0},
-            { 0, 1, 0}, { 0,-1, 0},
-            { 0, 0, 1}, { 0, 0,-1}
-        };
+        if (!BlockExists({midX, 64, midZ})) {
+            --lightingUpdatesScheduled;
+            return;
+        }
 
-        for (const auto& d : dirs) {
-            Int3 n = { pos.x + d.x, pos.y + d.y, pos.z + d.z };
-            if (!BlockExists(n)) continue;
+        Chunk* chunk = GetChunk(midX >> 4, midZ >> 4);
+        if (!chunk) {
+            --lightingUpdatesScheduled;
+            return;
+        }
 
-            int neighborLevel = GetLight(current.skyLight, n);
-            int newLevel = std::max(0, currentLevel - translucency);
+        // Duplicate suppression: scan up to last SCHEDULE_DUP_SCAN entries
+        if (checkDuplicates) {
+            std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
+            int scan = std::min((int)lightingToUpdate.size(), SCHEDULE_DUP_SCAN);
+            for (int i = 0; i < scan; ++i) {
+                LightUpdate& lu = lightingToUpdate[lightingToUpdate.size() - 1 - i];
 
-            if (newLevel > neighborLevel) {
-                if (Chunk* c = GetChunk(n.x >> 4, n.z >> 4)) {
-                    c->SetLight(current.skyLight, {n.x & 15, n.y, n.z & 15}, newLevel);
-                    queue.push(LightUpdate(current.skyLight, n, Int3{}));
+                // Here we compare skyLight plus bounding-box overlap heuristic.
+                if (lu.skyLight != skyLight) continue;
+                if(MergeBox(lu.posA, lu.posB, pos1.x,pos1.y,pos1.z, pos2.x,pos2.y,pos2.z)) {
+                    return;
+                }
+            }
+        }
+
+        // push new scheduled update as a single-point LightUpdate using posA,posB to store bbox if needed
+        {
+            std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
+            if ((int)lightingToUpdate.size() >= MAX_LIGHTING_UPDATES) {
+                // too many, clear as Java did (or drop)
+                lightingToUpdate.clear();
+            } else {
+                // store bbox endpoints in posA/posB (or adapt your LightUpdate structure)
+                lightingToUpdate.emplace_back(LightUpdate{skyLight, Int3{pos1.x,pos1.y,pos1.z}, Int3{pos2.x,pos2.y,pos2.z}});
+            }
+        }
+    } catch (...) {
+        --lightingUpdatesScheduled;
+        throw;
+    }
+    --lightingUpdatesScheduled;
+}
+
+bool World::UpdatingLighting() {
+    // limit concurrent updating runs
+    int counter = lightingUpdatesCounter.load();
+    if (counter >= MAX_CONCURRENT_SCHEDULED) {
+        return false;
+    }
+    ++lightingUpdatesCounter;
+    try {
+        int iterationsLeft = UPDATING_ITER_LIMIT;
+
+        while (true) {
+            LightUpdate task;
+            {
+                std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
+                if (lightingToUpdate.empty()) break;
+                // Java removes from end: LIFO behavior
+                task = lightingToUpdate.back();
+                lightingToUpdate.pop_back();
+            }
+
+            if (--iterationsLeft <= 0) {
+                return true; // aborted because iteration cap reached
+            }
+
+            // Process this single LightUpdate.
+            // Implement func_4127_a(this) equivalent: here we'll run localized propagation starting at task.posA.
+            // Use the same propagation logic as UpdateLightingInfdev but confined per-task.
+            ProcessSingleLightUpdate(task);
+        }
+
+        return false; // finished without hitting limit
+    } catch (...) {
+        --lightingUpdatesCounter;
+        throw;
+    }
+    --lightingUpdatesCounter;
+}
+
+// ---- Helper: process a single LightUpdate with same 6-neighbour spread used earlier ----
+void World::ProcessSingleLightUpdate(const LightUpdate &current) {
+    Int3 pos = current.posA;
+    if (!BlockExists(pos)) return;
+
+    int currentLevel = GetLight(current.skyLight, pos);
+    int translucency = std::max<uint8_t>(1, GetOpacity(GetBlockType(pos)));
+
+    static const Int3 dirs[6] = {
+        { 1, 0, 0}, {-1, 0, 0},
+        { 0, 1, 0}, { 0,-1, 0},
+        { 0, 0, 1}, { 0, 0,-1}
+    };
+
+    for (const auto& d : dirs) {
+        Int3 n = { pos.x + d.x, pos.y + d.y, pos.z + d.z };
+        if (!BlockExists(n)) continue;
+
+        int neighborLevel = GetLight(current.skyLight, n);
+        int newLevel = std::max(0, currentLevel - translucency);
+
+        if (newLevel > neighborLevel) {
+            if (Chunk* c = GetChunk(n.x >> 4, n.z >> 4)) {
+                c->SetLight(current.skyLight, {n.x & 15, n.y, n.z & 15}, newLevel);
+                // schedule further propagation by pushing new LightUpdate
+                std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
+                if ((int)lightingToUpdate.size() < MAX_LIGHTING_UPDATES) {
+                    lightingToUpdate.emplace_back(LightUpdate{current.skyLight, n, Int3{}});
                 }
             }
         }
     }
+}
+
+bool World::MergeBox(Int3& posA, Int3& posB, int a1, int a2, int a3, int a4, int a5, int a6) {
+    int &bx1=posA.x, &by1=posA.y, &bz1=posA.z;
+    int &bx2=posB.x, &by2=posB.y, &bz2=posB.z;
+
+    // fully inside
+    if(a1>=bx1 && a2>=by1 && a3>=bz1 && a4<=bx2 && a5<=by2 && a6<=bz2)
+        return true;
+
+    const int t=1;
+    if(a1>=bx1-t && a2>=by1-t && a3>=bz1-t &&
+       a4<=bx2+t && a5<=by2+t && a6<=bz2+t) {
+
+        int old_dx=bx2-bx1, old_dy=by2-by1, old_dz=bz2-bz1;
+        int old_vol=old_dx*old_dy*old_dz;
+
+        int nx1=(a1>bx1?bx1:a1);
+        int ny1=(a2>by1?by1:a2);
+        int nz1=(a3>bz1?bz1:a3);
+        int nx2=(a4<bx2?bx2:a4);
+        int ny2=(a5<by2?by2:a5);
+        int nz2=(a6<bz2?bz2:a6);
+
+        int new_dx=nx2-nx1, new_dy=ny2-ny1, new_dz=nz2-nz1;
+        int new_vol=new_dx*new_dy*new_dz;
+
+        if(new_vol - old_vol <= 2) {
+            bx1=nx1; by1=ny1; bz1=nz1;
+            bx2=nx2; by2=ny2; bz2=nz2;
+            return true;
+        }
+    }
+    return false;
 }
 
 void World::UpdateBlock(Int3 position) {

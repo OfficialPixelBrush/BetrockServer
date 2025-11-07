@@ -73,7 +73,7 @@ void WorldManager::Run() {
     // TODO: Add clean-up thread to remove unseen chunks
     while (Betrock::Server::Instance().IsAlive()) {
         //GenerateQueuedChunks();
-        world.UpdateLightingInfdev();
+        world.UpdatingLighting();
         std::this_thread::sleep_for(std::chrono::milliseconds(500)); // Sleep for half a second
     }
 

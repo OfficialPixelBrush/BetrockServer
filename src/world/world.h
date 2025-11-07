@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <random>
 #include <queue>
+#include <atomic>
 
 #include "helper.h"
 #include "blocks.h"
@@ -38,7 +39,7 @@ class World {
         std::mutex regionMutex;
 
         std::unordered_map<long, std::unique_ptr<Chunk>> chunks;
-        std::queue<LightUpdate>lightingToUpdate;
+        std::deque<LightUpdate> lightingToUpdate;
         std::filesystem::path dirPath;
         void RemoveChunk(int32_t x, int32_t z);
         std::random_device dev;
@@ -46,9 +47,11 @@ class World {
         bool RandomTick(Int3& pos);
         mutable std::shared_mutex lightUpdateMutex;
         mutable std::shared_mutex chunkMutex;
+        std::atomic<int> lightingUpdatesCounter{0};
+        std::atomic<int> lightingUpdatesScheduled{0};
+        bool MergeBox(Int3& posA, Int3& posB, int a1, int a2, int a3, int a4, int a5, int a6);
     public:
         int64_t seed;
-        void UpdateLightingInfdev();
         World(const std::string &extra = "");
 
         // Block-related
@@ -75,7 +78,9 @@ class World {
 
         // Light-related
         void SpreadLight(bool skyLight, Int3 pos, int limit);
-        void AddToLightQueue(bool skyLight, Int3 posA, Int3 posB);
+        void ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool checkDuplicates = true);
+        bool UpdatingLighting();
+        void ProcessSingleLightUpdate(const LightUpdate &current);
         void SetLight(bool skyLight, Int3 pos,int8_t newLight);
         int8_t GetLight(bool skyLight, Int3 pos);
         int8_t GetTotalLight(Int3 pos);

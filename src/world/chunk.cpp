@@ -9,10 +9,23 @@ void Chunk::GenerateHeightMap() {
     int x,z;
     for(x = 0; x < CHUNK_WIDTH_X; ++x) {
         for(z = 0; z < CHUNK_WIDTH_Z; ++z) {
-            this->heightMap[z << 4 | x] = -CHUNK_HEIGHT;
-            this->RelightBlock(x, CHUNK_HEIGHT-1, z);
-            if((this->heightMap[z << 4 | x] & 255) < lowestBlock) {
-                lowestBlock = this->heightMap[z << 4 | x] & 255;
+            int y = CHUNK_HEIGHT-1;
+            
+            for(y = CHUNK_HEIGHT-1; y > 0; --y) {
+                if (GetOpacity(GetBlockType(Int3{x,y-1,z})) == 0) break;
+            }
+
+            this->heightMap[z << 4 | x] = (int8_t)y;
+            if (y < lowestBlock) {
+                lowestBlock = y;
+            }
+
+            // Check if the world has no sky (nether)
+            int8_t light = 15;
+            for(y = CHUNK_HEIGHT-1; y > 0; --y) {
+                light -= GetOpacity(GetBlockType(Int3{x,y,z}));
+                if (light <= 0) break;
+                SetSkyLight(light,Int3{x,y,z});
             }
         }
     }
@@ -23,6 +36,7 @@ void Chunk::GenerateHeightMap() {
             this->UpdateSkylight_do(x, z);
         }
     }
+    this->modified = true;
 }
 
 void Chunk::PrintHeightmap() {
@@ -37,74 +51,72 @@ void Chunk::PrintHeightmap() {
 }
 
 void Chunk::RelightBlock(int x, int y, int z) {
-    int heightMapValue = this->heightMap[z << 4 | x] & 255;
-    int heightValue = heightMapValue;
-    if(y > heightMapValue) {
-        heightValue = y;
-    }
+    int oldY = this->heightMap[(z << 4) | x] & 255;
+    int newY = oldY;
+    if (y > oldY) newY = y;
 
-    // We decrement heightValue until we hit a fully opaque block
-    while(heightValue > 0 && GetOpacity(this->GetBlockType(Int3{x, heightValue - 1, z})) == 0) {
-        //int bType = this->GetBlockType(Int3{x, heightValue - 1, z});
-        //std::cout << Int3{x, heightValue - 1, z} << IdToLabel(bType) << ": " << (int)GetTranslucency(bType) << std::endl;
-        --heightValue;
-    }
+    // match Infdev logic: walk downward until a solid block
+    while (newY > 0 && GetOpacity(GetBlockType({x, newY - 1, z})) == 0)
+        --newY;
 
-    // If heightValue and heightMapValue aren't equal, we recalculate lighting
-    if(heightValue != heightMapValue) {
-        // This is purely for the Infdev Singleplayer client to update stuff visually
-        //this->world->MarkBlocksDirtyVertical(x, z, heightValue, heightMapValue);
-        this->heightMap[z << 4 | x] = (int8_t)heightValue;
-        int ix;
-        int iz;
-        if(heightValue < this->lowestBlockHeight) {
-            this->lowestBlockHeight = heightValue;
+    if (newY != oldY) {
+        // visual update
+        // this->world->MarkBlocksDirtyVertical(x, z, newY, oldY);
+
+        this->heightMap[(z << 4) | x] = int8_t(newY);
+
+        if (newY < this->lowestBlockHeight) {
+            this->lowestBlockHeight = newY;
         } else {
-            y = 127;
-
-            for(ix = 0; ix < 16; ++ix) {
-                for(iz = 0; iz < 16; ++iz) {
-                    if((this->heightMap[iz << 4 | ix] & 255) < y) {
-                        y = this->heightMap[iz << 4 | ix] & 255;
-                    }
+            int m = CHUNK_HEIGHT - 1;
+            for (int ix = 0; ix < 16; ++ix) {
+                for (int iz = 0; iz < 16; ++iz) {
+                    int h = this->heightMap[(iz << 4) | ix] & 255;
+                    if (h < m) m = h;
                 }
             }
-
-            this->lowestBlockHeight = y;
+            this->lowestBlockHeight = m;
         }
 
-        y = (this->xPos << 4) + x;
-        ix = (this->zPos << 4) + z;
-        if(heightValue < heightMapValue) {
-            for(iz = heightValue; iz < heightMapValue; ++iz) {
-                this->SetLight(true,Int3{x, iz, z}, 15);
-            }
-        } else {
-            this->world->AddToLightQueue(true, Int3{y, heightMapValue, ix}, Int3{y, heightValue, ix});
+        int wx = (this->xPos << 4) + x;
+        int wz = (this->zPos << 4) + z;
 
-            for(iz = heightMapValue; iz < heightValue; ++iz) {
-                this->SetLight(true,Int3{x, iz, z}, 0);
-            }
+        // height lowered
+        if (newY < oldY) {
+            for (int yy = newY; yy < oldY; ++yy)
+                this->SetSkyLight(15, {x, yy, z});
+        }
+        // height raised
+        else {
+            this->world->ScheduleLightingUpdate(true, {wx, oldY, wz}, {wx, newY, wz});
+            for (int yy = oldY; yy < newY; ++yy)
+                this->SetSkyLight(0, {x, yy, z});
         }
 
-        iz = 15;
+        int light = 15;
+        int stopY = newY;    // var10
+        int yy = newY;
 
-        while(heightValue > 0 && iz > 0) {
-            --heightValue;
-            heightMapValue = GetOpacity(
-                this->GetBlockType(Int3{x, heightValue, z})
+        // propagate downward
+        while (yy > 0 && light > 0) {
+            --yy;
+            int op = GetOpacity(GetBlockType({x, yy, z}));
+            if (op == 0) op = 1;
+            light -= op;
+            if (light < 0) light = 0;
+            this->SetSkyLight(light, {x, yy, z});
+        }
+
+        // drop until solid
+        while (yy > 0 && GetOpacity(GetBlockType({x, yy - 1, z})) == 0)
+            --yy;
+
+        if (yy != stopY) {
+            this->world->ScheduleLightingUpdate(
+                true,
+                {wx - 1, yy, wz - 1},
+                {wx + 1, stopY, wz + 1}
             );
-            if(heightMapValue == 0) {
-                heightMapValue = 1;
-            }
-
-            iz -= heightMapValue;
-            if(iz < 0) {
-                iz = 0;
-            }
-
-            this->SetLight(true,Int3{x, heightValue, z}, iz);
-            this->world->SpreadLight(true, Int3{y, heightValue, ix}, -1);
         }
 
         this->modified = true;
@@ -124,13 +136,14 @@ void Chunk::UpdateSkylight_do(int x, int z) {
 void Chunk::CheckSkylightNeighborHeight(int x, int z, int height) {
     int worldHeight = this->world->GetHeightValue(x, z);
     if(worldHeight > height) {
-        this->world->AddToLightQueue(true, Int3{x, height, z}, Int3{x, worldHeight, z});
+        this->world->ScheduleLightingUpdate(true, Int3{x, height, z}, Int3{x, worldHeight, z});
     } else if(worldHeight < height) {
-        this->world->AddToLightQueue(true, Int3{x, worldHeight, z}, Int3{x, height, z});
+        this->world->ScheduleLightingUpdate(true, Int3{x, worldHeight, z}, Int3{x, height, z});
     }
 
     this->modified = true;
 }
+
 
 Block* Chunk::GetBlock(Int3 pos) {
     if (pos.x < 0 || pos.y < 0 || pos.z < 0 ||
