@@ -2,6 +2,7 @@
 #include "javaRandom.h"
 #include "javaMath.h"
 #include <cmath>
+#include <vector>
 
 class NoiseGenerator {
     private:
