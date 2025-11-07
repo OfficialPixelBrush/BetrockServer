@@ -39,7 +39,6 @@ class Chunk {
         Block* GetBlock(Int3 pos);
         Block* GetBlock(int32_t x, int8_t y, int32_t z);
         bool CanBlockSeeTheSky(Int3 pos);
-        bool CanBlockSeeTheSky(int32_t x, int8_t y, int32_t z);
         void SetLight(bool skyLight, Int3 pos, int8_t newLight);
         int8_t GetLight(bool skyLight, Int3 pos);
         int8_t GetTotalLight(Int3 pos);

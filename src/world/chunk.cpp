@@ -11,7 +11,7 @@ void Chunk::GenerateHeightMap() {
         for(z = 0; z < CHUNK_WIDTH_Z; ++z) {
             this->heightMap[z << 4 | x] = -CHUNK_HEIGHT;
             this->RelightBlock(x, CHUNK_HEIGHT-1, z);
-            if((this->heightMap[z << 4 | x] & 255) < y) {
+            if((this->heightMap[z << 4 | x] & 255) < lowestBlock) {
                 lowestBlock = this->heightMap[z << 4 | x] & 255;
             }
         }
@@ -149,10 +149,6 @@ bool Chunk::CanBlockSeeTheSky(Int3 pos) {
     }
     //if (!heightMap) return false;
     return pos.y >= (this->heightMap[pos.z << 4 | pos.x] & 255);
-}
-
-bool Chunk::CanBlockSeeTheSky(int32_t x, int8_t y, int32_t z) {
-    return CanBlockSeeTheSky(Int3{x,y,z});
 }
 
 int8_t Chunk::GetLight(bool skyLight, Int3 pos) {
