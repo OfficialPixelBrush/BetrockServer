@@ -122,7 +122,7 @@ std::string CommandTeleport::Execute(std::vector<std::string> command, std::vect
 			Respond::ChatMessage(response, "§7Teleported  " + sourcePlayer->username + " to (" + std::to_string(x) + ", "  + std::to_string(y) + ", " + std::to_string(z) + ")");
 			return "";
 		} catch (const std::exception &e) {
-			// Fallthrough
+			return ERROR_REASON_PARAMETERS;
 		}
 
 		// Option 2: Target client
