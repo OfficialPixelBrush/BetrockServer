@@ -11,7 +11,16 @@
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62
 
+enum INVENTORY_SECTION {
+    INVENTORY_SECTION_MAIN = 0,
+    INVENTORY_SECTION_ARMOR = 1,
+    INVENTORY_SECTION_CRAFTING = 2
+};
+
 class Player : public Entity {
+    private:
+        int8_t InventoryMappingLocalToNbt(INVENTORY_SECTION section, int8_t slot);
+        int8_t InventoryMappingNbtToLocal(INVENTORY_SECTION section, int8_t slot);
     public:
         std::string username = "";
 
@@ -31,7 +40,13 @@ class Player : public Entity {
         int8_t health = HEALTH_MAX;
 
         // Inventory
-        Item inventory[INVENTORY_MAX_SLOTS];
+        Item inventory[INVENTORY_MAIN_SIZE];
+        // 3 = helmet
+        // 2 = chestplate
+        // 1 = leggings
+        // 0 = boots
+        Item armor[INVENTORY_ARMOR_SIZE];
+        Item crafting[INVENTORY_CRAFTING_SIZE];
 
         Player(int &entityId, Vec3 position, int8_t dimension, std::string world, Vec3 spawnPosition, int8_t spawnDimension, std::string spawnWorld)
             : Entity(entityId++, position, dimension, world),

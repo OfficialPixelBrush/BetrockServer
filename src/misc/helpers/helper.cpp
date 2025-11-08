@@ -94,9 +94,25 @@ Int3 BlockToChunkPosition(Vec3 position) {
 	return BlockToChunkPosition(intPos);
 }
 
+Int3 BlockIndexToPosition(int32_t index) {
+    Int3 pos;
+    pos.y = index % CHUNK_HEIGHT;
+    index /= CHUNK_HEIGHT;
+
+    pos.z = index % CHUNK_WIDTH_Z;
+    index /= CHUNK_WIDTH_Z;
+
+    pos.x = index;
+    return pos;
+}
+
+int32_t PositionToBlockIndex(Int3 pos) {
+    return pos.y + pos.z * CHUNK_HEIGHT + pos.x * (CHUNK_HEIGHT * CHUNK_WIDTH_Z);
+}
+
 // Turn a float value into a byte, mapping the range 0-255 to 0°-360°
 int8_t ConvertFloatToPackedByte(float value) {
-	return static_cast<int8_t>((value/360.0)*255.0);
+	return static_cast<int8_t>((value/360.0f)*255.0f);
 }
 
 constexpr std::array<const char*, 256> packetLabels = [] {
@@ -327,4 +343,12 @@ std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size) {
 
 void LimitBlockCoordinates(Int3 &position) {
     position.y = std::max(std::min(position.y,127),0);
+}
+
+size_t GetFileSize(std::fstream& file){
+    auto current = file.tellg();
+    file.seekg(0, std::ios::end);
+    size_t size = file.tellg();
+    file.seekg(current);
+    return size;
 }

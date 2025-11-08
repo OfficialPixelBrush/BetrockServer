@@ -1,6 +1,10 @@
 #pragma once
+#include <cstdint>
+#include "nbt.h"
 
 #define SLOT_EMPTY -1
+
+std::shared_ptr<Tag> NbtItem(int8_t slot, int16_t id, int8_t count, int16_t damage);
 
 enum Items {
     ITEM_MINIMUM = 255,
@@ -109,4 +113,9 @@ enum Items {
     ITEM_MAP,
     ITEM_SHEARS,
     ITEM_MAX,
+    ITEM_RECORD_13 = 2256,
+    ITEM_RECORD_CAT = 2257
 };
+
+bool IsHoe(uint8_t id);
+bool CanPlace(uint8_t id);

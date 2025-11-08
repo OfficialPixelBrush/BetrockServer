@@ -27,6 +27,10 @@ uint64_t Server::GetServerTime() const noexcept { return this->serverTime; }
 
 uint64_t Server::GetUpTime() const noexcept { return this->upTime; }
 
+int32_t Server::GetMaximumPlayers() const noexcept { return this->maximumPlayers; }
+
+std::string Server::GetMotd() const noexcept { return this->motd; }
+
 WorldManagerMap &Server::GetWorldManagers() noexcept { return this->worldManagers; }
 
 WorldManager *Server::GetWorldManager(int8_t worldId) const {
@@ -57,15 +61,12 @@ void Server::AddUpTime(uint64_t upTime) { this->upTime += upTime; }
 
 void Server::SetSpawnPoint(const Int3 &spawnPoint) noexcept { this->spawnPoint = spawnPoint; }
 
-Client *Server::FindClientByUsername(std::string_view username) const {
-	auto client = std::ranges::find_if(std::ranges::views::all(this->connectedClients),
-									   [&username](const auto &c) { return c->GetPlayer()->username == username; });
+Client* Server::FindClientByUsername(std::string_view username) const {
+	auto client = std::ranges::find_if(connectedClients, [&username](const auto& c) {
+		return c->GetUsername() == username;
+	});
 
-	if (client == this->connectedClients.end()) {
-		return nullptr;
-	}
-
-	return std::to_address(*client);
+	return client == connectedClients.end() ? nullptr : std::to_address(*client);
 }
 
 void Server::AddWorldManager(int8_t worldId) {
@@ -137,6 +138,7 @@ void Server::LoadConfig() {
 											{"view-distance", "10"},
 											{"white-list","false"},
 											{"server-ip", ""},
+											{"motd", "A Minecraft Server"},
 											//{"pvp","true"},
 											// use a random device to seed another prng that gives us our seed
 											{"level-seed", std::to_string(std::mt19937(std::random_device()())())},
@@ -147,7 +149,7 @@ void Server::LoadConfig() {
 											{"max-players","-1"},
 											//{"online-mode","false"},
 											//{"allow-flight","false"}
-											{"generator", "inf20100327"}});
+											{"generator", "beta173"}});
 		GlobalConfig::Instance().SaveToDisk();
 	} else {
 		GlobalConfig::Instance().LoadFromDisk();
@@ -157,6 +159,7 @@ void Server::LoadConfig() {
 		} catch (const std::invalid_argument& e) {
 			seed = (long)hashCode(GlobalConfig::Instance().GetAsString("level-seed"));
 		}
+		motd = GlobalConfig::Instance().GetAsString("motd");
 		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int>("max-players");
 		whitelistEnabled = GlobalConfig::Instance().GetAsBoolean("white-list");
 	}

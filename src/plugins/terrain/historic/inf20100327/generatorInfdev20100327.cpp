@@ -18,7 +18,7 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t seed, World* world) : G
 std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
     std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
     this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
-    std::memset(c->blocks, 0, sizeof(c->blocks));
+    std::fill(std::begin(c->blocks), std::end(c->blocks), Block{BLOCK_AIR});
 
     // Terrain shape generation
     for(int macroX = 0; macroX < 4; ++macroX) {
@@ -55,7 +55,7 @@ std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
                         double var37 = (double)macroX1 / 4.0D;
                         double var39 = var28 + (var32 - var28) * var37;
                         double var41 = var30 + (var34 - var30) * var37;
-                        int blockIndex = macroX1 + (macroX << 2) << 11 | 0 + (macroZ << 2) << 7 | (macroY << 2) + var25;
+                        int blockIndex = (macroX1 + ((macroX << 2) << 11)) | (0 + ((macroZ << 2) << 7)) | ((macroY << 2) + var25);
 
                         for(int var36 = 0; var36 < 4; ++var36) {
                             double var45 = (double)var36 / 4.0D;
@@ -170,10 +170,10 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
 
 bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* world, JavaRandom* rand, int var3, int var4, int macroX) {
     float macroZ = rand->nextFloat() * (float)M_PI;
-    double var7 = (double)((float)(var3 + 8) + std::sin(macroZ) * 2.0F);
-    double blockY = (double)((float)(var3 + 8) - std::sin(macroZ) * 2.0F);
-    double world1 = (double)((float)(macroX + 8) + std::cos(macroZ) * 2.0F);
-    double world3 = (double)((float)(macroX + 8) - std::cos(macroZ) * 2.0F);
+    double var7 = (double)((float)(var3 + 8) + MathHelper::sin(macroZ) * 2.0F);
+    double blockY = (double)((float)(var3 + 8) - MathHelper::sin(macroZ) * 2.0F);
+    double world1 = (double)((float)(macroX + 8) + MathHelper::cos(macroZ) * 2.0F);
+    double world3 = (double)((float)(macroX + 8) - MathHelper::cos(macroZ) * 2.0F);
     double world5 = (double)(var4 + rand->nextInt(3) + 2);
     double world7 = (double)(var4 + rand->nextInt(3) + 2);
 
@@ -182,8 +182,8 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* worl
         double rand2 = world5 + (world7 - world5) * (double)var3 / 16.0D;
         double rand4 = world1 + (world3 - world1) * (double)var3 / 16.0D;
         double rand6 = rand->nextDouble();
-        double rand8 = (double)(std::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
-        double var30 = (double)(std::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
+        double rand8 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
+        double var30 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
 
         for(var4 = (int)(rand0 - rand8 / 2.0D); var4 <= (int)(rand0 + rand8 / 2.0D); ++var4) {
             for(macroX = (int)(rand2 - var30 / 2.0D); macroX <= (int)(rand2 + var30 / 2.0D); ++macroX) {
@@ -191,11 +191,8 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* worl
                     double var35 = ((double)var4 + 0.5D - rand0) / (rand8 / 2.0D);
                     double var37 = ((double)macroX + 0.5D - rand2) / (var30 / 2.0D);
                     double var39 = ((double)var41 + 0.5D - rand4) / (rand8 / 2.0D);
-                    Block* b = world->GetBlock(Int3{var4, macroX, var41});
-                    if (!b) continue;
-                    if(var35 * var35 + var37 * var37 + var39 * var39 < 1.0D && b->type == BLOCK_STONE) {
-                        b->type = blockType;
-                        b->meta = 0;
+                    if(var35 * var35 + var37 * var37 + var39 * var39 < 1.0D && world->GetBlockType(Int3{var4, macroX, var41}) == BLOCK_STONE) {
+                        world->SetBlockTypeAndMeta(blockType, 0, Int3{var4, macroX, var41});
                     }
                 }
             }
@@ -252,7 +249,6 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 		int blockY = oreX + 2;
 		int var10 = this->rand->nextInt(3) + 4;
 		bool canPlaceTree = true;
-		bool cX3;
 		if(heightValue > 0 && heightValue + var10 + 1 <= CHUNK_HEIGHT) {
 			int treeY;
 			int var14;
@@ -281,14 +277,10 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 				}
 			}
 
-			if(!canPlaceTree) {
-				cX3 = false;
-			} else {
-                Block* b = world->GetBlock(Int3{var7, heightValue - 1, blockY});
-                if (!b) break;
-				treeY = b->type;
+			if(canPlaceTree) {
+				treeY = world->GetBlockType(Int3{var7, heightValue - 1, blockY});
 				if((treeY == BLOCK_GRASS || treeY == BLOCK_DIRT) && heightValue < CHUNK_HEIGHT - var10 - 1) {
-				    b->type = BLOCK_DIRT;
+				    world->SetBlockType(BLOCK_DIRT, Int3{var7, heightValue - 1, blockY});
 
 					int cX2;
 					for(cX2 = heightValue - 3 + var10; cX2 <= heightValue + var10; ++cX2) {
@@ -300,32 +292,26 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 
 							for(treeY = blockY - var15; treeY <= blockY + var15; ++treeY) {
 								int var17 = treeY - blockY;
-                                Block* b = world->GetBlock(Int3{blockId, cX2, treeY});
-                                if (!b) continue;
-								if((std::abs(cX1) != var15 || std::abs(var17) != var15 || this->rand->nextInt(2) != 0 && var14 != 0) && !IsOpaque(b->type)) {
-                                    b->type = BLOCK_LEAVES;
-                                    b->meta = 0;
+								if (
+                                    (
+                                        (std::abs(cX1) != var15) ||
+                                        (std::abs(var17) != var15) ||
+                                        (this->rand->nextInt(2) != 0 && var14 != 0)
+                                    ) && !IsOpaque(world->GetBlockType(Int3{blockId, cX2, treeY}))
+                                ) {
+                                    world->SetBlockTypeAndMeta(BLOCK_LEAVES, 0, Int3{blockId, cX2, treeY});
 								}
 							}
 						}
 					}
 
 					for(cX2 = 0; cX2 < var10; ++cX2) {
-                        Block* b = world->GetBlock(Int3{var7, heightValue + cX2, blockY});
-                        if (!b) continue;
-						if(!IsOpaque(b->type)) {
-                            b->type = BLOCK_LOG;
-                            b->meta = 0;
+						if(!IsOpaque(world->GetBlockType(Int3{var7, heightValue + cX2, blockY}))) {
+                            world->SetBlockTypeAndMeta(BLOCK_LOG, 0, Int3{var7, heightValue + cX2, blockY});
 						}
 					}
-
-					cX3 = true;
-				} else {
-					cX3 = false;
 				}
 			}
-		} else {
-			cX3 = false;
 		}
 	}
     return true;

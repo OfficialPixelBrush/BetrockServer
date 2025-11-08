@@ -123,6 +123,8 @@ void Respond::NamedEntitySpawn(std::vector<uint8_t> &response, int32_t& entityId
     AppendIntegerToVector(response, position.z);
     response.push_back(yaw);
     response.push_back(pitch);
+    // Must never be <0, otherwise the client gets rendering issues!
+    currentItem < 0 ? currentItem = 0 : currentItem;
     AppendShortToVector(response, currentItem);
 }
 
@@ -247,6 +249,19 @@ void Respond::Soundeffect(std::vector<uint8_t> &response, int32_t sound, Int3 po
     AppendIntegerToVector(response,extra);
 }
 
+void Respond::OpenWindow(std::vector<uint8_t> &response, int8_t windowId, uint8_t type, std::string name, int8_t size) {
+    response.push_back((uint8_t)Packet::OpenWindow);
+    response.push_back((uint8_t)windowId);
+    response.push_back((uint8_t)type);
+    AppendString8ToVector(response,name);
+    response.push_back((uint8_t)size);
+}
+
+void Respond::CloseWindow(std::vector<uint8_t> &response, int8_t windowId) {
+    response.push_back((uint8_t)Packet::CloseWindow);
+    response.push_back((uint8_t)windowId);
+}
+
 void Respond::SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slot, int16_t item, int8_t amount, int16_t damage) {
     response.push_back((uint8_t)Packet::SetSlot);
     response.push_back(window);
@@ -257,10 +272,11 @@ void Respond::SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slo
 }
 
 void Respond::WindowItems(std::vector<uint8_t> &response, int8_t window, std::vector<Item> payload) {
+    if (payload.empty()) return;
     response.push_back((uint8_t)Packet::WindowItems);
     response.push_back(window); // Player Inventory
     AppendShortToVector(response, payload.size());
-    for (int16_t slot = 0; slot < payload.size(); slot++) {
+    for (size_t slot = 0; slot < payload.size(); slot++) {
         Item i = payload[slot];
         AppendShortToVector(response,i.id);
         if (i.id > SLOT_EMPTY) {
@@ -268,6 +284,11 @@ void Respond::WindowItems(std::vector<uint8_t> &response, int8_t window, std::ve
             AppendShortToVector(response,i.damage);
         }
     }
+}
+
+// TODO: Check that there are enough lines
+void Respond::UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::array<std::string, 4> lines) {
+    UpdateSign(response,pos,lines[0],lines[1],lines[2],lines[3]);
 }
 
 void Respond::UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::string line1, std::string line2, std::string line3, std::string line4) {
@@ -281,7 +302,7 @@ void Respond::UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::string l
     AppendString16ToVector(response,line4);
 }
 
-void Respond::Disconnect(std::vector<uint8_t> &response, std::string message) {
+void Respond::Disconnect(std::string message) {
 	std::vector<uint8_t> disconnectResponse;
 	disconnectResponse.push_back((uint8_t)Packet::Disconnect);
 	AppendString16ToVector(disconnectResponse,message);

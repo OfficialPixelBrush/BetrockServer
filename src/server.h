@@ -1,7 +1,7 @@
 #pragma once
+#include <atomic>
 #include <cstdint>
 #include <mutex>
-#include <stdatomic.h>
 #include <thread>
 #include <unordered_map>
 #include <vector>
@@ -64,6 +64,10 @@ class Server {
 	uint64_t GetServerTime() const noexcept;
 
 	uint64_t GetUpTime() const noexcept;
+
+	int32_t GetMaximumPlayers() const noexcept;
+
+	std::string GetMotd() const noexcept;
 
 	WorldManagerMap &GetWorldManagers() noexcept;
 
@@ -144,7 +148,7 @@ class Server {
 
 			// Create new Client
 			// if player slots are available
-			if (server.maximumPlayers != NO_LIMIT && server.connectedClients.size() >= server.maximumPlayers) {
+			if (server.maximumPlayers != NO_LIMIT && int(server.connectedClients.size()) >= server.maximumPlayers) {
 				// Optionally send a rejection message to client
 				unsigned char rejectionCode = 0xFF;
 				send(client_fd, &rejectionCode, 1, 0);
@@ -193,8 +197,8 @@ class Server {
 	int32_t latestEntityId = 0;
 	int32_t maximumPlayers = NO_LIMIT;
 	int chunkDistance = 10;
-	atomic_uint64_t serverTime = 0;
-	atomic_uint64_t upTime = 0;
+	std::atomic_uint64_t serverTime = 0;
+	std::atomic_uint64_t upTime = 0;
 	WorldManagerMap worldManagers;
 	std::unordered_map<int8_t, std::jthread> worldManagerThreads;
 	std::vector<std::unique_ptr<Plugin>> plugins;
@@ -204,6 +208,7 @@ class Server {
 	std::vector<std::string> operators;
 	std::vector<std::string> whitelist;
 	bool whitelistEnabled = false;
+	std::string motd = "A Minecraft Server";
 
 	std::mutex connectedClientsMutex;
 	std::mutex entityIdMutex;

@@ -33,7 +33,11 @@ void CommandManager::Init() {
 	Register(std::make_shared<CommandUsage>());
 	Register(std::make_shared<CommandSummon>());
 	Register(std::make_shared<CommandPopulated>());
-    std::cout << "Registered " << registeredCommands.size() << " command(s)!" << std::endl;
+	Register(std::make_shared<CommandInterface>());
+	Register(std::make_shared<CommandRegion>());
+	Register(std::make_shared<CommandSeed>());
+	Register(std::make_shared<CommandEntity>());
+    //std::cout << "Registered " << registeredCommands.size() << " command(s)!" << std::endl;
 }
 
 // Register a single command
@@ -63,7 +67,7 @@ void CommandManager::Parse(std::string &rawCommand, Client* client) noexcept {
 
 	try {
         // TODO: Make this efficient
-        for (int i = 0; i < registeredCommands.size(); i++) {
+        for (size_t i = 0; i < registeredCommands.size(); i++) {
             if (registeredCommands[i]->GetLabel() == command[0]) {
                 failureReason = registeredCommands[i]->Execute(command, response, client);
                 break;

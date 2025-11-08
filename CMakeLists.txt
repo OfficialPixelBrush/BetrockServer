@@ -1,13 +1,18 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.2.12)
+project(BetrockServer VERSION 0.2.13)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+# This could be funny to do in the future :p
+#set(CMAKE_C_FLAGS "-m32 -march=pentium -static")
+#set(CMAKE_CXX_FLAGS "-m32 -march=pentium -static")
+#set(CMAKE_EXE_LINKER_FLAGS "-static")
 
 find_package(Lua REQUIRED)
 
@@ -39,9 +44,13 @@ configure_file(
     ${CMAKE_SOURCE_DIR}/src/misc/version.h
 )
 
+# Find threading library
+find_package(Threads REQUIRED)
+
 include_directories(
     "${PROJECT_SOURCE_DIR}/include"
     "${PROJECT_SOURCE_DIR}/include/pixnbt"
+    "${PROJECT_SOURCE_DIR}/src/client"
     "${PROJECT_SOURCE_DIR}/src/coms"
     "${PROJECT_SOURCE_DIR}/src/enums"
     "${PROJECT_SOURCE_DIR}/src/logger"
@@ -53,6 +62,7 @@ include_directories(
     "${PROJECT_SOURCE_DIR}/src/plugins/terrain"
     "${PROJECT_SOURCE_DIR}/src/plugins/terrain/historic"
     "${PROJECT_SOURCE_DIR}/src/plugins/terrain/historic/noise"
+    "${PROJECT_SOURCE_DIR}/src/world"
     "${PROJECT_SOURCE_DIR}/src/"
     ${LUA_INCLUDE_DIR}
 )
@@ -66,7 +76,9 @@ add_executable(
     src/coms/coms.cpp
     src/coms/responses.cpp
 
+    src/enums/drops.cpp
     src/enums/blocks.cpp
+    src/enums/items.cpp
     src/enums/labels.cpp
     src/enums/biomes.cpp
 
@@ -81,18 +93,22 @@ add_executable(
     src/misc/commands/command.cpp
     src/misc/commands/commandManager.cpp
     src/misc/gamerules.cpp
-    src/misc/lighting.cpp
+    #src/misc/lighting.cpp
     src/misc/sysinfo.cpp
 
-    src/objects/chunk.cpp
     src/objects/entity.cpp
     src/objects/player.cpp
-    src/objects/world.cpp
-    src/objects/worldManager.cpp
+
+    src/world/chunk.cpp
+    src/world/region.cpp
+    src/world/world.cpp
+    src/world/worldManager.cpp
 
     src/plugins/terrain/historic/inf20100227/generatorInfdev20100227.cpp
     src/plugins/terrain/historic/inf20100327/generatorInfdev20100327.cpp
     src/plugins/terrain/historic/b173/beta173Caver.cpp
+    src/plugins/terrain/historic/b173/beta173Feature.cpp
+    src/plugins/terrain/historic/b173/beta173Tree.cpp
     src/plugins/terrain/historic/b173/generatorBeta173.cpp
     src/plugins/terrain/historic/noise/noiseGenerator.cpp
     src/plugins/terrain/historic/noise/noisePerlin.cpp
@@ -101,7 +117,9 @@ add_executable(
     src/plugins/terrain/generator.cpp
     src/plugins/plugins.cpp
 
-    src/client.cpp
+    src/client/client.cpp
+    src/client/clientChunks.cpp
+    src/client/clientPackets.cpp
     src/config.cpp
     src/debug.cpp
     src/main.cpp
@@ -119,6 +137,30 @@ endif ()
 
 set(CMAKE_SYSTEM_NAME Linux)
 
+# If we're being extra pedantic
+target_compile_options(BetrockServer PRIVATE
+    # Make math more java-like
+    # -fexcess-precision=standard
+    -fno-fast-math
+    -ffloat-store
+    # Make code more secure
+    -Wall
+    -Wextra
+    #-Wpedantic           # Enforce strict ISO compliance
+    #-Wconversion          # Implicit conversions (int → float, etc.)
+    #-Wsign-conversion     # Sign mismatches
+    #-Wshadow              # Variable shadowing
+    -Wunused              # Unused variables, params, etc.
+    -Wuninitialized
+    -Werror               # Treat warnings as errors
+    -Wnon-virtual-dtor    # Common OOP pitfall
+    #-Wold-style-cast
+    -Woverloaded-virtual
+    -Wnull-dereference
+    -Wdouble-promotion
+    -Wformat=2
+)
+
 # Maybe get Windows Target working
 #if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
 #    set(CMAKE_C_COMPILER i686-w64-mingw32-gcc)
@@ -131,6 +173,7 @@ target_link_libraries(
     BetrockServer
     deflate
     ${LUA_LIBRARIES}
+    Threads::Threads
 )
 
 # Detect CPU architecture

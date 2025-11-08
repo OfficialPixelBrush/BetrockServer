@@ -47,3 +47,12 @@ Vec3 EntityInt3ToVec3(Int3 pos) {
 		double(pos.z)/32
 	};
 }
+
+AABB CalculateAABB(Vec3 position, AABB base) {
+    return AABB {
+		// This should be negative
+        position + base.min,
+		// This should be positive
+        position + base.max
+    };
+}

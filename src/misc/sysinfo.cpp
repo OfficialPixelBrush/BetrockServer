@@ -2,7 +2,7 @@
 
 int parseLine(char* line){
     // This assumes that a digit will be found and the line ends in " Kb".
-    int i = strlen(line);
+    int i = int(strlen(line));
     const char* p = line;
     while (*p <'0' || *p > '9') p++;
     line[i-3] = '\0';
@@ -39,4 +39,10 @@ double GetUsedMemoryMB() { //Note: this value is in KB!
     }
     fclose(file);
     return ((double)result/1024.0);
+}
+
+std::string GetUsedMemoryMBString() {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2) << GetUsedMemoryMB();
+    return ss.str();
 }

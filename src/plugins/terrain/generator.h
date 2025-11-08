@@ -11,7 +11,6 @@
 #include "generatorVersionCheck.h"
 #include "javaRandom.h"
 #include "noiseOctaves.h"
-#include "lighting.h"
 #include "chunk.h"
 #include "PerlinNoise.hpp"
 

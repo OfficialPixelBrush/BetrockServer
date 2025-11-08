@@ -6,21 +6,22 @@
 #define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH_X 16
 #define CHUNK_WIDTH_Z 16
-#define WATER_LEVEL 64
+#define WATER_LEVEL CHUNK_HEIGHT/2
 
 #define CHUNK_DATA_SIZE static_cast<size_t>(CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z * 2.5)
 
 #define OLD_CHUNK_FILE_EXTENSION ".cnk"
 #define CHUNK_FILE_EXTENSION ".ncnk"
+#define MCREGION_FILE_EXTENSION ".mcr"
 
 // Item
 struct Item {
-    int16_t id = 0;
+    int16_t id = -1;
     int8_t  amount = 0;
     int16_t damage = 0; // Also known as metadata
 
     friend std::ostream& operator<<(std::ostream& os, const Item& i) {
-        os << "(" << (int)i.id << ":" << (int)i.damage << "x" << (int)i.amount << ")";
+        os << "(" << int(i.id) << ":" << int(i.damage) << "x" << int(i.amount) << ")";
         return os;
     }
     
@@ -35,11 +36,12 @@ struct Item {
 struct Block {
     int8_t type = 0;
     int8_t meta = 0;
-    int8_t lightBlock = 0;
-    int8_t lightSky = 0;
+    // Blocklight 0xF0
+    // Skylight   0x0F
+    int8_t light = 0;
 
     friend std::ostream& operator<<(std::ostream& os, const Block& b) {
-        os << "(" << (int)b.type << ":" << (int)b.meta << ")";
+        os << "(" << int(b.type) << ":" << int(b.meta) << ")";
         return os;
     }
     
@@ -75,6 +77,14 @@ struct Vec3 {
         oss << *this; // Use the overloaded << operator
         return oss.str();
     }
+
+    double& operator[](int i) {
+        return *(&x + i);
+    }
+    
+    const double& operator[](int i) const {
+        return *(&x + i);
+    }
 };
 
 struct Int3 {
@@ -101,10 +111,24 @@ struct Int3 {
         oss << *this; // Use the overloaded << operator
         return oss.str();
     }
+
+    int& operator[](int i) {
+        return *(&x + i);
+    }
+
+    const int& operator[](int i) const {
+        return *(&x + i);
+    }
+};
+
+struct AABB {
+    Vec3 min;
+    Vec3 max;
 };
 
 typedef struct Vec3 Vec3;
 typedef struct Int3 Int3;
+typedef struct AABB AABB;
 
 Vec3 Int3ToVec3(Int3 i);
 Int3 Vec3ToInt3(Vec3 v);
@@ -112,3 +136,4 @@ Int3 Vec3ToInt3(Vec3 v);
 Int3 Int3ToEntityInt3(Int3 pos);
 Int3 Vec3ToEntityInt3(Vec3 pos);
 Vec3 EntityInt3ToVec3(Int3 pos);
+AABB CalculateAABB(Vec3 position, AABB base);

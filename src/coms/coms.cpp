@@ -144,7 +144,7 @@ void AppendLongToVector(std::vector<uint8_t> &vector, int64_t value) {
 	uint8_t byte3 = (value >> 24) & 0xFF;
 	uint8_t byte2 = (value >> 16) & 0xFF;
 	uint8_t byte1 = (value >> 8 ) & 0xFF;
-	uint8_t byte0 = (value 		) & 0xFF;
+	uint8_t byte0 = (value      ) & 0xFF;
 	vector.push_back(byte7);
 	vector.push_back(byte6);
 	vector.push_back(byte5);

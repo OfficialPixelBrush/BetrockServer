@@ -1,6 +1,8 @@
 #include "generator.h"
 #include "biomes.h"
 #include "beta173Caver.h"
+#include "beta173Feature.h"
+#include "beta173Tree.h"
 
 class GeneratorBeta173 : public Generator {
     private:
@@ -13,7 +15,7 @@ class GeneratorBeta173 : public Generator {
         std::unique_ptr<NoiseOctaves<NoisePerlin>> stoneNoiseGen;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> continentalnessNoiseGen;
         std::unique_ptr<NoiseOctaves<NoisePerlin>> depthNoiseGen;
-        std::unique_ptr<NoiseOctaves<NoisePerlin>> mobSpawnerNoiseGen;
+        std::unique_ptr<NoiseOctaves<NoisePerlin>> treeDensityNoiseGen;
 
         // Simplex Noise Generators
         std::unique_ptr<NoiseOctaves<NoiseSimplex>> temperatureNoiseGen;
@@ -41,10 +43,12 @@ class GeneratorBeta173 : public Generator {
         // Cave Gen
         std::unique_ptr<Beta173Caver> caver;
 
-        void GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap, std::vector<double>& temperature);
+        void GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c);
         std::vector<double> GenerateTerrainNoise(std::vector<double> terrainMap, int x, int y, int z, int xMax, int yMax, int zMax);
-        std::vector<Biome> GenerateBiomeMap(std::vector<Biome> biomeMap, int x, int z, int xMax, int zMax);
-        void ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c, std::vector<Biome> biomeMap);
+        std::vector<Biome> GenerateBiomeMap(int x, int z, int xMax, int zMax);
+        std::vector<double> GenerateTemperature(int x, int z, int xMax, int zMax);
+        void ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c);
+        Biome GetBiomeAt(int worldX, int worldZ);
     public:
         GeneratorBeta173(int64_t seed, World* world);
         ~GeneratorBeta173() = default;

@@ -8,6 +8,10 @@ A Server-Engine written in C++, made to work with Minecraft Beta 1.7.3. The goal
 - Commands
 - Lua-driven World Generation
 
+## Discord
+We have a [Discord Server](
+https://discord.gg/JHTz2HSKrf)!
+
 ## Getting Started
 How do you run your own BetrockServer instance?
 

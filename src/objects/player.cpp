@@ -69,14 +69,29 @@ void Player::Save() {
 	auto nbtInventory = std::make_shared<ListTag>("Inventory");
 	root->Put(nbtInventory);
 
-    for (int i = 0; i < INVENTORY_MAX_SLOTS; i++) {
+    for (int i = 0; i < INVENTORY_MAIN_SIZE; i++) {
         Item item = inventory[i];
         if (item.id == SLOT_EMPTY) {
             continue;
         }
         nbtInventory->Put(
             NbtItem(
-                NbtConvertToSlot(i),
+                InventoryMappingLocalToNbt(INVENTORY_SECTION_MAIN, i),
+                item.id,
+                item.amount,
+                item.damage
+            )
+        );
+    }
+
+    for (int i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
+        Item item = armor[i];
+        if (item.id == SLOT_EMPTY) {
+            continue;
+        }
+        nbtInventory->Put(
+            NbtItem(
+                InventoryMappingLocalToNbt(INVENTORY_SECTION_ARMOR, i),
                 item.id,
                 item.amount,
                 item.damage
@@ -95,7 +110,9 @@ void Player::Save() {
         std::cout << "Directory created: " << dirPath << '\n';
     }
     std::filesystem::path entryPath = dirPath / (username + ".dat");
-	NbtWriteToFile(entryPath,root);
+    std::ofstream writeFile(entryPath, std::ios::binary);
+	NbtWrite(writeFile,root);
+    writeFile.close();
 }
 
 // Load the players data from an NBT-format file
@@ -112,7 +129,9 @@ bool Player::Load() {
     }
 
     // Load the NBT Data into the root node
-    std::shared_ptr<CompoundTag> root = std::dynamic_pointer_cast<CompoundTag>(NbtReadFromFile(entryPath));
+    std::ifstream readFile(entryPath, std::ios::binary);
+    auto root = std::dynamic_pointer_cast<CompoundTag>(NbtRead(readFile));
+    readFile.close();
 
     // Get the players saved rotation
     std::shared_ptr<ListTag> rotationList = std::dynamic_pointer_cast<ListTag>(root->Get("Rotation"));
@@ -130,17 +149,49 @@ bool Player::Load() {
 
     // Get the players saved inventory
     std::shared_ptr<ListTag> inventoryList = std::dynamic_pointer_cast<ListTag>(root->Get("Inventory"));
-    for (int i = 0; i < inventoryList->GetNumberOfTags(); i++) {
+    for (size_t i = 0; i < inventoryList->GetNumberOfTags(); i++) {
         auto slot = std::dynamic_pointer_cast<CompoundTag>(inventoryList->Get(i));
-        int8_t  slotNumber = std::dynamic_pointer_cast<ByteTag>(slot->Get("Slot"))->GetData();
-        int16_t itemId = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"))->GetData();
-        int8_t  itemCount = std::dynamic_pointer_cast<ByteTag>(slot->Get("Count"))->GetData();
-        int16_t itemDamage = std::dynamic_pointer_cast<ShortTag>(slot->Get("Damage"))->GetData();
-        inventory[NbtConvertToSlot(slotNumber)] = {
-            itemId,
-            itemCount,
-            itemDamage
-        };
+        [[maybe_unused]] int8_t  slotNumber = std::dynamic_pointer_cast<ByteTag>(slot->Get("Slot"))->GetData();
+        [[maybe_unused]] int16_t itemId = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"))->GetData();
+        [[maybe_unused]] int8_t  itemCount = std::dynamic_pointer_cast<ByteTag>(slot->Get("Count"))->GetData();
+        [[maybe_unused]] int16_t itemDamage = std::dynamic_pointer_cast<ShortTag>(slot->Get("Damage"))->GetData();
+        if (slotNumber >= 100) {
+            armor[InventoryMappingNbtToLocal(INVENTORY_SECTION_ARMOR, slotNumber)] = {
+                itemId,
+                itemCount,
+                itemDamage
+            };
+        } else {
+            inventory[InventoryMappingNbtToLocal(INVENTORY_SECTION_MAIN, slotNumber)] = {
+                itemId,
+                itemCount,
+                itemDamage
+            };
+        }
     }
     return true;
+}
+
+int8_t Player::InventoryMappingLocalToNbt(INVENTORY_SECTION section, int8_t slotId) {
+    switch(section) {
+        case INVENTORY_SECTION_MAIN:
+            return slotId;
+        case INVENTORY_SECTION_ARMOR:
+            return slotId+100;
+        default:
+        case INVENTORY_SECTION_CRAFTING:
+            return 0;
+    }
+}
+
+int8_t Player::InventoryMappingNbtToLocal(INVENTORY_SECTION section, int8_t slotId) {
+    switch(section) {
+        case INVENTORY_SECTION_MAIN:
+            return slotId;
+        case INVENTORY_SECTION_ARMOR:
+            return slotId-100;
+        default:
+        case INVENTORY_SECTION_CRAFTING:
+            return 0;
+    }
 }

@@ -46,7 +46,7 @@ std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_
                 int blockType = BLOCK_AIR;
                 if((blockX == 0 || blockZ == 0) && blockY <= terrainHeight + 2) {
                     blockType = BLOCK_OBSIDIAN;
-                } else if(blockY == terrainHeight + 1 && terrainHeight >= WATER_LEVEL && decorationChance < 0.02D) {
+                } else if(blockY == terrainHeight + 1 && terrainHeight >= WATER_LEVEL && decorationChance < 0.02f) {
                     blockType = BLOCK_DANDELION;
                 } else if(blockY == terrainHeight && terrainHeight >= WATER_LEVEL) {
                     blockType = BLOCK_GRASS;
@@ -91,6 +91,9 @@ std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_
 }
 
 // Do nothing, since population didn't exist yet
-bool GeneratorInfdev20100227::PopulateChunk(int32_t cX, int32_t cZ) {
+bool GeneratorInfdev20100227::PopulateChunk(
+    [[maybe_unused]] int32_t cX,
+    [[maybe_unused]] int32_t cZ
+) {
     return true;
 }

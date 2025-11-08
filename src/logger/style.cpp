@@ -5,52 +5,52 @@ std::string FormatToStyle(int8_t format) {
     switch(format) {
         // Colors
         case '0': 
-            return "\e[30m";
+            return "\033[30m";
         case '1':
-            return "\e[34m";
+            return "\033[34m";
         case '2':
-            return "\e[32m";
+            return "\033[32m";
         case '3':
-            return "\e[36m";
+            return "\033[36m";
         case '4':
-            return "\e[31m";
+            return "\033[31m";
         case '5':
-            return "\e[35m";
+            return "\033[35m";
         case '6':
-            return "\e[33m";
+            return "\033[33m";
         case '7':
-            return "\e[37m";
+            return "\033[37m";
         case '8':
-            return "\e[90m";
+            return "\033[90m";
         case '9':
-            return "\e[94m";
+            return "\033[94m";
         case 'a':
-            return "\e[92m";
+            return "\033[92m";
         case 'b':
-            return "\e[96m";
+            return "\033[96m";
         case 'c':
-            return "\e[91m";
+            return "\033[91m";
         case 'd':
-            return "\e[95m";
+            return "\033[95m";
         case 'e':
-            return "\e[93m";
+            return "\033[93m";
         case 'f':
-            return "\e[97m";
+            return "\033[97m";
         // Bold
         case 'l':
-            return "\e[1m";
+            return "\033[1m";
         // Strikethrough
         case 'm':
-            return "\e[9m";
+            return "\033[9m";
         // Underlined
         case 'n':
-            return "\e[4m";
+            return "\033[4m";
         // Italic
         case 'o':
-            return "\e[3m";
+            return "\033[3m";
         // Obfuscated
         case 'k':
-            return "\e[37;105m";
+            return "\033[37;105m";
         // Reset
         default:
             return STYLE_RESET;
