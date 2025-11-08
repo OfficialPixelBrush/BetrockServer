@@ -133,33 +133,35 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(BetrockServer PRIVATE -ggdb)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
+
+    # Putting this in debug is rather stupid,
+    # but I don't care!
+    # If we're being extra pedantic
+    target_compile_options(BetrockServer PRIVATE
+        # Make math more java-like
+        # -fexcess-precision=standard
+        -fno-fast-math
+        -ffloat-store
+        # Make code more secure
+        -Wall
+        -Wextra
+        #-Wpedantic           # Enforce strict ISO compliance
+        #-Wconversion          # Implicit conversions (int → float, etc.)
+        #-Wsign-conversion     # Sign mismatches
+        #-Wshadow              # Variable shadowing
+        -Wunused              # Unused variables, params, etc.
+        -Wuninitialized
+        -Werror               # Treat warnings as errors
+        -Wnon-virtual-dtor    # Common OOP pitfall
+        #-Wold-style-cast
+        -Woverloaded-virtual
+        -Wnull-dereference
+        -Wdouble-promotion
+        -Wformat=2
+    )
 endif ()
 
 set(CMAKE_SYSTEM_NAME Linux)
-
-# If we're being extra pedantic
-target_compile_options(BetrockServer PRIVATE
-    # Make math more java-like
-    # -fexcess-precision=standard
-    -fno-fast-math
-    -ffloat-store
-    # Make code more secure
-    -Wall
-    -Wextra
-    #-Wpedantic           # Enforce strict ISO compliance
-    #-Wconversion          # Implicit conversions (int → float, etc.)
-    #-Wsign-conversion     # Sign mismatches
-    #-Wshadow              # Variable shadowing
-    -Wunused              # Unused variables, params, etc.
-    -Wuninitialized
-    -Werror               # Treat warnings as errors
-    -Wnon-virtual-dtor    # Common OOP pitfall
-    #-Wold-style-cast
-    -Woverloaded-virtual
-    -Wnull-dereference
-    -Wdouble-promotion
-    -Wformat=2
-)
 
 # Maybe get Windows Target working
 #if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
