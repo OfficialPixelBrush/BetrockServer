@@ -37,6 +37,7 @@ void CommandManager::Init() {
 	Register(std::make_shared<CommandRegion>());
 	Register(std::make_shared<CommandSeed>());
 	Register(std::make_shared<CommandEntity>());
+	Register(std::make_shared<CommandModified>());
     //std::cout << "Registered " << registeredCommands.size() << " command(s)!" << std::endl;
 }
 

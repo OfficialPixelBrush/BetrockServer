@@ -579,3 +579,9 @@ std::string CommandEntity::Execute([[maybe_unused]] std::vector<std::string> com
 	
 	return "Last ID was " + std::to_string(server.GetLatestEntityId());
 }
+
+// Get the number of modified chunks
+std::string CommandModified::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+	DEFINE_PERMSCHECK(client);	
+	return std::to_string(Betrock::Server::Instance().GetWorld(0)->GetNumberOfModifiedChunks());
+}

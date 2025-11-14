@@ -17,6 +17,16 @@ int World::GetNumberOfPopulatedChunks() {
     return populatedChunks;
 }
 
+int World::GetNumberOfModifiedChunks() {
+    int modifiedChunks = 0;
+    for (const auto& [key, chunkPtr] : chunks) {
+        if (chunkPtr && chunkPtr->modified) {
+            modifiedChunks++;
+        }
+    }
+    return modifiedChunks;
+}
+
 
 int8_t World::GetHeightValue(int32_t x, int32_t z) {
     Chunk* c = GetChunk(x >> 4, z >> 4);
@@ -195,7 +205,7 @@ void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
     if (debugDisableSave) return;
 
     if (!chunk || !chunk->modified) {
-        //
+        return;
     }
 
     // Update Chunklight before saving

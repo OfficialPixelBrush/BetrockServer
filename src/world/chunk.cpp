@@ -193,6 +193,7 @@ void Chunk::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
         return;
     }
     SetBlockLight(newLight, pos);
+    this->modified = true;
 }
 
 int8_t Chunk::GetBlockType(Int3 pos) {
@@ -207,6 +208,7 @@ void Chunk::SetBlockType(int8_t blockType, Int3 pos) {
     if (!b) return;
     b->type = blockType;
     RelightBlock(pos.x, pos.y, pos.z);
+    this->modified = true;
 }
 
 int8_t Chunk::GetBlockMeta(Int3 pos) {
@@ -220,6 +222,7 @@ void Chunk::SetBlockMeta(int8_t blockType, Int3 pos) {
     Block* b = this->GetBlock(pos);
     if (!b) return;
     b->meta = blockType;
+    this->modified = true;
 }
 
 
@@ -234,6 +237,7 @@ void Chunk::SetBlockLight(int8_t value, Int3 pos) {
     if (!b) return;
     b->light &= 0x0F;
     b->light |= ((value & 0xF) << 4);
+    this->modified = true;
 }
 
 int8_t Chunk::GetSkyLight(Int3 pos) {
@@ -247,6 +251,7 @@ void Chunk::SetSkyLight(int8_t value, Int3 pos) {
     if (!b) return;
     b->light &= 0xF0;
     b->light |= (value & 0xF);
+    this->modified = true;
 }
 
 void Chunk::SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos) {
@@ -254,6 +259,7 @@ void Chunk::SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos) {
     if (!b) return;
     b->type = blockType;
     b->meta = blockMeta;
+    this->modified = true;
     //RelightBlock(pos.x, pos.y, pos.z);
 }
 
