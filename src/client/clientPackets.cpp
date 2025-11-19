@@ -242,6 +242,9 @@ bool Client::HandleEntityAction() {
 		case 2:
 			player->crouching = false;
 			break;
+		case 3:
+			// Player tries to leave bed
+			break;
 		default:
 			break;
 	}

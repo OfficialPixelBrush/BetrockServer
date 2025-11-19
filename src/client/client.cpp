@@ -46,7 +46,7 @@ ssize_t Client::Setup() {
 void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
 	std::string debugMessage = "";
 	if (debugReceivedPacketType) {
-		debugMessage += "Received " + PacketIdToLabel(packetType) + " from " + player->username + "! (" + std::to_string(bytes_received) + " Bytes)";
+		debugMessage += "Received " + PacketIdToLabel(packetType) + " from " + this->username + "! (" + std::to_string(bytes_received) + " Bytes)";
 	}
 	if (debugReceivedBytes) {
 		debugMessage += "\n" + Uint8ArrayToHexDump(message,bytes_received);

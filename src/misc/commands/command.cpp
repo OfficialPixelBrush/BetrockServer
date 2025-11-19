@@ -585,3 +585,31 @@ std::string CommandModified::Execute([[maybe_unused]] std::vector<std::string> c
 	DEFINE_PERMSCHECK(client);	
 	return std::to_string(Betrock::Server::Instance().GetWorld(0)->GetNumberOfModifiedChunks());
 }
+
+// Send a custom packet
+std::string CommandPacket::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+	DEFINE_PERMSCHECK(client);
+	if (command.size() < 2) return ERROR_REASON_PARAMETERS;
+	std::vector<uint8_t> broadcast;
+	bool broadcastToAll = false;
+	// 0th is "packet"
+	size_t part = 1;
+	// Send this to all
+	if (command[1] == "broadcast") {
+		broadcastToAll = true;
+		part++;
+	}
+	for (part = part; part < command.size(); part++) {
+		unsigned int x;   
+		std::stringstream ss;
+		ss << std::hex << command[part];
+        if (!(ss >> x) || x > 0xFF)
+            return "Invalid hex value"; // or handle error
+
+		std::cout << int(part) << ": " << int(x) << " - " << command[part] << std::endl;
+        if (broadcastToAll) broadcast.push_back(static_cast<uint8_t>(x));
+        else response.push_back(static_cast<uint8_t>(x));
+	}
+	if (broadcastToAll) BroadcastToClients(broadcast);
+	return "";
+}
