@@ -13,6 +13,14 @@ void QueueChunk::AddClient(const std::shared_ptr<Client>& requestClient) {
     requestedClients.push_back(requestClient);
 }
 
+WorldManager::WorldManager(int maxThreads) {
+    if (maxThreads < 1) {
+        workerCount =  std::thread::hardware_concurrency();
+        return;
+    }
+    workerCount = maxThreads;
+}
+
 // This adds a Chunk to the ChunkQueue
 void WorldManager::AddChunkToQueue(int32_t x, int32_t z, const std::shared_ptr<Client>& requestClient) {
     auto hash = GetChunkHash(x, z);  // Compute hash

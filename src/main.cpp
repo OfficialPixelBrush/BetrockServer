@@ -7,10 +7,8 @@
 #include "sysinfo.h"
 
 // The Save interval in ticks
-// This matches what Minecraft does
-// 6000 = 5 minutes
-// TODO: Apparently minecraft saves every 40 ticks???
-#define SAVE_INTERVAL 6000 
+// Save every 10 seconds
+#define SAVE_INTERVAL 10 * TICK_SPEED
 
 void HandleGracefulSignal(int) {
 	Betrock::Server::Instance().PrepareForShutdown();

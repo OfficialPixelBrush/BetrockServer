@@ -69,8 +69,12 @@ Client* Server::FindClientByUsername(std::string_view username) const {
 	return client == connectedClients.end() ? nullptr : std::to_address(*client);
 }
 
-void Server::AddWorldManager(int8_t worldId) {
-	const auto &[wmEntry, wmWorked] = this->worldManagers.try_emplace(worldId, std::make_unique<WorldManager>());
+void Server::AddWorldManager(int8_t worldId, int maxThreads) {
+	const auto &[wmEntry, wmWorked] =
+		this->worldManagers.try_emplace(
+			worldId,
+			std::make_unique<WorldManager>(maxThreads)
+		);
 
 	if (wmWorked == false) {
 		// TODO: better error handling + logger macros
@@ -92,7 +96,7 @@ void Server::AddWorldManager(int8_t worldId) {
 }
 
 void Server::SaveAll() {
-	Betrock::Logger::Instance().Info("Saving...");
+	//Betrock::Logger::Instance().Info("Saving...");
 	for (auto c : GetConnectedClients()){
 		if (c) {
 			c->GetPlayer()->Save();
@@ -101,7 +105,7 @@ void Server::SaveAll() {
 	for (const auto &[key, wm] : worldManagers) {
 		wm->FreeAndSave();
 	}
-	Betrock::Logger::Instance().Info("Saved");
+	//Betrock::Logger::Instance().Info("Saved");
 }
 
 void Server::FreeAll() {
@@ -147,6 +151,7 @@ void Server::LoadConfig() {
 											//{"allow-nether",true},
 											//{"spawn-monsters","true"},
 											{"max-players","-1"},
+											{"max-generator-threads","-1"},
 											//{"online-mode","false"},
 											//{"allow-flight","false"}
 											{"generator", "beta173"}});
@@ -161,12 +166,13 @@ void Server::LoadConfig() {
 		}
 		motd = GlobalConfig::Instance().GetAsString("motd");
 		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int>("max-players");
+		maximumThreads = GlobalConfig::Instance().GetAsNumber<int>("max-generator-threads");
 		whitelistEnabled = GlobalConfig::Instance().GetAsBoolean("white-list");
 	}
 
 	// Load all defined worlds
 	// TODO: Add file to configure custom worlds
-	AddWorldManager(0);
+	AddWorldManager(0, maximumThreads);
 	for (const auto &[key, wm] : worldManagers) {
 		wm->SetSeed(seed);
 	}
