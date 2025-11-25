@@ -111,7 +111,7 @@ int main() {
 			logger.Info("Preparing spawn area: " + std::to_string(percent) + "%");
 			lastTime = now;
 		}
-		std::this_thread::sleep_for(std::chrono::milliseconds(5));
+		std::this_thread::sleep_for(std::chrono::milliseconds(100));
 	}
 
 	Int3 spawn = Int3{0, 64, 0};

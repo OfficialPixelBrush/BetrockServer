@@ -16,7 +16,7 @@
 
 class Client;  // Forward declaration
 
-#define MAX_GENERATION_ATTEMPTS 25
+#define MAX_GENERATION_ATTEMPTS 5
 
 class QueueChunk {
     public:

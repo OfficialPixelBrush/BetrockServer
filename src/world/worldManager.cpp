@@ -161,7 +161,7 @@ void WorldManager::WorkerThread() {
             }
         }
         busyWorkers.fetch_sub(1, std::memory_order_relaxed);
-        std::this_thread::sleep_for(std::chrono::milliseconds(100)); // Sleep for 1/10th a second
+        //std::this_thread::sleep_for(std::chrono::milliseconds(10)); // Sleep for 1/10th a second
     }
 }
 
