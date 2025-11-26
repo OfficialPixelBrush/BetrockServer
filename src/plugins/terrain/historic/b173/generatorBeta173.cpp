@@ -29,15 +29,15 @@ GeneratorBeta173::GeneratorBeta173(int64_t seed, World* world) : Generator(seed,
     caver = std::make_unique<Beta173Caver>();
 }
 
-std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
-    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
+std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world,cX,cZ);
     this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
     
     // Allocate empty chunk
-    std::fill(std::begin(c->blocks), std::end(c->blocks), Block{BLOCK_AIR});
+    c->ClearChunk();
 
     // Generate Biomes
-	this->biomeMap = GenerateBiomeMap(
+	GenerateBiomeMap(
         cX * CHUNK_WIDTH_X,
         cZ * CHUNK_WIDTH_Z,
         CHUNK_WIDTH_X,
@@ -63,7 +63,7 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     // Replace some of the stone with Biome-appropriate blocks
     ReplaceBlocksForBiome(cX, cZ, c);
     // Carve caves
-    this->caver->GenerateCavesForChunk(this->world, cX, cZ, c);    
+    this->caver->GenerateCavesForChunk(this->world, cX, cZ, c);
     // Generate heightmap
     c->GenerateHeightMap();
     
@@ -79,7 +79,7 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
 }
 
 // Replace some of the stone with Biome-appropriate blocks
-void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chunk>& c) {
+void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::shared_ptr<Chunk>& c) {
     const double oneThirtySecond = 1.0D / 32.0D;
     // Init noise maps
     this->sandNoise.resize(256, 0.0);
@@ -87,19 +87,19 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
     this->stoneNoise.resize(256, 0.0);
 
     // Populate noise maps
-    this->sandNoise = this->sandGravelNoiseGen->GenerateOctaves(
+    this->sandGravelNoiseGen->GenerateOctaves(
         this->sandNoise,
         (double)(cX * CHUNK_WIDTH_X), (double)(cZ * CHUNK_WIDTH_Z),
         0.0D, 16, 16, 1,
         oneThirtySecond, oneThirtySecond, 1.0D
     );
-    this->gravelNoise = this->sandGravelNoiseGen->GenerateOctaves(
+    this->sandGravelNoiseGen->GenerateOctaves(
         this->gravelNoise,
         (double)(cX * CHUNK_WIDTH_X), 109.0134D, (double)(cZ * CHUNK_WIDTH_Z),
         16, 1, 16,
         oneThirtySecond, 1.0D, oneThirtySecond
     );
-    this->stoneNoise = this->stoneNoiseGen->GenerateOctaves(
+    this->stoneNoiseGen->GenerateOctaves(
         this->stoneNoise,
         (double)(cX * CHUNK_WIDTH_X), (double)(cZ * CHUNK_WIDTH_Z), 0.0D,
         16, 16, 1,
@@ -124,11 +124,11 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
                 int blockIndex = (z * CHUNK_WIDTH_X + x) * CHUNK_HEIGHT + y;
                 // Place Bedrock at bottom with some randomness
                 if(y <= 0 + this->rand->nextInt(5)) {
-                    c->blocks[blockIndex].type = BLOCK_BEDROCK;
+                    c->SetBlockType(BLOCK_BEDROCK, BlockIndexToPosition(blockIndex));
                     continue;
                 }
 
-                uint8_t currentBlock = c->blocks[blockIndex].type;
+                uint8_t currentBlock = c->GetBlockType(BlockIndexToPosition(blockIndex));
                 // Ignore air
                 if(currentBlock == BLOCK_AIR) {
                     stoneDepth = -1;
@@ -159,13 +159,13 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
 
                         stoneDepth = stoneActive;
                         if(y >= WATER_LEVEL - 1) {
-                            c->blocks[blockIndex].type = topBlock;
+                            c->SetBlockType(topBlock, BlockIndexToPosition(blockIndex));
                         } else {
-                            c->blocks[blockIndex].type = fillerBlock;
+                            c->SetBlockType(fillerBlock, BlockIndexToPosition(blockIndex));
                         }
                     } else if(stoneDepth > 0) {
                         --stoneDepth;
-                        c->blocks[blockIndex].type = fillerBlock;
+                        c->SetBlockType(fillerBlock, BlockIndexToPosition(blockIndex));
                         if(stoneDepth == 0 && fillerBlock == BLOCK_SAND) {
                             stoneDepth = this->rand->nextInt(4);
                             fillerBlock = BLOCK_SANDSTONE;
@@ -178,13 +178,13 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
 }
 
 // Generate the Terrain, minus any caves, as just stone 
-void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c) {
+void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::shared_ptr<Chunk>& c) {
     const int     xMax = CHUNK_WIDTH_X / 4 + 1; // 3
     const uint8_t yMax = CHUNK_HEIGHT  / 8 + 1; // 14
     const int     zMax = CHUNK_WIDTH_Z / 4 + 1; // 3
     
     // Generate 4x16x4 low resolution noise map
-    this->terrainNoiseField = this->GenerateTerrainNoise(
+    this->GenerateTerrainNoise(
         this->terrainNoiseField,
         cX * 4,
         0,
@@ -247,7 +247,7 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
                                 blockType = BLOCK_STONE;
                             }
                             
-                            c->blocks[blockIndex].type = blockType;
+                            c->SetBlockType(blockType, BlockIndexToPosition(blockIndex));
                             // Prep for next iteration
                             blockIndex += CHUNK_HEIGHT;
                             terrainDensity += densityStepZ;
@@ -268,13 +268,13 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
     }
 }
 
-std::vector<double> GeneratorBeta173::GenerateTemperature(int bx, int bz, int xMax, int zMax) {
+void GeneratorBeta173::GenerateTemperature(int bx, int bz, int xMax, int zMax) {
     if(this->temperature.empty() || this->temperature.size() < size_t(xMax * zMax)) {
         this->temperature.resize(xMax * zMax, 0.0);
     }
 
-    this->temperature = this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, zMax, (double)0.025F, (double)0.025F, 0.25D);
-    this->weirdness = this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, zMax, 0.25D, 0.25D, 0.5882352941176471D);
+    this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, zMax, (double)0.025F, (double)0.025F, 0.25D);
+    this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, zMax, 0.25D, 0.25D, 0.5882352941176471D);
     int index = 0;
 
     for(int x = 0; x < xMax; ++x) {
@@ -296,12 +296,10 @@ std::vector<double> GeneratorBeta173::GenerateTemperature(int bx, int bz, int xM
             ++index;
         }
     }
-
-    return this->temperature;
 }
 
 // Generate Biomes based on simplex noise
-std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(int bx, int bz, int xMax, int zMax) {
+void GeneratorBeta173::GenerateBiomeMap(int bx, int bz, int xMax, int zMax) {
     // Init Biome map
     if(this->biomeMap.empty() || int(this->biomeMap.size()) < xMax * zMax) {
         this->biomeMap.resize(xMax * zMax, BIOME_NONE);
@@ -310,9 +308,9 @@ std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(int bx, int bz, int xMax, 
     // Get noise values
     // We found an oversight in the original code! zMax is NEVER used for getting the noise range!
     // Although this is irrelevant for all intents and purposes, as xMax always equals zMax
-    this->temperature = this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, xMax, 0.025D, 0.025D, 0.25D);
-    this->humidity = this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)bx, (double)bz, xMax, xMax, 0.05D, 0.05D, 1.0D / 3.0D);
-    this->weirdness = this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, xMax, 0.25D, 0.25D, 0.5882352941176471D);
+    this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, xMax, 0.025D, 0.025D, 0.25D);
+    this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)bx, (double)bz, xMax, xMax, 0.05D, 0.05D, 1.0D / 3.0D);
+    this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, xMax, 0.25D, 0.25D, 0.5882352941176471D);
     int index = 0;
 
     // Iterate over each block column
@@ -340,24 +338,21 @@ std::vector<Biome> GeneratorBeta173::GenerateBiomeMap(int bx, int bz, int xMax, 
             index++;
         }
     }
-    return this->biomeMap;
 }
 
 // Make terrain noise
-std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> terrainMap, int cX, int cY, int cZ, int xMax, int yMax, int zMax) {
-    if(terrainMap.empty()) {
-        terrainMap.resize(xMax * yMax * zMax, 0.0);
-    }
-
+void GeneratorBeta173::GenerateTerrainNoise(std::vector<double>& terrainMap, int cX, int cY, int cZ, int xMax, int yMax, int zMax) {
+    terrainMap.resize(xMax * yMax * zMax, 0.0);
+    
     double horiScale = 684.412D;
     double vertScale = 684.412D;
     
     // We do this to need to generate noise as often
-    this->continentalnessNoiseField = this->continentalnessNoiseGen->GenerateOctaves(this->continentalnessNoiseField, cX, cZ, xMax, zMax, 1.121D, 1.121D, 0.5D);
-    this->depthNoiseField = this->depthNoiseGen->GenerateOctaves(this->depthNoiseField, cX, cZ, xMax, zMax, 200.0D, 200.0D, 0.5D);
-    this->selectorNoiseField = this->selectorNoiseGen->GenerateOctaves(this->selectorNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale / 80.0D, vertScale / 160.0D, horiScale / 80.0D);
-    this->lowNoiseField = this->lowNoiseGen->GenerateOctaves(this->lowNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
-    this->highNoiseField = this->highNoiseGen->GenerateOctaves(this->highNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
+    this->continentalnessNoiseGen->GenerateOctaves(this->continentalnessNoiseField, cX, cZ, xMax, zMax, 1.121D, 1.121D, 0.5D);
+    this->depthNoiseGen->GenerateOctaves(this->depthNoiseField, cX, cZ, xMax, zMax, 200.0D, 200.0D, 0.5D);
+    this->selectorNoiseGen->GenerateOctaves(this->selectorNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale / 80.0D, vertScale / 160.0D, horiScale / 80.0D);
+    this->lowNoiseGen->GenerateOctaves(this->lowNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
+    this->highNoiseGen->GenerateOctaves(this->highNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
     // Used to iterate 3D noise maps (low, high, selector)
     int xyzIndex = 0;
     // Used to iterate 2D Noise maps (depth, continentalness)
@@ -438,8 +433,6 @@ std::vector<double> GeneratorBeta173::GenerateTerrainNoise(std::vector<double> t
             }
         }
     }
-
-    return terrainMap;
 }
 
 Biome GeneratorBeta173::GetBiomeAt(int worldX, int worldZ) {
@@ -745,7 +738,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
         zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
-        Beta173Feature(BLOCK_SUGARCANE).GeneratePumpkins(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+        Beta173Feature(BLOCK_PUMPKIN).GeneratePumpkins(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     int8_t numberOfCacti = 0;
@@ -757,24 +750,24 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
         zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
-        //(new WorldGenCactus()).generate(this->worldObj, this->rand, z, int offsetX, offsetZ);
+        Beta173Feature(BLOCK_CACTUS).GenerateCacti(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     for(int i = 0; i < 50; ++i) {
         xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(this->rand->nextInt(120) + 8);
         zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
-        //(new WorldGenLiquids(Block.waterMoving.blockID)).generate(this->worldObj, this->rand, z, int offsetX, offsetZ);
+        Beta173Feature(BLOCK_WATER_FLOWING).GenerateLiquid(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
     for(int i = 0; i < 20; ++i) {
         xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
         yCoordinate = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(112) + 8) + 8);
         zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
-        //(new WorldGenLiquids(Block.lavaMoving.blockID)).generate(this->worldObj, this->rand, z, int offsetX, offsetZ);
+        Beta173Feature(BLOCK_LAVA_FLOWING).GenerateLiquid(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
     }
 
-	this->temperature = GenerateTemperature(
+	GenerateTemperature(
         blockX + 8,
         blockZ + 8,
         CHUNK_WIDTH_X,

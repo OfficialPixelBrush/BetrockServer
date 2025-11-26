@@ -503,3 +503,57 @@ bool Beta173Feature::GeneratePumpkins(World* world, JavaRandom* rand, int blockX
     }
     return true;
 }
+
+
+bool Beta173Feature::GenerateCacti(World* world, JavaRandom* rand, int blockX, int blockY, int blockZ) {
+    for(int i = 0; i < 10; ++i) {
+        int xOffset = blockX + rand->nextInt(8) - rand->nextInt(8);
+        int yOffset = blockY + rand->nextInt(4) - rand->nextInt(4);
+        int zOffset = blockZ + rand->nextInt(8) - rand->nextInt(8);
+        if(world->GetBlockType(Int3{xOffset, yOffset, zOffset}) == BLOCK_AIR) {
+            int height = 1 + rand->nextInt(rand->nextInt(3) + 1);
+
+            for(int h = 0; h < height; ++h) {
+                if(CanStay(BLOCK_CACTUS, world, Int3{xOffset, yOffset + h, zOffset})) {
+                    world->SetBlockType(BLOCK_CACTUS, Int3{xOffset, yOffset + h, zOffset});
+                }
+            }
+        }
+    }
+
+    return true;
+}
+
+bool Beta173Feature::GenerateLiquid(World* world, [[maybe_unused]] JavaRandom* rand, int blockX, int blockY, int blockZ) {
+    if(world->GetBlockType(Int3{blockX, blockY + 1, blockZ}) != BLOCK_STONE) {
+        return false;
+    } else if(world->GetBlockType(Int3{blockX, blockY - 1, blockZ}) != BLOCK_STONE) {
+        return false;
+    } else if(
+        world->GetBlockType(Int3{blockX, blockY, blockZ}) != BLOCK_AIR &&
+        world->GetBlockType(Int3{blockX, blockY, blockZ}) != BLOCK_STONE
+    ) {
+        return false;
+    } else {
+        int surroundingStone = 0;
+        if(world->GetBlockType(Int3{blockX - 1, blockY, blockZ}) == BLOCK_STONE) ++surroundingStone;
+        if(world->GetBlockType(Int3{blockX + 1, blockY, blockZ}) == BLOCK_STONE) ++surroundingStone;
+        if(world->GetBlockType(Int3{blockX, blockY, blockZ - 1}) == BLOCK_STONE) ++surroundingStone;
+        if(world->GetBlockType(Int3{blockX, blockY, blockZ + 1}) == BLOCK_STONE) ++surroundingStone;
+
+        int surroundingAir = 0;
+        if(world->GetBlockType(Int3{blockX - 1, blockY, blockZ}) == BLOCK_AIR) ++surroundingAir;
+        if(world->GetBlockType(Int3{blockX + 1, blockY, blockZ}) == BLOCK_AIR) ++surroundingAir;
+        if(world->GetBlockType(Int3{blockX, blockY, blockZ - 1}) == BLOCK_AIR) ++surroundingAir;
+        if(world->GetBlockType(Int3{blockX, blockY, blockZ + 1}) == BLOCK_AIR) ++surroundingAir;
+
+        if(surroundingStone == 3 && surroundingAir == 1) {
+            world->SetBlockType(this->id, Int3{blockX, blockY, blockZ});
+            //var1.scheduledUpdatesAreImmediate = true;
+            //Block.blocksList[this.liquidBlockId].updateTick(var1, var3, var4, var5, var2);
+            //var1.scheduledUpdatesAreImmediate = false;
+        }
+
+        return true;
+    }
+}

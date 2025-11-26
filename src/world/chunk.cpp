@@ -50,6 +50,12 @@ void Chunk::PrintHeightmap() {
     }
 }
 
+void Chunk::ClearChunk() {
+    std::fill(std::begin(blockType), std::end(blockType), BLOCK_AIR);
+    std::fill(std::begin(blockMeta), std::end(blockMeta), 0);
+    std::fill(std::begin(blockLight), std::end(blockLight), 0);
+}
+
 void Chunk::RelightBlock(int x, int y, int z) {
     int oldY = this->heightMap[(z << 4) | x] & 255;
     int newY = oldY;
@@ -144,7 +150,7 @@ void Chunk::CheckSkylightNeighborHeight(int x, int z, int height) {
     this->modified = true;
 }
 
-
+/*
 Block* Chunk::GetBlock(Int3 pos) {
     if (pos.x < 0 || pos.y < 0 || pos.z < 0 ||
         pos.x >= CHUNK_WIDTH_X || pos.y >= CHUNK_HEIGHT || pos.z >= CHUNK_WIDTH_Z)
@@ -154,6 +160,7 @@ Block* Chunk::GetBlock(Int3 pos) {
 Block* Chunk::GetBlock(int32_t x, int8_t y, int32_t z) {
     return GetBlock(Int3{x,y,z});
 }
+*/
 
 bool Chunk::CanBlockSeeTheSky(Int3 pos) {
     if (pos.x < 0 || pos.x >= 16 || pos.z < 0 || pos.z >= 16) {
@@ -171,14 +178,6 @@ int8_t Chunk::GetLight(bool skyLight, Int3 pos) {
 
 int8_t Chunk::GetTotalLight(Int3 pos) {
     int8_t totalLight = GetLight(true, pos);
-    /*
-    if(totalLight > 0) {
-        isLit = true;
-    }
-    */
-
-    // Assume 0
-    //totalLight -= var4;
     int8_t blockLight = GetLight(false, pos);
     if(blockLight > totalLight) {
         totalLight = blockLight;
@@ -193,68 +192,84 @@ void Chunk::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
         return;
     }
     SetBlockLight(newLight, pos);
+    this->modified = true;
 }
 
 int8_t Chunk::GetBlockType(Int3 pos) {
-    if (pos.y < 0 || pos.y >= CHUNK_HEIGHT) return BLOCK_AIR;
-    Block* b = this->GetBlock(pos);
-    if (!b) return BLOCK_AIR;
-    return b->type;
+    if (!InChunkBounds(pos)) return BLOCK_AIR;
+    return blockType[PositionToBlockIndex(pos)];
 }
 
-void Chunk::SetBlockType(int8_t blockType, Int3 pos) {
-    Block* b = this->GetBlock(pos);
-    if (!b) return;
-    b->type = blockType;
+void Chunk::SetBlockType(int8_t type, Int3 pos) {
+    if (!InChunkBounds(pos)) return;
+    blockType[PositionToBlockIndex(pos)] = type;
     RelightBlock(pos.x, pos.y, pos.z);
+    this->modified = true;
 }
 
 int8_t Chunk::GetBlockMeta(Int3 pos) {
-    if (pos.y < 0 || pos.y >= CHUNK_HEIGHT) return 0;
-    Block* b = this->GetBlock(pos);
-    if (!b) return 0;
-    return b->meta;
+    if (!InChunkBounds(pos)) return 0;
+    const int index = PositionToBlockIndex(pos) / 2;
+    uint8_t value = blockMeta[index];
+
+    if ((pos.y & 1) == 0) {
+        return (value >> 4) & 0x0F;
+    } else {
+        return value & 0x0F;
+    }
 }
 
-void Chunk::SetBlockMeta(int8_t blockType, Int3 pos) {
-    Block* b = this->GetBlock(pos);
-    if (!b) return;
-    b->meta = blockType;
+void Chunk::SetBlockMeta(int8_t meta, Int3 pos) {
+    if (!InChunkBounds(pos)) return;
+    const int index = PositionToBlockIndex(pos) / 2;
+    meta &= 0x0F;
+    if ((pos.y & 1) == 0) {
+        blockMeta[index] &= 0x0F;
+        blockMeta[index] |= (meta << 4);
+    } else {
+        blockMeta[index] &= 0xF0;
+        blockMeta[index] |= meta;
+    }
+    modified = true;
 }
-
 
 int8_t Chunk::GetBlockLight(Int3 pos) {
-    Block* b = this->GetBlock(pos);
-    if (!b) return 0;
-    return b->light >> 4;
+    if (!InChunkBounds(pos)) return 0;
+    return (blockLight[PositionToBlockIndex(pos)] >> 4) & 0xF;
 }
 
 void Chunk::SetBlockLight(int8_t value, Int3 pos) {
-    Block* b = this->GetBlock(pos);
-    if (!b) return;
-    b->light &= 0x0F;
-    b->light |= ((value & 0xF) << 4);
+    if (!InChunkBounds(pos)) return;
+    int index = PositionToBlockIndex(pos);
+    blockLight[index] &= 0x0F;
+    blockLight[index] |= ((value & 0xF) << 4);
+    this->modified = true;
 }
 
 int8_t Chunk::GetSkyLight(Int3 pos) {
-    Block* b = this->GetBlock(pos);
-    if (!b) return 0;
-    return b->light & 0x0F;
+    if (!InChunkBounds(pos)) return 0;
+    return blockLight[PositionToBlockIndex(pos)] & 0x0F;
 }
 
 void Chunk::SetSkyLight(int8_t value, Int3 pos) {
-    Block* b = this->GetBlock(pos);
-    if (!b) return;
-    b->light &= 0xF0;
-    b->light |= (value & 0xF);
+    if (!InChunkBounds(pos)) return;
+    int index = PositionToBlockIndex(pos);
+    blockLight[index] &= 0xF0;
+    blockLight[index] |= (value & 0xF);
+    this->modified = true;
 }
 
-void Chunk::SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos) {
-    Block* b = this->GetBlock(pos);
-    if (!b) return;
-    b->type = blockType;
-    b->meta = blockMeta;
-    //RelightBlock(pos.x, pos.y, pos.z);
+void Chunk::SetBlockTypeAndMeta(int8_t type, int8_t meta, Int3 pos) {
+    SetBlockType(type,pos);
+    SetBlockMeta(meta,pos);
+    this->modified = true;
+}
+
+bool Chunk::InChunkBounds(Int3& pos) {
+    pos.x &= 15;
+    pos.z &= 15;
+    if (pos.y < 0 || pos.y >= CHUNK_HEIGHT) return false;
+    return true;
 }
 
 void Chunk::AddTileEntity(std::unique_ptr<TileEntity>&& te) {
@@ -333,13 +348,13 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
     // Block Data
     auto blockData = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Blocks"))->GetData();
     for (size_t i = 0; i < blockDataSize; i++) {
-        blocks[i].type = blockData[i];
+        SetBlockType(blockData[i], BlockIndexToPosition(i));
     }
     // Block Metadata
     auto metaData = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Data"))->GetData();
     for (size_t i = 0; i < nibbleDataSize; i++) {
-        blocks[i*2  ].meta = (metaData[i]     )&0xF;
-        blocks[i*2+1].meta = (metaData[i] >> 4)&0xF;
+        SetBlockMeta((metaData[i]     )&0xF, BlockIndexToPosition(i*2 ));
+        SetBlockMeta((metaData[i] >> 4)&0xF, BlockIndexToPosition(i*2+1));
     }
     // Block Light
     auto blockLightData = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("BlockLight"))->GetData();
@@ -382,8 +397,10 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
         }
     }
 
-    auto terrainPopulated = std::dynamic_pointer_cast<ByteTag>(level->Get("TerrainPopulated"))->GetData();
-    if (terrainPopulated) state = ChunkState::Populated;
+    auto populatedTag = std::dynamic_pointer_cast<ByteTag>(level->Get("TerrainPopulated"));
+    if (populatedTag && populatedTag->GetData() != 0) {
+        state = ChunkState::Populated;
+    }
 }
 
 
@@ -411,12 +428,8 @@ std::array<uint8_t, CHUNK_WIDTH_X * (CHUNK_HEIGHT/2) * CHUNK_WIDTH_Z> Chunk::Get
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 // Default to safe values
-                uint8_t b1v = 0;
-                uint8_t b2v = 0;
-                Block* b1 = GetBlock(cX,cY*2  ,cZ);
-                Block* b2 = GetBlock(cX,cY*2+1,cZ);
-                if (b1) b1v = b1->meta;
-                if (b2) b2v = b2->meta;
+                uint8_t b1v = GetBlockMeta(Int3{cX,cY*2  ,cZ});
+                uint8_t b2v = GetBlockMeta(Int3{cX,cY*2+1,cZ});
                 data[index++] = int8_t(b2v << 4 | b1v);
             }
         }

@@ -146,7 +146,6 @@ bool Player::Load() {
 
     health = std::dynamic_pointer_cast<ShortTag>(root->Get("Health"))->GetData();
 
-
     // Get the players saved inventory
     std::shared_ptr<ListTag> inventoryList = std::dynamic_pointer_cast<ListTag>(root->Get("Inventory"));
     for (size_t i = 0; i < inventoryList->GetNumberOfTags(); i++) {

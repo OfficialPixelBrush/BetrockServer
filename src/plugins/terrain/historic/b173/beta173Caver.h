@@ -10,14 +10,14 @@ class Beta173Caver {
         std::unique_ptr<JavaRandom> rand;
     public:
         Beta173Caver();
-        void GenerateCavesForChunk(World* world, int cX, int cZ, std::unique_ptr<Chunk>& c);
-        void GenerateCaves(int cXoffset, int cZoffset, int cX, int cZ, std::unique_ptr<Chunk>& c);
+        void GenerateCavesForChunk(World* world, int cX, int cZ, std::shared_ptr<Chunk>& c);
+        void GenerateCaves(int cXoffset, int cZoffset, int cX, int cZ, std::shared_ptr<Chunk>& c);
         void CarveCave(
-            int cX, int cZ, std::unique_ptr<Chunk>& c,
+            int cX, int cZ, std::shared_ptr<Chunk>& c,
             double xOffset, double yOffset, double zOffset
         );
         void CarveCave(
-            int cX, int cZ, std::unique_ptr<Chunk>& c,
+            int cX, int cZ, std::shared_ptr<Chunk>& c,
             double xOffset, double yOffset, double zOffset,
             float tunnelRadius, float carveYaw, float carvePitch,
             int tunnelStep, int tunnelLength, double verticalScale

@@ -15,10 +15,10 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t seed, World* world) : G
     mobSpawnerNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 5);
 }
 
-std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
-    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
+std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world,cX,cZ);
     this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
-    std::fill(std::begin(c->blocks), std::end(c->blocks), Block{BLOCK_AIR});
+    c->ClearChunk();
 
     // Terrain shape generation
     for(int macroX = 0; macroX < 4; ++macroX) {
@@ -54,8 +54,10 @@ std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
                     for(int macroX1 = 0; macroX1 < 4; ++macroX1) {
                         double var37 = (double)macroX1 / 4.0D;
                         double var39 = var28 + (var32 - var28) * var37;
-                        double var41 = var30 + (var34 - var30) * var37;
-                        int blockIndex = (macroX1 + ((macroX << 2) << 11)) | (0 + ((macroZ << 2) << 7)) | ((macroY << 2) + var25);
+                        double var41 = var30 + (var34 - var30) * var37;                        
+                        int blockIndex = ((macroX1 + (macroX << 2)) << 11) |
+                                        ((0 + (macroZ << 2)) << 7) |
+                                        ((macroY << 2) + var25);
 
                         for(int var36 = 0; var36 < 4; ++var36) {
                             double var45 = (double)var36 / 4.0D;
@@ -69,7 +71,7 @@ std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
                                 blockType = BLOCK_STONE;
                             }
 
-                            c->blocks[blockIndex].type = (char)blockType;
+                            c->SetBlockType((char)blockType, BlockIndexToPosition(blockIndex));
                             blockIndex += CHUNK_HEIGHT;
                         }
                     }
@@ -85,19 +87,19 @@ std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
             int depth = -1;
 
             for(int blockY = CHUNK_HEIGHT-1; blockY >= 0; --blockY) {
-                if(c->blocks[blockIndex].type == BLOCK_AIR) {
+                if(c->GetBlockType(BlockIndexToPosition(blockIndex)) == BLOCK_AIR) {
                     depth = -1;
-                } else if(c->blocks[blockIndex].type == BLOCK_STONE) {
+                } else if(c->GetBlockType(BlockIndexToPosition(blockIndex)) == BLOCK_STONE) {
                     if(depth == -1) {
                         depth = 3;
                         if(blockY >= WATER_LEVEL-1) {
-                            c->blocks[blockIndex].type = BLOCK_GRASS;
+                            c->SetBlockType(BLOCK_GRASS, BlockIndexToPosition(blockIndex));
                         } else {
-                            c->blocks[blockIndex].type = BLOCK_DIRT;
+                            c->SetBlockType(BLOCK_DIRT, BlockIndexToPosition(blockIndex));
                         }
                     } else if(depth > 0) {
                         --depth;
-                        c->blocks[blockIndex].type = BLOCK_DIRT;
+                        c->SetBlockType(BLOCK_DIRT, BlockIndexToPosition(blockIndex));
                     }
                 }
 

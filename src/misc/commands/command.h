@@ -92,3 +92,5 @@ DEFINE_COMMAND(CommandPopulated,"populated","Check the population status of the 
 DEFINE_COMMAND(CommandRegion,   "region",   "Test the region infrastructure"                        , "<action>"                                            , true,  false);
 DEFINE_COMMAND(CommandSeed,     "seed",     "Get the world seed"                                    , ""                                                    , true,  false);
 DEFINE_COMMAND(CommandEntity,   "entity",   "Get the latest entity id"                              , ""                                                    , true,  false);
+DEFINE_COMMAND(CommandModified, "modified", "Get the number of modified chunks"                     , ""                                                    , true,  false);
+DEFINE_COMMAND(CommandPacket,   "packet"  , "Send a custom packet"                                  , "[broadcast] <data>"                                  , true,  false);

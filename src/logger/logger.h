@@ -14,7 +14,7 @@ class Logger {
     private:
         std::ofstream logFile;
         #ifndef NDEBUG
-        int8_t logLevelText = LOG_NONE;
+        int8_t logLevelText = LOG_ALL;
         #else
         int8_t logLevelText = LOG_ALL;
         #endif

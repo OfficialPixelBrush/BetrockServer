@@ -3,14 +3,23 @@ A Server-Engine written in C++, made to work with Minecraft Beta 1.7.3. The goal
 ![BetrockServer Logo](media/betrock_server_logo.png)
 
 ## Features
-(as of 0.2.0)
+(as of 0.3.0)
 - Players can connect, chat, build and explore
-- Commands
+- Lots of Commands
+- (very) accurate Beta 1.7.3 Terrain
 - Lua-driven World Generation
+- World saving and loading (**not** in McRegion format yet)
+- Extensive multi-threading
 
 ## Discord
 We have a [Discord Server](
 https://discord.gg/JHTz2HSKrf)!
+
+## Screenshots
+
+| Glacier | pack.png | Gargamel |
+|--- | --- |--- |
+| ![](media/screenshots/gameplay.png) | ![](media/screenshots/pack.png) | ![](media/screenshots/gargamel.png) |
 
 ## Getting Started
 How do you run your own BetrockServer instance?
@@ -83,6 +92,7 @@ If not, create a **new issue** and fill out all the necessary information accord
 ## Misc
 - [PixNBT](https://github.com/OfficialPixelBrush/pixnbt) - A C++ native NBT parsing library
 - [BetaPacketPlainTextifier](https://github.com/OfficialPixelBrush/BetaPacketPlainTextifier) - A utility for turning WireShark captures of Minecraft Client-Server data into Markdown files for easy decoding
+- [Beta Wiki](https://officialpixelbrush.github.io/beta-wiki)
 
 # Contributing
 Please read the [CONTRIBUTING](https://github.com/OfficialPixelBrush/BetrockServer/blob/main/CONTRIBUTING.md) page.
@@ -91,8 +101,7 @@ Please read the [CONTRIBUTING](https://github.com/OfficialPixelBrush/BetrockServ
 For further reading, to aid development and sources for where certain info has been gotten from.
 
 Some stuff can be found on the [BetrockServer Wiki](https://github.com/OfficialPixelBrush/BetrockServer/wiki),
-especially if you're interested in developing your own [World Generator](https://github.com/OfficialPixelBrush/BetrockServer/wiki/World-Generation) or [Plugin](https://github.com/OfficialPixelBrush/BetrockServer/wiki/Plugins). It also features a very complete [ID Listing](https://github.com/OfficialPixelBrush/BetrockServer/wiki/Full-ID-Listing),
-though the one hosted on [grahamedgecombe.com](https://minecraft-ids.grahamedgecombe.com/) is a great alternative for general usage.
+especially if you're interested in developing your own [World Generator](https://github.com/OfficialPixelBrush/BetrockServer/wiki/World-Generation) or [Plugin](https://github.com/OfficialPixelBrush/BetrockServer/wiki/Plugins).
 
 If you're more interested in the in-depth technical stuff of Beta 1.7.3, check out [my extended fork of mudkipdev's Beta Wiki](https://officialpixelbrush.github.io/beta-wiki)!
 

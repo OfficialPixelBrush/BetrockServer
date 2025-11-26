@@ -244,6 +244,9 @@ bool Client::HandleEntityAction() {
 		case 2:
 			player->crouching = false;
 			break;
+		case 3:
+			// Player tries to leave bed
+			break;
 		default:
 			break;
 	}
@@ -264,10 +267,15 @@ bool Client::HandlePlayerDigging(World* world) {
 	Int3 pos = Int3(x,y,z);
 	int8_t blockType = world->GetBlockType(pos);
 	int8_t blockMeta = world->GetBlockMeta(pos);
-	//Block* targetedBlock = world->GetBlock(pos);
 	
 	if (debugPunchBlockInfo) {
-		//Betrock::Logger::Instance().Debug(IdToLabel((int)targetedBlock->type) + " " + targetedBlock->str() + " at " + pos.str());
+		std::shared_ptr<Chunk> c = world->GetChunk(pos.x >> 4, pos.z >> 4);
+		if (c) {
+			//Block* b = c->GetBlock(pos);
+			//if (b) {
+				//Betrock::Logger::Instance().Debug(IdToLabel(int(b->type)) + " " + b->str() + " at " + pos.str());
+			//}
+		}
 	}
 
 	// If the block is broken or instantly breakable

@@ -82,8 +82,8 @@ Block GeneratorLua::DecodeBlock() {
 // Run the GenerateChunk function and pass its execution onto lua
 // Then retrieve the generated Chunk data
 // This step is for ma
-std::unique_ptr<Chunk> GeneratorLua::GenerateChunk(int32_t cX, int32_t cZ) {
-    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
+std::shared_ptr<Chunk> GeneratorLua::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world,cX,cZ);
     
     if (!L) {
         return c;
@@ -98,7 +98,8 @@ std::unique_ptr<Chunk> GeneratorLua::GenerateChunk(int32_t cX, int32_t cZ) {
         if (lua_istable(L, -1)) {    
             for (int i = 1; i <= CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z; i++) {
                 lua_rawgeti(L, -1, i);
-                c->blocks[i-1] = DecodeBlock();
+                Block b = DecodeBlock();
+                c->SetBlockTypeAndMeta(b.type, b.meta, BlockIndexToPosition(i-1));
                 lua_pop(L, 1);  // Pop table[i]
             }
     
@@ -396,13 +397,6 @@ int GeneratorLua::lua_GetBlock(lua_State *L) {
     int y = (int)lua_tonumber(L, 2);
     int z = (int)lua_tonumber(L, 3);
     Int3 position = Int3{x, y, z};
-
-    // Get the block at the given position
-    Chunk* c = gen->world->GetChunk(x/16,z/16);
-    if (!c) {
-        lua_pushnil(L);
-        return 1;
-    }
 
     // Create a table and push it to Lua stack
     lua_newtable(L);

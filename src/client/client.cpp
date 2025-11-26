@@ -46,10 +46,10 @@ ssize_t Client::Setup() {
 void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
 	std::string debugMessage = "";
 	if (debugReceivedPacketType) {
-		debugMessage += "Received " + PacketIdToLabel(packetType) + " from " + player->username + "! (" + std::to_string(bytes_received) + " Bytes)";
+		debugMessage += "Received " + PacketIdToLabel(packetType) + " from " + this->username + "! (" + std::to_string(bytes_received) + " Bytes)";
 	}
 	if (debugReceivedBytes) {
-		debugMessage += "\n" + Uint8ArrayToHexDump(message,bytes_received);
+		debugMessage += " RECEIVED\n" + Uint8ArrayToHexDump(message,bytes_received);
 	}
 	if (debugReceivedPacketType || debugReceivedBytes) {
 		Betrock::Logger::Instance().Debug(debugMessage);
@@ -351,7 +351,7 @@ void Client::SendResponse(bool autoclear) {
 		if (((Packet)response[0] == Packet::Chunk || (Packet)response[0] == Packet::PreChunk) && debugDisablePrintChunk) {
 			// Do nothing
 		} else {
-			debugMessage += "\n" + Uint8ArrayToHexDump(&response[0],response.size());
+			debugMessage += " SENT\n" + Uint8ArrayToHexDump(&response[0],response.size());
 		}
 	}
 	if (debugSentPacketType || debugSentBytes) {

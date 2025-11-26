@@ -8,7 +8,7 @@ class GeneratorLua : public Generator {
                 lua_close(L);
             }
         }
-        std::unique_ptr<Chunk> GenerateChunk(int32_t cX, int32_t cZ) override;
+        std::shared_ptr<Chunk> GenerateChunk(int32_t cX, int32_t cZ) override;
         bool PopulateChunk(int32_t cX, int32_t cZ) override;
     private:
         std::string name = GENERATOR_DEFAULT_NAME;

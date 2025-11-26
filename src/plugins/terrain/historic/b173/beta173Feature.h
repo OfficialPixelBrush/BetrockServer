@@ -22,4 +22,6 @@ class Beta173Feature {
         bool GenerateDeadbush(World* world, JavaRandom* rand, int x, int y, int z);
         bool GenerateSugarcane(World* world, JavaRandom* rand, int x, int y, int z);
         bool GeneratePumpkins(World* world, JavaRandom* rand, int x, int y, int z);
+        bool GenerateCacti(World* world, JavaRandom* rand, int x, int y, int z);
+        bool GenerateLiquid(World* world, JavaRandom* rand, int x, int y, int z);
 };

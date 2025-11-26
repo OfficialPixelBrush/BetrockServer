@@ -14,8 +14,8 @@ GeneratorInfdev20100227::GeneratorInfdev20100227(int64_t seed, World* world) : G
     noiseGen6 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 5);
 }
 
-std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
-    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
+std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world,cX,cZ);
     int chunkStartX = cX << 4;
     int chunkStartZ = cZ << 4;
     int blockIndex = 0;
@@ -77,9 +77,7 @@ std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_
                 // Clamping
                 if(blockType < BLOCK_AIR) blockType = BLOCK_AIR;
 
-                Block b;
-                b.type = blockType;
-                c->blocks[blockIndex++] = b;
+                c->SetBlockType(blockType, BlockIndexToPosition(blockIndex++));
             }
         }
     }
