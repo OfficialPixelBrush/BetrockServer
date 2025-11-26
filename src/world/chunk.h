@@ -25,9 +25,11 @@ class Chunk {
         void RelightBlock(int var1, int var2, int var3);
         void UpdateSkylight_do(int x, int z);
         void CheckSkylightNeighborHeight(int x, int z, int height);
-        Block* GetBlock(Int3 pos);
-        Block* GetBlock(int32_t x, int8_t y, int32_t z);
-        struct Block blocks[CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT];
+        //Block* GetBlock(Int3 pos);
+        //Block* GetBlock(int32_t x, int8_t y, int32_t z);
+        uint8_t blockType[ (CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT)    ];
+        uint8_t blockMeta[ (CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT) / 2];
+        uint8_t blockLight[(CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT)];
     public:
         int8_t state = ChunkState::Invalid;
         bool modified = false;
@@ -44,16 +46,18 @@ class Chunk {
         int8_t GetTotalLight(Int3 pos);
         void ClearChunk();
 
-        void SetBlockType(int8_t blockType, Int3 pos);
+        void SetBlockType(int8_t type, Int3 pos);
         int8_t GetBlockType(Int3 pos);
-        void SetBlockMeta(int8_t blockMeta, Int3 pos);
+        void SetBlockMeta(int8_t meta, Int3 pos);
         int8_t GetBlockMeta(Int3 pos);
-        void SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos);
+        void SetBlockTypeAndMeta(int8_t type, int8_t meta, Int3 pos);
 
         void SetBlockLight(int8_t value, Int3 pos);
         int8_t GetBlockLight(Int3 pos);
         void SetSkyLight(int8_t value, Int3 pos);
         int8_t GetSkyLight(Int3 pos);
+
+        bool InChunkBounds(Int3& pos);
 
         void AddTileEntity(std::unique_ptr<TileEntity>&& te);
         TileEntity* GetTileEntity(Int3 pos);

@@ -82,8 +82,8 @@ Block GeneratorLua::DecodeBlock() {
 // Run the GenerateChunk function and pass its execution onto lua
 // Then retrieve the generated Chunk data
 // This step is for ma
-std::unique_ptr<Chunk> GeneratorLua::GenerateChunk(int32_t cX, int32_t cZ) {
-    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
+std::shared_ptr<Chunk> GeneratorLua::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world,cX,cZ);
     
     if (!L) {
         return c;

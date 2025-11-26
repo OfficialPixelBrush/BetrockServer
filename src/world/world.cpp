@@ -122,7 +122,7 @@ Chunk* World::GetChunk(int32_t x, int32_t z) {
 }
 
 // Adds a new Chunk to the world
-Chunk* World::AddChunk(int32_t x, int32_t z, std::unique_ptr<Chunk> c) {
+Chunk* World::AddChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> c) {
     std::unique_lock lock(chunkMutex);
     auto hash = GetChunkHash(x, z);
     chunks[hash] = std::move(c);
@@ -189,7 +189,7 @@ Chunk* World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
         if (!readRoot) {
             return nullptr;
         }
-        std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,cX,cZ);
+        std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this,cX,cZ);
         c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
         c->state = ChunkState::Populated;
         c->modified = false;
@@ -489,19 +489,16 @@ std::vector<SignTile*> World::GetChunkSigns(Int3 position) {
 }
 
 // Get all the block,meta,block light and sky light data of a Chunk in a Binary Format
-std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
-    auto bytes = std::make_unique<char[]>(CHUNK_DATA_SIZE);
+void World::GetChunkData(uint8_t* chunkData, Int3 position) {
     int index = 0;
     Chunk* c = GetChunk(position.x,position.z);
-    if (!c) {
-        return nullptr;
-    }
-    // TODO: Make use of the individual functions!!!
+    if (!c) return;
+    
     // BlockData
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (uint8_t cY = 0; cY < CHUNK_HEIGHT; cY++) {
-                bytes[index] = c->GetBlockType(Int3{cX,cY,cZ});
+                chunkData[index] = c->GetBlockType(Int3{cX,cY,cZ});
                 index++;
             }
         }
@@ -513,7 +510,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
             for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 int8_t b1 = c->GetBlockMeta(Int3{cX,cY*2,cZ});
                 int8_t b2 = c->GetBlockMeta(Int3{cX,cY*2+1,cZ});
-                bytes[index] = (b2 << 4 | b1);
+                chunkData[index] = (b2 << 4 | b1);
                 index++;
             }
         }
@@ -525,7 +522,7 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
             for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 int8_t b1 = c->GetBlockLight(Int3{cX,cY*2  ,cZ});
                 int8_t b2 = c->GetBlockLight(Int3{cX,cY*2+1,cZ});
-                bytes[index] = (b2 << 4 | b1);
+                chunkData[index] = (b2 << 4 | b1);
                 index++;
             }
         }
@@ -537,12 +534,11 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
             for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
                 int8_t b1 = c->GetSkyLight(Int3{cX,cY*2  ,cZ});
                 int8_t b2 = c->GetSkyLight(Int3{cX,cY*2+1,cZ});
-                bytes[index] = (b2 << 4 | b1);
+                chunkData[index] = (b2 << 4 | b1);
                 index++;
             }
         }
     }
-    return bytes;
 }
 
 int8_t World::GetFirstUncoveredBlock(Int3& position) {
@@ -579,7 +575,7 @@ Chunk* World::LoadOldV2Chunk(int32_t x, int32_t z) {
         if (!readRoot) {
             throw std::runtime_error("Unable to read NBT data!");
         }
-        std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,x,z);
+        std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this,x,z);
         c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
         c->state = ChunkState::Populated;
         c->modified = false;
@@ -630,7 +626,7 @@ Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
         return nullptr;
     }
 
-    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this,x,z);
+    std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this,x,z);
     size_t blockDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT;
     size_t nibbleDataSize = CHUNK_WIDTH_X*CHUNK_WIDTH_Z*(CHUNK_HEIGHT/2);
     for (size_t i = 0; i < decompressedSize; i++) {

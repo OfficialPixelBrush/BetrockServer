@@ -9,7 +9,7 @@ Generator::~Generator() {
 
 }
 
-std::unique_ptr<Chunk> Generator::GenerateChunk( [[maybe_unused]] int32_t cX, [[maybe_unused]] int32_t cZ) {
+std::shared_ptr<Chunk> Generator::GenerateChunk( [[maybe_unused]] int32_t cX, [[maybe_unused]] int32_t cZ) {
     return nullptr;
 }
 

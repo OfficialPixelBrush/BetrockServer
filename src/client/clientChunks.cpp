@@ -111,18 +111,14 @@ void Client::SendNewChunks() {
             continue;
         }
 
-        auto chunkData = wm->world.GetChunkData(*it);
-        if (!chunkData) {
-            // Failed to get chunk data, remove from queue
-            it = newChunks.erase(it);
-            continue;
-        }
+        uint8_t chunkData[CHUNK_DATA_SIZE];
+        wm->world.GetChunkData(chunkData, *it);
 
         auto signs = wm->world.GetChunkSigns(*it);
 
         // Compress and send chunk
         size_t compressedSize = 0;
-        auto chunk = CompressChunk(chunkData.get(), compressedSize);
+        auto chunk = CompressChunk(chunkData, compressedSize);
         if (chunk) {
             visibleChunks.push_back(Int3{it->x, 0, it->z});
 

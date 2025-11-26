@@ -198,7 +198,7 @@ Int3 GetBlockPosition(int index) {
 
 
 // Compress the passed binary Chunk data
-std::unique_ptr<char[]> CompressChunk(char* chunk, size_t &compressed_size) {
+std::unique_ptr<char[]> CompressChunk(uint8_t* chunk, size_t &compressed_size) {
 
     // Create a compression context
     struct libdeflate_compressor *compressor = libdeflate_alloc_compressor(9);

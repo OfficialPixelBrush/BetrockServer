@@ -38,7 +38,7 @@ class World {
         std::unordered_map<std::string, std::shared_ptr<RegionFile>> openRegions;
         std::mutex regionMutex;
 
-        std::unordered_map<long, std::unique_ptr<Chunk>> chunks;
+        std::unordered_map<long, std::shared_ptr<Chunk>> chunks;
         std::deque<LightUpdate> lightingToUpdate;
         std::filesystem::path dirPath;
         void RemoveChunk(int32_t x, int32_t z);
@@ -87,13 +87,13 @@ class World {
         bool CanBlockSeeTheSky(Int3 pos);
 
         // Chunk-related
-        std::unique_ptr<char[]> GetChunkData(Int3 position);
+        void GetChunkData(uint8_t* chunkData, Int3 position);
         std::vector<SignTile*> GetChunkSigns(Int3 position);
         void TickChunks();
         Chunk* GetChunk(int32_t x, int32_t z);
         bool IsChunkPopulated(int32_t x, int32_t z);
         bool IsChunkGenerated(int32_t x, int32_t z);
-        Chunk* AddChunk(int32_t x, int32_t z, std::unique_ptr<Chunk> c);
+        Chunk* AddChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> c);
         void FreeUnseenChunks();
         void SaveChunk(int32_t x, int32_t z, Chunk* chunk);
         Chunk* LoadMcRegionChunk(int32_t cX, int32_t cZ);

@@ -15,8 +15,8 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t seed, World* world) : G
     mobSpawnerNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 5);
 }
 
-std::unique_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
-    std::unique_ptr<Chunk> c = std::make_unique<Chunk>(this->world,cX,cZ);
+std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
+    std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world,cX,cZ);
     this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
     c->ClearChunk();
 

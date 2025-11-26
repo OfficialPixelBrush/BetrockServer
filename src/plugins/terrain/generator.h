@@ -26,7 +26,7 @@ class Generator {
     public:
         Generator(int64_t seed, World* world);
         virtual ~Generator();
-        virtual std::unique_ptr<Chunk> GenerateChunk(int32_t cX, int32_t cZ);
+        virtual std::shared_ptr<Chunk> GenerateChunk(int32_t cX, int32_t cZ);
         virtual bool PopulateChunk(int32_t cX, int32_t cZ);
     protected:
         Betrock::Logger* logger;

@@ -3,7 +3,7 @@ Beta173Caver::Beta173Caver() {
     rand = std::make_unique<JavaRandom>();
 }
 
-void Beta173Caver::GenerateCavesForChunk(World* world, int cX, int cZ, std::unique_ptr<Chunk>& c) {
+void Beta173Caver::GenerateCavesForChunk(World* world, int cX, int cZ, std::shared_ptr<Chunk>& c) {
     int carveExtent = this->carveExtentLimit;
     this->rand->setSeed(world->seed);
     long xOffset = this->rand->nextLong() / 2L * 2L + 1L;
@@ -20,7 +20,7 @@ void Beta173Caver::GenerateCavesForChunk(World* world, int cX, int cZ, std::uniq
 
 // TODO: This is only the cave generator for the overworld.
 // The one for the nether is different!
-void Beta173Caver::GenerateCaves(int cXoffset, int cZoffset, int cX, int cZ, std::unique_ptr<Chunk>& c) {
+void Beta173Caver::GenerateCaves(int cXoffset, int cZoffset, int cX, int cZ, std::shared_ptr<Chunk>& c) {
     int numberOfCaves = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(40) + 1) + 1);
     if(this->rand->nextInt(15) != 0) {
         numberOfCaves = 0;
@@ -50,7 +50,7 @@ void Beta173Caver::GenerateCaves(int cXoffset, int cZoffset, int cX, int cZ, std
     }
 }
 
-void Beta173Caver::CarveCave(int cX, int cZ, std::unique_ptr<Chunk>& c, double xOffset, double yOffset, double zOffset) {
+void Beta173Caver::CarveCave(int cX, int cZ, std::shared_ptr<Chunk>& c, double xOffset, double yOffset, double zOffset) {
     this->CarveCave(
         cX, cZ, c,
         xOffset, yOffset, zOffset,
@@ -60,7 +60,7 @@ void Beta173Caver::CarveCave(int cX, int cZ, std::unique_ptr<Chunk>& c, double x
 }
 
 void Beta173Caver::CarveCave(
-    int cX, int cZ, std::unique_ptr<Chunk>& c,
+    int cX, int cZ, std::shared_ptr<Chunk>& c,
     double xOffset, double yOffset, double zOffset,
     float tunnelRadius, float carveYaw, float carvePitch,
     int tunnelStep, int tunnelLength, double verticalScale
