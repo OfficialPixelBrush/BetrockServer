@@ -520,7 +520,7 @@ std::string CommandPopulated::Execute([[maybe_unused]] std::vector<std::string> 
 	// TODO: Add support for non-zero worlds
 	World* w = Betrock::Server::Instance().GetWorld(0);
 	if (!w) return "World does not exist!";
-	Chunk* c = w->GetChunk(int(player->position.x/16.0),int(player->position.z/16.0));
+	std::shared_ptr<Chunk> c = w->GetChunk(int(player->position.x/16.0),int(player->position.z/16.0));
 	if (!c) return "Chunk does not exist!";
 	if (c->state != ChunkState::Populated) return "Chunk is not populated";
 	if (c->state == ChunkState::Populated) return "Chunk is populated";

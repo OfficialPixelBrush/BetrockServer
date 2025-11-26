@@ -40,7 +40,7 @@ class WorldManager {
         int workerCount = 1;  // Use number of CPU cores
         std::atomic<int> busyWorkers = 0;
         void WorkerThread();
-        Chunk* GetChunk(int32_t cX, int32_t cZ, Generator* generator);
+        std::shared_ptr<Chunk> GetChunk(int32_t cX, int32_t cZ, Generator* generator);
     public:
         WorldManager(int maxThreads = -1);
         World world;

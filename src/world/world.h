@@ -90,15 +90,15 @@ class World {
         void GetChunkData(uint8_t* chunkData, Int3 position);
         std::vector<SignTile*> GetChunkSigns(Int3 position);
         void TickChunks();
-        Chunk* GetChunk(int32_t x, int32_t z);
+        std::shared_ptr<Chunk> GetChunk(int32_t x, int32_t z);
         bool IsChunkPopulated(int32_t x, int32_t z);
         bool IsChunkGenerated(int32_t x, int32_t z);
-        Chunk* AddChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> c);
+        std::shared_ptr<Chunk> AddChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> c);
         void FreeUnseenChunks();
-        void SaveChunk(int32_t x, int32_t z, Chunk* chunk);
-        Chunk* LoadMcRegionChunk(int32_t cX, int32_t cZ);
-        Chunk* LoadOldV2Chunk(int32_t x, int32_t z);
-        Chunk* LoadOldChunk(int32_t x, int32_t z);
+        void SaveChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> chunk);
+        std::shared_ptr<Chunk> LoadMcRegionChunk(int32_t cX, int32_t cZ);
+        std::shared_ptr<Chunk> LoadOldV2Chunk(int32_t x, int32_t z);
+        std::shared_ptr<Chunk> LoadOldChunk(int32_t x, int32_t z);
         bool ChunkFileExists(int32_t x, int32_t z, std::string extension = std::string(CHUNK_FILE_EXTENSION));
         bool ChunkExists(int32_t x, int32_t z);
         

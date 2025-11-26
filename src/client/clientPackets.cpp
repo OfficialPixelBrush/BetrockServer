@@ -267,7 +267,7 @@ bool Client::HandlePlayerDigging(World* world) {
 	int8_t blockMeta = world->GetBlockMeta(pos);
 	
 	if (debugPunchBlockInfo) {
-		Chunk* c = world->GetChunk(pos.x >> 4, pos.z >> 4);
+		std::shared_ptr<Chunk> c = world->GetChunk(pos.x >> 4, pos.z >> 4);
 		if (c) {
 			//Block* b = c->GetBlock(pos);
 			//if (b) {

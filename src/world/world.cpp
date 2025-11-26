@@ -29,7 +29,7 @@ int World::GetNumberOfModifiedChunks() {
 
 
 int8_t World::GetHeightValue(int32_t x, int32_t z) {
-    Chunk* c = GetChunk(x >> 4, z >> 4);
+    std::shared_ptr<Chunk> c = GetChunk(x >> 4, z >> 4);
     if (!c) return 0;
     return c->GetHeightValue(x & 15, z & 15);
 }
@@ -61,14 +61,14 @@ bool World::BlockExists(Int3 pos) {
 }
 
 bool World::IsChunkGenerated(int32_t x, int32_t z) {
-    Chunk* c = this->GetChunk(x,z);
+    std::shared_ptr<Chunk> c = this->GetChunk(x,z);
     if (!c) return false;
     return c->state == ChunkState::Generated;
 }
 
 // Checks if the Chunk is populated
 bool World::IsChunkPopulated(int32_t x, int32_t z) {
-    Chunk* c = this->GetChunk(x,z);
+    std::shared_ptr<Chunk> c = this->GetChunk(x,z);
     if (!c) return false;
     return c->state == ChunkState::Populated;
 }
@@ -105,7 +105,7 @@ World::World(const std::string& extra)
 void World::Save() {
     for (auto& pair : chunks) {
         int64_t hash = pair.first;
-        Chunk* chunk = pair.second.get();
+        std::shared_ptr<Chunk> chunk = pair.second;
 
         Int3 pos = DecodeChunkHash(hash);
         SaveChunk(pos.x, pos.z, chunk);
@@ -113,20 +113,20 @@ void World::Save() {
 }
 
 // Gets the Chunk Pointer from Memory
-Chunk* World::GetChunk(int32_t x, int32_t z) {
+std::shared_ptr<Chunk> World::GetChunk(int32_t x, int32_t z) {
     std::shared_lock lock(chunkMutex);
     auto it = chunks.find(GetChunkHash(x, z));
     if (it != chunks.end() && it->second != nullptr)
-        return it->second.get();
+        return it->second;
     return nullptr;
 }
 
 // Adds a new Chunk to the world
-Chunk* World::AddChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> c) {
+std::shared_ptr<Chunk> World::AddChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> c) {
     std::unique_lock lock(chunkMutex);
     auto hash = GetChunkHash(x, z);
     chunks[hash] = std::move(c);
-    return chunks[hash].get();
+    return chunks[hash];
 }
 
 // Removes a Chunk from the world
@@ -141,7 +141,7 @@ void World::FreeUnseenChunks() {
 
     for (auto& pair : chunks) {
         const int64_t& hash = pair.first;
-        Chunk* chunk = pair.second.get();
+        std::shared_ptr<Chunk> chunk = pair.second;
         Int3 pos = DecodeChunkHash(hash);
     
         // Check if any player has this chunk hash in their visibleChunks
@@ -165,7 +165,7 @@ void World::FreeUnseenChunks() {
     }
 }
 
-Chunk* World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
+std::shared_ptr<Chunk> World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
         return nullptr;
@@ -201,7 +201,7 @@ Chunk* World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
 }
 
 // Save a Chunk as an NBT-format file
-void World::SaveChunk(int32_t x, int32_t z, Chunk* chunk) {
+void World::SaveChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> chunk) {
     // Skip if we have this flag set
     if (debugDisableSave) return;
 
@@ -264,7 +264,7 @@ void World::SpreadLight(bool skyLight, Int3 pos, int newLightLevel) {
     if (newLightLevel <= oldLevel) return; // no improvement, skip
 
     // Update block light in chunk if chunk is present
-    if (Chunk* c = GetChunk(pos.x >> 4, pos.z >> 4)) {
+    if (std::shared_ptr<Chunk> c = GetChunk(pos.x >> 4, pos.z >> 4)) {
         c->SetLight(skyLight, {pos.x & 15, pos.y, pos.z & 15}, newLightLevel);
     }
 
@@ -298,7 +298,7 @@ void World::ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool che
             return;
         }
 
-        Chunk* chunk = GetChunk(midX >> 4, midZ >> 4);
+        std::shared_ptr<Chunk> chunk = GetChunk(midX >> 4, midZ >> 4);
         if (!chunk) {
             --lightingUpdatesScheduled;
             return;
@@ -397,7 +397,7 @@ void World::ProcessSingleLightUpdate(const LightUpdate &current) {
         int newLevel = std::max(0, currentLevel - translucency);
 
         if (newLevel > neighborLevel) {
-            if (Chunk* c = GetChunk(n.x >> 4, n.z >> 4)) {
+            if (std::shared_ptr<Chunk> c = GetChunk(n.x >> 4, n.z >> 4)) {
                 c->SetLight(current.skyLight, {n.x & 15, n.y, n.z & 15}, newLevel);
                 // schedule further propagation by pushing new LightUpdate
                 std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
@@ -455,33 +455,33 @@ void World::UpdateBlock(Int3 position) {
 }
 
 int8_t World::GetBlockLight(Int3 position) {
-    Chunk* c = GetChunk(position.x,position.z);
+    std::shared_ptr<Chunk> c = GetChunk(position.x,position.z);
     if (!c) return 0;
     return c->GetBlockLight(position);
 }
 
 void World::SetBlockLight(int8_t level, Int3 position) {
-    Chunk* c = GetChunk(position.x,position.z);
+    std::shared_ptr<Chunk> c = GetChunk(position.x,position.z);
     if (!c) return;
     c->SetBlockLight(level, position);
 }
 
 // Get the Skylight of a Block at the passed position
 int8_t World::GetSkyLight(Int3 position) {
-    Chunk* c = GetChunk(position.x,position.z);
+    std::shared_ptr<Chunk> c = GetChunk(position.x,position.z);
     if (!c) return 0;
     return c->GetSkyLight(position);
 }
 
 // Set the Skylight of a Block at the passed position
 void World::SetSkyLight(int8_t level, Int3 position) {
-    Chunk* c = GetChunk(position.x,position.z);
+    std::shared_ptr<Chunk> c = GetChunk(position.x,position.z);
     if (!c) return;
     c->SetSkyLight(level, position);
 }
 
 std::vector<SignTile*> World::GetChunkSigns(Int3 position) {
-    Chunk* c = GetChunk(position.x,position.z);
+    std::shared_ptr<Chunk> c = GetChunk(position.x,position.z);
     if (!c) {
         return {};
     }
@@ -491,7 +491,7 @@ std::vector<SignTile*> World::GetChunkSigns(Int3 position) {
 // Get all the block,meta,block light and sky light data of a Chunk in a Binary Format
 void World::GetChunkData(uint8_t* chunkData, Int3 position) {
     int index = 0;
-    Chunk* c = GetChunk(position.x,position.z);
+    std::shared_ptr<Chunk> c = GetChunk(position.x,position.z);
     if (!c) return;
     
     // BlockData
@@ -553,7 +553,7 @@ int8_t World::GetFirstUncoveredBlock(Int3& position) {
 }
 
 // Load a Chunk into Memory from an NBT-Format file
-Chunk* World::LoadOldV2Chunk(int32_t x, int32_t z) {
+std::shared_ptr<Chunk> World::LoadOldV2Chunk(int32_t x, int32_t z) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
         return nullptr;
@@ -587,7 +587,7 @@ Chunk* World::LoadOldV2Chunk(int32_t x, int32_t z) {
 }
 
 // Load an old-format Chunk into Memory from a Binary File
-Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
+std::shared_ptr<Chunk> World::LoadOldChunk(int32_t x, int32_t z) {
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
         std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
         return nullptr;
@@ -701,7 +701,7 @@ bool World::InteractWithBlock(Int3 pos) {
 void World::TickChunks() {
     //for (auto& pair : chunks) {
         //int64_t hash = pair.first;
-        //Chunk* chunk = pair.second.get();
+        //std::shared_ptr<Chunk> chunk = pair.second.get();
         //std::uniform_int_distribution<int32_t> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
         /*
         // Choose a batch of random blocks within a chunk to run RandomTick on
@@ -741,7 +741,7 @@ int8_t World::GetLight(bool skyLight, Int3 pos) {
     } else if(pos.y >= 128) {
         return 15;
     } else {
-        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
         if (!c) return 0;
         pos.x &= 15;
         pos.z &= 15;
@@ -750,7 +750,7 @@ int8_t World::GetLight(bool skyLight, Int3 pos) {
 }
 
 int8_t World::GetTotalLight(Int3 pos) {
-    Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+    std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
     if (!c) return 0;
     pos.x &= 15;
     pos.z &= 15;
@@ -763,7 +763,7 @@ void World::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
     } else if(pos.y >= 128) {
         return;
     } else {
-        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
         if (!c) return;
         pos.x &= 15;
         pos.z &= 15;
@@ -777,7 +777,7 @@ void World::SetBlockMeta(int8_t blockMeta, Int3 pos) {
     } else if(pos.y >= CHUNK_HEIGHT) {
         return;
     } else {
-        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
         if (!c) return;
         pos.x &= 15;
         pos.z &= 15;
@@ -791,7 +791,7 @@ int8_t World::GetBlockMeta(Int3 pos) {
     } else if(pos.y >= CHUNK_HEIGHT) {
         return 0;
     } else {
-        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
         if (!c) return 0;
         pos.x &= 15;
         pos.z &= 15;
@@ -805,7 +805,7 @@ void World::SetBlockType(int8_t blockType, Int3 pos) {
     } else if(pos.y >= CHUNK_HEIGHT) {
         return;
     } else {
-        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
         if (!c) return;
         pos.x &= 15;
         pos.z &= 15;
@@ -819,7 +819,7 @@ int8_t World::GetBlockType(Int3 pos) {
     } else if(pos.y >= CHUNK_HEIGHT) {
         return BLOCK_AIR;
     } else {
-        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
         if (!c) return 0;
         pos.x &= 15;
         pos.z &= 15;
@@ -833,7 +833,7 @@ void World::SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos) {
     } else if(pos.y >= CHUNK_HEIGHT) {
         return;
     } else {
-        Chunk* c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+        std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
         if (!c) return;
         pos.x &= 15;
         pos.z &= 15;
@@ -842,7 +842,7 @@ void World::SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos) {
 }
 
 void World::AddTileEntity(std::unique_ptr<TileEntity>&& te) {
-    Chunk* c = this->GetChunk(
+    std::shared_ptr<Chunk> c = this->GetChunk(
         te->position.x >> 4,
         te->position.z >> 4
     );
@@ -851,7 +851,7 @@ void World::AddTileEntity(std::unique_ptr<TileEntity>&& te) {
 }
 
 TileEntity* World::GetTileEntity(Int3 pos) {
-    Chunk* c = this->GetChunk(
+    std::shared_ptr<Chunk> c = this->GetChunk(
         pos.x >> 4,
         pos.z >> 4
     );
@@ -860,7 +860,7 @@ TileEntity* World::GetTileEntity(Int3 pos) {
 }
 
 bool World::CanBlockSeeTheSky(Int3 pos) {
-    Chunk* c = this->GetChunk(
+    std::shared_ptr<Chunk> c = this->GetChunk(
         pos.x >> 4,
         pos.z >> 4
     );
@@ -869,7 +869,7 @@ bool World::CanBlockSeeTheSky(Int3 pos) {
 }
 
 int World::GetHighestSolidOrLiquidBlock(int32_t x, int32_t z) {
-    Chunk* c = this->GetChunk(
+    std::shared_ptr<Chunk> c = this->GetChunk(
         x >> 4,
         z >> 4
     );
