@@ -54,8 +54,10 @@ std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
                     for(int macroX1 = 0; macroX1 < 4; ++macroX1) {
                         double var37 = (double)macroX1 / 4.0D;
                         double var39 = var28 + (var32 - var28) * var37;
-                        double var41 = var30 + (var34 - var30) * var37;
-                        int blockIndex = (macroX1 + ((macroX << 2) << 11)) | (0 + ((macroZ << 2) << 7)) | ((macroY << 2) + var25);
+                        double var41 = var30 + (var34 - var30) * var37;                        
+                        int blockIndex = ((macroX1 + (macroX << 2)) << 11) |
+                                        ((0 + (macroZ << 2)) << 7) |
+                                        ((macroY << 2) + var25);
 
                         for(int var36 = 0; var36 < 4; ++var36) {
                             double var45 = (double)var36 / 4.0D;

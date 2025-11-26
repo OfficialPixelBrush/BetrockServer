@@ -398,13 +398,6 @@ int GeneratorLua::lua_GetBlock(lua_State *L) {
     int z = (int)lua_tonumber(L, 3);
     Int3 position = Int3{x, y, z};
 
-    // Get the block at the given position
-    Chunk* c = gen->world->GetChunk(x/16,z/16);
-    if (!c) {
-        lua_pushnil(L);
-        return 1;
-    }
-
     // Create a table and push it to Lua stack
     lua_newtable(L);
     lua_pushnumber(L, gen->world->GetBlockType(position));
