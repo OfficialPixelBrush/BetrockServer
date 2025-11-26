@@ -34,7 +34,7 @@ std::unique_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
     this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
     
     // Allocate empty chunk
-    std::fill(std::begin(c->blocks), std::end(c->blocks), Block{BLOCK_AIR});
+    c->ClearChunk();
 
     // Generate Biomes
 	this->biomeMap = GenerateBiomeMap(
@@ -124,11 +124,11 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
                 int blockIndex = (z * CHUNK_WIDTH_X + x) * CHUNK_HEIGHT + y;
                 // Place Bedrock at bottom with some randomness
                 if(y <= 0 + this->rand->nextInt(5)) {
-                    c->blocks[blockIndex].type = BLOCK_BEDROCK;
+                    c->SetBlockType(BLOCK_BEDROCK, BlockIndexToPosition(blockIndex));
                     continue;
                 }
 
-                uint8_t currentBlock = c->blocks[blockIndex].type;
+                uint8_t currentBlock = c->GetBlockType(BlockIndexToPosition(blockIndex));
                 // Ignore air
                 if(currentBlock == BLOCK_AIR) {
                     stoneDepth = -1;
@@ -159,13 +159,13 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::unique_ptr<Chu
 
                         stoneDepth = stoneActive;
                         if(y >= WATER_LEVEL - 1) {
-                            c->blocks[blockIndex].type = topBlock;
+                            c->SetBlockType(topBlock, BlockIndexToPosition(blockIndex));
                         } else {
-                            c->blocks[blockIndex].type = fillerBlock;
+                            c->SetBlockType(fillerBlock, BlockIndexToPosition(blockIndex));
                         }
                     } else if(stoneDepth > 0) {
                         --stoneDepth;
-                        c->blocks[blockIndex].type = fillerBlock;
+                        c->SetBlockType(fillerBlock, BlockIndexToPosition(blockIndex));
                         if(stoneDepth == 0 && fillerBlock == BLOCK_SAND) {
                             stoneDepth = this->rand->nextInt(4);
                             fillerBlock = BLOCK_SANDSTONE;
@@ -247,7 +247,7 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::unique_ptr<Chunk>& c
                                 blockType = BLOCK_STONE;
                             }
                             
-                            c->blocks[blockIndex].type = blockType;
+                            c->SetBlockType(blockType, BlockIndexToPosition(blockIndex));
                             // Prep for next iteration
                             blockIndex += CHUNK_HEIGHT;
                             terrainDensity += densityStepZ;

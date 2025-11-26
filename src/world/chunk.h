@@ -25,9 +25,11 @@ class Chunk {
         void RelightBlock(int var1, int var2, int var3);
         void UpdateSkylight_do(int x, int z);
         void CheckSkylightNeighborHeight(int x, int z, int height);
+        Block* GetBlock(Int3 pos);
+        Block* GetBlock(int32_t x, int8_t y, int32_t z);
+        struct Block blocks[CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT];
     public:
         int8_t state = ChunkState::Invalid;
-        struct Block blocks[CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT];
         bool modified = false;
         std::shared_ptr<CompoundTag> GetAsNbt();
         void ReadFromNbt(std::shared_ptr<CompoundTag> readRoot);
@@ -36,12 +38,11 @@ class Chunk {
         int8_t GetHeightValue(uint8_t x, uint8_t z);
         void GenerateHeightMap();
         void PrintHeightmap();
-        Block* GetBlock(Int3 pos);
-        Block* GetBlock(int32_t x, int8_t y, int32_t z);
         bool CanBlockSeeTheSky(Int3 pos);
         void SetLight(bool skyLight, Int3 pos, int8_t newLight);
         int8_t GetLight(bool skyLight, Int3 pos);
         int8_t GetTotalLight(Int3 pos);
+        void ClearChunk();
 
         void SetBlockType(int8_t blockType, Int3 pos);
         int8_t GetBlockType(Int3 pos);

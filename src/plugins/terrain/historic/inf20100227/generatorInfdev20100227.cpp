@@ -77,9 +77,7 @@ std::unique_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_
                 // Clamping
                 if(blockType < BLOCK_AIR) blockType = BLOCK_AIR;
 
-                Block b;
-                b.type = blockType;
-                c->blocks[blockIndex++] = b;
+                c->SetBlockType(blockType, BlockIndexToPosition(blockIndex++));
             }
         }
     }

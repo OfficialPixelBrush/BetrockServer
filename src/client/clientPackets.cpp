@@ -269,10 +269,10 @@ bool Client::HandlePlayerDigging(World* world) {
 	if (debugPunchBlockInfo) {
 		Chunk* c = world->GetChunk(pos.x >> 4, pos.z >> 4);
 		if (c) {
-			Block* b = c->GetBlock(pos);
-			if (b) {
-				Betrock::Logger::Instance().Debug(IdToLabel(int(b->type)) + " " + b->str() + " at " + pos.str());
-			}
+			//Block* b = c->GetBlock(pos);
+			//if (b) {
+				//Betrock::Logger::Instance().Debug(IdToLabel(int(b->type)) + " " + b->str() + " at " + pos.str());
+			//}
 		}
 	}
 

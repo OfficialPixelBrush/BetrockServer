@@ -98,7 +98,8 @@ std::unique_ptr<Chunk> GeneratorLua::GenerateChunk(int32_t cX, int32_t cZ) {
         if (lua_istable(L, -1)) {    
             for (int i = 1; i <= CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z; i++) {
                 lua_rawgeti(L, -1, i);
-                c->blocks[i-1] = DecodeBlock();
+                Block b = DecodeBlock();
+                c->SetBlockTypeAndMeta(b.type, b.meta, BlockIndexToPosition(i-1));
                 lua_pop(L, 1);  // Pop table[i]
             }
     

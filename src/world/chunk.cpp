@@ -50,6 +50,10 @@ void Chunk::PrintHeightmap() {
     }
 }
 
+void Chunk::ClearChunk() {
+    std::fill(std::begin(blocks), std::end(blocks), Block{BLOCK_AIR});
+}
+
 void Chunk::RelightBlock(int x, int y, int z) {
     int oldY = this->heightMap[(z << 4) | x] & 255;
     int newY = oldY;

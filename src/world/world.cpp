@@ -511,10 +511,9 @@ std::unique_ptr<char[]> World::GetChunkData(Int3 position) {
     for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
         for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
             for (uint8_t cY = 0; cY < (CHUNK_HEIGHT/2); cY++) {
-                Block* b1 = c->GetBlock(cX,cY*2,cZ);
-                Block* b2 = c->GetBlock(cX,cY*2+1,cZ);
-                if (!b1 || !b2) continue;
-                bytes[index] = (b2->meta << 4 | b1->meta);
+                int8_t b1 = c->GetBlockMeta(Int3{cX,cY*2,cZ});
+                int8_t b2 = c->GetBlockMeta(Int3{cX,cY*2+1,cZ});
+                bytes[index] = (b2 << 4 | b1);
                 index++;
             }
         }
@@ -637,28 +636,28 @@ Chunk* World::LoadOldChunk(int32_t x, int32_t z) {
     for (size_t i = 0; i < decompressedSize; i++) {
         if (i < blockDataSize) {
             // Block Data
-            c->blocks[i].type = chunkData[i];
+            c->SetBlockType(chunkData[i], BlockIndexToPosition(i));
         } else if (
             // Metadata
             i >= blockDataSize &&
             i <  blockDataSize+nibbleDataSize)
         {
-            c->blocks[(i%nibbleDataSize)*2  ].meta = (chunkData[i]     )&0xF;
-            c->blocks[(i%nibbleDataSize)*2+1].meta = (chunkData[i] >> 4)&0xF;
+            c->SetBlockMeta((chunkData[i]     )&0xF, BlockIndexToPosition((i%nibbleDataSize)*2  ));
+            c->SetBlockMeta((chunkData[i] >> 4)&0xF, BlockIndexToPosition((i%nibbleDataSize)*2+1));
         } else if (
             // Block Light
             i >= blockDataSize+nibbleDataSize &&
             i <  blockDataSize+(nibbleDataSize*2))
         {
-            SetBlockLight((chunkData[i]     )&0xF, BlockIndexToPosition((i%nibbleDataSize)*2  ));
-            SetBlockLight((chunkData[i] >> 4)&0xF, BlockIndexToPosition((i%nibbleDataSize)*2+1));
+            c->SetBlockLight((chunkData[i]     )&0xF, BlockIndexToPosition((i%nibbleDataSize)*2  ));
+            c->SetBlockLight((chunkData[i] >> 4)&0xF, BlockIndexToPosition((i%nibbleDataSize)*2+1));
         } else if (
             // Sky Light
             i >= blockDataSize+(nibbleDataSize*2) &&
             i <  blockDataSize+(nibbleDataSize*3))
         {
-            SetSkyLight((chunkData[i]     )&0xF, BlockIndexToPosition((i%nibbleDataSize)*2  ));
-            SetSkyLight((chunkData[i] >> 4)&0xF, BlockIndexToPosition((i%nibbleDataSize)*2+1));
+            c->SetSkyLight((chunkData[i]     )&0xF, BlockIndexToPosition((i%nibbleDataSize)*2  ));
+            c->SetSkyLight((chunkData[i] >> 4)&0xF, BlockIndexToPosition((i%nibbleDataSize)*2+1));
         }
     }
     c->state = ChunkState::Populated;
@@ -704,10 +703,11 @@ bool World::InteractWithBlock(Int3 pos) {
 
 // Tick all currently loaded chunks
 void World::TickChunks() {
-    for (auto& pair : chunks) {
-        int64_t hash = pair.first;
-        Chunk* chunk = pair.second.get();
-        std::uniform_int_distribution<int32_t> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
+    //for (auto& pair : chunks) {
+        //int64_t hash = pair.first;
+        //Chunk* chunk = pair.second.get();
+        //std::uniform_int_distribution<int32_t> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
+        /*
         // Choose a batch of random blocks within a chunk to run RandomTick on
         for (int i = 0; i < 16; i++) {
             int blockIndex = dist6(rng);
@@ -729,7 +729,8 @@ void World::TickChunks() {
                 UpdateBlock(pos);
             }
         }
-    }
+        */
+    //}
 }
 
 // Tick the passed block
