@@ -44,8 +44,8 @@ Int3 GetBlockPosition(int index);
 std::unique_ptr<char[]> CompressChunk(uint8_t* chunk, size_t &compressed_size);
 std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size);
 
-int64_t GetChunkHash(int32_t x, int32_t z);
-Int3 DecodeChunkHash(int64_t hash);
+int64_t GetChunkHash(Int2 position);
+Int2 DecodeChunkHash(int64_t hash);
 
 int32_t SafeStringToInt(std::string in);
 int64_t SafeStringToLong(std::string in);

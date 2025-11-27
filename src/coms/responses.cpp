@@ -210,11 +210,11 @@ void Respond::EntityMetadata(std::vector<uint8_t> &response, int32_t& entityId, 
     response.push_back(127);
 }
 
-void Respond::PreChunk(std::vector<uint8_t> &response, int32_t x, int32_t z, bool mode) {
+void Respond::PreChunk(std::vector<uint8_t> &response, Int2 position, bool mode) {
     // , int32_t compressedSize, std::vector<uint8_t> compressedData
     response.push_back((uint8_t)Packet::PreChunk);
-    AppendIntegerToVector(response,x);
-    AppendIntegerToVector(response,z);
+    AppendIntegerToVector(response,position.x);
+    AppendIntegerToVector(response,position.y);
     response.push_back(mode);
 }
 

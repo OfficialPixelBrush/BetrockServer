@@ -25,22 +25,24 @@ int World::GetNumberOfModifiedChunks() {
 	return modifiedChunks;
 }
 
-int8_t World::GetHeightValue(int32_t x, int32_t z) {
-	std::shared_ptr<Chunk> c = GetChunk(x >> 4, z >> 4);
+int8_t World::GetHeightValue(Int2 position) {
+	std::shared_ptr<Chunk> c = GetChunk(
+		Int2{position.x >> 4, position.y >> 4}
+	);
 	if (!c)
 		return 0;
-	return c->GetHeightValue(x & 15, z & 15);
+	return c->GetHeightValue(position.x & 15, position.y & 15);
 }
 
 // Checks if a file with a matching position and extension exists
-bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
+bool World::ChunkFileExists(Int2 position, std::string extension) {
 	if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
 		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << "\n";
 		return false;
 	}
 
 	// Create the chunk entry file path based on x and z coordinates
-	std::filesystem::path entryPath = dirPath / (std::to_string(x) + "," + std::to_string(z) + extension);
+	std::filesystem::path entryPath = dirPath / (std::to_string(position.x) + "," + std::to_string(position.y) + extension);
 
 	// Check if the entry file exists and has a .cnk extension
 	if (std::filesystem::exists(entryPath) && std::filesystem::is_regular_file(entryPath) &&
@@ -50,23 +52,23 @@ bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
 	return false;
 }
 
-bool World::ChunkExists(int32_t x, int32_t z) {
+bool World::ChunkExists(Int2 position) {
 	std::shared_lock lock(chunkMutex);
-	return chunks.contains(GetChunkHash(x, z));
+	return chunks.contains(GetChunkHash(position));
 }
 
-bool World::BlockExists(Int3 pos) { return pos.y >= 0 && pos.y < 128 ? ChunkExists(pos.x >> 4, pos.z >> 4) : false; }
+bool World::BlockExists(Int3 pos) { return pos.y >= 0 && pos.y < 128 ? ChunkExists(Int2{pos.x >> 4, pos.z >> 4}) : false; }
 
-bool World::IsChunkGenerated(int32_t x, int32_t z) {
-	std::shared_ptr<Chunk> c = this->GetChunk(x, z);
+bool World::IsChunkGenerated(Int2 position) {
+	std::shared_ptr<Chunk> c = this->GetChunk(position);
 	if (!c)
 		return false;
 	return c->state == ChunkState::Generated;
 }
 
 // Checks if the Chunk is populated
-bool World::IsChunkPopulated(int32_t x, int32_t z) {
-	std::shared_ptr<Chunk> c = this->GetChunk(x, z);
+bool World::IsChunkPopulated(Int2 position) {
+	std::shared_ptr<Chunk> c = this->GetChunk(position);
 	if (!c)
 		return false;
 	return c->state == ChunkState::Populated;
@@ -98,48 +100,68 @@ World::World(const std::string &extra) : dev(), rng(dev()) {
 	}
 }
 
-// Saves all the Chunks that're currently loaded into Memory
+/**
+ * @brief Saves all the Chunks that're currently loaded into Memory
+ */
 void World::Save() {
 	for (auto &pair : chunks) {
 		int64_t hash = pair.first;
 		std::shared_ptr<Chunk> chunk = pair.second;
 
-		Int3 pos = DecodeChunkHash(hash);
-		SaveChunk(pos.x, pos.z, chunk);
+		Int2 pos = DecodeChunkHash(hash);
+		SaveChunk(pos, chunk);
 	}
 }
 
-// Gets the Chunk Pointer from Memory
-std::shared_ptr<Chunk> World::GetChunk(int32_t x, int32_t z) {
+/**
+ * @brief Gets the Chunk Pointer from Memory
+ * 
+ * @param x X Chunk coordinate
+ * @param z Z Chunk coordinate
+ */
+std::shared_ptr<Chunk> World::GetChunk(Int2 position) {
 	std::shared_lock lock(chunkMutex);
-	auto it = chunks.find(GetChunkHash(x, z));
+	auto it = chunks.find(GetChunkHash(position));
 	if (it != chunks.end() && it->second != nullptr)
 		return it->second;
 	return nullptr;
 }
 
-// Adds a new Chunk to the world
-std::shared_ptr<Chunk> World::AddChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> c) {
+/**
+ * @brief Adds a new Chunk to the world
+ * 
+ * @param x X Chunk coordinate
+ * @param z Z Chunk coordinate
+ */
+std::shared_ptr<Chunk> World::AddChunk(Int2 position, std::shared_ptr<Chunk> c) {
 	std::unique_lock lock(chunkMutex);
-	auto hash = GetChunkHash(x, z);
+	auto hash = GetChunkHash(position);
 	chunks[hash] = std::move(c);
 	return chunks[hash];
 }
 
-// Removes a Chunk from the world
-void World::RemoveChunk(int32_t x, int32_t z) {
+/**
+ * @brief Removes a Chunk from the world
+ * 
+ * @param x X Chunk coordinate
+ * @param z Z Chunk coordinate
+ */
+void World::RemoveChunk(Int2 position) {
 	std::unique_lock lock(chunkMutex);
-	chunks.erase(GetChunkHash(x, z));
+	chunks.erase(GetChunkHash(position));
 }
 
-// Removes any chunks that're not visible to any player
+/**
+ * @brief Removes any chunks that're not visible to any player
+ * 
+ */
 void World::FreeUnseenChunks() {
-	std::vector<Int3> chunksToRemove;
+	std::vector<Int2> chunksToRemove;
 
 	for (auto &pair : chunks) {
 		const int64_t &hash = pair.first;
 		std::shared_ptr<Chunk> chunk = pair.second;
-		Int3 pos = DecodeChunkHash(hash);
+		Int2 pos = DecodeChunkHash(hash);
 
 		// Check if any player has this chunk hash in their visibleChunks
 		bool isVisible = false;
@@ -151,26 +173,26 @@ void World::FreeUnseenChunks() {
 		}
 
 		if (!isVisible) {
-			SaveChunk(pos.x, pos.z, chunk);
+			SaveChunk(pos, chunk);
 			chunksToRemove.push_back(pos);
 		}
 	}
 
 	// Remove chunks that are not visible to any player
-	for (Int3 pos : chunksToRemove) {
-		RemoveChunk(pos.x, pos.z);
+	for (Int2 pos : chunksToRemove) {
+		RemoveChunk(pos);
 	}
 }
 
-std::shared_ptr<Chunk> World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
+std::shared_ptr<Chunk> World::LoadMcRegionChunk(Int2 position) {
 	if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
 		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << "\n";
 		return nullptr;
 	}
 
 	try {
-		int32_t regionX = int32_t(floor(cX / 32.0f));
-		int32_t regionZ = int32_t(floor(cZ / 32.0f));
+		int32_t regionX = int32_t(floorf(position.x) / 32.0f);
+		int32_t regionZ = int32_t(floorf(position.y) / 32.0f);
 		std::filesystem::path regionPath =
 			dirPath / ("r." + std::to_string(regionX) + "." + std::to_string(regionZ) + MCREGION_FILE_EXTENSION);
 		std::cout << regionPath << "\n";
@@ -179,24 +201,30 @@ std::shared_ptr<Chunk> World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
 		std::unique_ptr<RegionFile> rf = std::make_unique<RegionFile>(regionPath);
 
 		std::shared_ptr<Tag> readRoot;
-		readRoot = rf->GetChunkNbt(cX, cZ);
+		readRoot = rf->GetChunkNbt(position);
 
 		if (!readRoot) {
 			return nullptr;
 		}
-		std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this, cX, cZ);
+		std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this, position);
 		c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
 		c->state = ChunkState::Populated;
 		c->modified = false;
-		return AddChunk(cX, cZ, std::move(c));
+		return AddChunk(position, std::move(c));
 	} catch (const std::exception &e) {
 		Betrock::Logger::Instance().Error(e.what());
 		return nullptr;
 	}
 }
 
-// Save a Chunk as an NBT-format file
-void World::SaveChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> chunk) {
+/**
+ * @brief Save a Chunk as an NBT-format file
+ * 
+ * @param x X Chunk coordinate
+ * @param z Z Chunk coordinate
+ * @param chunk The chunk that should be saved
+ */
+void World::SaveChunk(Int2 position, std::shared_ptr<Chunk> chunk) {
 	// Skip if we have this flag set
 	if (debugDisableSave)
 		return;
@@ -206,10 +234,8 @@ void World::SaveChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> chunk) {
 	}
 
 	// Update Chunklight before saving
-	Int3 pos = Int3{x, 0, z};
-
 	std::filesystem::path filePath =
-		dirPath / (std::to_string(pos.x) + "," + std::to_string(pos.z) + CHUNK_FILE_EXTENSION);
+		dirPath / (std::to_string(position.x) + "," + std::to_string(position.y) + CHUNK_FILE_EXTENSION);
 	// CalculateChunkLight(GetChunk(x,z));
 
 	std::ofstream writeFile(filePath, std::ios::binary);
@@ -258,7 +284,7 @@ void World::SpreadLight(bool skyLight, Int3 pos, int newLightLevel) {
 		return; // no improvement, skip
 
 	// Update block light in chunk if chunk is present
-	if (std::shared_ptr<Chunk> c = GetChunk(pos.x >> 4, pos.z >> 4)) {
+	if (std::shared_ptr<Chunk> c = GetChunk(Int2{pos.x >> 4, pos.z >> 4})) {
 		c->SetLight(skyLight, {pos.x & 15, pos.y, pos.z & 15}, newLightLevel);
 	}
 
@@ -293,7 +319,7 @@ void World::ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool che
 			return;
 		}
 
-		std::shared_ptr<Chunk> chunk = GetChunk(midX >> 4, midZ >> 4);
+		std::shared_ptr<Chunk> chunk = GetChunk(Int2{midX >> 4, midZ >> 4});
 		if (!chunk) {
 			--lightingUpdatesScheduled;
 			return;
@@ -393,7 +419,7 @@ void World::ProcessSingleLightUpdate(const LightUpdate &current) {
 		int newLevel = std::max(0, currentLevel - translucency);
 
 		if (newLevel > neighborLevel) {
-			if (std::shared_ptr<Chunk> c = GetChunk(n.x >> 4, n.z >> 4)) {
+			if (std::shared_ptr<Chunk> c = GetChunk(Int2{n.x >> 4, n.z >> 4})) {
 				c->SetLight(current.skyLight, {n.x & 15, n.y, n.z & 15}, newLevel);
 				// schedule further propagation by pushing new LightUpdate
 				std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
@@ -442,6 +468,11 @@ bool World::MergeBox(Int3 &posA, Int3 &posB, int a1, int a2, int a3, int a4, int
 	return false;
 }
 
+/**
+ * @brief Inform all clients of the updated block at the passed position
+ * 
+ * @param position Updated block position
+ */
 void World::UpdateBlock(Int3 position) {
 	std::vector<uint8_t> response;
 	Respond::BlockChange(response, position, GetBlockType(position), GetBlockMeta(position));
@@ -449,14 +480,14 @@ void World::UpdateBlock(Int3 position) {
 }
 
 int8_t World::GetBlockLight(Int3 position) {
-	std::shared_ptr<Chunk> c = GetChunk(position.x, position.z);
+	std::shared_ptr<Chunk> c = GetChunk(Int2{position.x >> 4, position.y >> 4});
 	if (!c)
 		return 0;
 	return c->GetBlockLight(position);
 }
 
 void World::SetBlockLight(int8_t level, Int3 position) {
-	std::shared_ptr<Chunk> c = GetChunk(position.x, position.z);
+	std::shared_ptr<Chunk> c = GetChunk(Int2{position.x >> 4, position.y >> 4});
 	if (!c)
 		return;
 	c->SetBlockLight(level, position);
@@ -464,7 +495,7 @@ void World::SetBlockLight(int8_t level, Int3 position) {
 
 // Get the Skylight of a Block at the passed position
 int8_t World::GetSkyLight(Int3 position) {
-	std::shared_ptr<Chunk> c = GetChunk(position.x, position.z);
+	std::shared_ptr<Chunk> c = GetChunk(Int2{position.x >> 4, position.y >> 4});
 	if (!c)
 		return 0;
 	return c->GetSkyLight(position);
@@ -472,14 +503,20 @@ int8_t World::GetSkyLight(Int3 position) {
 
 // Set the Skylight of a Block at the passed position
 void World::SetSkyLight(int8_t level, Int3 position) {
-	std::shared_ptr<Chunk> c = GetChunk(position.x, position.z);
+	std::shared_ptr<Chunk> c = GetChunk(Int2{position.x >> 4, position.y >> 4});
 	if (!c)
 		return;
 	c->SetSkyLight(level, position);
 }
 
-std::vector<SignTile *> World::GetChunkSigns(Int3 position) {
-	std::shared_ptr<Chunk> c = GetChunk(position.x, position.z);
+/**
+ * @brief Get all the sign tile-entities within the requested chunk
+ * 
+ * @param position The requested chunk position
+ * @return std::vector<SignTile *> 
+ */
+std::vector<SignTile *> World::GetChunkSigns(Int2 position) {
+	std::shared_ptr<Chunk> c = GetChunk(Int2{position.x >> 4, position.y >> 4});
 	if (!c) {
 		return {};
 	}
@@ -487,9 +524,9 @@ std::vector<SignTile *> World::GetChunkSigns(Int3 position) {
 }
 
 // Get all the block,meta,block light and sky light data of a Chunk in a Binary Format
-void World::GetChunkData(uint8_t *chunkData, Int3 position) {
+void World::GetChunkData(uint8_t *chunkData, Int2 position) {
 	int index = 0;
-	std::shared_ptr<Chunk> c = GetChunk(position.x, position.z);
+	std::shared_ptr<Chunk> c = GetChunk(position);
 	if (!c)
 		return;
 
@@ -548,17 +585,17 @@ int8_t World::GetFirstUncoveredBlock(Int3 &position) {
 }
 
 // Load a Chunk into Memory from an NBT-Format file
-std::shared_ptr<Chunk> World::LoadOldV2Chunk(int32_t x, int32_t z) {
+std::shared_ptr<Chunk> World::LoadOldV2Chunk(Int2 posiiton) {
 	if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
 		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << "\n";
 		return nullptr;
 	}
 
 	// Create the chunk entry file path based on x and z coordinates
-	std::filesystem::path entryPath = dirPath / (std::to_string(x) + "," + std::to_string(z) + CHUNK_FILE_EXTENSION);
+	std::filesystem::path entryPath = dirPath / (std::to_string(posiiton.x) + "," + std::to_string(posiiton.y) + CHUNK_FILE_EXTENSION);
 
 	// Check if the entry file exists and has a .cnk extension
-	if (!ChunkFileExists(x, z)) {
+	if (!ChunkFileExists(posiiton)) {
 		std::cout << "File doesn't exist!" << "\n";
 		return nullptr;
 	}
@@ -570,11 +607,11 @@ std::shared_ptr<Chunk> World::LoadOldV2Chunk(int32_t x, int32_t z) {
 		if (!readRoot) {
 			throw std::runtime_error("Unable to read NBT data!");
 		}
-		std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this, x, z);
+		std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this, posiiton);
 		c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
 		c->state = ChunkState::Populated;
 		c->modified = false;
-		return AddChunk(x, z, std::move(c));
+		return AddChunk(posiiton, std::move(c));
 	} catch (const std::exception &e) {
 		Betrock::Logger::Instance().Error(e.what());
 		return nullptr;
@@ -582,7 +619,7 @@ std::shared_ptr<Chunk> World::LoadOldV2Chunk(int32_t x, int32_t z) {
 }
 
 // Load an old-format Chunk into Memory from a Binary File
-std::shared_ptr<Chunk> World::LoadOldChunk(int32_t x, int32_t z) {
+std::shared_ptr<Chunk> World::LoadOldChunk(Int2 posiiton) {
 	if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
 		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << "\n";
 		return nullptr;
@@ -590,10 +627,10 @@ std::shared_ptr<Chunk> World::LoadOldChunk(int32_t x, int32_t z) {
 
 	// Create the chunk entry file path based on x and z coordinates
 	std::filesystem::path entryPath =
-		dirPath / (std::to_string(x) + "," + std::to_string(z) + OLD_CHUNK_FILE_EXTENSION);
+		dirPath / (std::to_string(posiiton.x) + "," + std::to_string(posiiton.y) + OLD_CHUNK_FILE_EXTENSION);
 
 	// Check if the entry file exists and has a .cnk extension
-	if (!ChunkFileExists(x, z, OLD_CHUNK_FILE_EXTENSION)) {
+	if (!ChunkFileExists(posiiton, OLD_CHUNK_FILE_EXTENSION)) {
 		return nullptr;
 	}
 
@@ -622,7 +659,7 @@ std::shared_ptr<Chunk> World::LoadOldChunk(int32_t x, int32_t z) {
 		return nullptr;
 	}
 
-	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this, x, z);
+	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this, posiiton);
 	size_t blockDataSize = CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT;
 	size_t nibbleDataSize = CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT / 2);
 	for (size_t i = 0; i < decompressedSize; i++) {
@@ -653,7 +690,7 @@ std::shared_ptr<Chunk> World::LoadOldChunk(int32_t x, int32_t z) {
 	remove(entryPath);
 	c->state = ChunkState::Populated;
 	c->modified = false;
-	return AddChunk(x, z, std::move(c));
+	return AddChunk(posiiton, std::move(c));
 }
 
 bool World::InteractWithBlock(Int3 pos) {
@@ -731,7 +768,7 @@ int8_t World::GetLight(bool skyLight, Int3 pos) {
 	} else if (pos.y >= 128) {
 		return 15;
 	} else {
-		std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+		std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 		if (!c)
 			return 0;
 		pos.x &= 15;
@@ -741,7 +778,7 @@ int8_t World::GetLight(bool skyLight, Int3 pos) {
 }
 
 int8_t World::GetTotalLight(Int3 pos) {
-	std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+	std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 	if (!c)
 		return 0;
 	pos.x &= 15;
@@ -755,7 +792,7 @@ void World::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
 	} else if (pos.y >= 128) {
 		return;
 	} else {
-		std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+		std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 		if (!c)
 			return;
 		pos.x &= 15;
@@ -770,7 +807,7 @@ void World::SetBlockMeta(int8_t blockMeta, Int3 pos) {
 	} else if (pos.y >= CHUNK_HEIGHT) {
 		return;
 	} else {
-		std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+		std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 		if (!c)
 			return;
 		pos.x &= 15;
@@ -785,7 +822,7 @@ int8_t World::GetBlockMeta(Int3 pos) {
 	} else if (pos.y >= CHUNK_HEIGHT) {
 		return 0;
 	} else {
-		std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+		std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 		if (!c)
 			return 0;
 		pos.x &= 15;
@@ -800,7 +837,7 @@ void World::SetBlockType(int8_t blockType, Int3 pos) {
 	} else if (pos.y >= CHUNK_HEIGHT) {
 		return;
 	} else {
-		std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+		std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 		if (!c)
 			return;
 		pos.x &= 15;
@@ -815,7 +852,7 @@ int8_t World::GetBlockType(Int3 pos) {
 	} else if (pos.y >= CHUNK_HEIGHT) {
 		return BLOCK_AIR;
 	} else {
-		std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+		std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 		if (!c)
 			return 0;
 		pos.x &= 15;
@@ -830,7 +867,7 @@ void World::SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos) {
 	} else if (pos.y >= CHUNK_HEIGHT) {
 		return;
 	} else {
-		std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+		std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 		if (!c)
 			return;
 		pos.x &= 15;
@@ -840,32 +877,32 @@ void World::SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos) {
 }
 
 void World::AddTileEntity(std::unique_ptr<TileEntity> &&te) {
-	std::shared_ptr<Chunk> c = this->GetChunk(te->position.x >> 4, te->position.z >> 4);
+	std::shared_ptr<Chunk> c = this->GetChunk(Int2{te->position.x >> 4, te->position.z >> 4});
 	if (!c)
 		return;
 	c->AddTileEntity(std::move(te));
 }
 
 TileEntity *World::GetTileEntity(Int3 pos) {
-	std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+	std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 	if (!c)
 		return nullptr;
 	return c->GetTileEntity(pos);
 }
 
 bool World::CanBlockSeeTheSky(Int3 pos) {
-	std::shared_ptr<Chunk> c = this->GetChunk(pos.x >> 4, pos.z >> 4);
+	std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 	if (!c)
 		return false;
 	return c->CanBlockSeeTheSky(pos);
 }
 
-int World::GetHighestSolidOrLiquidBlock(int32_t x, int32_t z) {
-	std::shared_ptr<Chunk> c = this->GetChunk(x >> 4, z >> 4);
+int World::GetHighestSolidOrLiquidBlock(Int2 pos) {
+	std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.y >> 4});
 	if (!c)
 		return -1;
 	for (int y = CHUNK_HEIGHT - 1; y > 0; --y) {
-		int8_t blockType = this->GetBlockType(Int3{x, y, z});
+		int8_t blockType = this->GetBlockType(Int3{pos.x, y, pos.y});
 		if (blockType == BLOCK_AIR)
 			continue;
 		if (IsSolid(blockType) || IsLiquid(blockType)) {

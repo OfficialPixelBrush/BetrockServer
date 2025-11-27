@@ -26,6 +26,12 @@ inline double altGrad(int var1, double var2, double var4) {
 // Easing Function
 inline double fade(double value) { return value * value * value * (value * (value * 6.0 - 15.0) + 10.0); }
 
+/**
+ * @brief Java-equivalent hashing function
+ * 
+ * @param value The input string
+ * @return Hashed string expressed as an integer
+ */
 inline int hashCode(std::string value) {
 	int h = 0;
 	if (h == 0 && value.size() > 0) {

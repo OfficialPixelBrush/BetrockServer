@@ -255,15 +255,14 @@ std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t comp
 }
 
 // Get the Chunk Hash of a Chunk
-int64_t GetChunkHash(int32_t x, int32_t z) {
-    return ((int64_t)x << 32) | (z & 0xFFFFFFFF);
+int64_t GetChunkHash(Int2 position) {
+    return ((int64_t)position.x << 32) | (position.y & 0xFFFFFFFF);
 }
 
 // Turn the chunk hash into X and Z coordinates
-Int3 DecodeChunkHash(int64_t hash) {
-    return Int3 {
+Int2 DecodeChunkHash(int64_t hash) {
+    return Int2 {
         (int32_t)(hash >> 32),
-        0,
         (int32_t)(hash & 0xFFFFFFFF)
     };
 }

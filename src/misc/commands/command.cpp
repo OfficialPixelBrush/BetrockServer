@@ -522,7 +522,12 @@ std::string CommandPopulated::Execute([[maybe_unused]] std::vector<std::string> 
 	World *w = Betrock::Server::Instance().GetWorld(0);
 	if (!w)
 		return "World does not exist!";
-	std::shared_ptr<Chunk> c = w->GetChunk(int(player->position.x / 16.0), int(player->position.z / 16.0));
+	std::shared_ptr<Chunk> c = w->GetChunk(
+		Int2{
+			int(player->position.x / 16.0),
+			int(player->position.z / 16.0)
+		}
+	);
 	if (!c)
 		return "Chunk does not exist!";
 	if (c->state != ChunkState::Populated)
@@ -562,7 +567,7 @@ std::string CommandRegion::Execute(std::vector<std::string> pCommand, [[maybe_un
 	// Read in region data
 	if (pCommand[1] == "load") {
 		std::unique_ptr<RegionFile> rf = std::make_unique<RegionFile>(std::filesystem::current_path() / "r.0.0.mcr");
-		auto root = rf->GetChunkNbt(0, 0);
+		auto root = rf->GetChunkNbt(Int2{0, 0});
 		if (root) {
 			root->NbtPrintData();
 		}

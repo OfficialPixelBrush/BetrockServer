@@ -1,4 +1,5 @@
 #include "beta173Tree.h"
+#include <cstdint>
 
 /**
  * @brief Attempts to generate an oak or birch tree.
@@ -7,83 +8,87 @@
  * @param rand Pointer to the JavaRandom that'll be utilized
  * @param pos Position of the lowest trunk-block
  * @param birch If the tree should be birch or oak
- * @return true Tree successfully generated
- * @return false Tree generation failed
+ * @return If tree successfully generated
  */
-
 bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch) {
+	// Decide on the tree height (birches are one block taller)
 	int treeHeight = rand->nextInt(3) + 4;
 	if (birch)
 		treeHeight++;
-	bool canPlace = true;
+	
+	// Check if there's space to generate the tree
+	// If any block in the desired area is neither air or
+	// leaves, we fail the placement check
 	if (pos.y >= 1 && pos.y + treeHeight + 1 <= CHUNK_HEIGHT) {
-		int yI;
-		int xI;
-		int zI;
-		int blockType;
-		for (yI = pos.y; yI <= pos.y + 1 + treeHeight; ++yI) {
+		Int3 check;
+		for (check.y = pos.y; check.y <= pos.y + 1 + treeHeight; ++check.y) {
 			int8_t width = 1;
-			if (yI == pos.y) {
+			if (check.y == pos.y)
 				width = 0;
-			}
 
-			if (yI >= pos.y + 1 + treeHeight - 2) {
+			if (check.y >= pos.y + 1 + treeHeight - 2)
 				width = 2;
-			}
 
-			for (xI = pos.x - width; xI <= pos.x + width && canPlace; ++xI) {
-				for (zI = pos.z - width; zI <= pos.z + width && canPlace; ++zI) {
-					if (yI >= 0 && yI < CHUNK_HEIGHT) {
-						blockType = world->GetBlockType(Int3{xI, yI, zI});
-						if (blockType != BLOCK_AIR && blockType != BLOCK_LEAVES) {
-							canPlace = false;
+			for (check.x = pos.x - width; check.x <= pos.x + width; ++check.x) {
+				for (check.z = pos.z - width; check.z <= pos.z + width; ++check.z) {
+					// Only test blocks that're within chunk boundaries
+					if (check.y >= 0 && check.y < CHUNK_HEIGHT) {
+						int8_t blockTest = world->GetBlockType(check);
+						if (blockTest != BLOCK_AIR && blockTest != BLOCK_LEAVES) {
+							return false;
 						}
 					} else {
-						canPlace = false;
+						return false;
 					}
 				}
 			}
 		}
 
-		if (!canPlace) {
-			return false;
-		}
-		yI = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
-		if ((yI == BLOCK_GRASS || yI == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - treeHeight - 1) {
+		// Check if the bock under the source block is grass or dirt
+		int8_t rootBlock = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
+		if ((rootBlock == BLOCK_GRASS || rootBlock == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - treeHeight - 1) {
+			// Replace the underlying block with dir
 			world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
 
-			int yIt;
-			for (yIt = pos.y - 3 + treeHeight; yIt <= pos.y + treeHeight; ++yIt) {
-				xI = yIt - (pos.y + treeHeight);
-				zI = 1 - xI / 2;
+			// Place leaves
+			Int3 offset;
+			for (offset.y = pos.y - 3 + treeHeight; offset.y <= pos.y + treeHeight; ++offset.y) {
+				int widthBase = offset.y - (pos.y + treeHeight);
+				int treeWidth = 1 - widthBase / 2;
 
-				for (blockType = pos.x - zI; blockType <= pos.x + zI; ++blockType) {
-					int zEnd = blockType - pos.x;
+				for (offset.x = pos.x - treeWidth; offset.x <= pos.x + treeWidth; ++offset.x) {
+					int xLeaf = offset.x - pos.x;
 
-					for (int var14 = pos.z - zI; var14 <= pos.z + zI; ++var14) {
-						int yStart = var14 - pos.z;
-						if (((std::abs(zEnd) != zI || std::abs(yStart) != zI || (rand->nextInt(2) != 0 && xI != 0))) &&
-							!IsOpaque(world->GetBlockType(Int3{blockType, yIt, var14}))) {
-							world->PlaceBlock(Int3{blockType, yIt, var14}, BLOCK_LEAVES, birch ? 2 : 0);
+					for (offset.z = pos.z - treeWidth; offset.z <= pos.z + treeWidth; ++offset.z) {
+						int zLeaf = offset.z - pos.z;
+						// Leaves are placed within the tree width
+						// and replace any non-opaque block
+						if ((
+								(
+								std::abs(xLeaf) != treeWidth ||
+								std::abs(zLeaf) != treeWidth ||
+								(rand->nextInt(2) != 0 && widthBase != 0)
+							)) && !IsOpaque(
+								world->GetBlockType(offset))) {
+							world->PlaceBlock(offset, BLOCK_LEAVES, birch ? 2 : 0);
 						}
 					}
 				}
 			}
 
-			for (yIt = 0; yIt < treeHeight; ++yIt) {
-				xI = world->GetBlockType(Int3{pos.x, pos.y + yIt, pos.z});
-				if (xI == 0 || xI == BLOCK_LEAVES) {
-					world->PlaceBlock(Int3{pos.x, pos.y + yIt, pos.z}, BLOCK_LOG, birch ? 2 : 0);
+			// Replace air and leaves with trunk
+			for (int h = 0; h < treeHeight; ++h) {
+				int8_t futureLog = world->GetBlockType(Int3{pos.x, pos.y + h, pos.z});
+				if (futureLog == BLOCK_AIR || futureLog == BLOCK_LEAVES) {
+					world->PlaceBlock(Int3{pos.x, pos.y + h, pos.z}, BLOCK_LOG, birch ? 2 : 0);
 				}
 			}
 
 			return true;
-		} else {
-			return false;
 		}
-	} else {
 		return false;
 	}
+	return false;
 }
 
 void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double pTrunkShape) {
@@ -151,7 +156,7 @@ void Beta173BigTree::GenerateBranchPositions() {
 			} else {
 				for (double var9 = 0.5; var7 < var1; ++var7) {
 					double var11 = this->branchLength * (double)var8 * ((double)this->rand->nextFloat() + 0.328);
-					// Oh hey, look! An approximation of pi!
+					// Oh hey, look! An approcheck.xmation of pi!
 					double var13 = (double)this->rand->nextFloat() * 2.0 * 3.14159;
 					int var15 = MathHelper::floor_double(var11 * double(MathHelper::sin(var13)) +
 														 (double)this->basePos.x + var9);

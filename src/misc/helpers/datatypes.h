@@ -120,6 +120,40 @@ struct Int3 {
     }
 };
 
+struct Int2 {
+	int32_t x,y;
+    bool operator==(const Int2& other) const {
+        return x == other.x && y == other.y;
+    }
+
+    Int2 operator+(const Int2& other) const {
+        return Int2{x + other.x, y + other.y};
+    }
+
+    Int2 operator-(const Int2& other) const {
+        return Int2{x - other.x, y - other.y};
+    }
+    
+    friend std::ostream& operator<<(std::ostream& os, const Int2& i) {
+        os << "(" << i.x << ", " << i.y << ")";
+        return os;
+    }
+    
+    std::string str() const {
+        std::ostringstream oss;
+        oss << *this; // Use the overloaded << operator
+        return oss.str();
+    }
+
+    int& operator[](int i) {
+        return *(&x + i);
+    }
+
+    const int& operator[](int i) const {
+        return *(&x + i);
+    }
+};
+
 struct AABB {
     Vec3 min;
     Vec3 max;

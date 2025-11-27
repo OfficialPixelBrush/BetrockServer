@@ -39,7 +39,7 @@ class World {
 	std::unordered_map<long, std::shared_ptr<Chunk>> chunks;
 	std::deque<LightUpdate> lightingToUpdate;
 	std::filesystem::path dirPath;
-	void RemoveChunk(int32_t x, int32_t z);
+	void RemoveChunk(Int2 position);
 	std::random_device dev;
 	std::mt19937 rng;
 	bool RandomTick(Int3 &pos);
@@ -85,29 +85,29 @@ class World {
 	bool CanBlockSeeTheSky(Int3 pos);
 
 	// Chunk-related
-	void GetChunkData(uint8_t *chunkData, Int3 position);
-	std::vector<SignTile *> GetChunkSigns(Int3 position);
+	void GetChunkData(uint8_t *chunkData, Int2 position);
+	std::vector<SignTile *> GetChunkSigns(Int2 position);
 	void TickChunks();
-	std::shared_ptr<Chunk> GetChunk(int32_t x, int32_t z);
-	bool IsChunkPopulated(int32_t x, int32_t z);
-	bool IsChunkGenerated(int32_t x, int32_t z);
-	std::shared_ptr<Chunk> AddChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> c);
+	std::shared_ptr<Chunk> GetChunk(Int2 position);
+	bool IsChunkPopulated(Int2 position);
+	bool IsChunkGenerated(Int2 position);
+	std::shared_ptr<Chunk> AddChunk(Int2 position, std::shared_ptr<Chunk> c);
 	void FreeUnseenChunks();
-	void SaveChunk(int32_t x, int32_t z, std::shared_ptr<Chunk> chunk);
-	std::shared_ptr<Chunk> LoadMcRegionChunk(int32_t cX, int32_t cZ);
-	std::shared_ptr<Chunk> LoadOldV2Chunk(int32_t x, int32_t z);
-	std::shared_ptr<Chunk> LoadOldChunk(int32_t x, int32_t z);
-	bool ChunkFileExists(int32_t x, int32_t z, std::string extension = std::string(CHUNK_FILE_EXTENSION));
-	bool ChunkExists(int32_t x, int32_t z);
+	void SaveChunk(Int2 position, std::shared_ptr<Chunk> chunk);
+	std::shared_ptr<Chunk> LoadMcRegionChunk(Int2 position);
+	std::shared_ptr<Chunk> LoadOldV2Chunk(Int2 position);
+	std::shared_ptr<Chunk> LoadOldChunk(Int2 position);
+	bool ChunkFileExists(Int2 position, std::string extension = std::string(CHUNK_FILE_EXTENSION));
+	bool ChunkExists(Int2 position);
 
 	// Misc
 	void Save();
 	int GetNumberOfChunks();
 	int GetNumberOfPopulatedChunks();
 	int GetNumberOfModifiedChunks();
-	int8_t GetHeightValue(int32_t x, int32_t z);
+	int8_t GetHeightValue(Int2 position);
 	int8_t GetFirstUncoveredBlock(Int3 &position);
 	void AddTileEntity(std::unique_ptr<TileEntity> &&te);
-	TileEntity *GetTileEntity(Int3 pos);
-	int GetHighestSolidOrLiquidBlock(int32_t x, int32_t z);
+	TileEntity *GetTileEntity(Int3 position);
+	int GetHighestSolidOrLiquidBlock(Int2 position);
 };

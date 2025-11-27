@@ -56,8 +56,8 @@ class Client : public std::enable_shared_from_this<Client> {
         int clientFd;
         std::atomic<ConnectionStatus> connectionStatus = ConnectionStatus::Disconnected;
         
-        std::vector<Int3> visibleChunks;
-        std::vector<Int3> newChunks;
+        std::vector<Int2> visibleChunks;
+        std::vector<Int2> newChunks;
         std::mutex newChunksMutex;  
         std::mutex responseMutex;  
         Vec3 lastChunkUpdatePosition;
@@ -101,7 +101,7 @@ class Client : public std::enable_shared_from_this<Client> {
         bool CheckPosition(Vec3 &newPosition, double &newStance); 
         bool BlockTooCloseToPosition(Int3 position);
         void HandlePacket();
-        void ProcessChunk(const Int3& position, WorldManager* wm);
+        void ProcessChunk(const Int2& position, WorldManager* wm);
         void DetermineVisibleChunks(bool forcePlayerAsCenter = false);
         bool CheckIfNewChunksRequired();
         bool TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &damage);
@@ -136,12 +136,12 @@ class Client : public std::enable_shared_from_this<Client> {
         void AppendResponse(std::vector<uint8_t> &addition);
         void SendResponse(bool autoclear = false);
 
-        bool ChunkIsVisible(Int3 pos);
+        bool ChunkIsVisible(Int2 pos);
         void OpenWindow(int8_t type);
         void CloseLatestWindow();
 
         std::mutex &GetNewChunksMutex() noexcept { return this->newChunksMutex; }
-        void AddNewChunk(Int3 pos) { 
+        void AddNewChunk(Int2 pos) { 
             std::lock_guard<std::mutex> lock(newChunksMutex);
             if (std::find(newChunks.begin(), newChunks.end(), pos) == newChunks.end()) {
                 newChunks.push_back(pos);
