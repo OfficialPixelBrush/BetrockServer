@@ -9,12 +9,12 @@ std::vector<std::string> command;
 std::string failureReason;
 
 // Base Command
-Command::Command(std::string label, std::string description, std::string syntax, bool requiresOp, bool requiresCreative) {
-	this->label = label;
-	this->description = description;
-	this->syntax = syntax;
-	this->requiresOp = requiresOp;
-	this->requiresCreative = requiresCreative;
+Command::Command(std::string pLabel, std::string pDescription, std::string pSyntax, bool pRequiresOp, bool pRequiresCreative) {
+	this->label = pLabel;
+	this->description = pDescription;
+	this->syntax = pSyntax;
+	this->requiresOp = pRequiresOp;
+	this->requiresCreative = pRequiresCreative;
 }
 
 // Check permissions for the command
@@ -33,28 +33,28 @@ std::string Command::CheckPermissions(Client* client) {
 	return "";
 }
 
-// Lists commands or helps with command
-std::string CommandHelp::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
-	DEFINE_PERMSCHECK(client)
+// Lists pCommands or helps with command
+std::string CommandHelp::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* pClient) {
+	DEFINE_PERMSCHECK(pClient)
 	std::vector<std::shared_ptr<Command>> registeredCommands = CommandManager::GetRegisteredCommands();
 	// Get help with specific command
-	if (command.size() > 1) {
+	if (pCommand.size() > 1) {
 		for (size_t i = 0; i < registeredCommands.size(); i++) {
-			if (registeredCommands[i]->GetLabel() == command[1]) {
+			if (registeredCommands[i]->GetLabel() == pCommand[1]) {
 				Respond::ChatMessage(
-					response,
+					pResponse,
 					"§7" + registeredCommands[i]->GetLabel() + ": " + registeredCommands[i]->GetDescription()
 				);
 				// Only print syntax if it has a value
 				if (!registeredCommands[i]->GetSyntax().empty()) {
 					Respond::ChatMessage(
-						response,
+						pResponse,
 						"§7/" + registeredCommands[i]->GetLabel() + " " + registeredCommands[i]->GetSyntax()
 					);
 				}
 				if (registeredCommands[i]->GetRequiresOperator()) {
 					Respond::ChatMessage(
-						response,
+						pResponse,
 						"§7(Requires operator)"
 					);
 				}
@@ -64,7 +64,7 @@ std::string CommandHelp::Execute(std::vector<std::string> command, std::vector<u
 		return "Command not found!";
 	// List all commands
 	} else {
-		Respond::ChatMessage(response, "§7-- All commands --");
+		Respond::ChatMessage(pResponse, "§7-- All pCommands --");
 		std::string msg = "§7";
 		for (size_t i = 0; i < registeredCommands.size(); i++) {
 			msg += registeredCommands[i]->GetLabel();
@@ -72,7 +72,7 @@ std::string CommandHelp::Execute(std::vector<std::string> command, std::vector<u
 				msg += ", ";
 			}
 			if (msg.size() > MAX_CHAT_LINE_SIZE || i == registeredCommands.size()-1) {
-				Respond::ChatMessage(response, msg);
+				Respond::ChatMessage(pResponse, msg);
 				msg = "§7";
 			}
 		}
@@ -82,19 +82,19 @@ std::string CommandHelp::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Shows how long the server has been alive in ticks
-std::string CommandUptime::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandUptime::Execute([[maybe_unused]] std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client)
-	Respond::ChatMessage(response, "§7Uptime is " + std::to_string(Betrock::Server::Instance().GetUpTime()) + " Ticks");
+	Respond::ChatMessage(pResponse, "§7Uptime is " + std::to_string(Betrock::Server::Instance().GetUpTime()) + " Ticks");
 	return "";
 }
 
 // Teleports player to coordinates or another player
-std::string CommandTeleport::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandTeleport::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client)
 	std::vector<uint8_t> sourceResponse;
-	if (command.size() > 1) {
+	if (pCommand.size() > 1) {
 		// client that is to-be teleported
-		std::string source = command[1];
+		std::string source = pCommand[1];
 		auto sourceClient = Betrock::Server::Instance().FindClientByUsername(source);
 		if (!sourceClient) {
 			return source + " does not exist! (Source)";
@@ -104,12 +104,12 @@ std::string CommandTeleport::Execute(std::vector<std::string> command, std::vect
 		try {
 			float pitch = 0.0f;
 			float yaw = 0.0f;
-			int32_t x = std::stoi(command[2].c_str());
-			int32_t y = std::stoi(command[3].c_str());
-			int32_t z = std::stoi(command[4].c_str());
-			if (command.size() > 6) {
-				pitch = std::stof(command[5].c_str());
-				yaw = std::stof(command[6].c_str());
+			int32_t x = std::stoi(pCommand[2].c_str());
+			int32_t y = std::stoi(pCommand[3].c_str());
+			int32_t z = std::stoi(pCommand[4].c_str());
+			if (pCommand.size() > 6) {
+				pitch = std::stof(pCommand[5].c_str());
+				yaw = std::stof(pCommand[6].c_str());
 			}
 			Int3 tpGoal = {x,y,z};
 			sourceClient->Teleport(
@@ -119,7 +119,7 @@ std::string CommandTeleport::Execute(std::vector<std::string> command, std::vect
 			);
 			sourceClient->AppendResponse(sourceResponse);
 			auto sourcePlayer = sourceClient->GetPlayer();
-			Respond::ChatMessage(response, "§7Teleported  " + sourcePlayer->username + " to (" + std::to_string(x) + ", "  + std::to_string(y) + ", " + std::to_string(z) + ")");
+			Respond::ChatMessage(pResponse, "§7Teleported  " + sourcePlayer->username + " to (" + std::to_string(x) + ", "  + std::to_string(y) + ", " + std::to_string(z) + ")");
 			return "";
 		} catch (const std::exception &e) {
 			return ERROR_REASON_PARAMETERS;
@@ -127,7 +127,7 @@ std::string CommandTeleport::Execute(std::vector<std::string> command, std::vect
 
 		// Option 2: Target client
 		try {
-			std::string destination = command[2];
+			std::string destination = pCommand[2];
 			auto destinationClient = Betrock::Server::Instance().FindClientByUsername(destination);
 			if (!destinationClient) {
 				return destination + " does not exist! (Destination)";
@@ -141,7 +141,7 @@ std::string CommandTeleport::Execute(std::vector<std::string> command, std::vect
 				destinationPlayer->pitch
 			);
 			sourceClient->AppendResponse(sourceResponse);
-			Respond::ChatMessage(response, "§7Teleported " + sourcePlayer->username + " to " + destinationPlayer->username);
+			Respond::ChatMessage(pResponse, "§7Teleported " + sourcePlayer->username + " to " + destinationPlayer->username);
 		} catch (const std::exception &e) {
 			return e.what();
 		}
@@ -150,96 +150,96 @@ std::string CommandTeleport::Execute(std::vector<std::string> command, std::vect
 }
 
 // Gets or sets the current world time
-std::string CommandTime::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandTime::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client)
 	auto &server = Betrock::Server::Instance();
 	
 	// Set the time
-	if (command.size() > 1) {
-		server.SetServerTime(std::stol(command[1]));
+	if (pCommand.size() > 1) {
+		server.SetServerTime(std::stol(pCommand[1]));
 
-		Respond::Time(response, server.GetServerTime());
-		Respond::ChatMessage(response, "§7Set time to " + std::to_string(server.GetServerTime()));
+		Respond::Time(pResponse, server.GetServerTime());
+		Respond::ChatMessage(pResponse, "§7Set time to " + std::to_string(server.GetServerTime()));
 		return "";
 	}
 	// Get the time
-	if (command.size() == 1) {
-		Respond::ChatMessage(response, "§7Current Time is " + std::to_string(server.GetServerTime()));
+	if (pCommand.size() == 1) {
+		Respond::ChatMessage(pResponse, "§7Current Time is " + std::to_string(server.GetServerTime()));
 		return "";
 	}
 	return ERROR_REASON_SYNTAX;
 }
 
 // Shows the current Server version
-std::string CommandVersion::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandVersion::Execute([[maybe_unused]] std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client)
-	Respond::ChatMessage(response, "§7Current " + std::string(PROJECT_NAME) + " version is "  + std::string(PROJECT_VERSION_FULL_STRING));
+	Respond::ChatMessage(pResponse, "§7Current " + std::string(PROJECT_NAME) + " version is "  + std::string(PROJECT_VERSION_FULL_STRING));
 	return "";
 }
 
 // Grant a player operator privlidges
-std::string CommandOp::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandOp::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client)
 	
-	if (command.size() > 0) {
+	if (pCommand.size() > 0) {
 		std::string username = client->GetPlayer()->username;
-		if (command.size() > 1) {
+		if (pCommand.size() > 1) {
 			// Search for the client by username
-			username = command[1];
+			username = pCommand[1];
 		}
 		Betrock::Server::Instance().AddOperator(username);
-		Respond::ChatMessage(response, "§7Opping " + username);
+		Respond::ChatMessage(pResponse, "§7Opping " + username);
 		return "";
 	}
 	return ERROR_REASON_SYNTAX;
 }
 
 // Revoke a players' operator privlidges
-std::string CommandDeop::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandDeop::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client)
 
-	if (command.size() > 0) {
+	if (pCommand.size() > 0) {
 		std::string username = client->GetPlayer()->username;
-		if (command.size() > 1) {
+		if (pCommand.size() > 1) {
 			// Search for the client by username
-			username = command[1];
+			username = pCommand[1];
 		}
 		Betrock::Server::Instance().RemoveOperator(username);
-		Respond::ChatMessage(response, "§7De-opping " + username);
+		Respond::ChatMessage(pResponse, "§7De-opping " + username);
 		return "";
 	}
 	return ERROR_REASON_SYNTAX;
 }
 
 // Modify the whitelist
-std::string CommandWhitelist::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandWhitelist::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client)
 	// TODO:
 	//- whitelist off
 	//- whitelist on
-	if (command.size() > 1) {
-		if (command.size() > 2) {
-			std::string username = command[2];
-			if (command[1] == "add") {
+	if (pCommand.size() > 1) {
+		if (pCommand.size() > 2) {
+			std::string username = pCommand[2];
+			if (pCommand[1] == "add") {
 				Betrock::Server::Instance().AddWhitelist(username);
-				Respond::ChatMessage(response, "§7Whitelisted " + username);
+				Respond::ChatMessage(pResponse, "§7Whitelisted " + username);
 				return "";
 			}
-			if (command[1] == "remove") {
+			if (pCommand[1] == "remove") {
 				Betrock::Server::Instance().RemoveWhitelist(username);
-				Respond::ChatMessage(response, "§7Unwhitelisted " + username);
+				Respond::ChatMessage(pResponse, "§7Unwhitelisted " + username);
 				return "";
 			}
 		}
-		if (command[1] == "reload") {
+		if (pCommand[1] == "reload") {
 			auto& server = Betrock::Server::Instance();
 			server.ReadWhitelist();
-			Respond::ChatMessage(response, "§7Reloaded Whitelist");
+			Respond::ChatMessage(pResponse, "§7Reloaded Whitelist");
 			return "";
 		}
-		if (command[1] == "list") {
+		if (pCommand[1] == "list") {
 			auto& server = Betrock::Server::Instance();
-			Respond::ChatMessage(response, "§7-- Whitelisted Players --");
+			Respond::ChatMessage(pResponse, "§7-- Whitelisted Players --");
 			std::string msg = "§7";
 			auto& whitelist = server.GetWhitelist();
 			for (size_t i = 0; i < whitelist.size(); i++) {
@@ -248,7 +248,7 @@ std::string CommandWhitelist::Execute(std::vector<std::string> command, std::vec
 					msg += ", ";
 				}
 				if (msg.size() > 40 || i == whitelist.size()-1) {
-					Respond::ChatMessage(response, msg);
+					Respond::ChatMessage(pResponse, msg);
 					msg = "§7";
 				}
 			}
@@ -259,27 +259,27 @@ std::string CommandWhitelist::Execute(std::vector<std::string> command, std::vec
 }
 
 // Give yourself a block or item
-std::string CommandGive::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandGive::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 
-	if (command.size() > 1) {
+	if (pCommand.size() > 1) {
 		int8_t amount = -1;
 		int8_t metadata = 0;
-		if (command.size() > 2) {
-			metadata = SafeStringToInt(command[2].c_str());
+		if (pCommand.size() > 2) {
+			metadata = SafeStringToInt(pCommand[2].c_str());
 		}
-		if (command.size() > 3) {
-			amount = SafeStringToInt(command[3].c_str());
+		if (pCommand.size() > 3) {
+			amount = SafeStringToInt(pCommand[3].c_str());
 		}
-		int16_t itemId = SafeStringToInt(command[1].c_str());
+		int16_t itemId = SafeStringToInt(pCommand[1].c_str());
 		if (
 			(itemId > BLOCK_AIR && itemId < BLOCK_MAX) ||
 			(itemId >= ITEM_SHOVEL_IRON && itemId < ITEM_MAX)
 		) {
-			if (!client->Give(response,itemId,amount,metadata)) {
+			if (!client->Give(pResponse,itemId,amount,metadata)) {
 				return "Unable to give " + IdToLabel(itemId);
 			}
-			Respond::ChatMessage(response, "§7Gave " + IdToLabel(itemId));
+			Respond::ChatMessage(pResponse, "§7Gave " + IdToLabel(itemId));
 			return "";
 		} else {
 			return std::to_string(itemId) + " is not a valid Item Id!";
@@ -289,19 +289,19 @@ std::string CommandGive::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Kick a player from the server
-std::string CommandKick::Execute(std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+std::string CommandKick::Execute(std::vector<std::string> pCommand, [[maybe_unused]] std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
-	if (command.size() > 0) {
+	if (pCommand.size() > 0) {
 		std::string username = client->GetPlayer()->username;
-		if (command.size() > 1) {
+		if (pCommand.size() > 1) {
 			// Search for the client by username
-			username = command[1];
+			username = pCommand[1];
 			client = Betrock::Server::Instance().FindClientByUsername(username);
 		}
 		if (client) {
 			client->DisconnectClient("Kicked by " + client->GetPlayer()->username);
-			//Respond::ChatMessage(response, "§7Kicked " + kicked->username);
+			//Respond::ChatMessage(pResponse, "§7Kicked " + kicked->username);
 			return "";
 		}
 		return "Client \"" + username + "\" does not exist!";
@@ -310,28 +310,28 @@ std::string CommandKick::Execute(std::vector<std::string> command, [[maybe_unuse
 }
 
 // Get or Set Player Health
-std::string CommandHealth::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandHealth::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto player = client->GetPlayer();
 
-	if (command.size() > 1) {
-		int health = std::stoi(command[1].c_str());
-		player->SetHealth(response, health);
-		Respond::ChatMessage(response, "§7Set Health to " + std::to_string(player->health));
+	if (pCommand.size() > 1) {
+		int health = std::stoi(pCommand[1].c_str());
+		player->SetHealth(pResponse, health);
+		Respond::ChatMessage(pResponse, "§7Set Health to " + std::to_string(player->health));
 		return "";
 	}
-	if (command.size() == 1) {
-		Respond::ChatMessage(response, "§7Health is " + std::to_string(player->health));
+	if (pCommand.size() == 1) {
+		Respond::ChatMessage(pResponse, "§7Health is " + std::to_string(player->health));
 		return "";
 	}
 	return ERROR_REASON_SYNTAX;
 }
 
 // List all currently online players
-std::string CommandList::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandList::Execute([[maybe_unused]] std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 
-	Respond::ChatMessage(response, "§7-- All players --");
+	Respond::ChatMessage(pResponse, "§7-- All players --");
 	Betrock::Server::Instance().GetConnectedClientMutex();
 	auto clients = Betrock::Server::Instance().GetConnectedClients();
 	std::string msg = "§7";
@@ -341,7 +341,7 @@ std::string CommandList::Execute([[maybe_unused]] std::vector<std::string> comma
 			msg += ", ";
 		}
 		if (msg.size() > MAX_CHAT_LINE_SIZE || i == clients.size()-1) {
-			Respond::ChatMessage(response, msg);
+			Respond::ChatMessage(pResponse, msg);
 			msg = "§7";
 		}
 	}
@@ -349,33 +349,33 @@ std::string CommandList::Execute([[maybe_unused]] std::vector<std::string> comma
 }
 
 // Toggle creative mode
-std::string CommandCreative::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandCreative::Execute([[maybe_unused]] std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto player = client->GetPlayer();
 	player->creativeMode = !player->creativeMode;
-	Respond::ChatMessage(response, "§7Set Creative to " + std::to_string(player->creativeMode));
+	Respond::ChatMessage(pResponse, "§7Set Creative to " + std::to_string(player->creativeMode));
 	return "";
 }
 
 // Set the current players' pose
-std::string CommandPose::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandPose::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto player = client->GetPlayer();
 
-	if (command.size() > 1) {
-		if (command[1] == "crouch") {
+	if (pCommand.size() > 1) {
+		if (pCommand[1] == "crouch") {
 			player->crouching = !player->crouching;
-		} else if (command[1] == "fire") {
+		} else if (pCommand[1] == "fire") {
 			player->onFire = !player->onFire;
-		} else if (command[1] == "sit") {
+		} else if (pCommand[1] == "sit") {
 			player->sitting = !player->sitting;
 		} else {
 			return "Invalid pose";
 		}
 		std::vector<uint8_t> broadcastResponse;
-		int8_t responseByte = (player->sitting << 2 | player->crouching << 1 | player->onFire);
-		Respond::ChatMessage(response, "§7Set Pose " + std::to_string((int)responseByte));
-		Respond::EntityMetadata(broadcastResponse, player->entityId, responseByte);
+		int8_t pResponseByte = (player->sitting << 2 | player->crouching << 1 | player->onFire);
+		Respond::ChatMessage(pResponse, "§7Set Pose " + std::to_string((int)pResponseByte));
+		Respond::EntityMetadata(broadcastResponse, player->entityId, pResponseByte);
 		BroadcastToClients(broadcastResponse);
 		return "";
 	}
@@ -383,20 +383,20 @@ std::string CommandPose::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Play a specified sound
-std::string CommandSound::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandSound::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto player = client->GetPlayer();
 
 	// Set the time
-	if (command.size() > 1) {
-		int32_t sound = std::stoi(command[1]);
+	if (pCommand.size() > 1) {
+		int32_t sound = std::stoi(pCommand[1]);
 		int32_t extraData = 0;
-		if (command.size() > 2) {
-			extraData = std::stoi(command[2]);
+		if (pCommand.size() > 2) {
+			extraData = std::stoi(pCommand[2]);
 		}
 		std::vector<uint8_t> broadcastResponse;
 		Respond::Soundeffect(broadcastResponse,sound,Vec3ToInt3(player->position),extraData);
-		Respond::ChatMessage(response, "§7Playing Sound " + std::to_string(sound));
+		Respond::ChatMessage(pResponse, "§7Playing Sound " + std::to_string(sound));
 		BroadcastToClients(broadcastResponse);
 		return "";
 	}
@@ -404,20 +404,20 @@ std::string CommandSound::Execute(std::vector<std::string> command, std::vector<
 }
 
 // Kill the specified player
-std::string CommandKill::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandKill::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto player = client->GetPlayer();
 
-	if (command.size() > 0) {
+	if (pCommand.size() > 0) {
 		std::string username = player->username;
-		if (command.size() > 1) {
+		if (pCommand.size() > 1) {
 			// Search for the client by username
-			username = command[1];
+			username = pCommand[1];
 			player = Betrock::Server::Instance().FindClientByUsername(username)->GetPlayer();
 		}
 		if (player) {
-			player->Kill(response);
-			Respond::ChatMessage(response, "§7Killed " + player->username);
+			player->Kill(pResponse);
+			Respond::ChatMessage(pResponse, "§7Killed " + player->username);
 			return "";
 		}
 		return "Client \"" + username + "\" does not exist";
@@ -426,19 +426,19 @@ std::string CommandKill::Execute(std::vector<std::string> command, std::vector<u
 }
 
 // Configure Gamerules
-std::string CommandGamerule::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandGamerule::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
-	if (command.size() > 1) {
-		if (command[1] == "doDaylightCycle") {
+	if (pCommand.size() > 1) {
+		if (pCommand[1] == "doDaylightCycle") {
 			doDaylightCycle = !doDaylightCycle;
-			Respond::ChatMessage(response, "§7Set doDaylightCycle to " + std::to_string(doDaylightCycle));
-		} else if (command[1] == "doTileDrops") {
+			Respond::ChatMessage(pResponse, "§7Set doDaylightCycle to " + std::to_string(doDaylightCycle));
+		} else if (pCommand[1] == "doTileDrops") {
 			doTileDrops = !doTileDrops;
-			Respond::ChatMessage(response, "§7Set doTileDrops to " + std::to_string(doTileDrops));
-		} else if (command[1] == "keepInventory") {
+			Respond::ChatMessage(pResponse, "§7Set doTileDrops to " + std::to_string(doTileDrops));
+		} else if (pCommand[1] == "keepInventory") {
 			keepInventory = !keepInventory;
-			Respond::ChatMessage(response, "§7Set keepInventory to " + std::to_string(keepInventory));
+			Respond::ChatMessage(pResponse, "§7Set keepInventory to " + std::to_string(keepInventory));
 		} else {
 			return "Gamerule does not exist!";
 		}
@@ -448,36 +448,36 @@ std::string CommandGamerule::Execute(std::vector<std::string> command, std::vect
 }
 
 // Forces the server to save all loaded chunks
-std::string CommandSave::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandSave::Execute([[maybe_unused]] std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
-	Respond::ChatMessage(response, "§7Saving...");
+	Respond::ChatMessage(pResponse, "§7Saving...");
 	Betrock::Server::Instance().SaveAll();
-	Respond::ChatMessage(response, "§7Saved");
+	Respond::ChatMessage(pResponse, "§7Saved");
 	return "";
 }
 
 // Forces the server to stop
-std::string CommandStop::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandStop::Execute([[maybe_unused]] std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
-	Respond::ChatMessage(response, "§7Stopping server");
+	Respond::ChatMessage(pResponse, "§7Stopping server");
 	Betrock::Server::Instance().PrepareForShutdown();
 	return "";
 }
 
 // Forces the server to unload chunks nobody can see
-std::string CommandFree::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandFree::Execute([[maybe_unused]] std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
-	Respond::ChatMessage(response, "§7Freeing Chunks");
+	Respond::ChatMessage(pResponse, "§7Freeing Chunks");
 	Betrock::Server::Instance().FreeAll();
-	Respond::ChatMessage(response, "§7Freed Chunks");
+	Respond::ChatMessage(pResponse, "§7Freed Chunks");
 	return "";
 }
 
 // Shows the number of loaded chunks
-std::string CommandLoaded::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+std::string CommandLoaded::Execute([[maybe_unused]] std::vector<std::string> pCommand, [[maybe_unused]] std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto player = client->GetPlayer();
 	
@@ -487,33 +487,33 @@ std::string CommandLoaded::Execute([[maybe_unused]] std::vector<std::string> com
 }
 
 // Shows the current memory usage in megabytes
-std::string CommandUsage::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+std::string CommandUsage::Execute([[maybe_unused]] std::vector<std::string> pCommand, [[maybe_unused]] std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	return GetDetailedMemoryMetricsMBString();
 }
 
 // Summon a player entity
-std::string CommandSummon::Execute(std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandSummon::Execute(std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 
 	auto &server = Betrock::Server::Instance();
 
-	if (command.size() > 1) {
+	if (pCommand.size() > 1) {
 		// TODO: Actually implement entities that *exist*
 		std::scoped_lock lock(server.GetEntityIdMutex());
-		std::string username = command[1];
+		std::string username = pCommand[1];
 		std::vector<uint8_t> broadcastResponse;
 		Respond::NamedEntitySpawn(broadcastResponse, server.GetLatestEntityId(), username, Vec3ToEntityInt3(client->GetPlayer()->position), 0,0, 5);
 		BroadcastToClients(broadcastResponse);
-		Respond::ChatMessage(response, "§7Summoned " + username);
+		Respond::ChatMessage(pResponse, "§7Summoned " + username);
 		return "";
 	}
 	return ERROR_REASON_PARAMETERS;
 }
 
 // Check the population status of the current chunk
-std::string CommandPopulated::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+std::string CommandPopulated::Execute([[maybe_unused]] std::vector<std::string> pCommand, [[maybe_unused]] std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto player = client->GetPlayer();
 
@@ -528,31 +528,31 @@ std::string CommandPopulated::Execute([[maybe_unused]] std::vector<std::string> 
 }
 
 // Teleport to Spawn
-std::string CommandSpawn::Execute([[maybe_unused]] std::vector<std::string> command, std::vector<uint8_t>& response, Client* client) {
+std::string CommandSpawn::Execute([[maybe_unused]] std::vector<std::string> pCommand, std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
-	client->Teleport(response, Int3ToVec3(Betrock::Server::Instance().GetSpawnPoint()));
+	client->Teleport(pResponse, Int3ToVec3(Betrock::Server::Instance().GetSpawnPoint()));
 	return "";
 }
 
 // Open the desired interface
-std::string CommandInterface::Execute(std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+std::string CommandInterface::Execute(std::vector<std::string> pCommand, [[maybe_unused]] std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	// TODO: Tracks players open Window IDs
-	if (command[1] == "craft") {
+	if (pCommand[1] == "craft") {
 		client->OpenWindow(INVENTORY_CRAFTING_TABLE);
-	} else if (command[1] == "chest") {
+	} else if (pCommand[1] == "chest") {
 		client->OpenWindow(INVENTORY_CHEST);
 	}
 	return "";
 }
 
 // Test the region infrastructure
-std::string CommandRegion::Execute(std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+std::string CommandRegion::Execute(std::vector<std::string> pCommand, [[maybe_unused]] std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	// Read in region data
-	if (command[1] == "load") {
+	if (pCommand[1] == "load") {
 		std::unique_ptr<RegionFile> rf =
 			std::make_unique<RegionFile>(std::filesystem::current_path() / "r.0.0.mcr");
 		auto root = rf->GetChunkNbt(0,0);
@@ -565,14 +565,14 @@ std::string CommandRegion::Execute(std::vector<std::string> command, [[maybe_unu
 }
 
 // Get the world seed
-std::string CommandSeed::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+std::string CommandSeed::Execute([[maybe_unused]] std::vector<std::string> pCommand, [[maybe_unused]] std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	
 	return std::to_string(Betrock::Server::Instance().GetWorld(0)->seed);
 }
 
 // Get the latest entity id
-std::string CommandEntity::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+std::string CommandEntity::Execute([[maybe_unused]] std::vector<std::string> pCommand, [[maybe_unused]] std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
 	auto& server = Betrock::Server::Instance();
 	std::scoped_lock lock(server.GetEntityIdMutex());
@@ -581,34 +581,34 @@ std::string CommandEntity::Execute([[maybe_unused]] std::vector<std::string> com
 }
 
 // Get the number of modified chunks
-std::string CommandModified::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+std::string CommandModified::Execute([[maybe_unused]] std::vector<std::string> pCommand, [[maybe_unused]] std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);	
 	return std::to_string(Betrock::Server::Instance().GetWorld(0)->GetNumberOfModifiedChunks());
 }
 
 // Send a custom packet
-std::string CommandPacket::Execute([[maybe_unused]] std::vector<std::string> command, [[maybe_unused]] std::vector<uint8_t>& response, Client* client) {
+std::string CommandPacket::Execute([[maybe_unused]] std::vector<std::string> pCommand, [[maybe_unused]] std::vector<uint8_t>& pResponse, Client* client) {
 	DEFINE_PERMSCHECK(client);
-	if (command.size() < 2) return ERROR_REASON_PARAMETERS;
+	if (pCommand.size() < 2) return ERROR_REASON_PARAMETERS;
 	std::vector<uint8_t> broadcast;
 	bool broadcastToAll = false;
 	// 0th is "packet"
 	size_t part = 1;
 	// Send this to all
-	if (command[1] == "broadcast") {
+	if (pCommand[1] == "broadcast") {
 		broadcastToAll = true;
 		part++;
 	}
-	for (part = part; part < command.size(); part++) {
+	for (part = part; part < pCommand.size(); part++) {
 		unsigned int x;   
 		std::stringstream ss;
-		ss << std::hex << command[part];
+		ss << std::hex << pCommand[part];
         if (!(ss >> x) || x > 0xFF)
             return "Invalid hex value"; // or handle error
 
-		std::cout << int(part) << ": " << int(x) << " - " << command[part] << std::endl;
+		std::cout << int(part) << ": " << int(x) << " - " << pCommand[part] << std::endl;
         if (broadcastToAll) broadcast.push_back(static_cast<uint8_t>(x));
-        else response.push_back(static_cast<uint8_t>(x));
+        else pResponse.push_back(static_cast<uint8_t>(x));
 	}
 	if (broadcastToAll) BroadcastToClients(broadcast);
 	return "";

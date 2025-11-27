@@ -135,11 +135,10 @@ void Beta173Caver::CarveCave(
 
                 bool waterIsPresent = false;
 
-                int blockIndex;
                 for(int blockX = xMin; !waterIsPresent && blockX < xMax; ++blockX) {
                     for(int blockZ = zMin; !waterIsPresent && blockZ < zMax; ++blockZ) {
                         for(int blockY = yMax + 1; !waterIsPresent && blockY >= yMin - 1; --blockY) {
-                            blockIndex = (blockX * CHUNK_WIDTH_Z + blockZ) * CHUNK_HEIGHT + blockY;
+                            int blockIndex = (blockX * CHUNK_WIDTH_Z + blockZ) * CHUNK_HEIGHT + blockY;
                             if(blockY >= 0 && blockY < CHUNK_HEIGHT) {
                                 
                                 if(

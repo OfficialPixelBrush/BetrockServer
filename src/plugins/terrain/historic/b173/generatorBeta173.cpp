@@ -1,9 +1,9 @@
 #include "generatorBeta173.h"
 
-GeneratorBeta173::GeneratorBeta173(int64_t seed, World* world) : Generator(seed, world) {
+GeneratorBeta173::GeneratorBeta173(int64_t pSeed, World* pWorld) : Generator(pSeed, pWorld) {
 	logger = &Betrock::Logger::Instance();
-    this->seed = seed;
-    this->world = world;
+    this->seed = pSeed;
+    this->world = pWorld;
 
     rand = std::make_unique<JavaRandom>(this->seed);
 

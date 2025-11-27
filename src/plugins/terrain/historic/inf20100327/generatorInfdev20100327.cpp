@@ -1,9 +1,9 @@
 #include "generatorInfdev20100327.h"
 
-GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t seed, World* world) : Generator(seed, world) {
+GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t pSeed, World* pWorld) : Generator(pSeed, pWorld) {
 	logger = &Betrock::Logger::Instance();
-    this->seed = seed;
-    this->world = world;
+    this->seed = pSeed;
+    this->world = pWorld;
 
     rand = std::make_unique<JavaRandom>(this->seed);
     noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
@@ -17,7 +17,7 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t seed, World* world) : G
 
 std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
     std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world,cX,cZ);
-    this->rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
+    rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
     c->ClearChunk();
 
     // Terrain shape generation
@@ -170,20 +170,20 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
     return var13;
 }
 
-bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* world, JavaRandom* rand, int var3, int var4, int macroX) {
-    float macroZ = rand->nextFloat() * (float)M_PI;
+bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* pWorld, JavaRandom* pRand, int var3, int var4, int macroX) {
+    float macroZ = pRand->nextFloat() * (float)M_PI;
     double var7 = (double)((float)(var3 + 8) + MathHelper::sin(macroZ) * 2.0F);
     double blockY = (double)((float)(var3 + 8) - MathHelper::sin(macroZ) * 2.0F);
     double world1 = (double)((float)(macroX + 8) + MathHelper::cos(macroZ) * 2.0F);
     double world3 = (double)((float)(macroX + 8) - MathHelper::cos(macroZ) * 2.0F);
-    double world5 = (double)(var4 + rand->nextInt(3) + 2);
-    double world7 = (double)(var4 + rand->nextInt(3) + 2);
+    double world5 = (double)(var4 + pRand->nextInt(3) + 2);
+    double world7 = (double)(var4 + pRand->nextInt(3) + 2);
 
     for(var3 = 0; var3 <= 16; ++var3) {
         double rand0 = var7 + (blockY - var7) * (double)var3 / 16.0;
         double rand2 = world5 + (world7 - world5) * (double)var3 / 16.0;
         double rand4 = world1 + (world3 - world1) * (double)var3 / 16.0;
-        double rand6 = rand->nextDouble();
+        double rand6 = pRand->nextDouble();
         double rand8 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0;
         double var30 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0;
 
@@ -193,8 +193,8 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* worl
                     double var35 = ((double)var4 + 0.5 - rand0) / (rand8 / 2.0);
                     double var37 = ((double)macroX + 0.5 - rand2) / (var30 / 2.0);
                     double var39 = ((double)var41 + 0.5 - rand4) / (rand8 / 2.0);
-                    if(var35 * var35 + var37 * var37 + var39 * var39 < 1.0 && world->GetBlockType(Int3{var4, macroX, var41}) == BLOCK_STONE) {
-                        world->SetBlockTypeAndMeta(blockType, 0, Int3{var4, macroX, var41});
+                    if(var35 * var35 + var37 * var37 + var39 * var39 < 1.0 && pWorld->GetBlockType(Int3{var4, macroX, var41}) == BLOCK_STONE) {
+                        pWorld->SetBlockTypeAndMeta(blockType, 0, Int3{var4, macroX, var41});
                     }
                 }
             }
@@ -205,7 +205,7 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* worl
 }
 
 bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
-	this->rand->setSeed((int64_t)cX * 318279123L + (int64_t)cZ * 919871212L);
+	rand->setSeed((int64_t)cX * 318279123L + (int64_t)cZ * 919871212L);
 	int chunkZOffset = cX << 4;
 	cX = cZ << 4;
 
@@ -213,43 +213,43 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 	int oreY;
 	int oreX;
 	for(cZ = 0; cZ < 20; ++cZ) {
-		oreZ = chunkZOffset + this->rand->nextInt(16);
-		oreY = this->rand->nextInt(128);
-		oreX = cX + this->rand->nextInt(16);
+		oreZ = chunkZOffset + rand->nextInt(16);
+		oreY = rand->nextInt(128);
+		oreX = cX + rand->nextInt(16);
 		WorldGenMinableGenerate(BLOCK_ORE_COAL, this->world, this->rand.get(), oreZ, oreY, oreX);
 	}
 
 	for(cZ = 0; cZ < 10; ++cZ) {
-		oreZ = chunkZOffset + this->rand->nextInt(16);
-		oreY = this->rand->nextInt(64);
-		oreX = cX + this->rand->nextInt(16);
+		oreZ = chunkZOffset + rand->nextInt(16);
+		oreY = rand->nextInt(64);
+		oreX = cX + rand->nextInt(16);
 		WorldGenMinableGenerate(BLOCK_ORE_IRON, this->world, this->rand.get(), oreZ, oreY, oreX);
 	}
 
-	if(this->rand->nextInt(2) == 0) {
-		cZ = chunkZOffset + this->rand->nextInt(16);
-		oreZ = this->rand->nextInt(32);
-		oreY = cX + this->rand->nextInt(16);
+	if(rand->nextInt(2) == 0) {
+		cZ = chunkZOffset + rand->nextInt(16);
+		oreZ = rand->nextInt(32);
+		oreY = cX + rand->nextInt(16);
 		WorldGenMinableGenerate(BLOCK_ORE_GOLD, this->world, this->rand.get(), cZ, oreZ, oreY);
 	}
 
-	if(this->rand->nextInt(8) == 0) {
-		cZ = chunkZOffset + this->rand->nextInt(16);
-		oreZ = this->rand->nextInt(16);
-		oreY = cX + this->rand->nextInt(16);
+	if(rand->nextInt(8) == 0) {
+		cZ = chunkZOffset + rand->nextInt(16);
+		oreZ = rand->nextInt(16);
+		oreY = cX + rand->nextInt(16);
 		WorldGenMinableGenerate(BLOCK_ORE_DIAMOND, this->world, this->rand.get(), cZ, oreZ, oreY);
 	}
 
 	cZ = (int)this->mobSpawnerNoise->GenerateOctaves((double)chunkZOffset * 0.25, (double)cX * 0.25) << 3;
 
 	for(oreZ = 0; oreZ < cZ; ++oreZ) {
-		oreY = chunkZOffset + this->rand->nextInt(16);
-		oreX = cX + this->rand->nextInt(16);
+		oreY = chunkZOffset + rand->nextInt(16);
+		oreX = cX + rand->nextInt(16);
 		//new WorldGenTrees();
-		int heightValue = this->world->GetHeightValue(oreY, oreX);
+		int heightValue = world->GetHeightValue(oreY, oreX);
 		int var7 = oreY + 2;
 		int blockY = oreX + 2;
-		int var10 = this->rand->nextInt(3) + 4;
+		int var10 = rand->nextInt(3) + 4;
 		bool canPlaceTree = true;
 		if(heightValue > 0 && heightValue + var10 + 1 <= CHUNK_HEIGHT) {
 			int treeY;
@@ -298,7 +298,7 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
                                     (
                                         (std::abs(cX1) != var15) ||
                                         (std::abs(var17) != var15) ||
-                                        (this->rand->nextInt(2) != 0 && var14 != 0)
+                                        (rand->nextInt(2) != 0 && var14 != 0)
                                     ) && !IsOpaque(world->GetBlockType(Int3{blockId, cX2, treeY}))
                                 ) {
                                     world->SetBlockTypeAndMeta(BLOCK_LEAVES, 0, Int3{blockId, cX2, treeY});

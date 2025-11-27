@@ -85,30 +85,30 @@ bool Beta173Tree::Generate(World* world, JavaRandom* rand, int xBlock, int yBloc
     }
 }
 
-void Beta173BigTree::Configure(double treeHeight, double branchLength, double trunkShape) {
-    this->maximumTreeHeight = (int)(treeHeight * 12.0);
-    if(treeHeight > 0.5) {
+void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double pTrunkShape) {
+    this->maximumTreeHeight = (int)(pTreeHeight * 12.0);
+    if(pTreeHeight > 0.5) {
         this->trunkThickness = 5;
     }
 
-    this->branchLength = branchLength;
-    this->trunkShape = trunkShape;
+    this->branchLength = pBranchLength;
+    this->trunkShape = pTrunkShape;
 }
 
 bool Beta173BigTree::Generate(
-    [[maybe_unused]] World* world,
-    JavaRandom* otherRand,
-    [[maybe_unused]] int xBlock,
-    [[maybe_unused]] int yBlock,
-    [[maybe_unused]] int zBlock,
-    [[maybe_unused]] bool birch
+    [[maybe_unused]] World* pWorld,
+    JavaRandom* pRand,
+    [[maybe_unused]] int pBlockX,
+    [[maybe_unused]] int pBlockY,
+    [[maybe_unused]] int pBlockZ,
+    [[maybe_unused]] bool pBirch
 ) {
     // Waste one rand cycle to get closer to being accurate
     
-    this->world = world;
-    long seed = otherRand->nextLong();
+    this->world = pWorld;
+    long seed = pRand->nextLong();
     this->rand->setSeed(seed);
-    this->basePos = Int3{xBlock, yBlock, zBlock};
+    this->basePos = Int3{pBlockX, pBlockY, pBlockZ};
     if(this->totalHeight == 0) {
         this->totalHeight = 5 + this->rand->nextInt(this->maximumTreeHeight);
     }
@@ -475,7 +475,7 @@ bool Beta173TaigaTree::Generate(World* world, JavaRandom* rand, int xBlock, int 
                 }
 
                 for(int var13 = 0; var13 < var6 - 1; ++var13) {
-                    int8_t blockType = world->GetBlockType(Int3{xBlock, yBlock + var13, zBlock});
+                    blockType = world->GetBlockType(Int3{xBlock, yBlock + var13, zBlock});
                     if(blockType == BLOCK_AIR || blockType == BLOCK_LEAVES) {
                         world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{xBlock, yBlock + var13, zBlock});
                     }

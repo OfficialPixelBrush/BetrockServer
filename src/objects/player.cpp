@@ -7,10 +7,10 @@ Vec3 Player::GetVelocity() {
     return previousPosition - position;
 }
 
-void Player::SetHealth(std::vector<uint8_t> &response, int8_t health) {
-    if (health > HEALTH_MAX) { health = HEALTH_MAX; }
-    if (health < 0) { health = 0; }
-    this->health = health;
+void Player::SetHealth(std::vector<uint8_t> &response, int8_t pHealth) {
+    if (pHealth > HEALTH_MAX) pHealth = HEALTH_MAX;
+    if (pHealth < 0) pHealth = 0;
+    health = pHealth;
     Respond::UpdateHealth(response, this->health);
 }
 

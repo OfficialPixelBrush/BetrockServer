@@ -26,9 +26,9 @@ class Chunk {
         void CheckSkylightNeighborHeight(int x, int z, int height);
         //Block* GetBlock(Int3 pos);
         //Block* GetBlock(int32_t x, int8_t y, int32_t z);
-        uint8_t blockType[ (CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT)    ];
-        uint8_t blockMeta[ (CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT) / 2];
-        uint8_t blockLight[(CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT)];
+        uint8_t blockTypeArray[ (CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT)    ];
+        uint8_t blockMetaArray[ (CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT) / 2];
+        uint8_t blockLightArray[(CHUNK_WIDTH_X*CHUNK_WIDTH_Z*CHUNK_HEIGHT)];
     public:
         int8_t state = ChunkState::Invalid;
         bool modified = false;

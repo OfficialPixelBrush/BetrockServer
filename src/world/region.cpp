@@ -1,7 +1,7 @@
 #include "region.h"
 
-RegionFile::RegionFile(std::filesystem::path filePath) {
-    this->filePath = filePath;
+RegionFile::RegionFile(std::filesystem::path pFilePath) {
+    this->filePath = pFilePath;
     //regionStream.open(filePath, std::ios::in | std::ios::out | std::ios::binary);
     // Read-only for testing
     regionStream.open(filePath, std::ios::in | std::ios::binary);

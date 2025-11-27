@@ -51,9 +51,9 @@ void Chunk::PrintHeightmap() {
 }
 
 void Chunk::ClearChunk() {
-    std::fill(std::begin(blockType), std::end(blockType), BLOCK_AIR);
-    std::fill(std::begin(blockMeta), std::end(blockMeta), 0);
-    std::fill(std::begin(blockLight), std::end(blockLight), 0);
+    std::fill(std::begin(blockTypeArray), std::end(blockTypeArray), BLOCK_AIR);
+    std::fill(std::begin(blockMetaArray), std::end(blockMetaArray), 0);
+    std::fill(std::begin(blockLightArray), std::end(blockLightArray), 0);
     std::fill(std::begin(heightMap), std::end(heightMap), 0);
 }
 
@@ -198,12 +198,12 @@ void Chunk::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
 
 int8_t Chunk::GetBlockType(Int3 pos) {
     if (!InChunkBounds(pos)) return BLOCK_AIR;
-    return blockType[PositionToBlockIndex(pos)];
+    return blockTypeArray[PositionToBlockIndex(pos)];
 }
 
 void Chunk::SetBlockType(int8_t type, Int3 pos) {
     if (!InChunkBounds(pos)) return;
-    blockType[PositionToBlockIndex(pos)] = type;
+    blockTypeArray[PositionToBlockIndex(pos)] = type;
     RelightBlock(pos.x, pos.y, pos.z);
     this->modified = true;
 }
@@ -211,7 +211,7 @@ void Chunk::SetBlockType(int8_t type, Int3 pos) {
 int8_t Chunk::GetBlockMeta(Int3 pos) {
     if (!InChunkBounds(pos)) return 0;
     const int index = PositionToBlockIndex(pos) / 2;
-    uint8_t value = blockMeta[index];
+    uint8_t value = blockMetaArray[index];
 
     if ((pos.y & 1) == 0) {
         return (value >> 4) & 0x0F;
@@ -225,38 +225,38 @@ void Chunk::SetBlockMeta(int8_t meta, Int3 pos) {
     const int index = PositionToBlockIndex(pos) / 2;
     meta &= 0x0F;
     if ((pos.y & 1) == 0) {
-        blockMeta[index] &= 0x0F;
-        blockMeta[index] |= (meta << 4);
+        blockMetaArray[index] &= 0x0F;
+        blockMetaArray[index] |= (meta << 4);
     } else {
-        blockMeta[index] &= 0xF0;
-        blockMeta[index] |= meta;
+        blockMetaArray[index] &= 0xF0;
+        blockMetaArray[index] |= meta;
     }
     modified = true;
 }
 
 int8_t Chunk::GetBlockLight(Int3 pos) {
     if (!InChunkBounds(pos)) return 0;
-    return (blockLight[PositionToBlockIndex(pos)] >> 4) & 0xF;
+    return (blockLightArray[PositionToBlockIndex(pos)] >> 4) & 0xF;
 }
 
 void Chunk::SetBlockLight(int8_t value, Int3 pos) {
     if (!InChunkBounds(pos)) return;
     int index = PositionToBlockIndex(pos);
-    blockLight[index] &= 0x0F;
-    blockLight[index] |= ((value & 0xF) << 4);
+    blockLightArray[index] &= 0x0F;
+    blockLightArray[index] |= ((value & 0xF) << 4);
     this->modified = true;
 }
 
 int8_t Chunk::GetSkyLight(Int3 pos) {
     if (!InChunkBounds(pos)) return 0;
-    return blockLight[PositionToBlockIndex(pos)] & 0x0F;
+    return blockLightArray[PositionToBlockIndex(pos)] & 0x0F;
 }
 
 void Chunk::SetSkyLight(int8_t value, Int3 pos) {
     if (!InChunkBounds(pos)) return;
     int index = PositionToBlockIndex(pos);
-    blockLight[index] &= 0xF0;
-    blockLight[index] |= (value & 0xF);
+    blockLightArray[index] &= 0xF0;
+    blockLightArray[index] |= (value & 0xF);
     this->modified = true;
 }
 

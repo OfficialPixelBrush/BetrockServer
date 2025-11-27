@@ -1,9 +1,9 @@
 #include "generatorLua.h"
 
-GeneratorLua::GeneratorLua(int64_t seed, World* world) : Generator(seed, world) {
+GeneratorLua::GeneratorLua(int64_t pSeed, World* pWorld) : Generator(pSeed, pWorld) {
 	logger = &Betrock::Logger::Instance();
-    this->seed = seed;
-    this->world = world;
+    seed = pSeed;
+    world = pWorld;
     L = luaL_newstate();
     luaL_openlibs(L);
 
@@ -242,9 +242,9 @@ int GeneratorLua::lua_GetNoiseWorley(lua_State *L) {
         luaL_error(L, "Scale must be a numeric values");
         return 1;
     }
-    double scaleX = (float)lua_tonumber(L, 5);
-    double scaleY = (float)lua_tonumber(L, 6);
-    double scaleZ = (float)lua_tonumber(L, 7);
+    double scaleX = lua_tonumber(L, 5);
+    double scaleY = lua_tonumber(L, 6);
+    double scaleZ = lua_tonumber(L, 7);
     Vec3 scale = {scaleX,scaleY,scaleZ};
 
     // Call GetNoiseWorley and push result

@@ -1,14 +1,14 @@
 #include "beta173Feature.h"
 
-Beta173Feature::Beta173Feature(int16_t id) {
+Beta173Feature::Beta173Feature(int16_t pId) {
     // Set the to-be-generated block
-    this->id = id;
+    this->id = pId;
 }
 
-Beta173Feature::Beta173Feature(int16_t id, int8_t meta) {
+Beta173Feature::Beta173Feature(int16_t pId, int8_t pMeta) {
     // Set the to-be-generated block
-    this->id = id;
-    this->meta = meta;
+    this->id = pId;
+    this->meta = pMeta;
 }
 
 // Generate a lake

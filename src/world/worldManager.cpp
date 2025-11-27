@@ -3,14 +3,14 @@
 #include "server.h"
 
 // This creates a new QueueChunk with a pre-filled Client
-QueueChunk::QueueChunk(Int3 position, const std::shared_ptr<Client>& requestClient) {
-    this->position = position;
-    AddClient(requestClient);
+QueueChunk::QueueChunk(Int3 pPosition, const std::shared_ptr<Client>& pRequestClient) {
+    this->position = pPosition;
+    AddClient(pRequestClient);
 }
 
 // This adds a new Client to the Queued Chunk
-void QueueChunk::AddClient(const std::shared_ptr<Client>& requestClient) {
-    requestedClients.push_back(requestClient);
+void QueueChunk::AddClient(const std::shared_ptr<Client>& pRequestClient) {
+    requestedClients.push_back(pRequestClient);
 }
 
 WorldManager::WorldManager(int maxThreads) {
@@ -22,15 +22,15 @@ WorldManager::WorldManager(int maxThreads) {
 }
 
 // This adds a Chunk to the ChunkQueue
-void WorldManager::AddChunkToQueue(int32_t x, int32_t z, const std::shared_ptr<Client>& requestClient) {
-    auto hash = GetChunkHash(x, z);  // Compute hash
+void WorldManager::AddChunkToQueue(int32_t pX, int32_t pZ, const std::shared_ptr<Client>& pRequestClient) {
+    auto hash = GetChunkHash(pX, pZ);  // Compute hash
 
     std::lock_guard<std::mutex> lock(queueMutex);  // Ensure thread safety
     if (chunkPositions.find(hash) != chunkPositions.end()) {
         // Chunk is already in the queue, no need to add it again
         for (QueueChunk& qc : chunkQueue) {
-            if (qc.position.x == x && qc.position.z == z) {
-                qc.requestedClients.push_back(requestClient);
+            if (qc.position.x == pX && qc.position.z == pZ) {
+                qc.requestedClients.push_back(pRequestClient);
                 break;
             }
         }
@@ -38,7 +38,7 @@ void WorldManager::AddChunkToQueue(int32_t x, int32_t z, const std::shared_ptr<C
     }
 
     // Add to queue and track position
-    chunkQueue.emplace_back(Int3{x, 0, z}, requestClient);
+    chunkQueue.emplace_back(Int3{pX, 0, pZ}, pRequestClient);
     chunkPositions.insert(hash);
     queueCV.notify_one();
 }
@@ -49,14 +49,14 @@ bool WorldManager::IsQueueEmpty() {
 }
 
 // Sets the seed of both the WorldManager and the world
-void WorldManager::SetSeed(int64_t seed) {
-    this->seed = seed;
-    world.seed = seed;
+void WorldManager::SetSeed(int64_t pSeed) {
+    seed = pSeed;
+    world.seed = pSeed;
 }
 
 // Gets the current Seed
 int64_t WorldManager::GetSeed() {
-    return this->seed;
+    return seed;
 }
 
 
@@ -257,8 +257,8 @@ std::shared_ptr<Chunk> WorldManager::GetChunk(int32_t cX, int32_t cZ, Generator*
 }
 
 // Sets the wm name
-void WorldManager::SetName(std::string name) {
-    this->name = name;
+void WorldManager::SetName(std::string pName) {
+    this->name = pName;
 }
 
 // Gets the wm name

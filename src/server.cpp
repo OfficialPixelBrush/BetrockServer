@@ -55,11 +55,11 @@ std::mutex &Server::GetConnectedClientMutex() noexcept { return this->connectedC
 
 std::mutex &Server::GetEntityIdMutex() noexcept { return this->entityIdMutex; }
 
-void Server::SetServerTime(uint64_t serverTime) { this->serverTime = serverTime; }
+void Server::SetServerTime(uint64_t pServerTime) { this->serverTime = pServerTime; }
 
-void Server::AddUpTime(uint64_t upTime) { this->upTime += upTime; }
+void Server::AddUpTime(uint64_t pUpTime) { this->upTime += pUpTime; }
 
-void Server::SetSpawnPoint(const Int3 &spawnPoint) noexcept { this->spawnPoint = spawnPoint; }
+void Server::SetSpawnPoint(const Int3 &pSpawnPoint) noexcept { this->spawnPoint = pSpawnPoint; }
 
 Client* Server::FindClientByUsername(std::string_view username) const {
 	auto client = std::ranges::find_if(connectedClients, [&username](const auto& c) {

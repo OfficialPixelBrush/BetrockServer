@@ -1,9 +1,9 @@
 #include "generatorInfdev20100227.h"
 
-GeneratorInfdev20100227::GeneratorInfdev20100227(int64_t seed, World* world) : Generator(seed, world) {
+GeneratorInfdev20100227::GeneratorInfdev20100227(int64_t pSeed, World* pWorld) : Generator(pSeed, pWorld) {
 	logger = &Betrock::Logger::Instance();
-    this->seed = seed;
-    this->world = world;
+    this->seed = pSeed;
+    this->world = pWorld;
 
     rand = std::make_unique<JavaRandom>(this->seed);
     noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);

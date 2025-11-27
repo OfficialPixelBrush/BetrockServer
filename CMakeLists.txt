@@ -141,15 +141,15 @@ set(CMAKE_SYSTEM_NAME Linux)
 target_compile_options(BetrockServer PRIVATE
     # Make math more java-like
     # -fexcess-precision=standard
-    -fno-fast-math
-    -ffloat-store
+    #-fno-fast-math
+    #-ffloat-store
     # Make code more secure
     -Wall
     -Wextra
     #-Wpedantic           # Enforce strict ISO compliance
     #-Wconversion          # Implicit conversions (int → float, etc.)
     #-Wsign-conversion     # Sign mismatches
-    #-Wshadow              # Variable shadowing
+    -Wshadow              # Variable shadowing
     -Wunused              # Unused variables, params, etc.
     -Wuninitialized
     -Werror               # Treat warnings as errors
