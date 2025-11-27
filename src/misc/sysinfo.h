@@ -1,8 +1,8 @@
 #pragma once
-#include "sys/types.h"
 #include "sys/sysinfo.h"
-#include <fstream>
+#include "sys/types.h"
 #include <cstring>
+#include <fstream>
 #include <iomanip>
 
 extern int GetUsedMemory();

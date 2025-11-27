@@ -1,6 +1,6 @@
 #pragma once
-#include "datatypes.h"
 #include "blocks.h"
+#include "datatypes.h"
 
 // Returns true if the destroyed item maintains its NBT data upon being dropped
 bool KeepDamageOnDrop(int8_t id);
