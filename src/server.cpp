@@ -55,26 +55,22 @@ std::mutex &Server::GetConnectedClientMutex() noexcept { return this->connectedC
 
 std::mutex &Server::GetEntityIdMutex() noexcept { return this->entityIdMutex; }
 
-void Server::SetServerTime(uint64_t serverTime) { this->serverTime = serverTime; }
+void Server::SetServerTime(uint64_t pServerTime) { this->serverTime = pServerTime; }
 
-void Server::AddUpTime(uint64_t upTime) { this->upTime += upTime; }
+void Server::AddUpTime(uint64_t pUpTime) { this->upTime += pUpTime; }
 
-void Server::SetSpawnPoint(const Int3 &spawnPoint) noexcept { this->spawnPoint = spawnPoint; }
+void Server::SetSpawnPoint(const Int3 &pSpawnPoint) noexcept { this->spawnPoint = pSpawnPoint; }
 
-Client* Server::FindClientByUsername(std::string_view username) const {
-	auto client = std::ranges::find_if(connectedClients, [&username](const auto& c) {
-		return c->GetUsername() == username;
-	});
+Client *Server::FindClientByUsername(std::string_view username) const {
+	auto client =
+		std::ranges::find_if(connectedClients, [&username](const auto &c) { return c->GetUsername() == username; });
 
 	return client == connectedClients.end() ? nullptr : std::to_address(*client);
 }
 
 void Server::AddWorldManager(int8_t worldId, int maxThreads) {
 	const auto &[wmEntry, wmWorked] =
-		this->worldManagers.try_emplace(
-			worldId,
-			std::make_unique<WorldManager>(maxThreads)
-		);
+		this->worldManagers.try_emplace(worldId, std::make_unique<WorldManager>(maxThreads));
 
 	if (wmWorked == false) {
 		// TODO: better error handling + logger macros
@@ -96,8 +92,8 @@ void Server::AddWorldManager(int8_t worldId, int maxThreads) {
 }
 
 void Server::SaveAll() {
-	//Betrock::Logger::Instance().Info("Saving...");
-	for (auto c : GetConnectedClients()){
+	// Betrock::Logger::Instance().Info("Saving...");
+	for (auto c : GetConnectedClients()) {
 		if (c) {
 			c->GetPlayer()->Save();
 		}
@@ -105,7 +101,7 @@ void Server::SaveAll() {
 	for (const auto &[key, wm] : worldManagers) {
 		wm->FreeAndSave();
 	}
-	//Betrock::Logger::Instance().Info("Saved");
+	// Betrock::Logger::Instance().Info("Saved");
 }
 
 void Server::FreeAll() {
@@ -116,9 +112,7 @@ void Server::FreeAll() {
 	Betrock::Logger::Instance().Info("Freed Chunks");
 }
 
-void Server::PrepareForShutdown() {
-	this->alive = false;
-}
+void Server::PrepareForShutdown() { this->alive = false; }
 
 void Server::Stop() noexcept {
 	if (!this->alive) {
@@ -140,7 +134,7 @@ void Server::LoadConfig() {
 	if (!std::filesystem::exists(GlobalConfig::Instance().GetPath())) {
 		GlobalConfig::Instance().Overwrite({{"level-name", "world"},
 											{"view-distance", "10"},
-											{"white-list","false"},
+											{"white-list", "false"},
 											{"server-ip", ""},
 											{"motd", "A Minecraft Server"},
 											//{"pvp","true"},
@@ -150,8 +144,8 @@ void Server::LoadConfig() {
 											{"server-port", "25565"},
 											//{"allow-nether",true},
 											//{"spawn-monsters","true"},
-											{"max-players","-1"},
-											{"max-generator-threads","-1"},
+											{"max-players", "-1"},
+											{"max-generator-threads", "-1"},
 											//{"online-mode","false"},
 											//{"allow-flight","false"}
 											{"generator", "beta173"}});
@@ -161,7 +155,7 @@ void Server::LoadConfig() {
 		chunkDistance = GlobalConfig::Instance().GetAsNumber<int>("view-distance");
 		try {
 			seed = GlobalConfig::Instance().GetAsNumber<int64_t>("level-seed");
-		} catch (const std::invalid_argument& e) {
+		} catch (const std::invalid_argument &e) {
 			seed = (long)hashCode(GlobalConfig::Instance().GetAsString("level-seed"));
 		}
 		motd = GlobalConfig::Instance().GetAsString("motd");
@@ -181,16 +175,16 @@ void Server::LoadConfig() {
 }
 
 void Server::InitPlugins() {
-    // Go through /scripts/plugins folder
-    // Load plugin file and let it sit in it's own lua VM
-    // Start Plugin script
-    for (const auto & entry : std::filesystem::directory_iterator("scripts/plugins/")) {
+	// Go through /scripts/plugins folder
+	// Load plugin file and let it sit in it's own lua VM
+	// Start Plugin script
+	for (const auto &entry : std::filesystem::directory_iterator("scripts/plugins/")) {
 		try {
-        	plugins.push_back(std::make_unique<Plugin>(entry.path()));
-		} catch (const std::exception& e) {
-        	Betrock::Logger::Instance().Error(e.what());
+			plugins.push_back(std::make_unique<Plugin>(entry.path()));
+		} catch (const std::exception &e) {
+			Betrock::Logger::Instance().Error(e.what());
 		}
-    }
+	}
 }
 
 void Server::ReadOperators() { ReadGeneric(OPERATOR_TYPE); }
@@ -206,39 +200,38 @@ bool Server::RemoveWhitelist(std::string username) { return RemoveGeneric(WHITEL
 bool Server::IsWhitelist(std::string username) { return IsGeneric(WHITELIST_TYPE, username); }
 
 // Generic File reads, writes etc.
-std::vector<std::string>& Server::GetServerVector(uint8_t type) {
-	switch(type) {
-		case OPERATOR_TYPE:
-			return operators;
-		case WHITELIST_TYPE:
-			return whitelist;
-		default:
-			return whitelist;
+std::vector<std::string> &Server::GetServerVector(uint8_t type) {
+	switch (type) {
+	case OPERATOR_TYPE:
+		return operators;
+	case WHITELIST_TYPE:
+		return whitelist;
+	default:
+		return whitelist;
 	}
 }
 
 std::string Server::GetGenericFilePath(uint8_t type) {
-	switch(type) {
-		case OPERATOR_TYPE:
-			return OPERATOR_FILE;
-		case WHITELIST_TYPE:
-			return WHITELIST_FILE;
-		default:
-			return FALLBACK_FILE;
+	switch (type) {
+	case OPERATOR_TYPE:
+		return OPERATOR_FILE;
+	case WHITELIST_TYPE:
+		return WHITELIST_FILE;
+	default:
+		return FALLBACK_FILE;
 	}
 }
 
 void Server::ReadGeneric(uint8_t type) {
 	std::string path = GetGenericFilePath(type);
 	std::ifstream file(path);
-    if (!file) {
-		std::cout << "File doesn't exist!" << std::endl;
-        std::ofstream createFile(path);
-        createFile.close();
-        return;
-    }
-	for( std::string username; getline( file, username ); )
-	{
+	if (!file) {
+		std::cout << "File doesn't exist!" << "\n";
+		std::ofstream createFile(path);
+		createFile.close();
+		return;
+	}
+	for (std::string username; getline(file, username);) {
 		AddGeneric(type, username);
 	}
 	file.close();
@@ -246,15 +239,15 @@ void Server::ReadGeneric(uint8_t type) {
 
 void Server::WriteGeneric(uint8_t type) {
 	std::ofstream file(GetGenericFilePath(type));
-	auto& list = GetServerVector(type);
+	auto &list = GetServerVector(type);
 	for (auto entry : list) {
-		file << entry << std::endl;
+		file << entry << "\n";
 	}
 	file.close();
 }
 
 bool Server::AddGeneric(uint8_t type, std::string username) {
-	auto& list = GetServerVector(type);
+	auto &list = GetServerVector(type);
 	auto itr = std::find(list.begin(), list.end(), username);
 	// Only add if the operator doesn't already exist
 	if (itr == list.end()) {
@@ -266,7 +259,7 @@ bool Server::AddGeneric(uint8_t type, std::string username) {
 }
 
 bool Server::RemoveGeneric(uint8_t type, std::string username) {
-	auto& list = GetServerVector(type);
+	auto &list = GetServerVector(type);
 	auto itr = std::find(list.begin(), list.end(), username);
 	// Only remove if the operator does exist
 	if (itr != list.end()) {
@@ -278,10 +271,10 @@ bool Server::RemoveGeneric(uint8_t type, std::string username) {
 }
 
 bool Server::IsGeneric(uint8_t type, std::string username) {
-	auto& list = GetServerVector(type);
+	auto &list = GetServerVector(type);
 	auto itr = std::find(list.begin(), list.end(), username);
 	// Only add if the passed player is an operator
-	if (itr != list.end())	{
+	if (itr != list.end()) {
 		return true;
 	}
 	return false;

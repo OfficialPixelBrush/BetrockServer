@@ -26,7 +26,7 @@ class Respond {
         static void PlayerPositionLook(std::vector<uint8_t> &response, Player* player);
         static void PlayerDigging(std::vector<uint8_t> &response, int8_t status, Int3 position, int8_t face);
         static void PlayerBlockPlacement(std::vector<uint8_t> &response, Int3 position, int8_t direction, int16_t id, int8_t amount, int16_t damage);
-        static void Animation(std::vector<uint8_t> &response, int32_t entityId, uint8_t animation);
+        static void Animation(std::vector<uint8_t> &response, int32_t entityId, int8_t animation);
         static void EntityAction(std::vector<uint8_t> &response, int32_t entityId, uint8_t action);
         static void NamedEntitySpawn(std::vector<uint8_t> &response, int32_t& entityId, std::string username, Int3 position, int8_t yaw, int8_t pitch, int16_t currentItem);
         static void PickupSpawn(std::vector<uint8_t> &response, int32_t& entityId, int16_t id, int8_t count, int16_t damage, Int3 position, int8_t yaw, int8_t pitch, int8_t roll);

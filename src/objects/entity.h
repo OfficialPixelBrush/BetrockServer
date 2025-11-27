@@ -31,16 +31,19 @@ class Entity {
 
         int8_t health;
 
-        Entity(int entityId, Vec3 position, int8_t dimension, std::string world)
-            : entityId(entityId++), position(position), dimension(dimension), world(world) {}
+        Entity(int& pEntityId, Vec3 pPosition, int8_t pDimension, std::string pWorld)
+            : entityId(pEntityId), position(pPosition), dimension(pDimension), world(pWorld)
+        {
+            ++pEntityId;
+        }
 
         virtual ~Entity() = default;
 
-        virtual void Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw = 0, float pitch = 0);
-        virtual void SetHealth(std::vector<uint8_t> &response, int8_t health);
-        virtual void Hurt(std::vector<uint8_t> &response, int8_t damage);
-        virtual void Kill(std::vector<uint8_t> &response);
+        virtual void Teleport(std::vector<uint8_t> &pResponse, Vec3 pPosition, float pYaw = 0, float pPitch = 0);
+        virtual void SetHealth(std::vector<uint8_t> &pResponse, int8_t pHealth);
+        virtual void Hurt(std::vector<uint8_t> &pResponse, int8_t pDamage);
+        virtual void Kill(std::vector<uint8_t> &pResponse);
         virtual void PrintStats();
-        bool CheckCollision(Vec3 otherPos, AABB otherAABB);
-        Vec3 CheckPushback(Vec3 otherPos, AABB otherAABB);
+        bool CheckCollision(Vec3 pOtherPos, AABB pOtherAABB);
+        Vec3 CheckPushback(Vec3 pOtherPos, AABB pOtherAABB);
 };

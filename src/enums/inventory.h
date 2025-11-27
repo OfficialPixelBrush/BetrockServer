@@ -1,14 +1,14 @@
 #pragma once
 
 enum Inventory {
-    INVENTORY_NONE = -1,
-    INVENTORY_CHEST = 0,
-    INVENTORY_CRAFTING_TABLE = 1,
-    INVENTORY_FURNACE = 2,
-    INVENTORY_DISPENSER = 3,
-    // Doesn't actually exist, but makes distinction easier
-    INVENTORY_CHEST_LARGE = 4,
-    CLICK_OUTSIDE = -999
+	INVENTORY_NONE = -1,
+	INVENTORY_CHEST = 0,
+	INVENTORY_CRAFTING_TABLE = 1,
+	INVENTORY_FURNACE = 2,
+	INVENTORY_DISPENSER = 3,
+	// Doesn't actually exist, but makes distinction easier
+	INVENTORY_CHEST_LARGE = 4,
+	CLICK_OUTSIDE = -999
 };
 
 #define INVENTORY_CHEST_SIZE 27
@@ -32,12 +32,12 @@ enum Inventory {
 // Inventory + Hotbar local
 #define INVENTORY_ROW_1 0
 #define INVENTORY_ROW_2 9
-#define INVENTORY_ROW_3 9*2
-#define INVENTORY_ROW_LAST 9*3-1
-#define INVENTORY_HOTBAR 9*3
-#define INVENTORY_HOTBAR_LAST 9*4-1
+#define INVENTORY_ROW_3 9 * 2
+#define INVENTORY_ROW_LAST 9 * 3 - 1
+#define INVENTORY_HOTBAR 9 * 3
+#define INVENTORY_HOTBAR_LAST 9 * 4 - 1
 
-#define INVENTORY_MAIN_SIZE 9*4
+#define INVENTORY_MAIN_SIZE 9 * 4
 #define INVENTORY_ARMOR_SIZE 4
 // The result slot is not counted on the storage side
 #define INVENTORY_CRAFTING_SIZE 4

@@ -79,7 +79,7 @@ bool GlobalConfig::SaveToDisk() const noexcept {
 	return true;
 }
 
-void GlobalConfig::SetPath(std::string_view path) noexcept { this->path = path; }
+void GlobalConfig::SetPath(std::string_view pPath) noexcept { this->path = pPath; }
 
 std::string_view GlobalConfig::GetPath() const noexcept { return this->path; }
 } // namespace Betrock

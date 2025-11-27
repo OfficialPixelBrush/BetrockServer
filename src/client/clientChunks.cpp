@@ -142,4 +142,5 @@ void Client::SendNewChunks() {
         it = newChunks.erase(it);
         --sentThisCycle;
     }
+    newChunks.shrink_to_fit();
 }

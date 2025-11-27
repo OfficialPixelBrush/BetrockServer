@@ -1,6 +1,7 @@
 #include "client.h"
 
 #include "server.h"
+#include <cstdint>
 
 // Check if the position of a player is valid
 bool Client::CheckPosition(Vec3 &newPosition, double &newStance) {
@@ -49,7 +50,7 @@ void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
 		debugMessage += "Received " + PacketIdToLabel(packetType) + " from " + this->username + "! (" + std::to_string(bytes_received) + " Bytes)";
 	}
 	if (debugReceivedBytes) {
-		debugMessage += " RECEIVED\n" + Uint8ArrayToHexDump(message,bytes_received);
+		debugMessage += " RECEIVED\n" + Uint8ArrayToHexDump(message,size_t(bytes_received));
 	}
 	if (debugReceivedPacketType || debugReceivedBytes) {
 		Betrock::Logger::Instance().Debug(debugMessage);
@@ -77,9 +78,9 @@ void Client::HandlePacket() {
 	if (debugReceivedBundleDelimiter) {
 		Betrock::Logger::Instance().Debug("--- Start of Packet bundle ---");
 	}
-	while (validPacket && offset < bytes_received && GetConnectionStatus() > ConnectionStatus::Disconnected) {
-		uint8_t packetIndex = EntryToByte(message,offset);
-		Packet packetType = (Packet)packetIndex;
+	while (validPacket && offset < size_t(bytes_received) && GetConnectionStatus() > ConnectionStatus::Disconnected) {
+		uint8_t packetIndex = uint8_t(EntryToByte(message,offset));
+		Packet packetType = Packet(packetIndex);
 
 		// Provide debug info
 		if (debugReceivedBytes || debugReceivedPacketType) {
@@ -88,8 +89,8 @@ void Client::HandlePacket() {
 
 		// Legacy ping
 		if (packetIndex == 0xFE) {
-			uint8_t p1 = EntryToByte(message,offset);
-			uint8_t p2 = EntryToByte(message,offset);
+			uint8_t p1 = uint8_t(EntryToByte(message,offset));
+			uint8_t p2 = uint8_t(EntryToByte(message,offset));
 			if (p1 == 0x01 && p2 == 0xFA) {
 				HandleLegacyPing();
 				SetConnectionStatus(ConnectionStatus::Disconnected);
@@ -169,7 +170,7 @@ void Client::HandlePacket() {
 					HandleDisconnect();
 					break;
 				default:
-					Betrock::Logger::Instance().Debug("Unhandled Server-bound packet: " + std::to_string(packetIndex) + "\n" + Uint8ArrayToHexDump(message,bytes_received));
+					Betrock::Logger::Instance().Debug("Unhandled Server-bound packet: " + std::to_string(packetIndex) + "\n" + Uint8ArrayToHexDump(message,size_t(bytes_received)));
 					validPacket = false;
 					break;
 			}
@@ -345,10 +346,10 @@ void Client::SendResponse(bool autoclear) {
 
 	std::string debugMessage = "";
 	if (debugSentPacketType) {
-		debugMessage += "Sending " + PacketIdToLabel((Packet)response[0]) + " to " + player->username + "(" + std::to_string(player->entityId) + ") ! (" + std::to_string(response.size()) + " Bytes)";
+		debugMessage += "Sending " + PacketIdToLabel(Packet(response[0])) + " to " + player->username + "(" + std::to_string(player->entityId) + ") ! (" + std::to_string(response.size()) + " Bytes)";
 	}
 	if (debugSentBytes) {
-		if (((Packet)response[0] == Packet::Chunk || (Packet)response[0] == Packet::PreChunk) && debugDisablePrintChunk) {
+		if ((Packet(response[0]) == Packet::Chunk || Packet(response[0]) == Packet::PreChunk) && debugDisablePrintChunk) {
 			// Do nothing
 		} else {
 			debugMessage += " SENT\n" + Uint8ArrayToHexDump(&response[0],response.size());
@@ -365,11 +366,13 @@ void Client::SendResponse(bool autoclear) {
 	}
 	if (autoclear) {
 		response.clear();
+	} else {
+		response.shrink_to_fit();
 	}
 }
 
 // Teleport the client to the requested coordinate
-void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, float pitch) {
+void Client::Teleport(std::vector<uint8_t> &pResponse, Vec3 position, float yaw, float pitch) {
     player->position = position;
 	player->position.y += STANCE_OFFSET;
     player->yaw = yaw;
@@ -380,11 +383,11 @@ void Client::Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw, 
     DetermineVisibleChunks(true);
 	// Give us some time to teleport
 	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    Respond::PlayerPositionLook(response, player.get());
+    Respond::PlayerPositionLook(pResponse, player.get());
 }
 
 // Teleport the client to the requested while keeping view
-void Client::TeleportKeepView(std::vector<uint8_t> &response, Vec3 position) {
+void Client::TeleportKeepView(std::vector<uint8_t> &pResponse, Vec3 position) {
     player->position = position;
 	player->position.y += STANCE_OFFSET;
     player->stance = position.y;
@@ -393,15 +396,15 @@ void Client::TeleportKeepView(std::vector<uint8_t> &response, Vec3 position) {
     DetermineVisibleChunks(true);
 	// Give us some time to teleport
 	//std::this_thread::sleep_for(std::chrono::milliseconds(2000));
-    Respond::PlayerPosition(response, player.get());
+    Respond::PlayerPosition(pResponse, player.get());
 }
 
 // Respawn the Client by sending them back to spawn
-void Client::Respawn(std::vector<uint8_t> &response) {
+void Client::Respawn(std::vector<uint8_t> &pResponse) {
     player->dimension = player->spawnDimension;
     player->world = player->spawnWorld;
-    Teleport(response, player->spawnPosition);
-    Respond::Respawn(response, player->dimension);
+    Teleport(pResponse, player->spawnPosition);
+    Respond::Respawn(pResponse, player->dimension);
     // After respawning, the health is automatically set back to the maximum health
     // The Client should do this automatically
     player->health = HEALTH_MAX;
@@ -409,7 +412,7 @@ void Client::Respawn(std::vector<uint8_t> &response) {
 	if (!keepInventory) {
 		ClearInventory();
 	} else {
-		UpdateInventory(response);
+		UpdateInventory(pResponse);
 	}
 }
 
@@ -427,7 +430,7 @@ bool Client::TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &
             return true;
         }
         // If we fill it but items remain, keep going
-        amount -= (MAX_STACK - player->inventory[slot].amount);
+        amount -= int8_t(MAX_STACK - player->inventory[slot].amount);
         player->inventory[slot].amount = MAX_STACK;
         return false;
     }
@@ -467,10 +470,10 @@ bool Client::SpreadToSlots(int16_t id, int8_t amount, int16_t damage, int8_t pre
 
 // Get the Players Orientation along a cardinal direction
 int8_t Client::GetPlayerOrientation() {
-    float limitedYaw = fmod(player->yaw, 360.0f);
+    float limitedYaw = fmodf(player->yaw, 360.0f);
     if (limitedYaw < 0) limitedYaw += 360.0f; // Ensure yaw is in [0, 360)
 
-    int roundedYaw = static_cast<int>(round(limitedYaw / 90.0f)) % 4; // Round to nearest multiple of 90
+    int roundedYaw = static_cast<int>(roundf(limitedYaw / 90.0f)) % 4; // Round to nearest multiple of 90
 
     switch (roundedYaw) {
         case 0: return zPlus;  // 0°   -> +Z
@@ -482,7 +485,7 @@ int8_t Client::GetPlayerOrientation() {
 }
 
 // Give the player the passed item
-bool Client::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, int16_t damage) {
+bool Client::Give(std::vector<uint8_t> &pResponse, int16_t item, int8_t amount, int16_t damage) {
     // Amount is not specified
     if (amount == -1) {
         if (item < BLOCK_MAX) {
@@ -496,12 +499,12 @@ bool Client::Give(std::vector<uint8_t> &response, int16_t item, int8_t amount, i
     //inventory[slotId] = Item { item,amount,damage };
     // TODO: This is a horrible solution, please find something better,
     // like checking if the inventory was changed, and only then sending out an UpdateInventory
-    UpdateInventory(response);
+    UpdateInventory(pResponse);
     return true;
 }
 
 // Update the clients shown inventory
-bool Client::UpdateInventory(std::vector<uint8_t> &response, Int3 targetBlockPosition) {
+bool Client::UpdateInventory(std::vector<uint8_t> &pResponse, Int3 targetBlockPosition) {
 	World* world = Betrock::Server::Instance().GetWorld(player->dimension);
 	std::vector<Item> v;
 	switch(activeWindowType) {
@@ -526,15 +529,15 @@ bool Client::UpdateInventory(std::vector<uint8_t> &response, Int3 targetBlockPos
 			break;
 	}
     
-    Respond::WindowItems(response, windowIndex, v);
+    Respond::WindowItems(pResponse, windowIndex, v);
     return true;
 }
 
 // Change the players held item for all other clients
-void Client::ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId) {
-	currentHotbarSlot = (int8_t)slotId;
+void Client::ChangeHeldItem(std::vector<uint8_t> &pResponse, int16_t slotId) {
+	currentHotbarSlot = int8_t(slotId);
     Item i = GetHeldItem();
-    Respond::EntityEquipment(response, player->entityId, EQUIPMENT_SLOT_HELD, i.id, i.damage);
+    Respond::EntityEquipment(pResponse, player->entityId, EQUIPMENT_SLOT_HELD, i.id, i.damage);
 }
 
 // Get the hotbar slot the client currently has selected
@@ -550,7 +553,7 @@ Item Client::GetHeldItem() {
 // TODO: Implement Right-clicking
 // Handle the player clicking a slot in a window
 void Client::ClickedSlot(
-	[[maybe_unused]] std::vector<uint8_t> &response,
+	[[maybe_unused]] std::vector<uint8_t> &pResponse,
 	[[maybe_unused]] int8_t windowId,
 	int16_t slotId,
 	[[maybe_unused]] bool rightClick,
@@ -598,7 +601,7 @@ void Client::ClickedSlot(
 	// We're interacting with a window we're not
 	// currently looking at; something messed up!
 	if (windowId != windowIndex) {
-		std::cerr << "Was looking at " << int(windowIndex) << " but got click for " << int(windowId) << "!" << std::endl;
+		std::cerr << "Was looking at " << int(windowIndex) << " but got click for " << int(windowId) << "!" << "\n";
 		return;
 	}
 
@@ -626,27 +629,27 @@ void Client::ClickedSlot(
 		// Player Inventory
 		default:
 			if (slotId == 0) {
-				std::cout << "Crafting Result" << std::endl;
+				std::cout << "Crafting Result" << "\n";
 			} else if (slotId <= 4) {
-				std::cout << "Crafting Area" << std::endl;
+				std::cout << "Crafting Area" << "\n";
 				player->crafting[slotId-1] = testItem;
 			} else if (slotId <= 8) {
 				slotId -= 5;
-				std::cout << "Armor Area" << std::endl;
+				std::cout << "Armor Area" << "\n";
 				player->armor[slotId] = testItem;
 			} else {
 				slotId -= 9;
-				std::cout << "Main inventory" << std::endl;
+				std::cout << "Main inventory" << "\n";
 				player->inventory[slotId] = testItem;
 			}
 			break;
 	}
 
 	if (slotId < slotOffset) {
-		std::cout << "Clicking in other inventory (" << int(slotId) << ")" << std::endl;
+		std::cout << "Clicking in other inventory (" << int(slotId) << ")" << "\n";
 	} else {
 		slotId -= slotOffset;
-		std::cout << "Clicking in player inventory (" << int(slotId) << ")" << std::endl;
+		std::cout << "Clicking in player inventory (" << int(slotId) << ")" << "\n";
 	}
 	
 	lastClickedSlot = slotId;
@@ -678,7 +681,7 @@ bool Client::CanDecrementHotbar() {
 }
 
 // Decrement the held item by 1
-void Client::DecrementHotbar(std::vector<uint8_t> &response) {
+void Client::DecrementHotbar(std::vector<uint8_t> &pResponse) {
     Item* i = &player->inventory[GetHotbarSlot()];
 	// TODO: This is bad. Investigate making items better.
 	if (IsHoe(i->id)) {
@@ -693,7 +696,7 @@ void Client::DecrementHotbar(std::vector<uint8_t> &response) {
 			i->damage = 0;
 		}
 	}
-	Respond::SetSlot(response, 0, GetHotbarSlot()+9, i->id, i->amount, i->damage);
+	Respond::SetSlot(pResponse, 0, GetHotbarSlot()+9, i->id, i->amount, i->damage);
 }
 
 // Check if the passed chunk position is visible to the client
@@ -767,8 +770,8 @@ void Client::SendPlayerEntity(std::vector<uint8_t> &resp, Client* c, Player* p) 
 		p->entityId,
 		p->username,
 		Vec3ToInt3(p->position),
-		p->yaw,
-		p->pitch,
+		ConvertFloatToPackedByte(p->yaw),
+		ConvertFloatToPackedByte(p->pitch),
 		c->GetHeldItem().id
 	);
 

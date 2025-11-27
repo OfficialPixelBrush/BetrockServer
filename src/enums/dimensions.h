@@ -2,5 +2,8 @@
 
 namespace betrock::game {
 
-enum class dimension { Nether = -1, Overworld = 0 };
-}
+enum class dimension {
+	Nether = -1,
+	Overworld = 0
+};
+} // namespace betrock::game

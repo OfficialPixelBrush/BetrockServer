@@ -6,11 +6,11 @@
 #define CHAT_MESSAGE_MAX_LENGTH 119
 
 void Respond::KeepAlive(std::vector<uint8_t> &response) {
-    response.push_back((uint8_t)Packet::KeepAlive);
+    response.push_back(uint8_t(Packet::KeepAlive));
 }
 
 void Respond::Login(std::vector<uint8_t> &response, int32_t& entityId, int64_t seed, int8_t dimension) {
-    response.push_back((uint8_t)Packet::LoginRequest);
+    response.push_back(uint8_t(Packet::LoginRequest));
     AppendIntegerToVector(response, entityId);
     AppendString16ToVector(response, "");
     AppendLongToVector(response, seed);
@@ -19,7 +19,7 @@ void Respond::Login(std::vector<uint8_t> &response, int32_t& entityId, int64_t s
 
 // Note: Right now this just sends a "-", to tell the client that online mode is disabled
 void Respond::Handshake(std::vector<uint8_t> &response) {
-    response.push_back((uint8_t)Packet::Handshake);
+    response.push_back(uint8_t(Packet::Handshake));
     AppendString16ToVector(response,"-");
 }
 
@@ -28,12 +28,12 @@ void Respond::ChatMessage(std::vector<uint8_t> &response, std::string message) {
         Betrock::Logger::Instance().Warning("Tried to send a chat message that was too long! (" + std::to_string(message.size()) + "/" + std::to_string(CHAT_MESSAGE_MAX_LENGTH) + ")");
         message.resize(CHAT_MESSAGE_MAX_LENGTH);
     }
-    response.push_back((uint8_t)Packet::ChatMessage);
+    response.push_back(uint8_t(Packet::ChatMessage));
     AppendString16ToVector(response,message);
 }
 
 void Respond::Time(std::vector<uint8_t> &response, int64_t time) {
-    response.push_back((uint8_t)Packet::TimeUpdate);
+    response.push_back(uint8_t(Packet::TimeUpdate));
     AppendLongToVector(response, time);
 }
 
@@ -102,7 +102,7 @@ void Respond::PlayerBlockPlacement(std::vector<uint8_t> &response, Int3 position
     AppendShortToVector(response, damage);
 }
 
-void Respond::Animation(std::vector<uint8_t> &response, int32_t entityId, uint8_t animation) {
+void Respond::Animation(std::vector<uint8_t> &response, int32_t entityId, int8_t animation) {
     response.push_back((uint8_t)Packet::Animation);
     AppendIntegerToVector(response, entityId);
     response.push_back(animation);
