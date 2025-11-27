@@ -42,10 +42,10 @@ void Logger::ChatMessage(std::string message) {
     std::string time = GetRealTime();
     if (logLevelTerminal & LOG_CHAT) 
     {
-        std::cout << time << " " << HandleFormattingCodes(message) << std::endl;
+        std::cout << time << " " << HandleFormattingCodes(message) << "\n";
     }
     if (logLevelText & LOG_CHAT) {
-        logFile << time << " " << message << std::endl;
+        logFile << time << " " << message << "\n";
     }
 }
 
@@ -54,10 +54,10 @@ void Logger::Message(std::string message) {
     std::string time = GetRealTime();
     if (logLevelTerminal & LOG_MESSAGE) 
     {
-        std::cout << time << " " << message << std::endl;
+        std::cout << time << " " << message << "\n";
     }
     if (logLevelText & LOG_MESSAGE) {
-        logFile << time << " " << message << std::endl;
+        logFile << time << " " << message << "\n";
     }
 }
 
@@ -67,10 +67,10 @@ void Logger::Info(std::string message) {
     std::string header = "[INFO]";
     if (logLevelTerminal & LOG_INFO) 
     {
-        std::cout << time << " \x1b[1;107m" << header << "\x1b[0m " << message << std::endl;
+        std::cout << time << " \x1b[1;107m" << header << "\x1b[0m " << message << "\n";
     }
     if (logLevelText & LOG_INFO) {
-        logFile << time << " " << header << " " << message << std::endl;
+        logFile << time << " " << header << " " << message << "\n";
     }
 }
 
@@ -80,10 +80,10 @@ void Logger::Warning(std::string message) {
     std::string header = "[WARNING]";
     if (logLevelTerminal & LOG_WARNING) 
     {
-        std::cerr << time << " \x1b[1;43m" << header << "\e[0;33m " << message << "\x1b[0m " << std::endl;
+        std::cerr << time << " \x1b[1;43m" << header << "\e[0;33m " << message << "\x1b[0m " << "\n";
     }
     if (logLevelText & LOG_WARNING) {
-        logFile << time << " " << header << " " << message << std::endl;
+        logFile << time << " " << header << " " << message << "\n";
     }
 }
 
@@ -93,10 +93,10 @@ void Logger::Error(std::string message) {
     std::string header = "[ERROR]";
     if (logLevelTerminal & LOG_ERROR) 
     {
-        std::cerr << time << " \x1b[1;101m" << header << " " << message << "\x1b[0m" << std::endl;
+        std::cerr << time << " \x1b[1;101m" << header << " " << message << "\x1b[0m" << "\n";
     }
     if (logLevelText & LOG_ERROR) {
-        logFile << time << " " << header << " " << message << std::endl;
+        logFile << time << " " << header << " " << message << "\n";
     }
 }
 
@@ -106,10 +106,10 @@ void Logger::Debug(std::string message) {
     std::string header = "[DEBUG]";
     if (logLevelTerminal & LOG_DEBUG) 
     {
-        std::cerr << time << " \x1b[1;46m" << header << "\x1b[0m " << message << std::endl;
+        std::cerr << time << " \x1b[1;46m" << header << "\x1b[0m " << message << "\n";
     }
     if (logLevelText & LOG_DEBUG) {
-        logFile << time << " " << header << " " << message << std::endl;
+        logFile << time << " " << header << " " << message << "\n";
     }
 }
 }

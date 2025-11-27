@@ -25,7 +25,7 @@ void Entity::Kill([[maybe_unused]] std::vector<uint8_t> &response) {
 
 // Print the entities stats
 void Entity::PrintStats() {
-    std::cout << entityId << ": " << position << "; " << yaw << ", " << pitch << std::endl;
+    std::cout << entityId << ": " << position << "; " << yaw << ", " << pitch << "\n";
 }
 
 // Check collision
@@ -71,6 +71,6 @@ Vec3 Entity::CheckPushback(Vec3 otherPos, AABB otherAABB) {
         correction.y = pushY;
     else
         correction.z = pushZ;
-    std::cout << correction << std::endl;
+    std::cout << correction << "\n";
     return correction;
 }

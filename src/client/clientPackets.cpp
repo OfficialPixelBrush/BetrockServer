@@ -451,7 +451,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 // Handle the Client closing a Window
 bool Client::HandleCloseWindow() {
 	int8_t windowId = EntryToByte(message, offset);
-	//std::cout << int(windowId) << std::endl;
+	//std::cout << int(windowId) << "\n";
 	// Ignore inventory
 	if (windowId == 0) return true;
 	
@@ -479,7 +479,7 @@ bool Client::HandleWindowClick() {
 	[[maybe_unused]] int16_t itemId		= EntryToShort(message,offset);
 	[[maybe_unused]] int8_t itemCount	= 1;
 	[[maybe_unused]] int16_t itemUses	= 0;
-	//std::cout << int(window) << " (" << int(slot) << ")" << std::endl;
+	//std::cout << int(window) << " (" << int(slot) << ")" << "\n";
 	if (itemId > 0) {
 		itemCount		= EntryToByte(message, offset);
 		itemUses		= EntryToShort(message,offset);

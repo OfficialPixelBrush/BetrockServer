@@ -601,7 +601,7 @@ void Client::ClickedSlot(
 	// We're interacting with a window we're not
 	// currently looking at; something messed up!
 	if (windowId != windowIndex) {
-		std::cerr << "Was looking at " << int(windowIndex) << " but got click for " << int(windowId) << "!" << std::endl;
+		std::cerr << "Was looking at " << int(windowIndex) << " but got click for " << int(windowId) << "!" << "\n";
 		return;
 	}
 
@@ -629,27 +629,27 @@ void Client::ClickedSlot(
 		// Player Inventory
 		default:
 			if (slotId == 0) {
-				std::cout << "Crafting Result" << std::endl;
+				std::cout << "Crafting Result" << "\n";
 			} else if (slotId <= 4) {
-				std::cout << "Crafting Area" << std::endl;
+				std::cout << "Crafting Area" << "\n";
 				player->crafting[slotId-1] = testItem;
 			} else if (slotId <= 8) {
 				slotId -= 5;
-				std::cout << "Armor Area" << std::endl;
+				std::cout << "Armor Area" << "\n";
 				player->armor[slotId] = testItem;
 			} else {
 				slotId -= 9;
-				std::cout << "Main inventory" << std::endl;
+				std::cout << "Main inventory" << "\n";
 				player->inventory[slotId] = testItem;
 			}
 			break;
 	}
 
 	if (slotId < slotOffset) {
-		std::cout << "Clicking in other inventory (" << int(slotId) << ")" << std::endl;
+		std::cout << "Clicking in other inventory (" << int(slotId) << ")" << "\n";
 	} else {
 		slotId -= slotOffset;
-		std::cout << "Clicking in player inventory (" << int(slotId) << ")" << std::endl;
+		std::cout << "Clicking in player inventory (" << int(slotId) << ")" << "\n";
 	}
 	
 	lastClickedSlot = slotId;

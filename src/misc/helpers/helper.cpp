@@ -244,7 +244,7 @@ std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t comp
 
     // Check if decompression succeeded
     if (result != LIBDEFLATE_SUCCESS) {
-        std::cerr << "Decompression failed with error code " << result << std::endl;
+        std::cerr << "Decompression failed with error code " << result << "\n";
         libdeflate_free_decompressor(decompressor);
         return nullptr;
     }
@@ -335,7 +335,7 @@ std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size) {
             oss << (std::isprint(c) ? c : '.');
         }
 
-        oss << std::endl;
+        oss << "\n";
     }
 
     return oss.str();

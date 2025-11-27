@@ -41,7 +41,7 @@ std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
 
 	/*
 	if (cX >= -1 && cZ >= -1 && cX <= 1 && cZ <= 1) {
-		std::cout << "# " << cX << ", " << cZ << std::endl;
+		std::cout << "# " << cX << ", " << cZ << "\n";
 		std::cout << "[";
 		for (size_t i = 0; i < this->temperature.size(); i++) {
 			std::cout << this->temperature[i];
@@ -49,7 +49,7 @@ std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
 				std::cout << ", ";
 			}
 		}
-		std::cout << "]," << std::endl;
+		std::cout << "]," << "\n";
 	}
 	*/
 

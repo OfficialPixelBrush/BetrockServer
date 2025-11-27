@@ -226,7 +226,7 @@ void Server::ReadGeneric(uint8_t type) {
 	std::string path = GetGenericFilePath(type);
 	std::ifstream file(path);
 	if (!file) {
-		std::cout << "File doesn't exist!" << std::endl;
+		std::cout << "File doesn't exist!" << "\n";
 		std::ofstream createFile(path);
 		createFile.close();
 		return;
@@ -241,7 +241,7 @@ void Server::WriteGeneric(uint8_t type) {
 	std::ofstream file(GetGenericFilePath(type));
 	auto &list = GetServerVector(type);
 	for (auto entry : list) {
-		file << entry << std::endl;
+		file << entry << "\n";
 	}
 	file.close();
 }

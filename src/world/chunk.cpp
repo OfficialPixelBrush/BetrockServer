@@ -47,7 +47,7 @@ void Chunk::PrintHeightmap() {
 			if (z < 15)
 				std::cout << ",";
 		}
-		std::cout << "]," << std::endl;
+		std::cout << "]," << "\n";
 	}
 }
 

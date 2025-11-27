@@ -35,7 +35,7 @@ int8_t World::GetHeightValue(int32_t x, int32_t z) {
 // Checks if a file with a matching position and extension exists
 bool World::ChunkFileExists(int32_t x, int32_t z, std::string extension) {
 	if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
-		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
+		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << "\n";
 		return false;
 	}
 
@@ -80,21 +80,21 @@ World::World(const std::string &extra) : dev(), rng(dev()) {
 
 	// Create dirPath first
 	if (!std::filesystem::create_directories(dirPath)) {
-		// std::cout << "Failed to create: " << dirPath << std::endl;
+		// std::cout << "Failed to create: " << dirPath << "\n";
 	}
 
 	// Then dimension sub-directories
 	if (!extra.empty()) {
 		dirPath /= extra;
 		if (!std::filesystem::create_directories(dirPath)) {
-			// std::cout << "Failed to create: " << dirPath << std::endl;
+			// std::cout << "Failed to create: " << dirPath << "\n";
 		}
 	}
 
 	// The region folder in that
 	dirPath /= "region";
 	if (!std::filesystem::create_directories(dirPath)) {
-		std::cout << "Failed to create: " << dirPath << std::endl;
+		std::cout << "Failed to create: " << dirPath << "\n";
 	}
 }
 
@@ -164,7 +164,7 @@ void World::FreeUnseenChunks() {
 
 std::shared_ptr<Chunk> World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
 	if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
-		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
+		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << "\n";
 		return nullptr;
 	}
 
@@ -173,7 +173,7 @@ std::shared_ptr<Chunk> World::LoadMcRegionChunk(int32_t cX, int32_t cZ) {
 		int32_t regionZ = int32_t(floor(cZ / 32.0f));
 		std::filesystem::path regionPath =
 			dirPath / ("r." + std::to_string(regionX) + "." + std::to_string(regionZ) + MCREGION_FILE_EXTENSION);
-		std::cout << regionPath << std::endl;
+		std::cout << regionPath << "\n";
 
 		// TODO: Keep track of which regions already exist
 		std::unique_ptr<RegionFile> rf = std::make_unique<RegionFile>(regionPath);
@@ -550,7 +550,7 @@ int8_t World::GetFirstUncoveredBlock(Int3 &position) {
 // Load a Chunk into Memory from an NBT-Format file
 std::shared_ptr<Chunk> World::LoadOldV2Chunk(int32_t x, int32_t z) {
 	if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
-		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
+		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << "\n";
 		return nullptr;
 	}
 
@@ -559,7 +559,7 @@ std::shared_ptr<Chunk> World::LoadOldV2Chunk(int32_t x, int32_t z) {
 
 	// Check if the entry file exists and has a .cnk extension
 	if (!ChunkFileExists(x, z)) {
-		std::cout << "File doesn't exist!" << std::endl;
+		std::cout << "File doesn't exist!" << "\n";
 		return nullptr;
 	}
 
@@ -584,7 +584,7 @@ std::shared_ptr<Chunk> World::LoadOldV2Chunk(int32_t x, int32_t z) {
 // Load an old-format Chunk into Memory from a Binary File
 std::shared_ptr<Chunk> World::LoadOldChunk(int32_t x, int32_t z) {
 	if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
-		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
+		std::cerr << "Directory " << dirPath << " does not exist or is not a directory!" << "\n";
 		return nullptr;
 	}
 

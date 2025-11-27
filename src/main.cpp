@@ -2,9 +2,12 @@
 
 #include "biomes.h"
 #include "config.h"
+#include "debug.h"
 #include "gamerules.h"
+#include "misc/sysinfo.h"
 #include "server.h"
 #include "sysinfo.h"
+#include "world/worldManager.h"
 
 // The Save interval in ticks
 // Save every 10 seconds
@@ -20,12 +23,12 @@ void UsageReport() {
 	std::ofstream logFile;
 	logFile.open("usage.csv");
 	[[maybe_unused]] int pseudoTicks = 0;
-	logFile << "Ticks,Players,Chunks,Populated,Queued,Busy,Usage (MB)" << std::endl;
+	logFile << "Ticks,Players,Chunks,Populated,Queued,Busy,Usage (MB)" << "\n";
 	while (server.IsAlive()) {
 		World *overworld = server.GetWorld(0);
 		WorldManager *wm = server.GetWorldManager(0);
 		std::string usage = GetUsedMemoryMBString();
-		std::cout << usage << std::endl;
+		std::cout << usage << "\n";
 		logFile << pseudoTicks << ",";
 		logFile << server.GetConnectedClients().size() << ",";
 		if (overworld) {
@@ -40,7 +43,7 @@ void UsageReport() {
 		} else {
 			logFile << 0 << "," << 0 << ",";
 		}
-		logFile << usage << std::endl;
+		logFile << usage << "\n";
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000 / TICK_SPEED));
 		pseudoTicks++;
 		// Respond::ChatMessage(response, usage);

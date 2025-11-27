@@ -187,7 +187,7 @@ int GeneratorLua::lua_Between(lua_State *L) {
 int GeneratorLua::lua_SpatialPRNG(lua_State *L) {
 	lua_getglobal(L, "seed"); // This sets the global 'seed' variable in Lua
 	if (!lua_isnumber(L, 1)) {
-		std::cerr << "Invalid seed value!" << std::endl;
+		std::cerr << "Invalid seed value!" << "\n";
 		return 1;
 	}
 	int64_t seed = (int64_t)lua_tonumber(L, 1);
@@ -257,7 +257,7 @@ int GeneratorLua::lua_GetNoisePerlin2D(lua_State *L) {
 	// Get the seed
 	lua_getglobal(L, "seed");
 	if (!lua_isnumber(L, 1)) {
-		std::cerr << "Invalid seed value!" << std::endl;
+		std::cerr << "Invalid seed value!" << "\n";
 		return 1;
 	}
 	int64_t seed = (int64_t)lua_tonumber(L, 1);
@@ -288,7 +288,7 @@ int GeneratorLua::lua_GetNoisePerlin3D(lua_State *L) {
 	// Get the seed
 	lua_getglobal(L, "seed");
 	if (!lua_isnumber(L, 1)) {
-		std::cerr << "Invalid seed value!" << std::endl;
+		std::cerr << "Invalid seed value!" << "\n";
 		return 1;
 	}
 	int64_t seed = (int64_t)lua_tonumber(L, 1);
@@ -319,7 +319,7 @@ int GeneratorLua::lua_GetNaturalGrass(lua_State *L) {
 	// Get the seed
 	lua_getglobal(L, "seed");
 	if (!lua_isnumber(L, 1)) {
-		std::cerr << "Invalid seed value!" << std::endl;
+		std::cerr << "Invalid seed value!" << "\n";
 		return 1;
 	}
 	int64_t seed = (int64_t)lua_tonumber(L, 1);

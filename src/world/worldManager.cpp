@@ -102,7 +102,7 @@ void WorldManager::ForceGenerateChunk(int32_t x, int32_t z) { AddChunkToQueue(x,
 void WorldManager::WorkerThread() {
 	auto &cfg = Betrock::GlobalConfig::Instance();
 	auto gen = cfg.Get("generator");
-	// std::cout << gen << std::endl;
+	// std::cout << gen << "\n";
 	std::unique_ptr<Generator> generator; // = std::make_unique<GeneratorInfdev20100327>(seed, &this->world);
 	// I wish C++ supported strings in switch statements
 	//    generator

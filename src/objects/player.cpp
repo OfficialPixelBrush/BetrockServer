@@ -24,7 +24,7 @@ void Player::Kill(std::vector<uint8_t> &response) {
 }
 
 void Player::PrintStats() {
-    std::cout << username << ": " << position << ";" << stance <<  "; " << yaw << ", " << pitch << std::endl;
+    std::cout << username << ": " << position << ";" << stance <<  "; " << yaw << ", " << pitch << "\n";
 }
 
 // Store the player data as an NBT-format file
@@ -120,7 +120,7 @@ bool Player::Load() {
     std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
     dirPath += "/players/";
     if (!std::filesystem::exists(dirPath) || !std::filesystem::is_directory(dirPath)) {
-        std::cerr << "Player Directory " << dirPath << " does not exist or is not a directory!" << std::endl;
+        std::cerr << "Player Directory " << dirPath << " does not exist or is not a directory!" << "\n";
         return false;
     }
     std::filesystem::path entryPath = dirPath / (username + ".dat");

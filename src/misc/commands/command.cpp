@@ -618,7 +618,7 @@ std::string CommandPacket::Execute([[maybe_unused]] std::vector<std::string> pCo
 		if (!(ss >> x) || x > 0xFF)
 			return "Invalid hex value"; // or handle error
 
-		std::cout << int(part) << ": " << int(x) << " - " << pCommand[part] << std::endl;
+		std::cout << int(part) << ": " << int(x) << " - " << pCommand[part] << "\n";
 		if (broadcastToAll)
 			broadcast.push_back(static_cast<uint8_t>(x));
 		else
