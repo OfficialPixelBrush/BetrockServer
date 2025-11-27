@@ -15,7 +15,7 @@ GeneratorInfdev20100227::GeneratorInfdev20100227(int64_t pSeed, World *pWorld) :
 }
 
 std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
-	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, cX, cZ);
+	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, Int2{cX, cZ});
 	int chunkStartX = cX << 4;
 	int chunkStartZ = cZ << 4;
 	int blockIndex = 0;

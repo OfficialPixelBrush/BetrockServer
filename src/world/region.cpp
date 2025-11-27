@@ -67,9 +67,9 @@ RegionFile::RegionFile(std::filesystem::path pFilePath) {
 	// std::cout << "Read Timestamps" << "\n";
 }
 
-int32_t RegionFile::GetChunkOffset(int32_t cX, int32_t cZ) { return this->offsets[cX + cZ * REGION_CHUNKS_X]; }
+int32_t RegionFile::GetChunkOffset(Int2 position) { return this->offsets[position.x + position.y * REGION_CHUNKS_X]; }
 
-std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(int32_t cX, int32_t cZ) {
+std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(Int2 position) {
 	streamMutex.lock();
 	std::lock_guard lock(streamMutex);
 	if (!regionStream.good()) {
@@ -78,25 +78,25 @@ std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(int32_t cX, int32_t cZ) {
 	}
 
 	// Put into bounds
-	cX = (cX & 31);
-	cZ = (cZ & 31);
+	position.x = (position.x & 31);
+	position.y = (position.y & 31);
 	// Check if chunk is within bounds
-	if (IsOutOfBounds(cX, cZ)) {
-		std::cout << "READ " << std::to_string(cX) << ", " << std::to_string(cZ) << " out of bounds" << "\n";
+	if (IsOutOfBounds(position)) {
+		std::cout << "READ " << position << " out of bounds" << "\n";
 		return nullptr;
 	}
 
 	// Get the chunk offset
-	int32_t offset = GetChunkOffset(cX, cZ);
+	int32_t offset = GetChunkOffset(position);
 	if (!offset) {
-		std::cout << "READ " << std::to_string(cX) << ", " << std::to_string(cZ) << " invalid offset" << "\n";
+		std::cout << "READ " << position << " invalid offset" << "\n";
 		return nullptr;
 	}
 
 	int32_t upperOffset = offset >> 8;
 	int32_t lowerOffset = offset & 0xFF;
 	if (upperOffset + lowerOffset > int32_t(freeSectors.size())) {
-		std::cout << "READ " << std::to_string(cX) << ", " << std::to_string(cZ) << " invalid sector" << "\n";
+		std::cout << "READ " << position << " invalid sector" << "\n";
 		return nullptr;
 	}
 
@@ -106,7 +106,7 @@ std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(int32_t cX, int32_t cZ) {
 	regionStream.read(reinterpret_cast<char *>(&dataLength), sizeof(dataLength));
 	dataLength = Swap32(dataLength);
 	if (dataLength > uint32_t(SECTOR_SIZE * lowerOffset)) {
-		std::cout << "READ " << std::to_string(cX) << ", " << std::to_string(cZ) << " invalid length "
+		std::cout << "READ " << position << " invalid length "
 				  << std::to_string(dataLength) << " > 4096 * " << std::to_string(lowerOffset) << "\n";
 		return nullptr;
 	}
@@ -129,11 +129,11 @@ std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(int32_t cX, int32_t cZ) {
 		return std::dynamic_pointer_cast<CompoundTag>(NbtRead(dataStream, NBT_ZLIB, -1, CHUNK_DATA_SIZE * 20));
 	}
 
-	std::cout << "READ " << std::to_string(cX) << ", " << std::to_string(cZ) << " unknown version "
+	std::cout << "READ " << position << " unknown version "
 			  << std::to_string(compressionFormat) << "\n";
 	return nullptr;
 }
 
-bool RegionFile::IsOutOfBounds(int cX, int cZ) {
-	return cX < 0 || cX >= REGION_CHUNKS_X || cZ < 0 || cZ >= REGION_CHUNKS_Z;
+bool RegionFile::IsOutOfBounds(Int2 position) {
+	return position.x < 0 || position.x >= REGION_CHUNKS_X || position.y < 0 || position.y >= REGION_CHUNKS_Z;
 }

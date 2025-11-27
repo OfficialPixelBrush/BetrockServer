@@ -700,7 +700,7 @@ void Client::DecrementHotbar(std::vector<uint8_t> &pResponse) {
 }
 
 // Check if the passed chunk position is visible to the client
-bool Client::ChunkIsVisible(Int3 pos) {
+bool Client::ChunkIsVisible(Int2 pos) {
 	return std::find(visibleChunks.begin(), visibleChunks.end(), pos) != visibleChunks.end();
 }
 

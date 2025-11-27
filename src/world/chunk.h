@@ -36,7 +36,7 @@ class Chunk {
 	std::shared_ptr<CompoundTag> GetAsNbt();
 	void ReadFromNbt(std::shared_ptr<CompoundTag> readRoot);
 
-	Chunk(World *pWorld, int32_t cX, int32_t cZ) : world(pWorld), xPos(cX), zPos(cZ) {}
+	Chunk(World *pWorld, Int2 pos) : world(pWorld), xPos(pos.x), zPos(pos.y) {}
 	int8_t GetHeightValue(uint8_t x, uint8_t z);
 	void GenerateHeightMap();
 	void PrintHeightmap();

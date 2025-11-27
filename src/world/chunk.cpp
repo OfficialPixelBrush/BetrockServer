@@ -142,7 +142,7 @@ void Chunk::UpdateSkylight_do(int x, int z) {
 }
 
 void Chunk::CheckSkylightNeighborHeight(int x, int z, int height) {
-	int worldHeight = this->world->GetHeightValue(x, z);
+	int worldHeight = this->world->GetHeightValue(Int2{x, z});
 	if (worldHeight > height) {
 		this->world->ScheduleLightingUpdate(true, Int3{x, height, z}, Int3{x, worldHeight, z});
 	} else if (worldHeight < height) {

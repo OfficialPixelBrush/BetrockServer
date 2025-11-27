@@ -20,11 +20,11 @@ class Client; // Forward declaration
 
 class QueueChunk {
   public:
-	Int3 position;
+	Int2 position;
 	std::vector<std::weak_ptr<Client>> requestedClients;
 	int generationAttempt = 0;
-	QueueChunk() : position(Int3()), requestedClients() {}
-	QueueChunk(Int3 position, const std::shared_ptr<Client> &requestClient = nullptr);
+	QueueChunk() : position(Int2()), requestedClients() {}
+	QueueChunk(Int2 position, const std::shared_ptr<Client> &requestClient = nullptr);
 	void AddClient(const std::shared_ptr<Client> &requestClient);
 };
 
@@ -40,14 +40,14 @@ class WorldManager {
 	int workerCount = 1; // Use number of CPU cores
 	std::atomic<int> busyWorkers = 0;
 	void WorkerThread();
-	std::shared_ptr<Chunk> GetChunk(int32_t cX, int32_t cZ, Generator *generator);
+	std::shared_ptr<Chunk> GetChunk(Int2 position, Generator *generator);
 
   public:
 	WorldManager(int maxThreads = -1);
 	World world;
-	void AddChunkToQueue(int32_t x, int32_t z, const std::shared_ptr<Client> &requestClient = nullptr);
+	void AddChunkToQueue(Int2 position, const std::shared_ptr<Client> &requestClient = nullptr);
 	void GenerateQueuedChunks();
-	void ForceGenerateChunk(int32_t x, int32_t z);
+	void ForceGenerateChunk(Int2 position);
 	void SetSeed(int64_t seed);
 	int64_t GetSeed();
 	void Run();

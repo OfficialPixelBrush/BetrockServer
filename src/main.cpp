@@ -96,7 +96,7 @@ int main() {
 
 	for (int x = -radius; x <= radius && server.IsAlive(); x += 16) {
 		for (int z = -radius; z <= radius && server.IsAlive(); z += 16) {
-			wm->ForceGenerateChunk(x >> 4, z >> 4);
+			wm->ForceGenerateChunk(Int2{x >> 4, z >> 4});
 			totalQueuedChunks++;
 		}
 	}

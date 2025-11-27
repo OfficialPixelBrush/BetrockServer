@@ -25,7 +25,7 @@ cmake --build . --config Debug
 ```
 
 ## Recommended VSCode Extensions
-- clangd
+- clangd (ideally clangd-22 for Doxygen comment integration)
 - CMake Tools
 - Doxygen Documentation Generator
 

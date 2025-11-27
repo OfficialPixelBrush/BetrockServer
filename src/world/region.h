@@ -23,13 +23,13 @@ class RegionFile {
 
 	RegionFile(std::filesystem::path filePath);
 	void Write();
-	std::fstream GetChunkDataStream(int32_t cX, int32_t cZ);
-	std::shared_ptr<CompoundTag> GetChunkNbt(int32_t cX, int32_t cZ);
+	std::fstream GetChunkDataStream(Int2 position);
+	std::shared_ptr<CompoundTag> GetChunkNbt(Int2 position);
 
   private:
-	bool IsOutOfBounds(int32_t cX, int32_t cZ);
-	int32_t SetChunkOffset(int32_t cX, int32_t cZ);
-	int32_t GetChunkOffset(int32_t cX, int32_t cZ);
+	bool IsOutOfBounds(Int2 position);
+	int32_t SetChunkOffset(Int2 position);
+	int32_t GetChunkOffset(Int2 position);
 };
 
 /*

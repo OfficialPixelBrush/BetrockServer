@@ -83,7 +83,7 @@ Block GeneratorLua::DecodeBlock() {
 // Then retrieve the generated Chunk data
 // This step is for ma
 std::shared_ptr<Chunk> GeneratorLua::GenerateChunk(int32_t cX, int32_t cZ) {
-	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, cX, cZ);
+	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, Int2{cX, cZ});
 
 	if (!L) {
 		return c;
@@ -358,7 +358,7 @@ int GeneratorLua::lua_CheckChunk(lua_State *L) {
 	int x = (int)lua_tonumber(L, 1);
 	int z = (int)lua_tonumber(L, 2);
 
-	lua_pushboolean(L, gen->world->ChunkExists(x, z));
+	lua_pushboolean(L, gen->world->ChunkExists(Int2{x,z}));
 	return 1;
 }
 

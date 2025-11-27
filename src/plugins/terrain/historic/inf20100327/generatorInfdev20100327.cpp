@@ -16,7 +16,7 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t pSeed, World *pWorld) :
 }
 
 std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_t cZ) {
-	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, cX, cZ);
+	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, Int2{cX, cZ});
 	rand->setSeed((long)cX * 341873128712L + (long)cZ * 132897987541L);
 	c->ClearChunk();
 
@@ -250,7 +250,7 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 		oreY = chunkZOffset + rand->nextInt(16);
 		oreX = cX + rand->nextInt(16);
 		// new WorldGenTrees();
-		int heightValue = world->GetHeightValue(oreY, oreX);
+		int heightValue = world->GetHeightValue(Int2{oreY, oreX});
 		int var7 = oreY + 2;
 		int blockY = oreX + 2;
 		int var10 = rand->nextInt(3) + 4;
