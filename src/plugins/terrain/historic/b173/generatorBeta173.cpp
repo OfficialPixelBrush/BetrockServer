@@ -459,106 +459,104 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 	long xOffset = this->rand->nextLong() / 2L * 2L + 1L;
 	long zOffset = this->rand->nextLong() / 2L * 2L + 1L;
 	this->rand->setSeed(((long(cX) * xOffset) + (long(cZ) * zOffset)) ^ this->world->seed);
-	[[maybe_unused]] int xCoordinate;
-	[[maybe_unused]] int yCoordinate;
-	[[maybe_unused]] int zCoordinate;
+	[[maybe_unused]] Int3 coord;
 
 	// Generate lakes
 	if (this->rand->nextInt(4) == 0) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_WATER_STILL)
-			.GenerateLake(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateLake(this->world, this->rand.get(), coord);
 	}
 
 	// Generate lava lakes
 	if (this->rand->nextInt(8) == 0) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(this->rand->nextInt(120) + 8);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
-		if (yCoordinate < WATER_LEVEL || this->rand->nextInt(10) == 0) {
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(this->rand->nextInt(120) + 8);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		if (coord.y < WATER_LEVEL || this->rand->nextInt(10) == 0) {
 			Beta173Feature(BLOCK_LAVA_STILL)
-				.GenerateLake(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+				.GenerateLake(this->world, this->rand.get(), coord);
 		}
 	}
 
 	for (int i = 0; i < 8; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
-		Beta173Feature().GenerateDungeon(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		Beta173Feature().GenerateDungeon(this->world, this->rand.get(), coord);
 	}
 
 	for (int i = 0; i < 10; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
-		Beta173Feature().GenerateClay(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 32);
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+		Beta173Feature().GenerateClay(this->world, this->rand.get(), coord, 32);
 	}
 
 	for (int i = 0; i < 20; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
 		Beta173Feature(BLOCK_DIRT)
-			.GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 32);
+			.GenerateMinable(this->world, this->rand.get(), coord, 32);
 	}
 
 	for (int i = 0; i < 10; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
 		Beta173Feature(BLOCK_GRAVEL)
-			.GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 32);
+			.GenerateMinable(this->world, this->rand.get(), coord, 32);
 	}
 
 	for (int i = 0; i < 20; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
 		Beta173Feature(BLOCK_ORE_COAL)
-			.GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 16);
+			.GenerateMinable(this->world, this->rand.get(), coord, 16);
 	}
 
 	for (int i = 0; i < 20; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT / 2);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT / 2);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
 		Beta173Feature(BLOCK_ORE_IRON)
-			.GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 8);
+			.GenerateMinable(this->world, this->rand.get(), coord, 8);
 	}
 
 	for (int i = 0; i < 2; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT / 4);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT / 4);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
 		Beta173Feature(BLOCK_ORE_GOLD)
-			.GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 8);
+			.GenerateMinable(this->world, this->rand.get(), coord, 8);
 	}
 
 	for (int i = 0; i < 8; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT / 8);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT / 8);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
 		Beta173Feature(BLOCK_ORE_REDSTONE_OFF)
-			.GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 7);
+			.GenerateMinable(this->world, this->rand.get(), coord, 7);
 	}
 
 	for (int i = 0; i < 1; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT / 8);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT / 8);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
 		Beta173Feature(BLOCK_ORE_DIAMOND)
-			.GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 7);
+			.GenerateMinable(this->world, this->rand.get(), coord, 7);
 	}
 
 	for (int i = 0; i < 1; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT / 8) + this->rand->nextInt(16);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X);
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT / 8) + this->rand->nextInt(16);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z);
 		Beta173Feature(BLOCK_ORE_LAPIS_LAZULI)
-			.GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 6);
+			.GenerateMinable(this->world, this->rand.get(), coord, 6);
 	}
 
 	double fraction = 0.5;
@@ -591,9 +589,9 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 	}
 
 	for (int i = 0; i < numberOfTrees; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(16) + 8;
-		zCoordinate = blockZ + this->rand->nextInt(16) + 8;
-		yCoordinate = world->GetHeightValue(xCoordinate, zCoordinate);
+		coord.x = blockX + this->rand->nextInt(16) + 8;
+		coord.z = blockZ + this->rand->nextInt(16) + 8;
+		coord.y = world->GetHeightValue(coord.x, coord.z);
 
 		enum TreeState {
 			TREE_NONE,
@@ -628,22 +626,22 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 		// Generate the appropriate tree
 		switch (ts) {
 		case TREE_SMALL:
-			Beta173Tree().Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			Beta173Tree().Generate(this->world, this->rand.get(), coord);
 			break;
 		case TREE_BIRCH:
-			Beta173Tree().Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, true);
+			Beta173Tree().Generate(this->world, this->rand.get(), coord, true);
 			break;
 		case TREE_BIG: {
 			Beta173BigTree bt;
 			bt.Configure(1.0, 1.0, 1.0);
-			bt.Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			bt.Generate(this->world, this->rand.get(), coord);
 			break;
 		}
 		case TREE_TAIGA:
-			Beta173TaigaTree().Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			Beta173TaigaTree().Generate(this->world, this->rand.get(), coord);
 			break;
 		case TREE_TAIGA_ALT:
-			Beta173TaigaAltTree().Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			Beta173TaigaAltTree().Generate(this->world, this->rand.get(), coord);
 			break;
 		default:
 			break;
@@ -667,11 +665,11 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 	}
 
 	for (int8_t i = 0; i < numberOfFlowers; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_DANDELION)
-			.GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateFlowers(this->world, this->rand.get(), coord);
 	}
 
 	int8_t amountOfTallgrass = 0;
@@ -699,11 +697,11 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 			grassMeta = 2;
 		}
 
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_TALLGRASS, grassMeta)
-			.GenerateTallgrass(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateTallgrass(this->world, this->rand.get(), coord);
 	}
 
 	int8_t numberOfDeadbushes = 0;
@@ -711,51 +709,51 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 		numberOfDeadbushes = 2;
 
 	for (int i = 0; i < numberOfDeadbushes; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_DEADBUSH)
-			.GenerateDeadbush(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateDeadbush(this->world, this->rand.get(), coord);
 	}
 
 	if (this->rand->nextInt(2) == 0) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_ROSE)
-			.GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateFlowers(this->world, this->rand.get(), coord);
 	}
 
 	if (this->rand->nextInt(4) == 0) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_MUSHROOM_BROWN)
-			.GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateFlowers(this->world, this->rand.get(), coord);
 	}
 
 	if (this->rand->nextInt(8) == 0) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_MUSHROOM_RED)
-			.GenerateFlowers(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateFlowers(this->world, this->rand.get(), coord);
 	}
 
 	for (int i = 0; i < 10; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_SUGARCANE)
-			.GenerateSugarcane(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateSugarcane(this->world, this->rand.get(), coord);
 	}
 
 	if (this->rand->nextInt(32) == 0) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_PUMPKIN)
-			.GeneratePumpkins(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GeneratePumpkins(this->world, this->rand.get(), coord);
 	}
 
 	int8_t numberOfCacti = 0;
@@ -764,27 +762,27 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
 	}
 
 	for (int i = 0; i < numberOfCacti; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(CHUNK_HEIGHT);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(CHUNK_HEIGHT);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_CACTUS)
-			.GenerateCacti(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateCacti(this->world, this->rand.get(), coord);
 	}
 
 	for (int i = 0; i < 50; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(this->rand->nextInt(120) + 8);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(this->rand->nextInt(120) + 8);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_WATER_FLOWING)
-			.GenerateLiquid(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateLiquid(this->world, this->rand.get(), coord);
 	}
 
 	for (int i = 0; i < 20; ++i) {
-		xCoordinate = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
-		yCoordinate = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(112) + 8) + 8);
-		zCoordinate = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
+		coord.x = blockX + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.y = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(112) + 8) + 8);
+		coord.z = blockZ + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		Beta173Feature(BLOCK_LAVA_FLOWING)
-			.GenerateLiquid(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
+			.GenerateLiquid(this->world, this->rand.get(), coord);
 	}
 
 	GenerateTemperature(blockX + 8, blockZ + 8, CHUNK_WIDTH_X, CHUNK_WIDTH_Z);

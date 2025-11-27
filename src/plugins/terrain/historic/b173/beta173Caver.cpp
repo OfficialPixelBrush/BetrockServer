@@ -38,7 +38,7 @@ void Beta173Caver::GenerateCaves(int cXoffset, int cZoffset, int cX, int cZ, std
 			float carveYaw = this->rand->nextFloat() * (float)M_PI * 2.0F;
 			float carvePitch = (this->rand->nextFloat() - 0.5F) * 2.0F / 8.0F;
 			float tunnelRadius = this->rand->nextFloat() * 2.0F + this->rand->nextFloat();
-			this->CarveCave(cX, cZ, c, xOffset, yOffset, zOffset, tunnelRadius, carveYaw, carvePitch, 0, 0, 1.0D);
+			this->CarveCave(cX, cZ, c, xOffset, yOffset, zOffset, tunnelRadius, carveYaw, carvePitch, 0, 0, 1.0);
 		}
 	}
 }
@@ -46,7 +46,7 @@ void Beta173Caver::GenerateCaves(int cXoffset, int cZoffset, int cX, int cZ, std
 void Beta173Caver::CarveCave(int cX, int cZ, std::shared_ptr<Chunk> &c, double xOffset, double yOffset,
 							 double zOffset) {
 	this->CarveCave(cX, cZ, c, xOffset, yOffset, zOffset, 1.0F + this->rand->nextFloat() * 6.0F, 0.0F, 0.0F, -1, -1,
-					0.5D);
+					0.5);
 }
 
 void Beta173Caver::CarveCave(int cX, int cZ, std::shared_ptr<Chunk> &c, double xOffset, double yOffset, double zOffset,
@@ -71,7 +71,7 @@ void Beta173Caver::CarveCave(int cX, int cZ, std::shared_ptr<Chunk> &c, double x
 	int var25 = rand2->nextInt(tunnelLength / 2) + tunnelLength / 4;
 
 	for (bool var26 = rand2->nextInt(6) == 0; tunnelStep < tunnelLength; ++tunnelStep) {
-		double var27 = 1.5D + (double)(MathHelper::sin((float)tunnelStep * (float)M_PI / (float)tunnelLength) *
+		double var27 = 1.5 + (double)(MathHelper::sin((float)tunnelStep * (float)M_PI / (float)tunnelLength) *
 									   tunnelRadius * 1.0F);
 		double var29 = var27 * verticalScale;
 		float var31 = MathHelper::cos(carvePitch);
@@ -93,9 +93,9 @@ void Beta173Caver::CarveCave(int cX, int cZ, std::shared_ptr<Chunk> &c, double x
 		var21 += (rand2->nextFloat() - rand2->nextFloat()) * rand2->nextFloat() * 4.0F;
 		if (!var52 && tunnelStep == var25 && tunnelRadius > 1.0F) {
 			this->CarveCave(cX, cZ, c, xOffset, yOffset, zOffset, rand2->nextFloat() * 0.5F + 0.5F,
-							carveYaw - (float)M_PI * 0.5F, carvePitch / 3.0F, tunnelStep, tunnelLength, 1.0D);
+							carveYaw - (float)M_PI * 0.5F, carvePitch / 3.0F, tunnelStep, tunnelLength, 1.0);
 			this->CarveCave(cX, cZ, c, xOffset, yOffset, zOffset, rand2->nextFloat() * 0.5F + 0.5F,
-							carveYaw + (float)M_PI * 0.5F, carvePitch / 3.0F, tunnelStep, tunnelLength, 1.0D);
+							carveYaw + (float)M_PI * 0.5F, carvePitch / 3.0F, tunnelStep, tunnelLength, 1.0);
 			return;
 		}
 
@@ -108,8 +108,8 @@ void Beta173Caver::CarveCave(int cX, int cZ, std::shared_ptr<Chunk> &c, double x
 				return;
 			}
 
-			if (xOffset >= chunkCenterX - 16.0D - var27 * 2.0D && zOffset >= chunkCenterZ - 16.0D - var27 * 2.0D &&
-				xOffset <= chunkCenterX + 16.0D + var27 * 2.0D && zOffset <= chunkCenterZ + 16.0D + var27 * 2.0D) {
+			if (xOffset >= chunkCenterX - 16.0 - var27 * 2.0 && zOffset >= chunkCenterZ - 16.0 - var27 * 2.0 &&
+				xOffset <= chunkCenterX + 16.0 + var27 * 2.0 && zOffset <= chunkCenterZ + 16.0 + var27 * 2.0) {
 				int xMin = MathHelper::floor_double(xOffset - var27) - cX * 16 - 1;
 				int xMax = MathHelper::floor_double(xOffset + var27) - cX * 16 + 1;
 				int yMin = MathHelper::floor_double(yOffset - var29) - 1;
@@ -154,16 +154,16 @@ void Beta173Caver::CarveCave(int cX, int cZ, std::shared_ptr<Chunk> &c, double x
 
 				if (!waterIsPresent) {
 					for (int blockX = xMin; blockX < xMax; ++blockX) {
-						double var57 = ((double)(blockX + cX * 16) + 0.5D - xOffset) / var27;
+						double var57 = ((double)(blockX + cX * 16) + 0.5 - xOffset) / var27;
 
 						for (int blockZ = zMin; blockZ < zMax; ++blockZ) {
-							double var44 = ((double)(blockZ + cZ * 16) + 0.5D - zOffset) / var27;
+							double var44 = ((double)(blockZ + cZ * 16) + 0.5 - zOffset) / var27;
 							int blockIndex = (blockX * CHUNK_WIDTH_Z + blockZ) * CHUNK_HEIGHT + yMax;
 							bool var47 = false;
-							if (var57 * var57 + var44 * var44 < 1.0D) {
+							if (var57 * var57 + var44 * var44 < 1.0) {
 								for (int var48 = yMax - 1; var48 >= yMin; --var48) {
-									double var49 = ((double)var48 + 0.5D - yOffset) / var29;
-									if (var49 > -0.7D && var57 * var57 + var49 * var49 + var44 * var44 < 1.0D) {
+									double var49 = ((double)var48 + 0.5 - yOffset) / var29;
+									if (var49 > -0.7 && var57 * var57 + var49 * var49 + var44 * var44 < 1.0) {
 										uint8_t blockType = c->GetBlockType(BlockIndexToPosition(blockIndex));
 										if (blockType == BLOCK_GRASS) {
 											var47 = true;

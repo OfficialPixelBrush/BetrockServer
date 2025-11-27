@@ -1,27 +1,38 @@
 #include "beta173Tree.h"
 
-bool Beta173Tree::Generate(World *world, JavaRandom *rand, int xBlock, int yBlock, int zBlock, bool birch) {
+/**
+ * @brief Attempts to generate an oak or birch tree.
+ * 
+ * @param world Pointer to the world where it'll generate
+ * @param rand Pointer to the JavaRandom that'll be utilized
+ * @param pos Position of the lowest trunk-block
+ * @param birch If the tree should be birch or oak
+ * @return true Tree successfully generated
+ * @return false Tree generation failed
+ */
+
+bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch) {
 	int treeHeight = rand->nextInt(3) + 4;
 	if (birch)
 		treeHeight++;
 	bool canPlace = true;
-	if (yBlock >= 1 && yBlock + treeHeight + 1 <= CHUNK_HEIGHT) {
+	if (pos.y >= 1 && pos.y + treeHeight + 1 <= CHUNK_HEIGHT) {
 		int yI;
 		int xI;
 		int zI;
 		int blockType;
-		for (yI = yBlock; yI <= yBlock + 1 + treeHeight; ++yI) {
+		for (yI = pos.y; yI <= pos.y + 1 + treeHeight; ++yI) {
 			int8_t width = 1;
-			if (yI == yBlock) {
+			if (yI == pos.y) {
 				width = 0;
 			}
 
-			if (yI >= yBlock + 1 + treeHeight - 2) {
+			if (yI >= pos.y + 1 + treeHeight - 2) {
 				width = 2;
 			}
 
-			for (xI = xBlock - width; xI <= xBlock + width && canPlace; ++xI) {
-				for (zI = zBlock - width; zI <= zBlock + width && canPlace; ++zI) {
+			for (xI = pos.x - width; xI <= pos.x + width && canPlace; ++xI) {
+				for (zI = pos.z - width; zI <= pos.z + width && canPlace; ++zI) {
 					if (yI >= 0 && yI < CHUNK_HEIGHT) {
 						blockType = world->GetBlockType(Int3{xI, yI, zI});
 						if (blockType != BLOCK_AIR && blockType != BLOCK_LEAVES) {
@@ -37,20 +48,20 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, int xBlock, int yBloc
 		if (!canPlace) {
 			return false;
 		}
-		yI = world->GetBlockType(Int3{xBlock, yBlock - 1, zBlock});
-		if ((yI == BLOCK_GRASS || yI == BLOCK_DIRT) && yBlock < CHUNK_HEIGHT - treeHeight - 1) {
-			world->SetBlockType(BLOCK_DIRT, Int3{xBlock, yBlock - 1, zBlock});
+		yI = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
+		if ((yI == BLOCK_GRASS || yI == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - treeHeight - 1) {
+			world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
 
 			int yIt;
-			for (yIt = yBlock - 3 + treeHeight; yIt <= yBlock + treeHeight; ++yIt) {
-				xI = yIt - (yBlock + treeHeight);
+			for (yIt = pos.y - 3 + treeHeight; yIt <= pos.y + treeHeight; ++yIt) {
+				xI = yIt - (pos.y + treeHeight);
 				zI = 1 - xI / 2;
 
-				for (blockType = xBlock - zI; blockType <= xBlock + zI; ++blockType) {
-					int zEnd = blockType - xBlock;
+				for (blockType = pos.x - zI; blockType <= pos.x + zI; ++blockType) {
+					int zEnd = blockType - pos.x;
 
-					for (int var14 = zBlock - zI; var14 <= zBlock + zI; ++var14) {
-						int yStart = var14 - zBlock;
+					for (int var14 = pos.z - zI; var14 <= pos.z + zI; ++var14) {
+						int yStart = var14 - pos.z;
 						if (((std::abs(zEnd) != zI || std::abs(yStart) != zI || (rand->nextInt(2) != 0 && xI != 0))) &&
 							!IsOpaque(world->GetBlockType(Int3{blockType, yIt, var14}))) {
 							world->PlaceBlock(Int3{blockType, yIt, var14}, BLOCK_LEAVES, birch ? 2 : 0);
@@ -60,9 +71,9 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, int xBlock, int yBloc
 			}
 
 			for (yIt = 0; yIt < treeHeight; ++yIt) {
-				xI = world->GetBlockType(Int3{xBlock, yBlock + yIt, zBlock});
+				xI = world->GetBlockType(Int3{pos.x, pos.y + yIt, pos.z});
 				if (xI == 0 || xI == BLOCK_LEAVES) {
-					world->PlaceBlock(Int3{xBlock, yBlock + yIt, zBlock}, BLOCK_LOG, birch ? 2 : 0);
+					world->PlaceBlock(Int3{pos.x, pos.y + yIt, pos.z}, BLOCK_LOG, birch ? 2 : 0);
 				}
 			}
 
@@ -85,15 +96,14 @@ void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double 
 	this->trunkShape = pTrunkShape;
 }
 
-bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom *pRand, [[maybe_unused]] int pBlockX,
-							  [[maybe_unused]] int pBlockY, [[maybe_unused]] int pBlockZ,
+bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom *pRand, [[maybe_unused]] Int3 pos,
 							  [[maybe_unused]] bool pBirch) {
 	// Waste one rand cycle to get closer to being accurate
 
 	this->world = pWorld;
 	long seed = pRand->nextLong();
 	this->rand->setSeed(seed);
-	this->basePos = Int3{pBlockX, pBlockY, pBlockZ};
+	this->basePos = pos;
 	if (this->totalHeight == 0) {
 		this->totalHeight = 5 + this->rand->nextInt(this->maximumTreeHeight);
 	}
@@ -392,25 +402,25 @@ bool Beta173BigTree::ValidPlacement() {
 	}
 }
 
-bool Beta173TaigaTree::Generate(World *world, JavaRandom *rand, int xBlock, int yBlock, int zBlock,
+bool Beta173TaigaTree::Generate(World *world, JavaRandom *rand, Int3 pos,
 								[[maybe_unused]] bool birch) {
 	int var6 = rand->nextInt(5) + 7;
 	int var7 = var6 - rand->nextInt(2) - 3;
 	int var8 = var6 - var7;
 	int var9 = 1 + rand->nextInt(var8 + 1);
 	bool var10 = true;
-	if (yBlock >= 1 && yBlock + var6 + 1 <= CHUNK_HEIGHT) {
+	if (pos.y >= 1 && pos.y + var6 + 1 <= CHUNK_HEIGHT) {
 		int var18;
-		for (int var11 = yBlock; var11 <= yBlock + 1 + var6 && var10; ++var11) {
+		for (int var11 = pos.y; var11 <= pos.y + 1 + var6 && var10; ++var11) {
 			// bool var12 = true;
-			if (var11 - yBlock < var7) {
+			if (var11 - pos.y < var7) {
 				var18 = 0;
 			} else {
 				var18 = var9;
 			}
 
-			for (int var13 = xBlock - var18; var13 <= xBlock + var18 && var10; ++var13) {
-				for (int var14 = zBlock - var18; var14 <= zBlock + var18 && var10; ++var14) {
+			for (int var13 = pos.x - var18; var13 <= pos.x + var18 && var10; ++var13) {
+				for (int var14 = pos.z - var18; var14 <= pos.z + var18 && var10; ++var14) {
 					if (var11 >= 0 && var11 < CHUNK_HEIGHT) {
 						int8_t blockType = world->GetBlockType(Int3{var13, var11, var14});
 						if (blockType != BLOCK_AIR && blockType != BLOCK_LEAVES) {
@@ -426,17 +436,17 @@ bool Beta173TaigaTree::Generate(World *world, JavaRandom *rand, int xBlock, int 
 		if (!var10) {
 			return false;
 		} else {
-			int8_t blockType = world->GetBlockType(Int3{xBlock, yBlock - 1, zBlock});
-			if ((blockType == BLOCK_GRASS || blockType == BLOCK_DIRT) && yBlock < CHUNK_HEIGHT - var6 - 1) {
-				world->SetBlockType(BLOCK_DIRT, Int3{xBlock, yBlock - 1, zBlock});
+			int8_t blockType = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
+			if ((blockType == BLOCK_GRASS || blockType == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - var6 - 1) {
+				world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
 				var18 = 0;
 
-				for (int var13 = yBlock + var6; var13 >= yBlock + var7; --var13) {
-					for (int var14 = xBlock - var18; var14 <= xBlock + var18; ++var14) {
-						int var15 = var14 - xBlock;
+				for (int var13 = pos.y + var6; var13 >= pos.y + var7; --var13) {
+					for (int var14 = pos.x - var18; var14 <= pos.x + var18; ++var14) {
+						int var15 = var14 - pos.x;
 
-						for (int var16 = zBlock - var18; var16 <= zBlock + var18; ++var16) {
-							int var17 = var16 - zBlock;
+						for (int var16 = pos.z - var18; var16 <= pos.z + var18; ++var16) {
+							int var17 = var16 - pos.z;
 							if ((std::abs(var15) != var18 || std::abs(var17) != var18 || var18 <= 0) &&
 								!IsOpaque(world->GetBlockType(Int3{var14, var13, var16}))) {
 								// Spruce leaves
@@ -445,7 +455,7 @@ bool Beta173TaigaTree::Generate(World *world, JavaRandom *rand, int xBlock, int 
 						}
 					}
 
-					if (var18 >= 1 && var13 == yBlock + var7 + 1) {
+					if (var18 >= 1 && var13 == pos.y + var7 + 1) {
 						--var18;
 					} else if (var18 < var9) {
 						++var18;
@@ -453,9 +463,9 @@ bool Beta173TaigaTree::Generate(World *world, JavaRandom *rand, int xBlock, int 
 				}
 
 				for (int var13 = 0; var13 < var6 - 1; ++var13) {
-					blockType = world->GetBlockType(Int3{xBlock, yBlock + var13, zBlock});
+					blockType = world->GetBlockType(Int3{pos.x, pos.y + var13, pos.z});
 					if (blockType == BLOCK_AIR || blockType == BLOCK_LEAVES) {
-						world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{xBlock, yBlock + var13, zBlock});
+						world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{pos.x, pos.y + var13, pos.z});
 					}
 				}
 
@@ -469,28 +479,28 @@ bool Beta173TaigaTree::Generate(World *world, JavaRandom *rand, int xBlock, int 
 	}
 }
 
-bool Beta173TaigaAltTree::Generate(World *world, JavaRandom *rand, int xBlock, int yBlock, int zBlock,
+bool Beta173TaigaAltTree::Generate(World *world, JavaRandom *rand, Int3 pos,
 								   [[maybe_unused]] bool birch) {
 	int var6 = rand->nextInt(4) + 6;
 	int var7 = 1 + rand->nextInt(2);
 	int var8 = var6 - var7;
 	int var9 = 2 + rand->nextInt(2);
 	bool var10 = true;
-	if (yBlock >= 1 && yBlock + var6 + 1 <= CHUNK_HEIGHT) {
+	if (pos.y >= 1 && pos.y + var6 + 1 <= CHUNK_HEIGHT) {
 		int var11;
 		int var13;
 		int var15;
 		int var21;
-		for (var11 = yBlock; var11 <= yBlock + 1 + var6 && var10; ++var11) {
+		for (var11 = pos.y; var11 <= pos.y + 1 + var6 && var10; ++var11) {
 			// bool var12 = true;
-			if (var11 - yBlock < var7) {
+			if (var11 - pos.y < var7) {
 				var21 = 0;
 			} else {
 				var21 = var9;
 			}
 
-			for (var13 = xBlock - var21; var13 <= xBlock + var21 && var10; ++var13) {
-				for (int var14 = zBlock - var21; var14 <= zBlock + var21 && var10; ++var14) {
+			for (var13 = pos.x - var21; var13 <= pos.x + var21 && var10; ++var13) {
+				for (int var14 = pos.z - var21; var14 <= pos.z + var21 && var10; ++var14) {
 					if (var11 >= 0 && var11 < CHUNK_HEIGHT) {
 						var15 = world->GetBlockType(Int3{var13, var11, var14});
 						if (var15 != 0 && var15 != BLOCK_LEAVES) {
@@ -506,9 +516,9 @@ bool Beta173TaigaAltTree::Generate(World *world, JavaRandom *rand, int xBlock, i
 		if (!var10) {
 			return false;
 		} else {
-			var11 = world->GetBlockType(Int3{xBlock, yBlock - 1, zBlock});
-			if ((var11 == BLOCK_GRASS || var11 == BLOCK_DIRT) && yBlock < CHUNK_HEIGHT - var6 - 1) {
-				world->SetBlockType(BLOCK_DIRT, Int3{xBlock, yBlock - 1, zBlock});
+			var11 = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
+			if ((var11 == BLOCK_GRASS || var11 == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - var6 - 1) {
+				world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
 				var21 = rand->nextInt(2);
 				var13 = 1;
 				int8_t var22 = 0;
@@ -516,13 +526,13 @@ bool Beta173TaigaAltTree::Generate(World *world, JavaRandom *rand, int xBlock, i
 				int var16;
 				int var17;
 				for (var15 = 0; var15 <= var8; ++var15) {
-					var16 = yBlock + var6 - var15;
+					var16 = pos.y + var6 - var15;
 
-					for (var17 = xBlock - var21; var17 <= xBlock + var21; ++var17) {
-						int var18 = var17 - xBlock;
+					for (var17 = pos.x - var21; var17 <= pos.x + var21; ++var17) {
+						int var18 = var17 - pos.x;
 
-						for (int var19 = zBlock - var21; var19 <= zBlock + var21; ++var19) {
-							int var20 = var19 - zBlock;
+						for (int var19 = pos.z - var21; var19 <= pos.z + var21; ++var19) {
+							int var20 = var19 - pos.z;
 							if ((std::abs(var18) != var21 || std::abs(var20) != var21 || var21 <= 0) &&
 								!IsOpaque(world->GetBlockType(Int3{var17, var16, var19}))) {
 								world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{var17, var16, var19});
@@ -545,9 +555,9 @@ bool Beta173TaigaAltTree::Generate(World *world, JavaRandom *rand, int xBlock, i
 				var15 = rand->nextInt(3);
 
 				for (var16 = 0; var16 < var6 - var15; ++var16) {
-					var17 = world->GetBlockType(Int3{xBlock, yBlock + var16, zBlock});
+					var17 = world->GetBlockType(Int3{pos.x, pos.y + var16, pos.z});
 					if (var17 == 0 || var17 == BLOCK_LEAVES) {
-						world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{xBlock, yBlock + var16, zBlock});
+						world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{pos.x, pos.y + var16, pos.z});
 					}
 				}
 

@@ -23,3 +23,13 @@ We use `-fsanitize=address` to provide us with a readable debug trace.
 ```bash
 cmake --build . --config Debug
 ```
+
+## Recommended VSCode Extensions
+- clangd
+- CMake Tools
+- Doxygen Documentation Generator
+
+## Style Guide
+- If possible, do not pass values separately. Make use of structs that combine them
+    - i.e. instead of `int posX, int posY, int posZ`, just use `Int3 pos`
+- Run `clang-format -i` over the files you changed

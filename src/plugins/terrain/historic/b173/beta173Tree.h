@@ -3,15 +3,17 @@
 #include "javaRandom.h"
 #include "world.h"
 
+/// Used for generating Oak or Birch Trees
 class Beta173Tree {
   public:
 	Beta173Tree() {};
 	virtual ~Beta173Tree() = default;
-	virtual bool Generate(World *world, JavaRandom *rand, int xBlock, int yBlock, int zBlock, bool birch = false);
+	virtual bool Generate(World *world, JavaRandom *rand, Int3 pos, bool birch = false);
 	virtual void Configure([[maybe_unused]] double treeHeight, [[maybe_unused]] double branchLength,
 						   [[maybe_unused]] double trunkShape) {};
 };
 
+/// Used for generating Big Oak Trees
 class Beta173BigTree : public Beta173Tree {
   private:
 	int8_t branchOrientation[6] = {2, 0, 0, 1, 2, 1};
@@ -47,20 +49,22 @@ class Beta173BigTree : public Beta173Tree {
   public:
 	Beta173BigTree() { this->rand = std::make_unique<JavaRandom>(); };
 	~Beta173BigTree() = default;
-	bool Generate(World *world, JavaRandom *rand, int xBlock, int yBlock, int zBlock, bool birch = false);
+	bool Generate(World *world, JavaRandom *rand, Int3 pos, bool birch = false);
 	void Configure(double treeHeight, double branchLength, double trunkShape);
 };
 
+/// Used for generating Taiga Trees
 class Beta173TaigaTree : public Beta173Tree {
   public:
 	Beta173TaigaTree() {};
 	~Beta173TaigaTree() = default;
-	bool Generate(World *world, JavaRandom *rand, int xBlock, int yBlock, int zBlock, bool birch = false);
+	bool Generate(World *world, JavaRandom *rand, Int3 pos, bool birch = false);
 };
 
+/// Used for generating Alternative Taiga Trees
 class Beta173TaigaAltTree : public Beta173Tree {
   public:
 	Beta173TaigaAltTree() {};
 	~Beta173TaigaAltTree() = default;
-	bool Generate(World *world, JavaRandom *rand, int xBlock, int yBlock, int zBlock, bool birch = false);
+	bool Generate(World *world, JavaRandom *rand, Int3 pos, bool birch = false);
 };
