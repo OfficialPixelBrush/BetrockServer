@@ -3,3 +3,6 @@ ColumnLimit: 120
 UseTab: Always
 IndentWidth: 4
 TabWidth: 4
+
+AllowAllParametersOfDeclarationOnNextLine: false
+AllowShortEnumsOnASingleLine: false

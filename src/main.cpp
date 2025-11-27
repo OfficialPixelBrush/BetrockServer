@@ -1,28 +1,27 @@
 #include <signal.h>
 
-#include "config.h"
-#include "server.h"
 #include "biomes.h"
+#include "config.h"
 #include "gamerules.h"
+#include "server.h"
 #include "sysinfo.h"
 
 // The Save interval in ticks
 // Save every 10 seconds
 #define SAVE_INTERVAL 10 * TICK_SPEED
 
-void HandleGracefulSignal(int) {
-	Betrock::Server::Instance().PrepareForShutdown();
-}
+void HandleGracefulSignal(int) { Betrock::Server::Instance().PrepareForShutdown(); }
 
 void UsageReport() {
 	// Exit out if we don't want to log usage metrics
-	if (!debugReportUsage) return;
+	if (!debugReportUsage)
+		return;
 	auto &server = Betrock::Server::Instance();
 	std::ofstream logFile;
 	logFile.open("usage.csv");
 	[[maybe_unused]] int pseudoTicks = 0;
-	logFile << "Ticks,Players,Chunks,Populated,Queued,Busy,Usage (MB)"<< std::endl;
-	while(server.IsAlive()) {
+	logFile << "Ticks,Players,Chunks,Populated,Queued,Busy,Usage (MB)" << std::endl;
+	while (server.IsAlive()) {
 		World *overworld = server.GetWorld(0);
 		WorldManager *wm = server.GetWorldManager(0);
 		std::string usage = GetUsedMemoryMBString();
@@ -42,9 +41,9 @@ void UsageReport() {
 			logFile << 0 << "," << 0 << ",";
 		}
 		logFile << usage << std::endl;
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000 / TICK_SPEED));
 		pseudoTicks++;
-		//Respond::ChatMessage(response, usage);
+		// Respond::ChatMessage(response, usage);
 	}
 	logFile.close();
 }
@@ -75,7 +74,7 @@ int main() {
 	server.ReadWhitelist();
 
 	CommandManager::Init();
-	
+
 	// Init the plugins
 	server.InitPlugins();
 
@@ -86,20 +85,20 @@ int main() {
 	int worldIndex = 0;
 	int totalQueuedChunks = 0;
 
-	//for (int worldIndex = 0; worldIndex < worldManagers.size(); ++worldIndex) {
-		logger.Info("Preparing start region for level " + std::to_string(worldIndex));
+	// for (int worldIndex = 0; worldIndex < worldManagers.size(); ++worldIndex) {
+	logger.Info("Preparing start region for level " + std::to_string(worldIndex));
 
-		WorldManager *wm = server.GetWorldManager(0);
-		World *overworld = server.GetWorld(0);
+	WorldManager *wm = server.GetWorldManager(0);
+	World *overworld = server.GetWorld(0);
 
-		for (int x = -radius; x <= radius && server.IsAlive(); x += 16) {
-			for (int z = -radius; z <= radius && server.IsAlive(); z += 16) {
-				wm->ForceGenerateChunk(x >> 4, z >> 4);
-				totalQueuedChunks++;
-			}
+	for (int x = -radius; x <= radius && server.IsAlive(); x += 16) {
+		for (int z = -radius; z <= radius && server.IsAlive(); z += 16) {
+			wm->ForceGenerateChunk(x >> 4, z >> 4);
+			totalQueuedChunks++;
 		}
+	}
 
-	while(!wm->IsQueueEmpty()) {
+	while (!wm->IsQueueEmpty()) {
 		auto now = std::chrono::steady_clock::now();
 		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTime).count();
 
@@ -118,15 +117,14 @@ int main() {
 	server.SetSpawnPoint(spawn);
 	//}
 
-	//auto spawnPoint = Int3{0,200,0};
-	//spawnPoint.y += STANCE_OFFSET;
+	// auto spawnPoint = Int3{0,200,0};
+	// spawnPoint.y += STANCE_OFFSET;
 
-	logger.Info("Done (" + std::to_string(
-		std::chrono::duration_cast<std::chrono::milliseconds>(
-			std::chrono::steady_clock::now() - startTime
-		).count()
-	) + "ms)!");
-
+	logger.Info("Done (" +
+				std::to_string(
+					std::chrono::duration_cast<std::chrono::milliseconds>(std::chrono::steady_clock::now() - startTime)
+						.count()) +
+				"ms)!");
 
 	// Create threads for sending and receiving data
 	std::thread join_thread(&Betrock::Server::ServerJoin);
@@ -138,7 +136,6 @@ int main() {
 	while (server.IsAlive()) {
 		// Server is alive
 		server.AddUpTime(1);
-
 
 		if (server.GetUpTime() - lastSave >= SAVE_INTERVAL) {
 			server.SaveAll();
@@ -157,7 +154,7 @@ int main() {
 		response.clear();
 
 		// Sleep for one tick
-		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED));
+		std::this_thread::sleep_for(std::chrono::milliseconds(1000 / TICK_SPEED));
 	}
 
 	server.Stop();

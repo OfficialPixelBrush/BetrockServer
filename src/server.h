@@ -2,16 +2,16 @@
 #include <atomic>
 #include <cstdint>
 #include <mutex>
+#include <stdexcept>
 #include <thread>
 #include <unordered_map>
 #include <vector>
-#include <stdexcept>
 
 #include "client.h"
+#include "javaMath.h"
+#include "plugins.h"
 #include "world.h"
 #include "worldManager.h"
-#include "plugins.h"
-#include "javaMath.h"
 
 #define PROTOCOL_VERSION 14
 #define TICK_SPEED 20
@@ -95,7 +95,7 @@ class Server {
 	bool IsWhitelist(std::string username);
 	bool RemoveWhitelist(std::string username);
 
-	std::vector<std::string>& GetServerVector(uint8_t type);
+	std::vector<std::string> &GetServerVector(uint8_t type);
 	std::string GetGenericFilePath(uint8_t type);
 
 	// get the world with the coresponding world_id.
@@ -139,13 +139,11 @@ class Server {
 
 		while (server.IsAlive()) {
 			// Accept connections
-			int client_fd = accept(
-				server.serverFd, 
-				reinterpret_cast<struct sockaddr *> (&address), 
-				reinterpret_cast<socklen_t *> (&addrlen)
-			);
+			int client_fd = accept(server.serverFd, reinterpret_cast<struct sockaddr *>(&address),
+								   reinterpret_cast<socklen_t *>(&addrlen));
 			if (client_fd < 0) {
-				if (!server.IsAlive()) break;
+				if (!server.IsAlive())
+					break;
 				perror("Accept failed");
 				continue;
 			}
@@ -178,7 +176,7 @@ class Server {
 		}
 	}
 
-  	private:
+  private:
 	Server() = default;
 	~Server() = default;
 

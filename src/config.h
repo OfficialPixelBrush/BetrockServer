@@ -1,7 +1,7 @@
 #pragma once
 
-#include <shared_mutex>
 #include <iostream>
+#include <shared_mutex>
 
 #include <string>
 #include <unordered_map>
@@ -29,9 +29,7 @@ class GlobalConfig {
 	// get the value at key or a the default mapped_type if key doesn't exist
 	std::string_view Get(const std::string &key) noexcept;
 
-	std::string GetAsString(const std::string& key) {
-		return std::string(this->Get(key));
-	}
+	std::string GetAsString(const std::string &key) { return std::string(this->Get(key)); }
 
 	// get the value at key as number
 	template <std::integral num_type> num_type GetAsNumber(const std::string &key) {
@@ -39,7 +37,7 @@ class GlobalConfig {
 	}
 
 	// get the value at key as boolean
-	bool GetAsBoolean(const std::string& key) {
+	bool GetAsBoolean(const std::string &key) {
 		std::string val = std::string(this->Get(key));
 		try {
 			if (val == "true" || val == "1")
