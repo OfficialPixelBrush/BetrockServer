@@ -48,12 +48,14 @@ class Player : public Entity {
         Item armor[INVENTORY_ARMOR_SIZE];
         Item crafting[INVENTORY_CRAFTING_SIZE];
 
-        Player(int &entityId, Vec3 position, int8_t dimension, std::string world, Vec3 spawnPosition, int8_t spawnDimension, std::string spawnWorld)
-            : Entity(entityId++, position, dimension, world),
-            spawnPosition(spawnPosition),
-            spawnDimension(spawnDimension),
-            spawnWorld(spawnWorld)
-        {}
+        Player(int& pEntityId, Vec3 pPosition, int8_t pDimension, std::string pWorld, Vec3 pSpawnPosition, int8_t pSpawnDimension, std::string pSpawnWorld)
+            : Entity(pEntityId, pPosition, pDimension, pWorld),
+            spawnPosition(pSpawnPosition),
+            spawnDimension(pSpawnDimension),
+            spawnWorld(pSpawnWorld)
+        {
+            ++pEntityId;
+        }
 
         Vec3 GetVelocity();
         void SetHealth(std::vector<uint8_t> &response, int8_t health);

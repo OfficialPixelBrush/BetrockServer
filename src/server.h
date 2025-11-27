@@ -139,7 +139,11 @@ class Server {
 
 		while (server.IsAlive()) {
 			// Accept connections
-			int client_fd = accept(server.serverFd, (struct sockaddr *)&address, (socklen_t *)&addrlen);
+			int client_fd = accept(
+				server.serverFd, 
+				reinterpret_cast<struct sockaddr *> (&address), 
+				reinterpret_cast<socklen_t *> (&addrlen)
+			);
 			if (client_fd < 0) {
 				if (!server.IsAlive()) break;
 				perror("Accept failed");

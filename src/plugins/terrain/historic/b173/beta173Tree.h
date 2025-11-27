@@ -19,11 +19,11 @@ class Beta173BigTree : public Beta173Tree {
         Int3 basePos = Int3{0, 0, 0};
         int totalHeight = 0;
         int height;
-        double heightFactor = 0.618D;
-        double field_753_h = 1.0D;
-        double field_752_i = 0.381D;
-        double branchLength = 1.0D;
-        double trunkShape = 1.0D;
+        double heightFactor = 0.618;
+        double field_753_h = 1.0;
+        double field_752_i = 0.381;
+        double branchLength = 1.0;
+        double trunkShape = 1.0;
         int branchDensity = 1;
         int maximumTreeHeight = 12;
         int trunkThickness = 4;

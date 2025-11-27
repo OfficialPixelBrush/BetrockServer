@@ -39,8 +39,8 @@ class Client : public std::enable_shared_from_this<Client> {
     private:
         std::string username;
         std::unique_ptr<Player> player;
-        int32_t previousOffset = 0;
-        int32_t offset = 0;
+        size_t previousOffset = 0;
+        size_t offset = 0;
         uint8_t message[PACKET_MAX] = {0};
 
         std::vector<uint8_t> response;
@@ -93,7 +93,7 @@ class Client : public std::enable_shared_from_this<Client> {
         bool HandleDisconnect();
 
         // Helpers
-        void Respawn(std::vector<uint8_t> &response);
+        void Respawn(std::vector<uint8_t> &pResponse);
 
         int8_t GetPlayerOrientation();
         void SendNewChunks();
@@ -106,33 +106,33 @@ class Client : public std::enable_shared_from_this<Client> {
         bool CheckIfNewChunksRequired();
         bool TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &damage);
         bool SpreadToSlots(int16_t item, int8_t amount, int16_t damage, int8_t preferredRange = 0);
-        void ClickedSlot(std::vector<uint8_t> &response, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage);
-        void ChangeHeldItem(std::vector<uint8_t> &response, int16_t slotId);
+        void ClickedSlot(std::vector<uint8_t> &pResponse, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage);
+        void ChangeHeldItem(std::vector<uint8_t> &pResponse, int16_t slotId);
         void ClearInventory();
         bool IsValidPlacement(int8_t type, Int3& pos);
         bool CreatePlayer();
     public:
         void SetConnectionStatus(ConnectionStatus status) { this->connectionStatus = status; }
         ConnectionStatus GetConnectionStatus() { return this->connectionStatus; }
-        void SetClientFd(int clientFd) { this->clientFd = clientFd; }
+        void SetClientFd(int pClientFd) { this->clientFd = pClientFd; }
         int &GetClientFd() { return this->clientFd; }
 
-        Client(int clientFd) : clientFd(clientFd) {}
+        Client(int pClientFd) : clientFd(pClientFd) {}
         void HandleClient();
         void DisconnectClient(std::string disconnectMessage = "", bool tellOthers = false, bool tellPlayer = true);
 
-        bool Give(std::vector<uint8_t> &response, int16_t item, int8_t amount = -1, int16_t damage = 0);
-        bool UpdateInventory(std::vector<uint8_t> &response, Int3 targetBlockPosition = Int3{0,0,0});
+        bool Give(std::vector<uint8_t> &pResponse, int16_t item, int8_t amount = -1, int16_t damage = 0);
+        bool UpdateInventory(std::vector<uint8_t> &pResponse, Int3 targetBlockPosition = Int3{0,0,0});
         int16_t GetHotbarSlot();
         Item GetHeldItem();
         bool CanDecrementHotbar();
-        void DecrementHotbar(std::vector<uint8_t> &response);
+        void DecrementHotbar(std::vector<uint8_t> &pResponse);
         std::string GetUsername() { return username; };
         void SendPlayerEntity(std::vector<uint8_t> &resp, Client* c, Player* p);
 
         Player* GetPlayer() { return this->player.get(); };
-        void Teleport(std::vector<uint8_t> &response, Vec3 position, float yaw = 0, float pitch = 0);
-        void TeleportKeepView(std::vector<uint8_t> &response, Vec3 position);
+        void Teleport(std::vector<uint8_t> &pResponse, Vec3 position, float yaw = 0, float pitch = 0);
+        void TeleportKeepView(std::vector<uint8_t> &pResponse, Vec3 position);
         void AppendResponse(std::vector<uint8_t> &addition);
         void SendResponse(bool autoclear = false);
 

@@ -4,7 +4,6 @@
 #include "blocks.h"
 #include "world.h"
 #include "tileEntity.h"
-#include "nbt.h"
 
 class World;
 
@@ -17,7 +16,7 @@ enum ChunkState : int8_t {
 class Chunk {
     private:
         int16_t heightMap[256];
-        uint8_t lowestBlockHeight;
+        uint8_t lowestBlockHeight = CHUNK_HEIGHT-1;
         World* world;
         int32_t xPos, zPos;
         std::vector<std::unique_ptr<TileEntity>> tileEntities;
@@ -36,7 +35,7 @@ class Chunk {
         std::shared_ptr<CompoundTag> GetAsNbt();
         void ReadFromNbt(std::shared_ptr<CompoundTag> readRoot);
 
-        Chunk(World* world, int32_t cX, int32_t cZ) : world(world), xPos(cX), zPos(cZ) {}
+        Chunk(World* pWorld, int32_t cX, int32_t cZ) : world(pWorld), xPos(cX), zPos(cZ) {}
         int8_t GetHeightValue(uint8_t x, uint8_t z);
         void GenerateHeightMap();
         void PrintHeightmap();

@@ -8,3 +8,4 @@
 extern int GetUsedMemory();
 extern double GetUsedMemoryMB();
 extern std::string GetUsedMemoryMBString();
+extern std::string GetDetailedMemoryMetricsMBString();

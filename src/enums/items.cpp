@@ -9,7 +9,7 @@ std::shared_ptr<Tag> NbtItem(int8_t slot, int16_t id, int8_t count, int16_t dama
 	return invSlot;
 }
 
-bool IsHoe(uint8_t id) {
+bool IsHoe(int16_t id) {
     if (
         id == ITEM_HOE_DIAMOMD ||
         id == ITEM_HOE_GOLD ||
@@ -22,7 +22,7 @@ bool IsHoe(uint8_t id) {
     return false;
 }
 
-bool CanPlace(uint8_t id) {
+bool CanPlace(int16_t id) {
     if (
         id == ITEM_SEEDS_WHEAT ||
         id == ITEM_BED ||

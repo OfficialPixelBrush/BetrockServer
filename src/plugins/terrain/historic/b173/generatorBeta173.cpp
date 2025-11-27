@@ -80,7 +80,7 @@ std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(int32_t cX, int32_t cZ) {
 
 // Replace some of the stone with Biome-appropriate blocks
 void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::shared_ptr<Chunk>& c) {
-    const double oneThirtySecond = 1.0D / 32.0D;
+    const double oneThirtySecond = 1.0 / 32.0;
     // Init noise maps
     this->sandNoise.resize(256, 0.0);
     this->gravelNoise.resize(256, 0.0);
@@ -90,20 +90,20 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::shared_ptr<Chu
     this->sandGravelNoiseGen->GenerateOctaves(
         this->sandNoise,
         (double)(cX * CHUNK_WIDTH_X), (double)(cZ * CHUNK_WIDTH_Z),
-        0.0D, 16, 16, 1,
-        oneThirtySecond, oneThirtySecond, 1.0D
+        0.0, 16, 16, 1,
+        oneThirtySecond, oneThirtySecond, 1.0
     );
     this->sandGravelNoiseGen->GenerateOctaves(
         this->gravelNoise,
-        (double)(cX * CHUNK_WIDTH_X), 109.0134D, (double)(cZ * CHUNK_WIDTH_Z),
+        (double)(cX * CHUNK_WIDTH_X), 109.0134, (double)(cZ * CHUNK_WIDTH_Z),
         16, 1, 16,
-        oneThirtySecond, 1.0D, oneThirtySecond
+        oneThirtySecond, 1.0, oneThirtySecond
     );
     this->stoneNoiseGen->GenerateOctaves(
         this->stoneNoise,
-        (double)(cX * CHUNK_WIDTH_X), (double)(cZ * CHUNK_WIDTH_Z), 0.0D,
+        (double)(cX * CHUNK_WIDTH_X), (double)(cZ * CHUNK_WIDTH_Z), 0.0,
         16, 16, 1,
-        oneThirtySecond * 2.0D, oneThirtySecond * 2.0D, oneThirtySecond * 2.0D
+        oneThirtySecond * 2.0, oneThirtySecond * 2.0, oneThirtySecond * 2.0
     );
 
     // Iterate through entire chunk
@@ -111,9 +111,9 @@ void GeneratorBeta173::ReplaceBlocksForBiome(int cX, int cZ, std::shared_ptr<Chu
         for(int z = 0; z < CHUNK_WIDTH_Z; ++z) {
             // Get values from noise maps
             Biome biome = biomeMap[x + z * 16];
-            bool sandActive = this->sandNoise[x + z * CHUNK_WIDTH_X] + this->rand->nextDouble() * 0.2D > 0.0D;
-            bool gravelActive = this->gravelNoise[x + z * CHUNK_WIDTH_X] + this->rand->nextDouble() * 0.2D > 3.0D;
-            int stoneActive = (int)(this->stoneNoise[x + z * CHUNK_WIDTH_X] / 3.0D + 3.0D + this->rand->nextDouble() * 0.25D);
+            bool sandActive = this->sandNoise[x + z * CHUNK_WIDTH_X] + this->rand->nextDouble() * 0.2 > 0.0;
+            bool gravelActive = this->gravelNoise[x + z * CHUNK_WIDTH_X] + this->rand->nextDouble() * 0.2 > 3.0;
+            int stoneActive = (int)(this->stoneNoise[x + z * CHUNK_WIDTH_X] / 3.0 + 3.0 + this->rand->nextDouble() * 0.25);
             int stoneDepth = -1;
             // Get biome-appropriate top and filler blocks
             uint8_t topBlock = GetTopBlock(biome);
@@ -198,7 +198,7 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::shared_ptr<Chunk>& c
     for(int macroX = 0; macroX < 4; ++macroX) {
         for(int macroZ = 0; macroZ < 4; ++macroZ) {
             for(int macroY = 0; macroY < 16; ++macroY) {
-                double verticalLerpStep = 0.125D;
+                double verticalLerpStep = 0.125;
 
                 // Get noise cube corners
                 double corner000 =  this->terrainNoiseField[((macroX + 0) * zMax + macroZ + 0) * yMax + macroY + 0];
@@ -212,7 +212,7 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::shared_ptr<Chunk>& c
 
                 // Interpolate the 1/4th scale noise
                 for(int subY = 0; subY < 8; ++subY) {
-                    double horizontalLerpStep = 0.25D;
+                    double horizontalLerpStep = 0.25;
                     double terrainX0 = corner000;
                     double terrainX1 = corner010;
                     double terrainStepX0 = (corner100 - corner000) * horizontalLerpStep;
@@ -234,7 +234,7 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::shared_ptr<Chunk>& c
                             double temp = this->temperature[(macroX * 4 + subX) * 16 + macroZ * 4 + subZ];
                             int yLevel = macroY * 8 + subY;
                             if(yLevel < WATER_LEVEL) {
-                                if(temp < 0.5D && yLevel >= WATER_LEVEL - 1) {
+                                if(temp < 0.5 && yLevel >= WATER_LEVEL - 1) {
                                     blockType = BLOCK_ICE;
                                 } else {
                                     blockType = BLOCK_WATER_STILL;
@@ -243,7 +243,7 @@ void GeneratorBeta173::GenerateTerrain(int cX, int cZ, std::shared_ptr<Chunk>& c
 
                             // If the terrain density falls below,
                             // replace block with stone
-                            if(terrainDensity > 0.0D) {
+                            if(terrainDensity > 0.0) {
                                 blockType = BLOCK_STONE;
                             }
                             
@@ -273,23 +273,23 @@ void GeneratorBeta173::GenerateTemperature(int bx, int bz, int xMax, int zMax) {
         this->temperature.resize(xMax * zMax, 0.0);
     }
 
-    this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, zMax, (double)0.025F, (double)0.025F, 0.25D);
-    this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, zMax, 0.25D, 0.25D, 0.5882352941176471D);
+    this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, zMax, (double)0.025F, (double)0.025F, 0.25);
+    this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, zMax, 0.25, 0.25, 0.5882352941176471);
     int index = 0;
 
     for(int x = 0; x < xMax; ++x) {
         for(int z = 0; z < zMax; ++z) {
-            double var9 = this->weirdness[index] * 1.1D + 0.5D;
-            double scale = 0.01D;
-            double max = 1.0D - scale;
-            double temp = (this->temperature[index] * 0.15D + 0.7D) * max + var9 * scale;
-            temp = 1.0D - (1.0D - temp) * (1.0D - temp);
-            if(temp < 0.0D) {
-                temp = 0.0D;
+            double var9 = this->weirdness[index] * 1.1 + 0.5;
+            double scale = 0.01;
+            double max = 1.0 - scale;
+            double temp = (this->temperature[index] * 0.15 + 0.7) * max + var9 * scale;
+            temp = 1.0 - (1.0 - temp) * (1.0 - temp);
+            if(temp < 0.0) {
+                temp = 0.0;
             }
 
-            if(temp > 1.0D) {
-                temp = 1.0D;
+            if(temp > 1.0) {
+                temp = 1.0;
             }
 
             this->temperature[index] = temp;
@@ -308,27 +308,27 @@ void GeneratorBeta173::GenerateBiomeMap(int bx, int bz, int xMax, int zMax) {
     // Get noise values
     // We found an oversight in the original code! zMax is NEVER used for getting the noise range!
     // Although this is irrelevant for all intents and purposes, as xMax always equals zMax
-    this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, xMax, 0.025D, 0.025D, 0.25D);
-    this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)bx, (double)bz, xMax, xMax, 0.05D, 0.05D, 1.0D / 3.0D);
-    this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, xMax, 0.25D, 0.25D, 0.5882352941176471D);
+    this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)bx, (double)bz, xMax, xMax, 0.025, 0.025, 0.25);
+    this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)bx, (double)bz, xMax, xMax, 0.05, 0.05, 1.0 / 3.0);
+    this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)bx, (double)bz, xMax, xMax, 0.25, 0.25, 0.5882352941176471);
     int index = 0;
 
     // Iterate over each block column
     for(int iX = 0; iX < xMax; ++iX) {
         for(int iZ = 0; iZ < zMax; ++iZ) {
-            double weird = this->weirdness[index] * 1.1D + 0.5D;
-            double scale = 0.01D;
-            double max = 1.0D - scale;
-            double temp = (this->temperature[index] * 0.15D + 0.7D) * max + weird * scale;
-            scale = 0.002D;
-            max = 1.0D - scale;
-            double humi = (this->humidity[index] * 0.15D + 0.5D) * max + weird * scale;
-            temp = 1.0D - (1.0D - temp) * (1.0D - temp);
+            double weird = this->weirdness[index] * 1.1 + 0.5;
+            double scale = 0.01;
+            double max = 1.0 - scale;
+            double temp = (this->temperature[index] * 0.15 + 0.7) * max + weird * scale;
+            scale = 0.002;
+            max = 1.0 - scale;
+            double humi = (this->humidity[index] * 0.15 + 0.5) * max + weird * scale;
+            temp = 1.0 - (1.0 - temp) * (1.0 - temp);
             // Limit values to 0.0 - 1.0
-            if(temp < 0.0D) temp = 0.0D;
-            if(humi < 0.0D) humi = 0.0D;
-            if(temp > 1.0D) temp = 1.0D;
-            if(humi > 1.0D) humi = 1.0D;
+            if(temp < 0.0) temp = 0.0;
+            if(humi < 0.0) humi = 0.0;
+            if(temp > 1.0) temp = 1.0;
+            if(humi > 1.0) humi = 1.0;
 
             // Write the temperature and humidity values back
             this->temperature[index] = temp;
@@ -344,13 +344,13 @@ void GeneratorBeta173::GenerateBiomeMap(int bx, int bz, int xMax, int zMax) {
 void GeneratorBeta173::GenerateTerrainNoise(std::vector<double>& terrainMap, int cX, int cY, int cZ, int xMax, int yMax, int zMax) {
     terrainMap.resize(xMax * yMax * zMax, 0.0);
     
-    double horiScale = 684.412D;
-    double vertScale = 684.412D;
+    double horiScale = 684.412;
+    double vertScale = 684.412;
     
     // We do this to need to generate noise as often
-    this->continentalnessNoiseGen->GenerateOctaves(this->continentalnessNoiseField, cX, cZ, xMax, zMax, 1.121D, 1.121D, 0.5D);
-    this->depthNoiseGen->GenerateOctaves(this->depthNoiseField, cX, cZ, xMax, zMax, 200.0D, 200.0D, 0.5D);
-    this->selectorNoiseGen->GenerateOctaves(this->selectorNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale / 80.0D, vertScale / 160.0D, horiScale / 80.0D);
+    this->continentalnessNoiseGen->GenerateOctaves(this->continentalnessNoiseField, cX, cZ, xMax, zMax, 1.121, 1.121, 0.5);
+    this->depthNoiseGen->GenerateOctaves(this->depthNoiseField, cX, cZ, xMax, zMax, 200.0, 200.0, 0.5);
+    this->selectorNoiseGen->GenerateOctaves(this->selectorNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale / 80.0, vertScale / 160.0, horiScale / 80.0);
     this->lowNoiseGen->GenerateOctaves(this->lowNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
     this->highNoiseGen->GenerateOctaves(this->highNoiseField, (double)cX, (double)cY, (double)cZ, xMax, yMax, zMax, horiScale, vertScale, horiScale);
     // Used to iterate 3D noise maps (low, high, selector)
@@ -368,54 +368,54 @@ void GeneratorBeta173::GenerateTerrainNoise(std::vector<double>& terrainMap, int
             // Apply biome-noise-dependent variety
             double temp = this->temperature[sampleX * CHUNK_WIDTH_X + sampleZ];
             double humi = this->humidity[sampleX * CHUNK_WIDTH_X + sampleZ] * temp;
-            humi = 1.0D - humi;
+            humi = 1.0 - humi;
             humi *= humi;
             humi *= humi;
-            humi = 1.0D - humi;
+            humi = 1.0 - humi;
             // Apply contientalness
-            double continentalness = (this->continentalnessNoiseField[xzIndex] + 256.0D) / 512.0D;
+            double continentalness = (this->continentalnessNoiseField[xzIndex] + 256.0) / 512.0;
             continentalness *= humi;
-            if(continentalness > 1.0D) continentalness = 1.0D;
+            if(continentalness > 1.0) continentalness = 1.0;
 
-            double depthNoise = this->depthNoiseField[xzIndex] / 8000.0D;
-            if(depthNoise < 0.0D) depthNoise = -depthNoise * 0.3D;
+            double depthNoise = this->depthNoiseField[xzIndex] / 8000.0;
+            if(depthNoise < 0.0) depthNoise = -depthNoise * 0.3;
 
-            depthNoise = depthNoise * 3.0D - 2.0D;
-            if(depthNoise < 0.0D) {
-                depthNoise /= 2.0D;
-                if(depthNoise < -1.0D) depthNoise = -1.0D;
+            depthNoise = depthNoise * 3.0 - 2.0;
+            if(depthNoise < 0.0) {
+                depthNoise /= 2.0;
+                if(depthNoise < -1.0) depthNoise = -1.0;
 
-                depthNoise /= 1.4D;
-                depthNoise /= 2.0D;
-                continentalness = 0.0D;
+                depthNoise /= 1.4;
+                depthNoise /= 2.0;
+                continentalness = 0.0;
             } else {
-                if(depthNoise > 1.0D) depthNoise = 1.0D;
-                depthNoise /= 8.0D;
+                if(depthNoise > 1.0) depthNoise = 1.0;
+                depthNoise /= 8.0;
             }
 
-            if(continentalness < 0.0D) {
-                continentalness = 0.0D;
+            if(continentalness < 0.0) {
+                continentalness = 0.0;
             }
 
-            continentalness += 0.5D;
-            depthNoise = depthNoise * (double)yMax / 16.0D;
-            double elevationOffset = (double)yMax / 2.0D + depthNoise * 4.0D;
+            continentalness += 0.5;
+            depthNoise = depthNoise * (double)yMax / 16.0;
+            double elevationOffset = (double)yMax / 2.0 + depthNoise * 4.0;
             ++xzIndex;
 
             for(int iY = 0; iY < yMax; ++iY) {
                 // Sample 3D noises
-                double terrainDensity = 0.0D;
-                double densityOffset = ((double)iY - elevationOffset) * 12.0D / continentalness;
-                if(densityOffset < 0.0D) {
-                    densityOffset *= 4.0D;
+                double terrainDensity = 0.0;
+                double densityOffset = ((double)iY - elevationOffset) * 12.0 / continentalness;
+                if(densityOffset < 0.0) {
+                    densityOffset *= 4.0;
                 }
 
-                double lowNoise = this->lowNoiseField[xyzIndex] / 512.0D;
-                double highNoise = this->highNoiseField[xyzIndex] / 512.0D;
-                double selectorNoise = (this->selectorNoiseField[xyzIndex] / 10.0D + 1.0D) / 2.0D;
-                if(selectorNoise < 0.0D) {
+                double lowNoise = this->lowNoiseField[xyzIndex] / 512.0;
+                double highNoise = this->highNoiseField[xyzIndex] / 512.0;
+                double selectorNoise = (this->selectorNoiseField[xyzIndex] / 10.0 + 1.0) / 2.0;
+                if(selectorNoise < 0.0) {
                     terrainDensity = lowNoise;
-                } else if(selectorNoise > 1.0D) {
+                } else if(selectorNoise > 1.0) {
                     terrainDensity = highNoise;
                 } else {
                     terrainDensity = lowNoise + (highNoise - lowNoise) * selectorNoise;
@@ -425,7 +425,7 @@ void GeneratorBeta173::GenerateTerrainNoise(std::vector<double>& terrainMap, int
                 // Reduce density towards max height
                 if(iY > yMax - 4) {
                     double heightEdgeFade = (double)((float)(iY - (yMax - 4)) / 3.0F);
-                    terrainDensity = terrainDensity * (1.0D - heightEdgeFade) + -10.0D * heightEdgeFade;
+                    terrainDensity = terrainDensity * (1.0 - heightEdgeFade) + -10.0 * heightEdgeFade;
                 }
 
                 terrainMap[xyzIndex] = terrainDensity;
@@ -545,14 +545,14 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
         Beta173Feature(BLOCK_ORE_LAPIS_LAZULI).GenerateMinable(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate, 6);
     }
 
-    double fraction = 0.5D;
+    double fraction = 0.5;
     int treeDensitySample = int(
         (
             this->treeDensityNoiseGen->GenerateOctaves(
                 double(blockX) * fraction,
                 double(blockZ) * fraction
-            ) / 8.0D + this->rand->nextDouble() * 4.0D + 4.0D
-        ) / 3.0D
+            ) / 8.0 + this->rand->nextDouble() * 4.0 + 4.0
+        ) / 3.0
     );
 
     int numberOfTrees = 0;
@@ -624,7 +624,7 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
             case TREE_BIG:
                 {
                     Beta173BigTree bt;
-                    bt.Configure(1.0D, 1.0D, 1.0D);
+                    bt.Configure(1.0, 1.0, 1.0);
                     bt.Generate(this->world, this->rand.get(), xCoordinate, yCoordinate, zCoordinate);
                     break;
                 }
@@ -780,8 +780,8 @@ bool GeneratorBeta173::PopulateChunk(int32_t cX, int32_t cZ) {
             int offsetX = x - (blockX + 8);
             int offsetZ = z - (blockZ + 8);
             int highestBlock = world->GetHighestSolidOrLiquidBlock(x, z);
-            double temp = this->temperature[offsetX * 16 + offsetZ] - (double)(highestBlock - 64) / 64.0D * 0.3D;
-            if(temp < 0.5D &&
+            double temp = this->temperature[offsetX * 16 + offsetZ] - (double)(highestBlock - 64) / 64.0 * 0.3;
+            if(temp < 0.5 &&
                 highestBlock > 0 &&
                 highestBlock < CHUNK_HEIGHT &&
                 world->GetBlockType(Int3{x, highestBlock, z}) == BLOCK_AIR &&

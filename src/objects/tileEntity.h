@@ -15,10 +15,10 @@ class TileEntity {
         Int3 position;
         std::string type;
 
-        TileEntity(Int3 position, std::string type)
+        TileEntity(Int3 pPosition, std::string pType)
         {
-            this->position = position;
-            this->type = std::move(type);
+            this->position = pPosition;
+            this->type = std::move(pType);
         }
         virtual ~TileEntity() = default;
 };
@@ -27,9 +27,9 @@ class SignTile : public TileEntity {
     public:
         std::array<std::string, 4> lines;
 
-        SignTile(Int3 position, const std::array<std::string, 4>& lines = {})
-            : TileEntity(position, TILEENTITY_SIGN), lines(lines) {}
-        void SetText(std::array<std::string, 4> lines) { this->lines = lines; }
+        SignTile(Int3 pPosition, const std::array<std::string, 4>& pLines = {})
+            : TileEntity(pPosition, TILEENTITY_SIGN), lines(pLines) {}
+        void SetText(std::array<std::string, 4> pLines) { this->lines = pLines; }
         std::array<std::string, 4> GetText() { return lines; }
 };
 
@@ -37,15 +37,15 @@ class ChestTile : public TileEntity {
     public:
         std::array<Item,INVENTORY_CHEST_SIZE> inventory;
 
-        ChestTile(Int3 position, const std::array<Item,INVENTORY_CHEST_SIZE>& inventory = {})
-            : TileEntity(position, TILEENTITY_CHEST), inventory(inventory) {}
-        void SetInventory(std::array<Item,INVENTORY_CHEST_SIZE> inventory) { this->inventory = inventory; }
+        ChestTile(Int3 pPosition, const std::array<Item,INVENTORY_CHEST_SIZE>& pInv = {})
+            : TileEntity(pPosition, TILEENTITY_CHEST), inventory(pInv) {}
+        void SetInventory(std::array<Item,INVENTORY_CHEST_SIZE> pInv) { this->inventory = pInv; }
         std::array<Item,INVENTORY_CHEST_SIZE> GetInventory() { return inventory; }
-        void SetSlot(int8_t slot, Item item) {
-            inventory[slot] = item;
+        void SetSlot(int8_t pSlot, Item pItem) {
+            inventory[size_t(pSlot)] = pItem;
         }
-        Item GetSlot(int8_t slot) { 
-            return inventory[slot];
+        Item GetSlot(int8_t pSlot) { 
+            return inventory[size_t(pSlot)];
         }
 };
 
@@ -53,8 +53,8 @@ class MobSpawnerTile : public TileEntity {
     public:
         std::string mobLabel = "";
 
-        MobSpawnerTile(Int3 position, std::string mobLabel)
-            : TileEntity(position, TILEENTITY_MOBSPAWNER), mobLabel(mobLabel) {}
-        void SetMobLabel(std::string mobLabel) { this->mobLabel = mobLabel; } 
+        MobSpawnerTile(Int3 pPosition, std::string pMobLabel)
+            : TileEntity(pPosition, TILEENTITY_MOBSPAWNER), mobLabel(pMobLabel) {}
+        void SetMobLabel(std::string pMobLabel) { this->mobLabel = pMobLabel; } 
         std::string GetMobLabel() { return this->mobLabel; }
 };

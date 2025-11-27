@@ -26,13 +26,13 @@ int GetUsedMemory() { //Note: this value is in KB!
 }
 
 // Get the number of Megabytes used by BetrockServer
-double GetUsedMemoryMB() { //Note: this value is in KB!
+double GetUsedMemoryMB(std::string text) {
     FILE* file = fopen("/proc/self/status", "r");
     int result = -1;
     char line[128];
 
     while (fgets(line, 128, file) != NULL){
-        if (strncmp(line, "VmRSS:", 6) == 0){
+        if (strncmp(line, text.c_str(), text.size()) == 0){
             result = parseLine(line);
             break;
         }
@@ -43,6 +43,16 @@ double GetUsedMemoryMB() { //Note: this value is in KB!
 
 std::string GetUsedMemoryMBString() {
     std::stringstream ss;
-    ss << std::fixed << std::setprecision(2) << GetUsedMemoryMB();
+    ss << std::fixed << std::setprecision(2) << GetUsedMemoryMB("VmRSS:");
+    return ss.str();
+}
+
+std::string GetDetailedMemoryMetricsMBString() {
+    std::stringstream ss;
+    ss << std::fixed << std::setprecision(2);
+    ss << "Total: " << GetUsedMemoryMB("VmRSS:") << "MB, ";
+    ss << "Data: " << GetUsedMemoryMB("VmData:") << "MB, ";
+    ss << "Exe: " << GetUsedMemoryMB("VmExe:" ) << "MB, ";
+    ss << "Stack: " << GetUsedMemoryMB("VmStk:" ) << "MB";
     return ss.str();
 }

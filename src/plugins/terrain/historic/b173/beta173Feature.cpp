@@ -22,26 +22,26 @@ bool Beta173Feature::GenerateLake(World* world, JavaRandom* rand, int blockX, in
     }
 
     blockY -= 4;
-    bool shapeMask[2048];
+    bool shapeMask[2048] = {};
     int blobCount = rand->nextInt(4) + 4;
 
     for(int blobIndex = 0; blobIndex < blobCount; ++blobIndex) {
-        double blobRadiusX = rand->nextDouble() * 6.0D + 3.0D;
-        double blobRadiusY = rand->nextDouble() * 4.0D + 2.0D;
-        double blobRadiusZ = rand->nextDouble() * 6.0D + 3.0D;
+        double blobRadiusX = rand->nextDouble() * 6.0 + 3.0;
+        double blobRadiusY = rand->nextDouble() * 4.0 + 2.0;
+        double blobRadiusZ = rand->nextDouble() * 6.0 + 3.0;
 
-        double blobCenterX = rand->nextDouble() * (16.0D - blobRadiusX - 2.0D) + 1.0D + blobRadiusX / 2.0D;
-        double blobCenterY = rand->nextDouble() * (8.0D - blobRadiusY - 4.0D) + 2.0D + blobRadiusY / 2.0D;
-        double blobCenterZ = rand->nextDouble() * (16.0D - blobRadiusZ - 2.0D) + 1.0D + blobRadiusZ / 2.0D;
+        double blobCenterX = rand->nextDouble() * (16.0 - blobRadiusX - 2.0) + 1.0 + blobRadiusX / 2.0;
+        double blobCenterY = rand->nextDouble() * (8.0 - blobRadiusY - 4.0) + 2.0 + blobRadiusY / 2.0;
+        double blobCenterZ = rand->nextDouble() * (16.0 - blobRadiusZ - 2.0) + 1.0 + blobRadiusZ / 2.0;
 
         for(int x = 1; x < 15; ++x) {
             for(int z = 1; z < 15; ++z) {
                 for(int y = 1; y < 7; ++y) {
-                    double dx = ((double)x - blobCenterX) / (blobRadiusX / 2.0D);
-                    double dy = ((double)y - blobCenterY) / (blobRadiusY / 2.0D);
-                    double dz = ((double)z - blobCenterZ) / (blobRadiusZ / 2.0D);
+                    double dx = ((double)x - blobCenterX) / (blobRadiusX / 2.0);
+                    double dy = ((double)y - blobCenterY) / (blobRadiusY / 2.0);
+                    double dz = ((double)z - blobCenterZ) / (blobRadiusZ / 2.0);
                     double distance = dx * dx + dy * dy + dz * dz;
-                    if(distance < 1.0D) {
+                    if(distance < 1.0) {
                         shapeMask[(x * 16 + z) * 8 + y] = true;
                     }
                 }
@@ -313,24 +313,24 @@ bool Beta173Feature::GenerateClay(World* world, JavaRandom* rand, int xBlock, in
         double xCenter = xStart  + (xEnd    - xStart ) * (double)i / (double)blobSize;
         double yCenter = yStart  + (yEnd    - yStart ) * (double)i / (double)blobSize;
         double zCenter = zStart  + (zEnd    - zStart ) * (double)i / (double)blobSize;
-        double blobScale = rand->nextDouble() * (double)blobSize / 16.0D;
-        double blobRadiusXZ = (double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale  + 1.0D;
-        double blobRadiusY = (double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale  + 1.0D;
-        int minX = int(MathHelper::floor_double(xCenter  - blobRadiusXZ  / 2.0D));
-        int maxX = int(MathHelper::floor_double(xCenter  + blobRadiusXZ  / 2.0D));
-        int minY = int(MathHelper::floor_double(yCenter  - blobRadiusY   / 2.0D));
-        int maxY = int(MathHelper::floor_double(yCenter  + blobRadiusY   / 2.0D));
-        int minZ = int(MathHelper::floor_double(zCenter  - blobRadiusXZ  / 2.0D));
-        int maxZ = int(MathHelper::floor_double(zCenter  + blobRadiusXZ  / 2.0D));
+        double blobScale = rand->nextDouble() * (double)blobSize / 16.0;
+        double blobRadiusXZ = (double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale  + 1.0;
+        double blobRadiusY = (double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale  + 1.0;
+        int minX = int(MathHelper::floor_double(xCenter  - blobRadiusXZ  / 2.0));
+        int maxX = int(MathHelper::floor_double(xCenter  + blobRadiusXZ  / 2.0));
+        int minY = int(MathHelper::floor_double(yCenter  - blobRadiusY   / 2.0));
+        int maxY = int(MathHelper::floor_double(yCenter  + blobRadiusY   / 2.0));
+        int minZ = int(MathHelper::floor_double(zCenter  - blobRadiusXZ  / 2.0));
+        int maxZ = int(MathHelper::floor_double(zCenter  + blobRadiusXZ  / 2.0));
 
         // Replace sand blocks in the relevant area
         for(int x = minX; x <= maxX; ++x) {
             for(int y = minY; y <= maxY; ++y) {
                 for(int z = minZ; z <= maxZ; ++z) {
-                    double dx = ((double)x + 0.5D - xCenter ) / (blobRadiusXZ  / 2.0D);
-                    double dy = ((double)y + 0.5D - yCenter ) / (blobRadiusY   / 2.0D);
-                    double dz = ((double)z + 0.5D - zCenter ) / (blobRadiusXZ  / 2.0D);
-                    if(dx * dx + dy * dy + dz * dz < 1.0D) {
+                    double dx = ((double)x + 0.5 - xCenter ) / (blobRadiusXZ  / 2.0);
+                    double dy = ((double)y + 0.5 - yCenter ) / (blobRadiusY   / 2.0);
+                    double dz = ((double)z + 0.5 - zCenter ) / (blobRadiusXZ  / 2.0);
+                    if(dx * dx + dy * dy + dz * dz < 1.0) {
                         int currentBlock = world->GetBlockType(Int3{x, y, z});
                         if(currentBlock == BLOCK_SAND) {
                             world->PlaceBlock(Int3{x, y, z}, BLOCK_CLAY);
@@ -361,27 +361,27 @@ bool Beta173Feature::GenerateMinable(World* world, JavaRandom* rand, int xBlock,
         double xCenter = xStart  + (xEnd    - xStart ) * (double)i / (double)blobSize;
         double yCenter = yStart + (yEnd - yStart) * (double)i / (double)blobSize;
         double zCenter = zStart + (zEnd - zStart) * (double)i / (double)blobSize;
-        double blobScale = rand->nextDouble() * (double)blobSize / 16.0D;
-        double blobRadiusXZ = (double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale + 1.0D;
-        double blobRadiusY = (double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale + 1.0D;
-        int minX = int(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0D));
-        int maxX = int(MathHelper::floor_double(yCenter - blobRadiusY / 2.0D));
-        int minY = int(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0D));
-        int maxY = int(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0D));
-        int minZ = int(MathHelper::floor_double(yCenter + blobRadiusY / 2.0D));
-        int maxZ = int(MathHelper::floor_double(zCenter + blobRadiusXZ / 2.0D));
+        double blobScale = rand->nextDouble() * (double)blobSize / 16.0;
+        double blobRadiusXZ = (double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
+        double blobRadiusY = (double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
+        int minX = int(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
+        int maxX = int(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
+        int minY = int(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));
+        int maxY = int(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
+        int minZ = int(MathHelper::floor_double(yCenter + blobRadiusY / 2.0));
+        int maxZ = int(MathHelper::floor_double(zCenter + blobRadiusXZ / 2.0));
 
         // Replace stone blocks in the relevant area
         for(int x = minX; x <= maxY; ++x) {
-            double dx = ((double)x + 0.5D - xCenter) / (blobRadiusXZ / 2.0D);
-            if(dx * dx < 1.0D) {
+            double dx = ((double)x + 0.5 - xCenter) / (blobRadiusXZ / 2.0);
+            if(dx * dx < 1.0) {
                 for(int z = maxX; z <= minZ; ++z) {
-                    double dz = ((double)z + 0.5D - yCenter) / (blobRadiusY / 2.0D);
-                    if(dx * dx + dz * dz < 1.0D) {
+                    double dz = ((double)z + 0.5 - yCenter) / (blobRadiusY / 2.0);
+                    if(dx * dx + dz * dz < 1.0) {
                         for(int y = minY; y <= maxZ; ++y) {
-                            double dy = ((double)y + 0.5D - zCenter) / (blobRadiusXZ / 2.0D);
+                            double dy = ((double)y + 0.5 - zCenter) / (blobRadiusXZ / 2.0);
                             if(
-                                dx * dx + dz * dz + dy * dy < 1.0D &&
+                                dx * dx + dz * dz + dy * dy < 1.0 &&
                                 world->GetBlockType(Int3{x, z, y}) == BLOCK_STONE
                             ) {
                                 world->SetBlockType(int8_t(this->id), Int3{x, z, y});

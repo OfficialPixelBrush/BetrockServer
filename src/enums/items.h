@@ -117,5 +117,5 @@ enum Items {
     ITEM_RECORD_CAT = 2257
 };
 
-bool IsHoe(uint8_t id);
-bool CanPlace(uint8_t id);
+bool IsHoe(int16_t id);
+bool CanPlace(int16_t id);

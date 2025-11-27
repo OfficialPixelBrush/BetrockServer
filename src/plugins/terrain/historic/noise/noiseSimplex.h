@@ -23,8 +23,8 @@ class NoiseSimplex : public NoiseGenerator {
             {0, 1, -1},
             {0, -1, -1}
         };
-        double skewing = 0.5D * (sqrt(3.0D) - 1.0D);
-        double unskewing = (3.0D - sqrt(3.0D)) / 6.0D;
+        double skewing = 0.5 * (sqrt(3.0) - 1.0);
+        double unskewing = (3.0 - sqrt(3.0)) / 6.0;
     public:
         NoiseSimplex();
         NoiseSimplex(JavaRandom* rand);
@@ -38,9 +38,9 @@ class NoiseSimplex : public NoiseGenerator {
 };
 
 inline int wrap(double grad) {
-    return grad > 0.0D ? (int)grad : (int)grad - 1;
+    return grad > 0.0 ? int(grad) : int(grad) - 1;
 }
 
 inline double dotProd(int grad[3], double x, double y) {
-    return (double)grad[0] * x + (double)grad[1] * y;
+    return double(grad[0]) * x + double(grad[1]) * y;
 }

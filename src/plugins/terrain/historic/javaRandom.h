@@ -64,7 +64,7 @@ public:
     }
 
     double nextDouble() {
-        return double(((int64_t)next(26) << 27) + next(27)) / double(1LL << 53);
+        return double((int64_t(next(26) << 27)) + next(27)) / double(1LL << 53);
     }
 
     bool nextBoolean() {

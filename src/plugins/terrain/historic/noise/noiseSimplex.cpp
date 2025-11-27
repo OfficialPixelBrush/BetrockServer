@@ -4,9 +4,9 @@ NoiseSimplex::NoiseSimplex()
     : NoiseSimplex(new JavaRandom()) {}
 
 NoiseSimplex::NoiseSimplex(JavaRandom* rand) {
-    this->xCoord = rand->nextDouble() * 256.0D;
-    this->yCoord = rand->nextDouble() * 256.0D;
-    this->zCoord = rand->nextDouble() * 256.0D;
+    this->xCoord = rand->nextDouble() * 256.0;
+    this->yCoord = rand->nextDouble() * 256.0;
+    this->zCoord = rand->nextDouble() * 256.0;
 
     for (int i = 0; i < 256; ++i) {
         this->permutations[i] = i;
@@ -53,41 +53,41 @@ void NoiseSimplex::GenerateNoise(
 
             double x0c = x0b - (double)i + unskewing;
             double y0c = y0b - (double)j + unskewing;
-            double x1c = x0b - 1.0D + 2.0D * unskewing;
-            double y1c = y0b - 1.0D + 2.0D * unskewing;
+            double x1c = x0b - 1.0 + 2.0 * unskewing;
+            double y1c = y0b - 1.0 + 2.0 * unskewing;
             int xInt = x0 & 255;
             int yInt = y0 & 255;
             int grad0 = this->permutations[xInt + this->permutations[yInt]] % 12;
             int grad1 = this->permutations[xInt + i + this->permutations[yInt + j]] % 12;
             int grad2 = this->permutations[xInt + 1 + this->permutations[yInt + 1]] % 12;
-            double term0 = 0.5D - x0b * x0b - y0b * y0b;
+            double term0 = 0.5 - x0b * x0b - y0b * y0b;
             double contrib0;
-            if(term0 < 0.0D) {
-                contrib0 = 0.0D;
+            if(term0 < 0.0) {
+                contrib0 = 0.0;
             } else {
                 term0 *= term0;
                 contrib0 = term0 * term0 * dotProd(gradients[grad0], x0b, y0b);
             }
 
-            double term1 = 0.5D - x0c * x0c - y0c * y0c;
+            double term1 = 0.5 - x0c * x0c - y0c * y0c;
             double contrib1;
-            if(term1 < 0.0D) {
-                contrib1 = 0.0D;
+            if(term1 < 0.0) {
+                contrib1 = 0.0;
             } else {
                 term1 *= term1;
                 contrib1 = term1 * term1 * dotProd(gradients[grad1], x0c, y0c);
             }
 
-            double term2 = 0.5D - x1c * x1c - y1c * y1c;
+            double term2 = 0.5 - x1c * x1c - y1c * y1c;
             double contrib2;
-            if(term2 < 0.0D) {
-                contrib2 = 0.0D;
+            if(term2 < 0.0) {
+                contrib2 = 0.0;
             } else {
                 term2 *= term2;
                 contrib2 = term2 * term2 * dotProd(gradients[grad2], x1c, y1c);
             }
 
-            noiseField[index++] += 70.0D * (contrib0 + contrib1 + contrib2) * amplitude;
+            noiseField[index++] += 70.0 * (contrib0 + contrib1 + contrib2) * amplitude;
         }
     }
 }

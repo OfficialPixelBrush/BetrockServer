@@ -19,14 +19,14 @@ inline double grad(int var0, double var1, double var3, double var5) {
 // These may be very similar, dunno if this is some Java quirk
 inline double altGrad(int var1, double var2, double var4) {
     int var6 = var1 & 15;
-    double var7 = (double)(1 - ((var6 & 8) >> 3)) * var2;
-    double var9 = var6 < 4 ? 0.0D : (var6 != 12 && var6 != 14 ? var4 : var2);
+    double var7 = double(1 - ((var6 & 8) >> 3)) * var2;
+    double var9 = var6 < 4 ? 0.0 : (var6 != 12 && var6 != 14 ? var4 : var2);
     return ((var6 & 1) == 0 ? var7 : -var7) + ((var6 & 2) == 0 ? var9 : -var9);
 }
 
 // Easing Function
 inline double fade(double value) {
-    return value * value * value * (value * (value * 6.0D - 15.0D) + 10.0D);
+    return value * value * value * (value * (value * 6.0 - 15.0) + 10.0);
 }
 
 inline int hashCode(std::string value) {
@@ -40,7 +40,7 @@ inline int hashCode(std::string value) {
 }
 
 struct MathHelper {
-    static constexpr int TABLE_SIZE = 65536;
+    static constexpr size_t TABLE_SIZE = 65536;
     static std::array<float, TABLE_SIZE> SIN_TABLE;
 
     static float sin(float x) {
@@ -83,7 +83,7 @@ struct MathHelper {
 // initialize lookup table
 inline std::array<float, MathHelper::TABLE_SIZE> MathHelper::SIN_TABLE = [] {
     std::array<float, MathHelper::TABLE_SIZE> table{};
-    for (int i = 0; i < MathHelper::TABLE_SIZE; ++i)
-        table[i] = std::sin(i * M_PI * 2.0 / MathHelper::TABLE_SIZE);
+    for (size_t i = 0; i < MathHelper::TABLE_SIZE; ++i)
+        table[i] = std::sinf(float(i) * float(M_PI) * 2.0f / MathHelper::TABLE_SIZE);
     return table;
 }();

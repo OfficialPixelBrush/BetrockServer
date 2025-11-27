@@ -1,6 +1,7 @@
 #include "client.h"
 
 #include "server.h"
+#include <cstdint>
 
 // --- Packet answers ---
 // Respond to any KeepAlive packets
@@ -75,7 +76,7 @@ bool Client::HandleLoginRequest(World* world) {
 
 	// Set the Respawn Point, Time and Player Health
 	Respond::SpawnPoint(response,spawnPoint);
-	Respond::Time(response,server.GetServerTime());
+	Respond::Time(response,int64_t(server.GetServerTime()));
 	// This is usually only done if the players health isn't full upon joining
 	if (player->health != HEALTH_MAX) {
 		Respond::UpdateHealth(response,player->health);
@@ -399,19 +400,25 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	if (!CanDecrementHotbar()) return false;
 
 	// Check if the server-side inventory item is valid
-	Item i = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
+	Item currentItem = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
 	
 	// Special handling for Slabs
 	if (
 		blockType == BLOCK_SLAB &&
-		blockMeta == i.damage &&
+		blockMeta == currentItem.damage &&
 		face == yPlus
 	) {
-		world->PlaceBlockUpdate(pos,BLOCK_DOUBLE_SLAB,i.damage);
+		world->PlaceBlockUpdate(pos,BLOCK_DOUBLE_SLAB,int8_t(currentItem.damage));
 	} else {
 		// Get the block we need to place
 		BlockToFace(pos,face);
-		Block b = GetPlacedBlock(world,pos,face,player->yaw,GetPlayerOrientation(),i.id,i.damage);
+		Block b = GetPlacedBlock(
+			world,pos,face, player->yaw, 
+			GetPlayerOrientation(), 
+			currentItem.id, 
+			currentItem.damage
+		);
+		// Check if we can place it
 		if (!IsValidPlacement(b.type, pos)) return false;
 		if (b.type == SLOT_EMPTY) return false;
 		switch(b.type) {
@@ -429,8 +436,12 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	}
 	// Immediately give back the item if we're in creative mode
 	if (player->creativeMode) {
-		Item i = GetHeldItem();
-		Respond::SetSlot(response,0,GetHotbarSlot()+9,i.id,i.amount,i.damage);
+		Respond::SetSlot(
+			response,0,GetHotbarSlot()+9,
+			currentItem.id,
+			currentItem.amount,
+			currentItem.damage
+		);
 	} else {
 		DecrementHotbar(response);
 	}
@@ -473,7 +484,7 @@ bool Client::HandleWindowClick() {
 		itemCount		= EntryToByte(message, offset);
 		itemUses		= EntryToShort(message,offset);
 	}
-	ClickedSlot(response, window,slot,(bool)rightClick,actionNumber,shift,itemId,itemCount,itemUses);
+	ClickedSlot(response, window,slot,bool(rightClick),actionNumber,shift,itemId,itemCount,itemUses);
 	return true;
 }
 
@@ -503,7 +514,7 @@ bool Client::HandleDisconnect() {
 // This is incredibly ugly, but it makes the Server show up in 1.6+ Server Lists!
 // Handle the 1.6+ Server List Packet
 void Client::HandleLegacyPing() {
-	response.push_back((uint8_t)Packet::Disconnect);
+	response.push_back(uint8_t(Packet::Disconnect));
 	int32_t maximumPlayers = Betrock::Server::Instance().GetMaximumPlayers();
 	std::vector<std::string> strings = {
 		std::to_string(PROTOCOL_VERSION),
@@ -539,7 +550,7 @@ void Client::HandleLegacyPing() {
 	for (size_t i = 0; i < strings.size(); i++) {
 		for (auto c : strings[i]) {
 			response.push_back(0x00);
-			response.push_back(c);
+			response.push_back(uint8_t(c));
 		}
 		if (i < strings.size() - 1) {
 			// Account for null characters

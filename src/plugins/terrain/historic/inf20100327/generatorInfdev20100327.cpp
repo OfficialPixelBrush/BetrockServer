@@ -46,13 +46,13 @@ std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
                 double var23 = var7[macroY + 1][3];
 
                 for(int var25 = 0; var25 < 4; ++var25) {
-                    double var26 = (double)var25 / 4.0D;
+                    double var26 = (double)var25 / 4.0;
                     double var28 = macroX0 + (var17 - macroX0) * var26;
                     double var30 = var11 + (var19 - var11) * var26;
                     double var32 = var13 + (var21 - var13) * var26;
                     double var34 = var15 + (var23 - var15) * var26;
                     for(int macroX1 = 0; macroX1 < 4; ++macroX1) {
-                        double var37 = (double)macroX1 / 4.0D;
+                        double var37 = (double)macroX1 / 4.0;
                         double var39 = var28 + (var32 - var28) * var37;
                         double var41 = var30 + (var34 - var30) * var37;                        
                         int blockIndex = ((macroX1 + (macroX << 2)) << 11) |
@@ -60,14 +60,14 @@ std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
                                         ((macroY << 2) + var25);
 
                         for(int var36 = 0; var36 < 4; ++var36) {
-                            double var45 = (double)var36 / 4.0D;
+                            double var45 = (double)var36 / 4.0;
                             double terrainDensity = var39 + (var41 - var39) * var45;
                             int blockType = BLOCK_AIR;
                             if((macroY << 2) + var25 < WATER_LEVEL) {
                                 blockType = BLOCK_WATER_STILL;
                             }
 
-                            if(terrainDensity > 0.0D) {
+                            if(terrainDensity > 0.0) {
                                 blockType = BLOCK_STONE;
                             }
 
@@ -115,54 +115,54 @@ std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(int32_t cX, int32_
 }
 
 double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, double macroX) {
-    double var7 = var3 * 4.0D - 64.0D;
-    if(var7 < 0.0D) {
-        var7 *= 3.0D;
+    double var7 = var3 * 4.0 - 64.0;
+    if(var7 < 0.0) {
+        var7 *= 3.0;
     }
 
-    double blockY = this->noiseGen3->GenerateOctaves(var1 * 684.412D / 80.0D, var3 * 684.412D / 400.0D, macroX * 684.412D / 80.0D) / 2.0D;
+    double blockY = this->noiseGen3->GenerateOctaves(var1 * 684.412 / 80.0, var3 * 684.412 / 400.0, macroX * 684.412 / 80.0) / 2.0;
     double var11;
     double var13;
-    if(blockY < -1.0D) {
-        var11 = this->noiseGen1->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, macroX * 684.412D) / 512.0D;
+    if(blockY < -1.0) {
+        var11 = this->noiseGen1->GenerateOctaves(var1 * 684.412, var3 * 984.412, macroX * 684.412) / 512.0;
         var13 = var11 - var7;
-        if(var13 < -10.0D) {
-            var13 = -10.0D;
+        if(var13 < -10.0) {
+            var13 = -10.0;
         }
 
-        if(var13 > 10.0D) {
-            var13 = 10.0D;
+        if(var13 > 10.0) {
+            var13 = 10.0;
         }
-    } else if(blockY > 1.0D) {
-        var11 = this->noiseGen2->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, macroX * 684.412D) / 512.0D;
+    } else if(blockY > 1.0) {
+        var11 = this->noiseGen2->GenerateOctaves(var1 * 684.412, var3 * 984.412, macroX * 684.412) / 512.0;
         var13 = var11 - var7;
-        if(var13 < -10.0D) {
-            var13 = -10.0D;
+        if(var13 < -10.0) {
+            var13 = -10.0;
         }
 
-        if(var13 > 10.0D) {
-            var13 = 10.0D;
+        if(var13 > 10.0) {
+            var13 = 10.0;
         }
     } else {
-        double var15 = this->noiseGen1->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, macroX * 684.412D) / 512.0D - var7;
-        double var17 = this->noiseGen2->GenerateOctaves(var1 * 684.412D, var3 * 984.412D, macroX * 684.412D) / 512.0D - var7;
-        if(var15 < -10.0D) {
-            var15 = -10.0D;
+        double var15 = this->noiseGen1->GenerateOctaves(var1 * 684.412, var3 * 984.412, macroX * 684.412) / 512.0 - var7;
+        double var17 = this->noiseGen2->GenerateOctaves(var1 * 684.412, var3 * 984.412, macroX * 684.412) / 512.0 - var7;
+        if(var15 < -10.0) {
+            var15 = -10.0;
         }
 
-        if(var15 > 10.0D) {
-            var15 = 10.0D;
+        if(var15 > 10.0) {
+            var15 = 10.0;
         }
 
-        if(var17 < -10.0D) {
-            var17 = -10.0D;
+        if(var17 < -10.0) {
+            var17 = -10.0;
         }
 
-        if(var17 > 10.0D) {
-            var17 = 10.0D;
+        if(var17 > 10.0) {
+            var17 = 10.0;
         }
 
-        double var19 = (blockY + 1.0D) / 2.0D;
+        double var19 = (blockY + 1.0) / 2.0;
         var11 = var15 + (var17 - var15) * var19;
         var13 = var11;
     }
@@ -180,20 +180,20 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World* worl
     double world7 = (double)(var4 + rand->nextInt(3) + 2);
 
     for(var3 = 0; var3 <= 16; ++var3) {
-        double rand0 = var7 + (blockY - var7) * (double)var3 / 16.0D;
-        double rand2 = world5 + (world7 - world5) * (double)var3 / 16.0D;
-        double rand4 = world1 + (world3 - world1) * (double)var3 / 16.0D;
+        double rand0 = var7 + (blockY - var7) * (double)var3 / 16.0;
+        double rand2 = world5 + (world7 - world5) * (double)var3 / 16.0;
+        double rand4 = world1 + (world3 - world1) * (double)var3 / 16.0;
         double rand6 = rand->nextDouble();
-        double rand8 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
-        double var30 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0D;
+        double rand8 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0;
+        double var30 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0;
 
-        for(var4 = (int)(rand0 - rand8 / 2.0D); var4 <= (int)(rand0 + rand8 / 2.0D); ++var4) {
-            for(macroX = (int)(rand2 - var30 / 2.0D); macroX <= (int)(rand2 + var30 / 2.0D); ++macroX) {
-                for(int var41 = (int)(rand4 - rand8 / 2.0D); var41 <= (int)(rand4 + rand8 / 2.0D); ++var41) {
-                    double var35 = ((double)var4 + 0.5D - rand0) / (rand8 / 2.0D);
-                    double var37 = ((double)macroX + 0.5D - rand2) / (var30 / 2.0D);
-                    double var39 = ((double)var41 + 0.5D - rand4) / (rand8 / 2.0D);
-                    if(var35 * var35 + var37 * var37 + var39 * var39 < 1.0D && world->GetBlockType(Int3{var4, macroX, var41}) == BLOCK_STONE) {
+        for(var4 = (int)(rand0 - rand8 / 2.0); var4 <= (int)(rand0 + rand8 / 2.0); ++var4) {
+            for(macroX = (int)(rand2 - var30 / 2.0); macroX <= (int)(rand2 + var30 / 2.0); ++macroX) {
+                for(int var41 = (int)(rand4 - rand8 / 2.0); var41 <= (int)(rand4 + rand8 / 2.0); ++var41) {
+                    double var35 = ((double)var4 + 0.5 - rand0) / (rand8 / 2.0);
+                    double var37 = ((double)macroX + 0.5 - rand2) / (var30 / 2.0);
+                    double var39 = ((double)var41 + 0.5 - rand4) / (rand8 / 2.0);
+                    if(var35 * var35 + var37 * var37 + var39 * var39 < 1.0 && world->GetBlockType(Int3{var4, macroX, var41}) == BLOCK_STONE) {
                         world->SetBlockTypeAndMeta(blockType, 0, Int3{var4, macroX, var41});
                     }
                 }
@@ -240,7 +240,7 @@ bool GeneratorInfdev20100327::PopulateChunk(int32_t cX, int32_t cZ) {
 		WorldGenMinableGenerate(BLOCK_ORE_DIAMOND, this->world, this->rand.get(), cZ, oreZ, oreY);
 	}
 
-	cZ = (int)this->mobSpawnerNoise->GenerateOctaves((double)chunkZOffset * 0.25D, (double)cX * 0.25D) << 3;
+	cZ = (int)this->mobSpawnerNoise->GenerateOctaves((double)chunkZOffset * 0.25, (double)cX * 0.25) << 3;
 
 	for(oreZ = 0; oreZ < cZ; ++oreZ) {
 		oreY = chunkZOffset + this->rand->nextInt(16);

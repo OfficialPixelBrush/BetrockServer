@@ -86,8 +86,8 @@ bool Beta173Tree::Generate(World* world, JavaRandom* rand, int xBlock, int yBloc
 }
 
 void Beta173BigTree::Configure(double treeHeight, double branchLength, double trunkShape) {
-    this->maximumTreeHeight = (int)(treeHeight * 12.0D);
-    if(treeHeight > 0.5D) {
+    this->maximumTreeHeight = (int)(treeHeight * 12.0);
+    if(treeHeight > 0.5) {
         this->trunkThickness = 5;
     }
 
@@ -130,7 +130,7 @@ void Beta173BigTree::GenerateBranchPositions() {
         this->height = this->totalHeight - 1;
     }
 
-    int var1 = (int)(1.382D + std::pow(this->trunkShape * (double)this->totalHeight / 13.0D, 2.0D));
+    int var1 = (int)(1.382 + std::pow(this->trunkShape * (double)this->totalHeight / 13.0, 2.0));
     if(var1 < 1) {
         var1 = 1;
     }
@@ -154,16 +154,17 @@ void Beta173BigTree::GenerateBranchPositions() {
                 --var3;
                 --var6;
             } else {
-                for(double var9 = 0.5D; var7 < var1; ++var7) {
-                    double var11 = this->branchLength * (double)var8 * ((double)this->rand->nextFloat() + 0.328D);
-                    double var13 = (double)this->rand->nextFloat() * 2.0D * 3.14159D;
+                for(double var9 = 0.5; var7 < var1; ++var7) {
+                    double var11 = this->branchLength * (double)var8 * ((double)this->rand->nextFloat() + 0.328);
+                    // Oh hey, look! An approximation of pi!
+                    double var13 = (double)this->rand->nextFloat() * 2.0 * 3.14159;
                     int var15 = MathHelper::floor_double(var11 * double(MathHelper::sin(var13)) + (double)this->basePos.x + var9);
                     int var16 = MathHelper::floor_double(var11 * double(MathHelper::cos(var13)) + (double)this->basePos.z + var9);
                     Int3 var17 = Int3{var15, var3, var16};
                     Int3 var18 = Int3{var15, var3 + this->trunkThickness, var16};
                     if(this->checkIfPathClear(var17, var18) == -1) {
                         Int3 var19 = Int3{this->basePos.x, this->basePos.y, this->basePos.z};
-                        double var20 = std::sqrt(std::pow((double)std::abs(this->basePos.x - var17.x), 2.0D) + std::pow((double)std::abs(this->basePos.z - var17.z), 2.0D));
+                        double var20 = std::sqrt(std::pow((double)std::abs(this->basePos.x - var17.x), 2.0) + std::pow((double)std::abs(this->basePos.z - var17.z), 2.0));
                         double var22 = var20 * this->field_752_i;
                         if((double)var17.y - var22 > (double)var5) {
                             var19.y = var5;
@@ -221,7 +222,7 @@ void Beta173BigTree::func_426_a(int var1, int var2, int var3, float var4, int8_t
 }
 
 float Beta173BigTree::func_431_a(int var1) {
-    if((double)var1 < (double)((float)this->totalHeight) * 0.3D) {
+    if((double)var1 < (double)((float)this->totalHeight) * 0.3) {
         return -1.618F;
     } else {
         float var2 = (float)this->totalHeight / 2.0F;
@@ -232,7 +233,7 @@ float Beta173BigTree::func_431_a(int var1) {
         } else if(std::abs(var3) >= var2) {
             var4 = 0.0F;
         } else {
-            var4 = (float)std::sqrt(std::pow((double)std::abs(var2), 2.0D) - std::pow((double)std::abs(var3), 2.0D));
+            var4 = (float)std::sqrt(std::pow((double)std::abs(var2), 2.0) - std::pow((double)std::abs(var3), 2.0));
         }
 
         var4 *= 0.5F;
@@ -282,9 +283,9 @@ void Beta173BigTree::drawBlockLine(Int3 var1, Int3 var2, int blockType) {
         int var15 = 0;
 
         for(int var16 = var4[var6] + var9; var15 != var16; var15 += var9) {
-            var14[var6] = MathHelper::floor_double((double)(var1[var6] + var15) + 0.5D);
-            var14[var7] = MathHelper::floor_double((double)var1[var7] + (double)var15 * var10 + 0.5D);
-            var14[var8] = MathHelper::floor_double((double)var1[var8] + (double)var15 * var12 + 0.5D);
+            var14[var6] = MathHelper::floor_double((double)(var1[var6] + var15) + 0.5);
+            var14[var7] = MathHelper::floor_double((double)var1[var7] + (double)var15 * var10 + 0.5);
+            var14[var8] = MathHelper::floor_double((double)var1[var8] + (double)var15 * var12 + 0.5);
             this->world->PlaceBlock(var14, blockType);
         }
 
@@ -304,7 +305,7 @@ void Beta173BigTree::GenerateLeafClusters() {
 }
 
 bool Beta173BigTree::canGenerateBranchAtHeight(int var1) {
-    return (double)var1 >= (double)this->totalHeight * 0.2D;
+    return (double)var1 >= (double)this->totalHeight * 0.2;
 }
 
 void Beta173BigTree::GenerateTrunk() {

@@ -54,6 +54,7 @@ void Chunk::ClearChunk() {
     std::fill(std::begin(blockType), std::end(blockType), BLOCK_AIR);
     std::fill(std::begin(blockMeta), std::end(blockMeta), 0);
     std::fill(std::begin(blockLight), std::end(blockLight), 0);
+    std::fill(std::begin(heightMap), std::end(heightMap), 0);
 }
 
 void Chunk::RelightBlock(int x, int y, int z) {
