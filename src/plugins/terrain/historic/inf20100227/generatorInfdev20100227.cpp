@@ -14,10 +14,10 @@ GeneratorInfdev20100227::GeneratorInfdev20100227(int64_t pSeed, World *pWorld) :
 	noiseGen6 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 5);
 }
 
-std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_t cZ) {
-	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, Int2{cX, cZ});
-	int chunkStartX = cX << 4;
-	int chunkStartZ = cZ << 4;
+std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(Int2 chunkPos) {
+	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, chunkPos);
+	int chunkStartX = chunkPos.x << 4;
+	int chunkStartZ = chunkPos.y << 4;
 	int blockIndex = 0;
 
 	for (int blockX = chunkStartX; blockX < chunkStartX + 16; ++blockX) {
@@ -26,9 +26,9 @@ std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_
 			int regionZ = blockZ / 1024;
 			// Generate terrain height
 			float noiseGen1Value =
-				(float)(this->noiseGen1.get()->GenerateOctaves((double)((float)blockX / 0.03125F), 0.0D,
+				(float)(this->noiseGen1.get()->GenerateOctaves((double)((float)blockX / 0.03125F), 0.0,
 															   (double)((float)blockZ / 0.03125F)) -
-						this->noiseGen2.get()->GenerateOctaves((double)((float)blockX / 0.015625F), 0.0D,
+						this->noiseGen2.get()->GenerateOctaves((double)((float)blockX / 0.015625F), 0.0,
 															   (double)((float)blockZ / 0.015625F))) /
 				512.0F / 4.0F;
 			float noiseGen5Value = (float)this->noiseGen5.get()->GenerateOctaves((double)((float)blockX / 4.0F),
@@ -40,7 +40,7 @@ std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_
 				noiseGen5Value > 0.0F
 					? (float)(this->noiseGen3.get()->GenerateOctaves((double)((float)blockX * 0.25714284F * 2.0F),
 																	 (double)((float)blockZ * 0.25714284F * 2.0F)) *
-							  (double)noiseGen6Value / 4.0D)
+							  (double)noiseGen6Value / 4.0)
 					: (float)(this->noiseGen4.get()->GenerateOctaves((double)((float)blockX * 0.25714284F),
 																	 (double)((float)blockZ * 0.25714284F)) *
 							  (double)noiseGen6Value);
@@ -110,4 +110,4 @@ std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(int32_t cX, int32_
 }
 
 // Do nothing, since population didn't exist yet
-bool GeneratorInfdev20100227::PopulateChunk([[maybe_unused]] int32_t cX, [[maybe_unused]] int32_t cZ) { return true; }
+bool GeneratorInfdev20100227::PopulateChunk([[maybe_unused]] Int2 chunkPos) { return true; }

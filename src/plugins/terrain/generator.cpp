@@ -5,8 +5,8 @@ Generator::Generator([[maybe_unused]] int64_t pSeed, [[maybe_unused]] World *pWo
 
 Generator::~Generator() {}
 
-std::shared_ptr<Chunk> Generator::GenerateChunk([[maybe_unused]] int32_t cX, [[maybe_unused]] int32_t cZ) {
+std::shared_ptr<Chunk> Generator::GenerateChunk([[maybe_unused]] Int2 chunkPos) {
 	return nullptr;
 }
 
-bool Generator::PopulateChunk([[maybe_unused]] int32_t cX, [[maybe_unused]] int32_t cZ) { return true; }
+bool Generator::PopulateChunk([[maybe_unused]] Int2 chunkPos) { return true; }

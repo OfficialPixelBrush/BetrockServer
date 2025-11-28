@@ -213,7 +213,7 @@ std::shared_ptr<Chunk> WorldManager::GetChunk(Int2 position, Generator *generato
 		return c;
 	}
 	// Everything else has failed, so generate a new chunk!
-	c = world.AddChunk(position, generator->GenerateChunk(position.x, position.y));
+	c = world.AddChunk(position, generator->GenerateChunk(position));
 
 	auto tryPopulate = [&](Int2 tryPos) -> bool {
 		std::shared_ptr<Chunk> chunk = world.GetChunk(tryPos);
@@ -224,7 +224,7 @@ std::shared_ptr<Chunk> WorldManager::GetChunk(Int2 position, Generator *generato
 		if (chunk->state == ChunkState::Populated)
 			return true;
 		// Attempt population
-		if (!generator->PopulateChunk(tryPos.x, tryPos.y))
+		if (!generator->PopulateChunk(tryPos))
 			return false;
 		// Chunk is marked as populated if this succeeds
 		chunk->state = ChunkState::Populated;
