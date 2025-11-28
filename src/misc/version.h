@@ -4,9 +4,9 @@
 #define PROJECT_VERSION_MINOR 3
 #define PROJECT_VERSION_PATCH 0
 #define PROJECT_VERSION_STRING "0.3.0"
-#define PROJECT_VERSION_FULL_STRING "0.3.0 (latest/87bcae9)"
+#define PROJECT_VERSION_FULL_STRING "0.3.0 (latest/bffb011)"
 #define PROJECT_NAME "BetrockServer"
-#define PROJECT_GIT_COMMIT "87bcae9"
+#define PROJECT_GIT_COMMIT "bffb011"
 #define PROJECT_GIT_BRANCH "latest"
 #define PROJECT_NAME_VERSION "BetrockServer 0.3.0"
-#define PROJECT_NAME_VERSION_FULL "BetrockServer 0.3.0 (latest/87bcae9)"
+#define PROJECT_NAME_VERSION_FULL "BetrockServer 0.3.0 (latest/bffb011)"

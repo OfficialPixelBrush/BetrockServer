@@ -23,14 +23,6 @@ GeneratorBeta173::GeneratorBeta173(int64_t pSeed, World *pWorld) : Generator(pSe
 	depthNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
 	treeDensityNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
 
-	// Init Biome Noise
-	auto randTemp = std::make_unique<JavaRandom>(this->seed * 9871L);
-	auto randHum = std::make_unique<JavaRandom>(this->seed * 39811L);
-	auto randWeird = std::make_unique<JavaRandom>(this->seed * 543321L);
-	temperatureNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randTemp.get(), 4);
-	humidityNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randHum.get(), 4);
-	weirdnessNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randWeird.get(), 2);
-
 	// Init Caver
 	caver = std::make_unique<Beta173Caver>();
 }
@@ -38,8 +30,7 @@ GeneratorBeta173::GeneratorBeta173(int64_t pSeed, World *pWorld) : Generator(pSe
 /**
  * @brief Generate a non-populated chunk
  * 
- * @param chunkPos.x 
- * @param chunkPos.y 
+ * @param chunkPos The x,z coordinate of the chunk
  * @return std::shared_ptr<Chunk> 
  */
 std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(Int2 chunkPos) {
@@ -51,21 +42,7 @@ std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(Int2 chunkPos) {
 
 	// Generate Biomes
 	Int2 blockPos = Int2{chunkPos.x*CHUNK_WIDTH_X, chunkPos.y * CHUNK_WIDTH_Z };
-	GenerateBiomeMap(blockPos, Int2{CHUNK_WIDTH_X, CHUNK_WIDTH_Z});
-
-	/*
-	if (chunkPos.x >= -1 && chunkPos.y >= -1 && chunkPos.x <= 1 && chunkPos.y <= 1) {
-		std::cout << "# " << chunkPos.x << ", " << chunkPos.y << "\n";
-		std::cout << "[";
-		for (size_t i = 0; i < this->temperature.size(); i++) {
-			std::cout << this->temperature[i];
-			if (i < this->temperature.size() - 1) {
-				std::cout << ", ";
-			}
-		}
-		std::cout << "]," << "\n";
-	}
-	*/
+	Beta173Biome(seed).GenerateBiomeMap(biomeMap, temperature, humidity, weirdness, blockPos, Int2{CHUNK_WIDTH_X, CHUNK_WIDTH_Z});
 
 	// Generate the Terrain, minus any caves, as just stone
 	GenerateTerrain(chunkPos, c);
@@ -90,8 +67,7 @@ std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(Int2 chunkPos) {
 /**
  * @brief Replace some of the stone with Biome-appropriate blocks
  * 
- * @param chunkPos.x 
- * @param chunkPos.y 
+ * @param chunkPos The x,z coordinate of the chunk
  * @param c The chunk that should gets its blocks replaced
  */
 void GeneratorBeta173::ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chunk> &c) {
@@ -191,8 +167,7 @@ void GeneratorBeta173::ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chun
 /**
  * @brief Generate the Terrain, minus any caves, as just stone
  * 
- * @param chunkPos.x 
- * @param chunkPos.y 
+ * @param chunkPos The x,z coordinate of the chunk
  * @param c The chunk that should get its terrain generated
  */
 void GeneratorBeta173::GenerateTerrain(Int2 chunkPos, std::shared_ptr<Chunk> &c) {
@@ -283,110 +258,11 @@ void GeneratorBeta173::GenerateTerrain(Int2 chunkPos, std::shared_ptr<Chunk> &c)
 }
 
 /**
- * @brief Generates the temperature map values
- * 
- * @param bx 
- * @param bz 
- * @param max.x 
- * @param max.z 
- */
-void GeneratorBeta173::GenerateTemperature(Int2 blockPos, Int2 max) {
-	if (this->temperature.empty() || this->temperature.size() < size_t(max.x * max.y)) {
-		this->temperature.resize(max.x * max.y, 0.0);
-	}
-
-	this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)blockPos.x, (double)blockPos.y, max.x, max.y, (double)0.025F,
-											   (double)0.025F, 0.25);
-	this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)blockPos.x, (double)blockPos.y, max.x, max.y, 0.25, 0.25,
-											 0.5882352941176471);
-	int index = 0;
-
-	for (int x = 0; x < max.x; ++x) {
-		for (int z = 0; z < max.y; ++z) {
-			double var9 = this->weirdness[index] * 1.1 + 0.5;
-			double scale = 0.01;
-			double limit = 1.0 - scale;
-			double temp = (this->temperature[index] * 0.15 + 0.7) * limit + var9 * scale;
-			temp = 1.0 - (1.0 - temp) * (1.0 - temp);
-			if (temp < 0.0) {
-				temp = 0.0;
-			}
-
-			if (temp > 1.0) {
-				temp = 1.0;
-			}
-
-			this->temperature[index] = temp;
-			++index;
-		}
-	}
-}
-
-/**
- * @brief Generate Biomes based on simplex noise and updates the temperature, humidity and weirdness maps
- * 
- * @param bx 
- * @param bz 
- * @param max.x 
- * @param max.z 
- */
-void GeneratorBeta173::GenerateBiomeMap(Int2 blockPos, Int2 max) {
-	// Init Biome map
-	if (this->biomeMap.empty() || int(this->biomeMap.size()) < max.x * max.y) {
-		this->biomeMap.resize(max.x * max.y, BIOME_NONE);
-	}
-
-	// Get noise values
-	// We found an oversight in the original code! max.z is NEVER used for getting the noise range!
-	// Although this is irrelevant for all intents and purposes, as max.x always equals max.z
-	this->temperatureNoiseGen->GenerateOctaves(this->temperature, (double)blockPos.x, (double)blockPos.y, max.x, max.x, 0.025, 0.025,
-											   0.25);
-	this->humidityNoiseGen->GenerateOctaves(this->humidity, (double)blockPos.x, (double)blockPos.y, max.x, max.x, 0.05, 0.05, 1.0 / 3.0);
-	this->weirdnessNoiseGen->GenerateOctaves(this->weirdness, (double)blockPos.x, (double)blockPos.y, max.x, max.x, 0.25, 0.25,
-											 0.5882352941176471);
-	int index = 0;
-
-	// Iterate over each block column
-	for (int iX = 0; iX < max.x; ++iX) {
-		for (int iZ = 0; iZ < max.y; ++iZ) {
-			double weird = this->weirdness[index] * 1.1 + 0.5;
-			double scale = 0.01;
-			double limit = 1.0 - scale;
-			double temp = (this->temperature[index] * 0.15 + 0.7) * limit + weird * scale;
-			scale = 0.002;
-			limit = 1.0 - scale;
-			double humi = (this->humidity[index] * 0.15 + 0.5) * limit + weird * scale;
-			temp = 1.0 - (1.0 - temp) * (1.0 - temp);
-			// Limit values to 0.0 - 1.0
-			if (temp < 0.0)
-				temp = 0.0;
-			if (humi < 0.0)
-				humi = 0.0;
-			if (temp > 1.0)
-				temp = 1.0;
-			if (humi > 1.0)
-				humi = 1.0;
-
-			// Write the temperature and humidity values back
-			this->temperature[index] = temp;
-			this->humidity[index] = humi;
-			// Get the biome from the lookup
-			this->biomeMap[index] = GetBiomeFromLookup(temp, humi);
-			index++;
-		}
-	}
-}
-
-/**
  * @brief Make terrain noise and updates the terrain map
  * 
- * @param terrainMap 
- * @param chunkPos.x 
- * @param chunkPos.y 
- * @param chunkPos.y 
- * @param max.x 
- * @param max.y 
- * @param max.z 
+ * @param terrainMap The terrain map that the scaled-down terrain values will be written to
+ * @param chunkPos The x,y,z coordinate of the sub-chunk
+ * @param max Defines the area of the terrainMap
  */
 void GeneratorBeta173::GenerateTerrainNoise(std::vector<double> &terrainMap, Int3 chunkPos, Int3 max) {
 	terrainMap.resize(max.x * max.y * max.z, 0.0);
@@ -493,9 +369,8 @@ void GeneratorBeta173::GenerateTerrainNoise(std::vector<double> &terrainMap, Int
 /**
  * @brief Probes the biome map at the specified coordinates
  * 
- * @param worldX 
- * @param worldZ 
- * @return Biome 
+ * @param worldPos The x,z coordinate of the desired block column
+ * @return The Biome at that column
  */
 Biome GeneratorBeta173::GetBiomeAt(Int2 worldPos) {
 	int localX = worldPos.x % CHUNK_WIDTH_X;
@@ -510,8 +385,7 @@ Biome GeneratorBeta173::GetBiomeAt(Int2 worldPos) {
 /**
  * @brief Populates the specified chunk with biome-specific features
  * 
- * @param chunkPos.x 
- * @param chunkPos.y 
+ * @param chunkPos The x,z coordinate of the chunk
  * @return True if population succeeded
  */
 bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
@@ -877,7 +751,7 @@ bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
 	}
 
 	// Place Snow in cold regions
-	GenerateTemperature(Int2{blockPos.x + 8, blockPos.y + 8}, Int2{CHUNK_WIDTH_X, CHUNK_WIDTH_Z});
+	Beta173Biome(seed).GenerateTemperature(temperature,weirdness,Int2{blockPos.x + 8, blockPos.y + 8}, Int2{CHUNK_WIDTH_X, CHUNK_WIDTH_Z});
 	for (int x = blockPos.x + 8; x < blockPos.x + 8 + 16; ++x) {
 		for (int z = blockPos.y + 8; z < blockPos.y + 8 + 16; ++z) {
 			int offsetX = x - (blockPos.x + 8);

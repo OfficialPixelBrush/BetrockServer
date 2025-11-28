@@ -1,6 +1,7 @@
 #include "beta173Caver.h"
 #include "beta173Feature.h"
 #include "beta173Tree.h"
+#include "beta173Biome.h"
 #include "biomes.h"
 #include "generator.h"
 
@@ -16,11 +17,6 @@ class GeneratorBeta173 : public Generator {
 	std::unique_ptr<NoiseOctaves<NoisePerlin>> continentalnessNoiseGen;
 	std::unique_ptr<NoiseOctaves<NoisePerlin>> depthNoiseGen;
 	std::unique_ptr<NoiseOctaves<NoisePerlin>> treeDensityNoiseGen;
-
-	// Simplex Noise Generators
-	std::unique_ptr<NoiseOctaves<NoiseSimplex>> temperatureNoiseGen;
-	std::unique_ptr<NoiseOctaves<NoiseSimplex>> humidityNoiseGen;
-	std::unique_ptr<NoiseOctaves<NoiseSimplex>> weirdnessNoiseGen;
 
 	// Stored noise Fields
 	std::vector<double> terrainNoiseField;
@@ -45,8 +41,6 @@ class GeneratorBeta173 : public Generator {
 
 	void GenerateTerrain(Int2 chunkPos, std::shared_ptr<Chunk> &c);
 	void GenerateTerrainNoise(std::vector<double> &terrainMap, Int3 chunkPos, Int3 max);
-	void GenerateBiomeMap(Int2 chunkPos, Int2 max);
-	void GenerateTemperature(Int2 chunkPos, Int2 max);
 	void ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chunk> &c);
 	Biome GetBiomeAt(Int2 worldPos);
 
