@@ -111,11 +111,11 @@ struct Int3 {
         return oss.str();
     }
 
-    int& operator[](int i) {
+    int32_t& operator[](int32_t i) {
         return *(&x + i);
     }
 
-    const int& operator[](int i) const {
+    const int32_t& operator[](int32_t i) const {
         return *(&x + i);
     }
 };
@@ -145,11 +145,11 @@ struct Int2 {
         return oss.str();
     }
 
-    int& operator[](int i) {
+    int32_t& operator[](int32_t i) {
         return *(&x + i);
     }
 
-    const int& operator[](int i) const {
+    const int32_t& operator[](int32_t i) const {
         return *(&x + i);
     }
 };

@@ -15,6 +15,6 @@ class GeneratorInfdev20100227 : public Generator {
   public:
 	GeneratorInfdev20100227(int64_t seed, World *world);
 	~GeneratorInfdev20100227() = default;
-	std::shared_ptr<Chunk> GenerateChunk(int32_t cX, int32_t cZ) override;
-	bool PopulateChunk(int32_t cX, int32_t cZ) override;
+	std::shared_ptr<Chunk> GenerateChunk(Int2 chunkPos) override;
+	bool PopulateChunk(Int2 chunkPos) override;
 };

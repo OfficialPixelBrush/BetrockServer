@@ -43,16 +43,16 @@ class GeneratorBeta173 : public Generator {
 	// Cave Gen
 	std::unique_ptr<Beta173Caver> caver;
 
-	void GenerateTerrain(int cX, int cZ, std::shared_ptr<Chunk> &c);
-	void GenerateTerrainNoise(std::vector<double> &terrainMap, int x, int y, int z, int xMax, int yMax, int zMax);
-	void GenerateBiomeMap(int x, int z, int xMax, int zMax);
-	void GenerateTemperature(int x, int z, int xMax, int zMax);
-	void ReplaceBlocksForBiome(int cX, int cZ, std::shared_ptr<Chunk> &c);
-	Biome GetBiomeAt(int worldX, int worldZ);
+	void GenerateTerrain(Int2 chunkPos, std::shared_ptr<Chunk> &c);
+	void GenerateTerrainNoise(std::vector<double> &terrainMap, Int3 chunkPos, Int3 max);
+	void GenerateBiomeMap(Int2 chunkPos, Int2 max);
+	void GenerateTemperature(Int2 chunkPos, Int2 max);
+	void ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chunk> &c);
+	Biome GetBiomeAt(Int2 worldPos);
 
   public:
 	GeneratorBeta173(int64_t seed, World *world);
 	~GeneratorBeta173() = default;
-	std::shared_ptr<Chunk> GenerateChunk(int32_t cX, int32_t cZ) override;
-	bool PopulateChunk(int32_t cX, int32_t cZ) override;
+	std::shared_ptr<Chunk> GenerateChunk(Int2 chunkPos) override;
+	bool PopulateChunk(Int2 chunkPos) override;
 };
