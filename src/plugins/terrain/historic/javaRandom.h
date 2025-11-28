@@ -54,7 +54,7 @@ class JavaRandom {
 
 	int64_t nextLong() { return (int64_t(next(32)) << 32) + next(32); }
 
-	double nextDouble() { return double((int64_t(next(26) << 27)) + next(27)) / double(1LL << 53); }
+	double nextDouble() { return double((int64_t(next(26)) << 27) + next(27)) / double(1LL << 53); }
 
 	bool nextBoolean() { return next(1) != 0; }
 
