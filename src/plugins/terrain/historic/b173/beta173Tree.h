@@ -31,7 +31,6 @@ class Beta173BigTree : public Beta173Tree {
 	int maximumTreeHeight = 12;
 	int trunkThickness = 4;
 	std::vector<std::array<int, 4>> branchStartEnd;
-	;
 
 	bool ValidPlacement();
 	void GenerateBranchPositions();

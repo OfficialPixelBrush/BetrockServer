@@ -158,9 +158,9 @@ void Beta173BigTree::GenerateBranchPositions() {
 					double var11 = this->branchLength * (double)var8 * ((double)this->rand->nextFloat() + 0.328);
 					// Oh hey, look! An approcheck.xmation of pi!
 					double var13 = (double)this->rand->nextFloat() * 2.0 * 3.14159;
-					int var15 = MathHelper::floor_double(var11 * double(MathHelper::sin(var13)) +
+					int var15 = MathHelper::floor_double(var11 * double(std::sin(var13)) +
 														 (double)this->basePos.x + var9);
-					int var16 = MathHelper::floor_double(var11 * double(MathHelper::cos(var13)) +
+					int var16 = MathHelper::floor_double(var11 * double(std::cos(var13)) +
 														 (double)this->basePos.z + var9);
 					Int3 var17 = Int3{var15, var3, var16};
 					Int3 var18 = Int3{var15, var3 + this->trunkThickness, var16};
