@@ -10,11 +10,11 @@ void Chunk::GenerateHeightMap() {
 			int y = CHUNK_HEIGHT - 1;
 
 			for (y = CHUNK_HEIGHT - 1; y > 0; --y) {
-				if (GetOpacity(GetBlockType(Int3{x, y - 1, z})) == 0)
+				if (GetOpacity(GetBlockType(Int3{x, y-1, z})) != 0)
 					break;
 			}
 
-			this->heightMap[z << 4 | x] = (int8_t)y;
+			this->heightMap[z << 4 | x] = int8_t(y);
 			if (y < lowestBlock) {
 				lowestBlock = y;
 			}
@@ -40,6 +40,7 @@ void Chunk::GenerateHeightMap() {
 }
 
 void Chunk::PrintHeightmap() {
+	std::cout << std::hex;
 	for (int x = 0; x < 16; ++x) {
 		std::cout << "[";
 		for (int z = 0; z < 16; ++z) {
@@ -49,6 +50,7 @@ void Chunk::PrintHeightmap() {
 		}
 		std::cout << "]," << "\n";
 	}
+	std::cout << std::dec;
 }
 
 void Chunk::ClearChunk() {

@@ -33,8 +33,8 @@ uint8_t GetOpacity(int16_t id) {
 	default:
 		if (IsOpaque(id))
 			return 255;
+		return 0;
 	}
-	return 0;
 }
 
 // Returns true for all blocks that are completely or partially transparent

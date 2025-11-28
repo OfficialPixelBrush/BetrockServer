@@ -15,7 +15,7 @@ enum ChunkState : int8_t {
 
 class Chunk {
   private:
-	int16_t heightMap[256];
+	int8_t heightMap[256];
 	uint8_t lowestBlockHeight = CHUNK_HEIGHT - 1;
 	World *world;
 	int32_t xPos, zPos;
