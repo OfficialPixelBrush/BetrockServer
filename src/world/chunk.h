@@ -9,7 +9,9 @@ class World;
 
 enum ChunkState : int8_t {
 	Invalid,
+	Generating,
 	Generated,
+	Populating,
 	Populated
 };
 

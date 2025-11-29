@@ -84,6 +84,7 @@ Block GeneratorLua::DecodeBlock() {
 // This step is for ma
 std::shared_ptr<Chunk> GeneratorLua::GenerateChunk(Int2 chunkPos) {
 	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, chunkPos);
+	c->state = ChunkState::Generating;
 
 	if (!L) {
 		return c;

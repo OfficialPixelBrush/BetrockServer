@@ -1,5 +1,6 @@
 #include "worldManager.h"
 
+#include "chunk.h"
 #include "server.h"
 
 // This creates a new QueueChunk with a pre-filled Client
@@ -224,6 +225,7 @@ std::shared_ptr<Chunk> WorldManager::GetChunk(Int2 position, Generator *generato
 		if (chunk->state == ChunkState::Populated)
 			return true;
 		// Attempt population
+		chunk->state = ChunkState::Populating;
 		if (!generator->PopulateChunk(tryPos))
 			return false;
 		// Chunk is marked as populated if this succeeds
