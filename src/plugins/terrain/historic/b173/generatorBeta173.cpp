@@ -35,6 +35,7 @@ GeneratorBeta173::GeneratorBeta173(int64_t pSeed, World *pWorld) : Generator(pSe
  */
 std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(Int2 chunkPos) {
 	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, chunkPos);
+	c->state = ChunkState::Generating;
 	this->rand->setSeed((long)chunkPos.x * 341873128712L + (long)chunkPos.y * 132897987541L);
 
 	// Allocate empty chunk

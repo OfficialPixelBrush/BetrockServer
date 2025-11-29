@@ -17,6 +17,7 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t pSeed, World *pWorld) :
 
 std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(Int2 chunkPos) {
 	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, chunkPos);
+	c->state = ChunkState::Generating;
 	rand->setSeed((long)chunkPos.x * 341873128712L + (long)chunkPos.y * 132897987541L);
 	c->ClearChunk();
 
