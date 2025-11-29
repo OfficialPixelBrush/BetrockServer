@@ -101,7 +101,7 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 
 		if (var52 || rand2->nextInt(4) != 0) {
 			double var33 = offset.x - chunkCenterX;
-			double var35 = offset.y - chunkCenterZ;
+			double var35 = offset.z - chunkCenterZ;
 			double var37 = (double)(tunnelLength - tunnelStep);
 			double var39 = (double)(tunnelRadius + 2.0F + 16.0F);
 			if (var33 * var33 + var35 * var35 - var37 * var37 > var39 * var39) {
