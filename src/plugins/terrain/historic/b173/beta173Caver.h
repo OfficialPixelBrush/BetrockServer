@@ -4,6 +4,10 @@
 #include "world.h"
 #include <memory>
 
+/**
+ * @brief Used to carve caves into the world
+ * 
+ */
 class Beta173Caver {
   private:
 	const int carveExtentLimit = 8;

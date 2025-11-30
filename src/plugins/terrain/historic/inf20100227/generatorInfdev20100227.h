@@ -1,7 +1,9 @@
 #include "generator.h"
 
-// Implements Infdev 20100227-1433 Generation very closely
-
+/**
+ * @brief A faithful reimplementation of the Infdev 20100227 world generator (with seed support)
+ * 
+ */
 class GeneratorInfdev20100227 : public Generator {
   private:
 	std::unique_ptr<JavaRandom> rand;

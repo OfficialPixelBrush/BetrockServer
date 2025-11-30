@@ -4,6 +4,10 @@
 #include <cmath>
 #include <vector>
 
+/**
+ * @brief The base Noise generator object that splits into Perlin and Simplex noise
+ * 
+ */
 class NoiseGenerator {
   private:
 	int permutations[512];

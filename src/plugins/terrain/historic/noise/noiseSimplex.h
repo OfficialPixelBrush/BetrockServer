@@ -2,6 +2,10 @@
 #pragma once
 #include "noiseGenerator.h"
 
+/**
+ * @brief A faithful reimplementation of the Beta-era simplex noise generator, often used for Biome generation
+ * 
+ */
 class NoiseSimplex : public NoiseGenerator {
   private:
 	int permutations[512];

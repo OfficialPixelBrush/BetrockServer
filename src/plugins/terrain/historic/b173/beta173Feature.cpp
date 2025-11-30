@@ -1,17 +1,33 @@
 #include "beta173Feature.h"
 
+/**
+ * @brief Create a Beta 1.7.3 Feature Object
+ * 
+ * @param pId Block-ID that's used by some of the generators
+ */
 Beta173Feature::Beta173Feature(int16_t pId) {
-	// Set the to-be-generated block
 	this->id = pId;
 }
 
+/**
+ * @brief Create a Beta 1.7.3 Feature Object
+ * 
+ * @param pId Block-ID that's used by some of the generators
+ * @param pMeta Meta value that's used by the placed block id
+ */
 Beta173Feature::Beta173Feature(int16_t pId, int8_t pMeta) {
-	// Set the to-be-generated block
 	this->id = pId;
 	this->meta = pMeta;
 }
 
-// Generate a lake
+/**
+ * @brief Generate a lake
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GenerateLake(World *world, JavaRandom *rand, Int3 pos) {
 	pos.x -= 8;
 
@@ -123,7 +139,14 @@ bool Beta173Feature::GenerateLake(World *world, JavaRandom *rand, Int3 pos) {
 	return true;
 }
 
-// Generate a dungeon
+/**
+ * @brief Generate a dungeon
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
 	int8_t dungeonHeight = 3;
 	int dungeonWidthX = rand->nextInt(2) + 2;
@@ -223,7 +246,12 @@ bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
 	return true;
 }
 
-// Generate Dungeon Chest loot
+/**
+ * @brief Generate Dungeon Chest loot
+ * 
+ * @param rand The random object that should be used for this
+ * @return The item that's returned
+ */
 Item Beta173Feature::GenerateDungeonChestLoot(JavaRandom *rand) {
 	int randValue = rand->nextInt(11);
 	switch (randValue) {
@@ -259,7 +287,12 @@ Item Beta173Feature::GenerateDungeonChestLoot(JavaRandom *rand) {
 	return Item{SLOT_EMPTY, 0, 0};
 }
 
-// Pick a random monster that should be in a mob spawner
+/**
+ * @brief Pick a random monster that should be in a mob spawner
+ * 
+ * @param rand The random object that should be used for this
+ * @return The name-id of the to be spawned monster
+ */
 std::string Beta173Feature::PickMobToSpawn(JavaRandom *rand) {
 	int mobIndex = rand->nextInt(4);
 	switch (mobIndex) {
@@ -274,7 +307,14 @@ std::string Beta173Feature::PickMobToSpawn(JavaRandom *rand) {
 	return "";
 }
 
-// Generate a clay blob
+/**
+ * @brief Generate a clay blob
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int blobSize) {
 	// Clay can only generate around water
 	int8_t blockType = world->GetBlockType(pos);
@@ -329,7 +369,14 @@ bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int 
 	return true;
 }
 
-// Generate a blob of ore or other material
+/**
+ * @brief Generate a blob of ore or other material
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, int blobSize) {
 	// Get angle of clay blob
 	float angle = rand->nextFloat() * (float)M_PI;
@@ -381,6 +428,14 @@ bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, i
 	return true;
 }
 
+/**
+ * @brief Used to generate flowers and mushrooms
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GenerateFlowers(World *world, JavaRandom *rand, Int3 pos) {
 	for (int i = 0; i < CHUNK_HEIGHT / 2; ++i) {
 		int offsetX = pos.x + rand->nextInt(8) - rand->nextInt(8);
@@ -395,6 +450,14 @@ bool Beta173Feature::GenerateFlowers(World *world, JavaRandom *rand, Int3 pos) {
 	return true;
 }
 
+/**
+ * @brief Generate tallgrass and ferns
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GenerateTallgrass(World *world, JavaRandom *rand, Int3 pos) {
 	while (true) {
 		int blockType = world->GetBlockType(Int3{pos.x, pos.y, pos.z});
@@ -416,6 +479,14 @@ bool Beta173Feature::GenerateTallgrass(World *world, JavaRandom *rand, Int3 pos)
 	}
 }
 
+/**
+ * @brief Generate deadbushes
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GenerateDeadbush(World *world, JavaRandom *rand, Int3 pos) {
 	while (true) {
 		int blockType = world->GetBlockType(Int3{pos.x, pos.y, pos.z});
@@ -437,6 +508,14 @@ bool Beta173Feature::GenerateDeadbush(World *world, JavaRandom *rand, Int3 pos) 
 	}
 }
 
+/**
+ * @brief Generate sugarcane
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GenerateSugarcane(World *world, JavaRandom *rand, Int3 pos) {
 	for (int i = 0; i < 20; ++i) {
 		int xOffset = pos.x + rand->nextInt(4) - rand->nextInt(4);
@@ -463,6 +542,14 @@ bool Beta173Feature::GenerateSugarcane(World *world, JavaRandom *rand, Int3 pos)
 	return true;
 }
 
+/**
+ * @brief Generate pumpkins
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GeneratePumpkins(World *world, JavaRandom *rand, Int3 pos) {
 	for (int i = 0; i < 64; ++i) {
 		int xOffset = pos.x + rand->nextInt(8) - rand->nextInt(8);
@@ -477,6 +564,14 @@ bool Beta173Feature::GeneratePumpkins(World *world, JavaRandom *rand, Int3 pos) 
 	return true;
 }
 
+/**
+ * @brief Generate cacti
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GenerateCacti(World *world, JavaRandom *rand, Int3 pos) {
 	for (int i = 0; i < 10; ++i) {
 		int xOffset = pos.x + rand->nextInt(8) - rand->nextInt(8);
@@ -496,6 +591,14 @@ bool Beta173Feature::GenerateCacti(World *world, JavaRandom *rand, Int3 pos) {
 	return true;
 }
 
+/**
+ * @brief Generate single-block liquid sources
+ * 
+ * @param world World in which the feature will attempt to generate
+ * @param rand The random object for this feature
+ * @param pos Initial position of the feature
+ * @return If generation succeeded 
+ */
 bool Beta173Feature::GenerateLiquid(World *world, [[maybe_unused]] JavaRandom *rand, Int3 pos) {
 	if (world->GetBlockType(Int3{pos.x, pos.y + 1, pos.z}) != BLOCK_STONE) {
 		return false;
@@ -505,6 +608,7 @@ bool Beta173Feature::GenerateLiquid(World *world, [[maybe_unused]] JavaRandom *r
 			   world->GetBlockType(Int3{pos.x, pos.y, pos.z}) != BLOCK_STONE) {
 		return false;
 	} else {
+		// Check for surrounding stone along non-vertical directions
 		int surroundingStone = 0;
 		if (world->GetBlockType(Int3{pos.x - 1, pos.y, pos.z}) == BLOCK_STONE)
 			++surroundingStone;
@@ -515,6 +619,7 @@ bool Beta173Feature::GenerateLiquid(World *world, [[maybe_unused]] JavaRandom *r
 		if (world->GetBlockType(Int3{pos.x, pos.y, pos.z + 1}) == BLOCK_STONE)
 			++surroundingStone;
 
+		// Check for surrounding air along non-vertical directions
 		int surroundingAir = 0;
 		if (world->GetBlockType(Int3{pos.x - 1, pos.y, pos.z}) == BLOCK_AIR)
 			++surroundingAir;
@@ -525,6 +630,7 @@ bool Beta173Feature::GenerateLiquid(World *world, [[maybe_unused]] JavaRandom *r
 		if (world->GetBlockType(Int3{pos.x, pos.y, pos.z + 1}) == BLOCK_AIR)
 			++surroundingAir;
 
+		// If there's exactly 3 stone and 1 air, place the liquid block
 		if (surroundingStone == 3 && surroundingAir == 1) {
 			world->SetBlockType(this->id, Int3{pos.x, pos.y, pos.z});
 			// var1.scheduledUpdatesAreImmediate = true;

@@ -91,6 +91,10 @@ void Server::AddWorldManager(int8_t worldId, int maxThreads) {
 	}
 }
 
+/**
+ * @brief Save all currently connected players and chunks
+ * 
+ */
 void Server::SaveAll() {
 	// Betrock::Logger::Instance().Info("Saving...");
 	for (auto c : GetConnectedClients()) {
@@ -104,6 +108,10 @@ void Server::SaveAll() {
 	// Betrock::Logger::Instance().Info("Saved");
 }
 
+/**
+ * @brief Free all out-of-view chunks
+ * 
+ */
 void Server::FreeAll() {
 	Betrock::Logger::Instance().Info("Freeing Chunks");
 	for (const auto &[key, wm] : worldManagers) {
@@ -114,6 +122,10 @@ void Server::FreeAll() {
 
 void Server::PrepareForShutdown() { this->alive = false; }
 
+/**
+ * @brief Close all connections and save if the server is no longer alive
+ * 
+ */
 void Server::Stop() noexcept {
 	if (!this->alive) {
 		// Save all active worlds
@@ -128,6 +140,10 @@ void Server::Stop() noexcept {
 	}
 }
 
+/**
+ * @brief Read/Write the server.properties file
+ * 
+ */
 void Server::LoadConfig() {
 	int64_t seed = 0;
 
@@ -174,6 +190,10 @@ void Server::LoadConfig() {
 	GlobalConfig::Instance().SaveToDisk();
 }
 
+/**
+ * @brief Initialize all the plugins in the plugins folder
+ * 
+ */
 void Server::InitPlugins() {
 	// Go through /scripts/plugins folder
 	// Load plugin file and let it sit in it's own lua VM

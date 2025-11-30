@@ -5,6 +5,10 @@
 #include "biomes.h"
 #include "generator.h"
 
+/**
+ * @brief A faithful reimplementation of the Beta 1.7.3 world generator
+ * 
+ */
 class GeneratorBeta173 : public Generator {
   private:
 	std::unique_ptr<JavaRandom> rand;

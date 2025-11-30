@@ -15,6 +15,10 @@ enum ChunkState : int8_t {
 	Populated
 };
 
+/**
+ * @brief Responsible for reading, writing and holding onto its block data
+ * 
+ */
 class Chunk {
   private:
 	int8_t heightMap[256];
@@ -33,8 +37,8 @@ class Chunk {
 	int8_t blockLightArray[(CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT)];
 
   public:
-	int8_t state = ChunkState::Invalid;
-	bool modified = false;
+	std::atomic<int8_t> state = ChunkState::Invalid;
+	std::atomic<bool> modified = false;
 	std::shared_ptr<CompoundTag> GetAsNbt();
 	void ReadFromNbt(std::shared_ptr<CompoundTag> readRoot);
 

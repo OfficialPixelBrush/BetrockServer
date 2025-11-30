@@ -3,6 +3,11 @@
 #include "javaRandom.h"
 #include "world.h"
 
+/**
+ * @brief Beta 1.7.3 Feature Generators
+ * This class wraps up all the features that Beta 1.7.3 can generate
+ * into a single class for ease of access.
+ */
 class Beta173Feature {
   private:
 	int16_t id = BLOCK_AIR;

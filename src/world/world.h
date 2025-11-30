@@ -31,6 +31,10 @@ struct LightUpdate {
 };
 typedef struct LightUpdate LightUpdate;
 
+/**
+ * @brief Responsible for saving, loading and holding onto chunks
+ * 
+ */
 class World {
   private:
 	std::unordered_map<std::string, std::shared_ptr<RegionFile>> openRegions;
