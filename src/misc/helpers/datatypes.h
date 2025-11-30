@@ -86,6 +86,40 @@ struct Vec3 {
     }
 };
 
+struct Vec2 {
+	double x,y;
+    bool operator==(const Vec2& other) const {
+        return x == other.x && y == other.y;
+    }
+
+    Vec2 operator+(const Vec2& other) const {
+        return Vec2{x + other.x, y + other.y};
+    }
+
+    Vec2 operator-(const Vec2& other) const {
+        return Vec2{x - other.x, y - other.y};
+    }
+
+    friend std::ostream& operator<<(std::ostream& os, const Vec2& vec) {
+        os << "(" << vec.x << ", " << vec.y << ")";
+        return os;
+    }
+    
+    std::string str() const {
+        std::ostringstream oss;
+        oss << *this; // Use the overloaded << operator
+        return oss.str();
+    }
+
+    double& operator[](int i) {
+        return *(&x + i);
+    }
+    
+    const double& operator[](int i) const {
+        return *(&x + i);
+    }
+};
+
 struct Int3 {
 	int32_t x,y,z;
     bool operator==(const Int3& other) const {

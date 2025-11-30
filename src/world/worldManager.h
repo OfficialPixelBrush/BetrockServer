@@ -37,13 +37,13 @@ class WorldManager {
 	int64_t seed;
 	std::condition_variable queueCV;
 	std::vector<std::thread> workers;
-	int workerCount = 1; // Use number of CPU cores
+	uint workerCount = 1; // Use number of CPU cores
 	std::atomic<int> busyWorkers = 0;
 	void WorkerThread();
 	std::shared_ptr<Chunk> GetChunk(Int2 position, Generator *generator);
 
   public:
-	WorldManager(int maxThreads = -1);
+	WorldManager(uint32_t maxThreads = 0);
 	World world;
 	void AddChunkToQueue(Int2 position, const std::shared_ptr<Client> &requestClient = nullptr);
 	void GenerateQueuedChunks();

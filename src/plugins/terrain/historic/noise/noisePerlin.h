@@ -1,6 +1,8 @@
 // A recreation of the the Infdev 20100227-1433 Perlin noise function
 #pragma once
 #include "noiseGenerator.h"
+#include "datatypes.h"
+#include "javaMath.h"
 
 class NoisePerlin : public NoiseGenerator {
   private:
@@ -8,13 +10,12 @@ class NoisePerlin : public NoiseGenerator {
 	double xCoord;
 	double yCoord;
 	double zCoord;
-	double GenerateNoiseBase(double x, double y, double z);
+	double GenerateNoiseBase(Vec3 pos);
 
   public:
 	NoisePerlin();
 	NoisePerlin(JavaRandom *rand);
-	double GenerateNoise(double x, double y);
-	double GenerateNoise(double x, double y, double z);
-	void GenerateNoise(std::vector<double> &noiseField, double xOffset, double yOffset, double zOffset, int xSize,
-					   int ySize, int zSize, double xScale, double yScale, double zScale, double amplitude);
+	double GenerateNoise(Vec2 coord);
+	double GenerateNoise(Vec3 coord);
+	void GenerateNoise(std::vector<double> &noiseField, Vec3 offset, Int3 size, Vec3 scale, double amplitude);
 };

@@ -145,7 +145,7 @@ void Server::LoadConfig() {
 											//{"allow-nether",true},
 											//{"spawn-monsters","true"},
 											{"max-players", "-1"},
-											{"max-generator-threads", "-1"},
+											{"max-generator-threads", "0"},
 											//{"online-mode","false"},
 											//{"allow-flight","false"}
 											{"generator", "beta173"}});

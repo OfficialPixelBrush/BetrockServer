@@ -63,7 +63,7 @@ struct MathHelper {
 		int i = static_cast<int>(x);
 		return x < static_cast<double>(i) ? i - 1 : i;
 	}
-
+	
 	static float abs(float x) { return x >= 0.0f ? x : -x; }
 
 	static double abs_max(double a, double b) {

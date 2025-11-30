@@ -14,7 +14,7 @@ void QueueChunk::AddClient(const std::shared_ptr<Client> &pRequestClient) {
 	requestedClients.push_back(pRequestClient);
 }
 
-WorldManager::WorldManager(int maxThreads) {
+WorldManager::WorldManager(uint32_t maxThreads) {
 	if (maxThreads < 1) {
 		workerCount = std::thread::hardware_concurrency();
 		return;
@@ -66,7 +66,7 @@ int32_t WorldManager::GetBusyWorkers() { return busyWorkers.load(std::memory_ord
 // Generate Queued Chunks
 void WorldManager::Run() {
 	// Start worker threads
-	for (int i = 0; i < workerCount; ++i) {
+	for (uint32_t i = 0; i < workerCount; ++i) {
 		workers.emplace_back(&WorldManager::WorkerThread, this);
 	}
 
