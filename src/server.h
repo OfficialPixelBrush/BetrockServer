@@ -198,7 +198,7 @@ class Server {
 	std::vector<std::shared_ptr<Client>> connectedClients;
 	int32_t latestEntityId = 0;
 	int32_t maximumPlayers = NO_LIMIT;
-	int32_t maximumThreads = NO_LIMIT;
+	uint32_t maximumThreads = 0;
 	int chunkDistance = 10;
 	std::atomic_uint64_t serverTime = 0;
 	std::atomic_uint64_t upTime = 0;

@@ -50,7 +50,7 @@ template <typename T> double NoiseOctaves<T>::GenerateOctaves(double xOffset, do
 	double scale = 1.0;
 
 	for (int i = 0; i < this->octaves; ++i) {
-		value += this->generatorCollection[i]->GenerateNoise(xOffset * scale, yOffset * scale, zOffset * scale) / scale;
+		value += this->generatorCollection[i]->GenerateNoise(Vec3{xOffset * scale, yOffset * scale, zOffset * scale}) / scale;
 		scale /= 2.0;
 	}
 
@@ -64,19 +64,20 @@ template <typename T> double NoiseOctaves<T>::GenerateOctaves(double xOffset, do
 	double scale = 1.0;
 
 	for (int i = 0; i < this->octaves; ++i) {
-		value += this->generatorCollection[i]->GenerateNoise(xOffset * scale, yOffset * scale) / scale;
+		value += this->generatorCollection[i]->GenerateNoise(Vec2{xOffset * scale, yOffset * scale}) / scale;
 		scale /= 2.0;
 	}
 
 	return value;
 }
 
+// Used by Beta 1.7.3
 // generateNoiseOctaves
 template <typename T>
-void NoiseOctaves<T>::GenerateOctaves(std::vector<double> &noiseField, double var2, double var4, double var6, int var8,
-									  int var9, int var10, double var11, double var13, double var15) {
+void NoiseOctaves<T>::GenerateOctaves(std::vector<double> &noiseField, double coordX, double coordY, double coordZ, int sizeX,
+									  int sizeY, int sizeZ, double scaleX, double scaleY, double scaleZ) {
 	if (noiseField.empty()) {
-		noiseField.resize(size_t(var8 * var9 * var10), 0.0);
+		noiseField.resize(size_t(sizeX * sizeY * sizeZ), 0.0);
 	} else {
 		for (size_t i = 0; i < noiseField.size(); ++i) {
 			noiseField[i] = 0.0;
@@ -86,8 +87,8 @@ void NoiseOctaves<T>::GenerateOctaves(std::vector<double> &noiseField, double va
 	double scale = 1.0;
 
 	for (int octave = 0; octave < this->octaves; ++octave) {
-		this->generatorCollection[octave]->GenerateNoise(noiseField, var2, var4, var6, var8, var9, var10, var11 * scale,
-														 var13 * scale, var15 * scale, scale);
+		this->generatorCollection[octave]->GenerateNoise(noiseField, Vec3{coordX, coordY, coordZ}, Int3{sizeX, sizeY, sizeZ}, Vec3{scaleX * scale,
+														 scaleY * scale, scaleZ * scale}, scale);
 		scale /= 2.0;
 	}
 }

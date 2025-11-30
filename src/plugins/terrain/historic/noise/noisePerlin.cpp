@@ -7,12 +7,12 @@ NoisePerlin::NoisePerlin(JavaRandom *rand) {
 	this->yCoord = rand->nextDouble() * 256.0;
 	this->zCoord = rand->nextDouble() * 256.0;
 
-	for (int i = 0; i < 256; ++i) {
+	for (int32_t i = 0; i < 256; ++i) {
 		this->permutations[i] = i;
 	}
 
-	for (int i = 0; i < 256; ++i) {
-		int j = rand->nextInt(256 - i) + i;
+	for (int32_t i = 0; i < 256; ++i) {
+		int32_t j = rand->nextInt(256 - i) + i;
 		std::swap(this->permutations[i], this->permutations[j]);
 		this->permutations[i + 256] = this->permutations[i];
 	}
@@ -20,35 +20,37 @@ NoisePerlin::NoisePerlin(JavaRandom *rand) {
 
 // This is a rather standard implementation of "Improved Perlin Noise",
 // as described by Ken Perlin in 2002
-double NoisePerlin::GenerateNoiseBase(double x, double y, double z) {
-	x += this->xCoord;
-	y += this->yCoord;
-	z += this->zCoord;
+// This version is mainly used by the infdev generator but Beta still implements and uses it.
+double NoisePerlin::GenerateNoiseBase(Vec3 pos) {
+	pos.x += this->xCoord;
+	pos.y += this->yCoord;
+	pos.z += this->zCoord;
 	// The farlands are caused by this getting cast to a 32-Bit Integer.
-	// Change these ints to longs to fix the farlands.
-	// TODO: Apparently not? Fix this PLEASE
-	int64_t xInt = (int64_t)x;
-	int64_t yInt = (int64_t)y;
-	int64_t zInt = (int64_t)z;
-	if (x < (double)xInt)
+	// Change these int32_ts to int64_ts to fix the farlands,
+	// however, this will change Beta tree generation slightly
+	// due to rounding differences
+	int32_t xInt = int32_t(pos.x);
+	int32_t yInt = int32_t(pos.y);
+	int32_t zInt = int32_t(pos.z);
+	if (pos.x < double(xInt))
 		--xInt;
-	if (y < (double)yInt)
+	if (pos.y < double(yInt))
 		--yInt;
-	if (z < (double)zInt)
+	if (pos.z < double(zInt))
 		--zInt;
 
-	int64_t xIndex = xInt & 255;
-	int64_t yIndex = yInt & 255;
-	int64_t zIndex = zInt & 255;
+	int32_t xIndex = xInt & 255;
+	int32_t yIndex = yInt & 255;
+	int32_t zIndex = zInt & 255;
 
-	x -= (double)xInt;
-	y -= (double)yInt;
-	z -= (double)zInt;
-	double w = fade(x);
-	double v = fade(y);
-	double u = fade(z);
-	int64_t permXY = this->permutations[xIndex] + yIndex;
-	int64_t permXYZ = this->permutations[permXY] + zIndex;
+	pos.x -= double(xInt);
+	pos.y -= double(yInt);
+	pos.z -= double(zInt);
+	double w = fade(pos.x);
+	double v = fade(pos.y);
+	double u = fade(pos.z);
+	int32_t permXY = this->permutations[xIndex] + yIndex;
+	int32_t permXYZ = this->permutations[permXY] + zIndex;
 	// Some of the following code is weird,
 	// probably because it got optimized by Java to use
 	// fewer variables or Notch did this to be efficient
@@ -58,155 +60,125 @@ double NoisePerlin::GenerateNoiseBase(double x, double y, double z) {
 	xIndex = this->permutations[xIndex + 1] + zIndex;
 	return lerp(
 		u,
-		lerp(v, lerp(w, grad(this->permutations[permXYZ], x, y, z), grad(this->permutations[yIndex], x - 1.0, y, z)),
-			 lerp(w, grad(this->permutations[permXY], x, y - 1.0, z),
-				  grad(this->permutations[xIndex], x - 1.0, y - 1.0, z))),
+		lerp(v, lerp(w, grad(this->permutations[permXYZ], pos.x, pos.y, pos.z), grad(this->permutations[yIndex], pos.x - 1.0, pos.y, pos.z)),
+			 lerp(w, grad(this->permutations[permXY], pos.x, pos.y - 1.0, pos.z),
+				  grad(this->permutations[xIndex], pos.x - 1.0, pos.y - 1.0, pos.z))),
 		lerp(v,
-			 lerp(w, grad(this->permutations[permXYZ + 1], x, y, z - 1.0),
-				  grad(this->permutations[yIndex + 1], x - 1.0, y, z - 1.0)),
-			 lerp(w, grad(this->permutations[permXY + 1], x, y - 1.0, z - 1.0),
-				  grad(this->permutations[xIndex + 1], x - 1.0, y - 1.0, z - 1.0))));
+			 lerp(w, grad(this->permutations[permXYZ + 1], pos.x, pos.y, pos.z - 1.0),
+				  grad(this->permutations[yIndex + 1], pos.x - 1.0, pos.y, pos.z - 1.0)),
+			 lerp(w, grad(this->permutations[permXY + 1], pos.x, pos.y - 1.0, pos.z - 1.0),
+				  grad(this->permutations[xIndex + 1], pos.x - 1.0, pos.y - 1.0, pos.z - 1.0))));
 }
 
-double NoisePerlin::GenerateNoise(double x, double y) { return this->GenerateNoiseBase(x, y, 0.0); }
+double NoisePerlin::GenerateNoise(Vec2 coord) { return this->GenerateNoiseBase(Vec3{coord.x, coord.y, 0.0}); }
 
-double NoisePerlin::GenerateNoise(double x, double y, double z) { return this->GenerateNoiseBase(x, y, z); }
+double NoisePerlin::GenerateNoise(Vec3 coord) { return this->GenerateNoiseBase(coord); }
+void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
+								Vec3 offset, Int3 size, Vec3 scale,
+                                double amplitude) {
+    if (size.y == 1) {
+        int32_t index = 0;
+        double invAmp = 1.0 / amplitude;
 
-void NoisePerlin::GenerateNoise(std::vector<double> &noiseField, double xOffset, double yOffset, double zOffset,
-								int xSize, int ySize, int zSize, double xScale, double yScale, double zScale,
-								double amplitude) {
-	int zSize001;
-	int noiseField9;
-	int xOffset2;
-	double var31;
-	double var35;
-	int var37;
-	double var38;
-	int yOffset0;
-	int yOffset1;
-	double yOffset2;
-	int var75;
-	if (ySize == 1) {
-		/*
-		bool zOffset4 = false;
-		bool zOffset5 = false;
-		bool xOffset1 = false;
-		bool zOffset8 = false;
-		*/
-		double var70 = 0.0;
-		double var73 = 0.0;
-		var75 = 0;
-		double var77 = 1.0 / amplitude;
+        for (int32_t x = 0; x < size.x; ++x) {
+            double fx = (offset.x + x) * scale.x + this->xCoord;
+            int32_t ix = int32_t(fx);
+            if (fx < ix) --ix;
+            int32_t px = ix & 255;
+            fx -= ix;
+            double u = fade(fx);
 
-		for (int var30 = 0; var30 < xSize; ++var30) {
-			var31 = (xOffset + (double)var30) * xScale + this->xCoord;
-			int var78 = (int)var31;
-			if (var31 < (double)var78) {
-				--var78;
-			}
+            for (int32_t z = 0; z < size.z; ++z) {
+                double fz = (offset.z + z) * scale.z + this->zCoord;
+                int32_t iz = int32_t(fz);
+                if (fz < iz) --iz;
+                int32_t pz = iz & 255;
+                fz -= iz;
+                double w = fade(fz);
 
-			int var34 = var78 & 255;
-			var31 -= (double)var78;
-			var35 = var31 * var31 * var31 * (var31 * (var31 * 6.0 - 15.0) + 10.0);
+                int32_t a = this->permutations[px] + 0;
+                int32_t aa = this->permutations[a] + pz;
+                int32_t b = this->permutations[px + 1] + 0;
+                int32_t ba = this->permutations[b] + pz;
 
-			for (var37 = 0; var37 < zSize; ++var37) {
-				var38 = (zOffset + (double)var37) * zScale + this->zCoord;
-				yOffset0 = (int)var38;
-				if (var38 < (double)yOffset0) {
-					--yOffset0;
-				}
+                double x1 = lerp(u,
+                    altGrad(this->permutations[aa], fx, fz),
+                    grad(this->permutations[ba], fx - 1.0, 0.0, fz));
 
-				yOffset1 = yOffset0 & 255;
-				var38 -= (double)yOffset0;
-				yOffset2 = var38 * var38 * var38 * (var38 * (var38 * 6.0 - 15.0) + 10.0);
-				noiseField9 = this->permutations[var34] + 0;
-				int zOffset6 = this->permutations[noiseField9] + yOffset1;
-				int zOffset7 = this->permutations[var34 + 1] + 0;
-				xOffset2 = this->permutations[zOffset7] + yOffset1;
-				var70 = lerp(var35, altGrad(this->permutations[zOffset6], var31, var38),
-							 grad(this->permutations[xOffset2], var31 - 1.0, 0.0, var38));
-				var73 = lerp(var35, grad(this->permutations[zOffset6 + 1], var31, 0.0, var38 - 1.0),
-							 grad(this->permutations[xOffset2 + 1], var31 - 1.0, 0.0, var38 - 1.0));
-				double var79 = lerp(yOffset2, var70, var73);
-				zSize001 = var75++;
-				noiseField[zSize001] += var79 * var77;
-			}
-		}
+                double x2 = lerp(u,
+                    grad(this->permutations[aa + 1], fx, 0.0, fz - 1.0),
+                    grad(this->permutations[ba + 1], fx - 1.0, 0.0, fz - 1.0));
 
-	} else {
-		noiseField9 = 0;
-		double xOffset0 = 1.0 / amplitude;
-		xOffset2 = -1;
-		/*
-		bool xOffset3 = false;
-		bool xOffset4 = false;
-		bool xOffset5 = false;
-		bool xOffset6 = false;
-		bool xOffset7 = false;
-		bool xOffset8 = false;
-		*/
-		double xOffset9 = 0.0;
-		var31 = 0.0;
-		double var33 = 0.0;
-		var35 = 0.0;
+                double result = lerp(w, x1, x2);
+                noiseField[index++] += result * invAmp;
+            }
+        }
+    } else {
+        int32_t index = 0;
+        double invAmp = 1.0 / amplitude;
+        int32_t lastPermY = -1;
 
-		for (var37 = 0; var37 < xSize; ++var37) {
-			var38 = (xOffset + (double)var37) * xScale + this->xCoord;
-			yOffset0 = (int)var38;
-			if (var38 < (double)yOffset0) {
-				--yOffset0;
-			}
+        double lerpAX = 0.0, lerpBX = 0.0;
+        double lerpAY = 0.0, lerpBY = 0.0;
 
-			yOffset1 = yOffset0 & 255;
-			var38 -= (double)yOffset0;
-			yOffset2 = var38 * var38 * var38 * (var38 * (var38 * 6.0 - 15.0) + 10.0);
+        for (int32_t x = 0; x < size.x; ++x) {
+            double fx = (offset.x + x) * scale.x + this->xCoord;
+            int32_t ix = int32_t(fx);
+            if (fx < ix) --ix;
+            int32_t px = ix & 255;
+            fx -= ix;
+            double u = fade(fx);
 
-			for (int yOffset4 = 0; yOffset4 < zSize; ++yOffset4) {
-				double yOffset5 = (zOffset + (double)yOffset4) * zScale + this->zCoord;
-				int yOffset7 = (int)yOffset5;
-				if (yOffset5 < (double)yOffset7) {
-					--yOffset7;
-				}
+            for (int32_t z = 0; z < size.z; ++z) {
+                double fz = (offset.z + z) * scale.z + this->zCoord;
+                int32_t iz = int32_t(fz);
+                if (fz < iz) --iz;
+                int32_t pz = iz & 255;
+                fz -= iz;
+                double w = fade(fz);
 
-				int yOffset8 = yOffset7 & 255;
-				yOffset5 -= (double)yOffset7;
-				double yOffset9 = yOffset5 * yOffset5 * yOffset5 * (yOffset5 * (yOffset5 * 6.0 - 15.0) + 10.0);
+                for (int32_t y = 0; y < size.y; ++y) {
+                    double fy = (offset.y + y) * scale.y + this->yCoord;
+                    int32_t iy = int32_t(fy);
+                    if (fy < iy) --iy;
+                    int32_t py = iy & 255;
+                    fy -= iy;
+                    double v = fade(fy);
 
-				for (int var51 = 0; var51 < ySize; ++var51) {
-					double var52 = (yOffset + (double)var51) * yScale + this->yCoord;
-					int var54 = (int)var52;
-					if (var52 < (double)var54) {
-						--var54;
-					}
+                    if (y == 0 || py != lastPermY) {
+                        lastPermY = py;
 
-					int var55 = var54 & 255;
-					var52 -= (double)var54;
-					double var56 = var52 * var52 * var52 * (var52 * (var52 * 6.0 - 15.0) + 10.0);
-					if (var51 == 0 || var55 != xOffset2) {
-						xOffset2 = var55;
-						int zOffset9 = this->permutations[yOffset1] + var55;
-						int var71 = this->permutations[zOffset9] + yOffset8;
-						int var72 = this->permutations[zOffset9 + 1] + yOffset8;
-						int var74 = this->permutations[yOffset1 + 1] + var55;
-						var75 = this->permutations[var74] + yOffset8;
-						int var76 = this->permutations[var74 + 1] + yOffset8;
-						xOffset9 = lerp(yOffset2, grad(this->permutations[var71], var38, var52, yOffset5),
-										grad(this->permutations[var75], var38 - 1.0, var52, yOffset5));
-						var31 = lerp(yOffset2, grad(this->permutations[var72], var38, var52 - 1.0, yOffset5),
-									 grad(this->permutations[var76], var38 - 1.0, var52 - 1.0, yOffset5));
-						var33 = lerp(yOffset2, grad(this->permutations[var71 + 1], var38, var52, yOffset5 - 1.0),
-									 grad(this->permutations[var75 + 1], var38 - 1.0, var52, yOffset5 - 1.0));
-						var35 = lerp(yOffset2, grad(this->permutations[var72 + 1], var38, var52 - 1.0, yOffset5 - 1.0),
-									 grad(this->permutations[var76 + 1], var38 - 1.0, var52 - 1.0, yOffset5 - 1.0));
-					}
+                        int32_t A = this->permutations[px] + py;
+                        int32_t AA = this->permutations[A] + pz;
+                        int32_t AB = this->permutations[A + 1] + pz;
+                        int32_t B = this->permutations[px + 1] + py;
+                        int32_t BA = this->permutations[B] + pz;
+                        int32_t BB = this->permutations[B + 1] + pz;
 
-					double var58 = lerp(var56, xOffset9, var31);
-					double zOffset0 = lerp(var56, var33, var35);
-					double zOffset2 = lerp(yOffset9, var58, zOffset0);
-					zSize001 = noiseField9++;
-					noiseField[zSize001] += zOffset2 * xOffset0;
-				}
-			}
-		}
-	}
+                        lerpAX = lerp(u,
+                            grad(this->permutations[AA], fx, fy, fz),
+                            grad(this->permutations[BA], fx - 1.0, fy, fz));
+
+                        lerpBX = lerp(u,
+                            grad(this->permutations[AB], fx, fy - 1.0, fz),
+                            grad(this->permutations[BB], fx - 1.0, fy - 1.0, fz));
+
+                        lerpAY = lerp(u,
+                            grad(this->permutations[AA + 1], fx, fy, fz - 1.0),
+                            grad(this->permutations[BA + 1], fx - 1.0, fy, fz - 1.0));
+
+                        lerpBY = lerp(u,
+                            grad(this->permutations[AB + 1], fx, fy - 1.0, fz - 1.0),
+                            grad(this->permutations[BB + 1], fx - 1.0, fy - 1.0, fz - 1.0));
+                    }
+
+                    double i1 = lerp(v, lerpAX, lerpBX);
+                    double i2 = lerp(v, lerpAY, lerpBY);
+                    double result = lerp(w, i1, i2);
+
+                    noiseField[index++] += result * invAmp;
+                }
+            }
+        }
+    }
 }
