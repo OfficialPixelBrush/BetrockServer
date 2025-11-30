@@ -36,7 +36,7 @@ void Beta173Caver::GenerateCaves(Int2 chunkOffset, Int2 chunkPos, std::shared_pt
 		}
 
 		for (int nodeIndex = 0; nodeIndex < numberOfNodes; ++nodeIndex) {
-			float carveYaw = this->rand->nextFloat() * (float)M_PI * 2.0F;
+			float carveYaw = this->rand->nextFloat() * (float)JavaMath::PI * 2.0F;
 			float carvePitch = (this->rand->nextFloat() - 0.5F) * 2.0F / 8.0F;
 			float tunnelRadius = this->rand->nextFloat() * 2.0F + this->rand->nextFloat();
 			this->CarveCave(chunkPos, c, offset, tunnelRadius, carveYaw, carvePitch, 0, 0, 1.0);
@@ -71,7 +71,7 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 	int var25 = rand2->nextInt(tunnelLength / 2) + tunnelLength / 4;
 
 	for (bool var26 = rand2->nextInt(6) == 0; tunnelStep < tunnelLength; ++tunnelStep) {
-		double var27 = 1.5 + (double)(MathHelper::sin((float)tunnelStep * (float)M_PI / (float)tunnelLength) *
+		double var27 = 1.5 + (double)(MathHelper::sin((float)tunnelStep * (float)JavaMath::PI / (float)tunnelLength) *
 									   tunnelRadius * 1.0F);
 		double var29 = var27 * verticalScale;
 		float var31 = MathHelper::cos(carvePitch);
@@ -93,9 +93,9 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 		var21 += (rand2->nextFloat() - rand2->nextFloat()) * rand2->nextFloat() * 4.0F;
 		if (!var52 && tunnelStep == var25 && tunnelRadius > 1.0F) {
 			this->CarveCave(chunkPos, c, offset, rand2->nextFloat() * 0.5F + 0.5F,
-							carveYaw - (float)M_PI * 0.5F, carvePitch / 3.0F, tunnelStep, tunnelLength, 1.0);
+							carveYaw - (float)JavaMath::PI * 0.5F, carvePitch / 3.0F, tunnelStep, tunnelLength, 1.0);
 			this->CarveCave(chunkPos, c, offset, rand2->nextFloat() * 0.5F + 0.5F,
-							carveYaw + (float)M_PI * 0.5F, carvePitch / 3.0F, tunnelStep, tunnelLength, 1.0);
+							carveYaw + (float)JavaMath::PI * 0.5F, carvePitch / 3.0F, tunnelStep, tunnelLength, 1.0);
 			return;
 		}
 

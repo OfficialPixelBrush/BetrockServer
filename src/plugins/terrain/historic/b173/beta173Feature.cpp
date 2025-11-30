@@ -322,7 +322,7 @@ bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int 
 		return false;
 	}
 	// Get angle of clay blob
-	float angle = rand->nextFloat() * (float)M_PI;
+	float angle = rand->nextFloat() * (float)JavaMath::PI;
 	// Then determine the bounds of the blob
 	double xStart = (double)((float)(pos.x + 8) + MathHelper::sin(angle) * (float)blobSize / 8.0F);
 	double xEnd = (double)((float)(pos.x + 8) - MathHelper::sin(angle) * (float)blobSize / 8.0F);
@@ -338,9 +338,9 @@ bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int 
 		double zCenter = zStart + (zEnd - zStart) * (double)i / (double)blobSize;
 		double blobScale = rand->nextDouble() * (double)blobSize / 16.0;
 		double blobRadiusXZ =
-			(double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
+			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		double blobRadiusY =
-			(double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
+			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		int minX = int(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
 		int maxX = int(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
 		int minY = int(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
@@ -379,7 +379,7 @@ bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int 
  */
 bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, int blobSize) {
 	// Get angle of clay blob
-	float angle = rand->nextFloat() * (float)M_PI;
+	float angle = rand->nextFloat() * (float)JavaMath::PI;
 	// Then determine the bounds of the blob
 	double xStart = (double)((float)(pos.x + 8) + MathHelper::sin(angle) * (float)blobSize / 8.0F);
 	double xEnd = (double)((float)(pos.x + 8) - MathHelper::sin(angle) * (float)blobSize / 8.0F);
@@ -395,9 +395,9 @@ bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, i
 		double zCenter = zStart + (zEnd - zStart) * (double)i / (double)blobSize;
 		double blobScale = rand->nextDouble() * (double)blobSize / 16.0;
 		double blobRadiusXZ =
-			(double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
+			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		double blobRadiusY =
-			(double)(MathHelper::sin((float)i * (float)M_PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
+			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		int minX = int(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
 		int maxX = int(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
 		int minY = int(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));
