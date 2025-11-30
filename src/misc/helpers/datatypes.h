@@ -52,6 +52,10 @@ struct Block {
 };
 
 // Custom Types
+/**
+ * @brief A struct that contains 3 doubles (x,y,z)
+ * 
+ */
 struct Vec3 {
 	double x,y,z;
     bool operator==(const Vec3& other) const {
@@ -86,6 +90,10 @@ struct Vec3 {
     }
 };
 
+/**
+ * @brief A struct that contains 2 doubles (x,y)
+ * 
+ */
 struct Vec2 {
 	double x,y;
     bool operator==(const Vec2& other) const {
@@ -120,6 +128,10 @@ struct Vec2 {
     }
 };
 
+/**
+ * @brief A struct that contains 3 integers (x,y,z)
+ * 
+ */
 struct Int3 {
 	int32_t x,y,z;
     bool operator==(const Int3& other) const {
@@ -154,6 +166,11 @@ struct Int3 {
     }
 };
 
+
+/**
+ * @brief A struct that contains 2 integers (x,y)
+ * 
+ */
 struct Int2 {
 	int32_t x,y;
     bool operator==(const Int2& other) const {
@@ -188,6 +205,10 @@ struct Int2 {
     }
 };
 
+/**
+ * @brief Axis-aligned Bounding Box
+ * 
+ */
 struct AABB {
     Vec3 min;
     Vec3 max;

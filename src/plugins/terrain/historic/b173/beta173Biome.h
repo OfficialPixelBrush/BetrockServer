@@ -3,6 +3,10 @@
 #include "noiseOctaves.h"
 #include "noiseSimplex.h"
 
+/**
+ * @brief A faithful reimplementation of the Beta 1.7.3 biome generator
+ * 
+ */
 class Beta173Biome {
     private:
         // Simplex Noise Generators

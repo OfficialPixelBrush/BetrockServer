@@ -1,5 +1,9 @@
 #include "generator.h"
 
+/**
+ * @brief The lua-based world generator
+ * 
+ */
 class GeneratorLua : public Generator {
   public:
 	GeneratorLua(int64_t seed, World *world);

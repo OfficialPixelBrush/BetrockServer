@@ -15,6 +15,10 @@
 
 void HandleGracefulSignal(int) { Betrock::Server::Instance().PrepareForShutdown(); }
 
+/**
+ * @brief Used by the usage-report thread to track current resource usage
+ * 
+ */
 void UsageReport() {
 	// Exit out if we don't want to log usage metrics
 	if (!debugReportUsage)

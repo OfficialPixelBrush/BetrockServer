@@ -18,6 +18,10 @@ class Client; // Forward declaration
 
 #define MAX_GENERATION_ATTEMPTS 5
 
+/**
+ * @brief A coordinate that represents where a chunk should attempt to generate
+ * 
+ */
 class QueueChunk {
   public:
 	Int2 position;
@@ -28,6 +32,10 @@ class QueueChunk {
 	void AddClient(const std::shared_ptr<Client> &requestClient);
 };
 
+/**
+ * @brief Responsible for managing its world and chunk generation 
+ * 
+ */
 class WorldManager {
   private:
 	std::string name;

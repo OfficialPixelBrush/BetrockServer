@@ -5,7 +5,14 @@
 
 // Library for emulating Java/Java Edition math functions
 
-// Linear Interpolation
+/**
+ * @brief Linear interpolation function
+ * 
+ * @param t Interpolation factor
+ * @param a Start value (t = 0.0)
+ * @param b End value (t = 1.0)
+ * @return Interpolated value between a and b
+ */
 inline double lerp(double t, double a, double b) { return a + t * (b - a); }
 
 inline double grad(int var0, double var1, double var3, double var5) {
@@ -23,7 +30,12 @@ inline double altGrad(int var1, double var2, double var4) {
 	return ((var6 & 1) == 0 ? var7 : -var7) + ((var6 & 2) == 0 ? var9 : -var9);
 }
 
-// Easing Function
+/**
+ * @brief Perlin-noise easing function
+ * 
+ * @param value Input value
+ * @return Eased output value 
+ */
 inline double fade(double value) { return value * value * value * (value * (value * 6.0 - 15.0) + 10.0); }
 
 /**
@@ -42,6 +54,10 @@ inline int hashCode(std::string value) {
 	return h;
 }
 
+/**
+ * @brief A small helper that's used to simplify or speed up some code
+ * 
+ */
 struct MathHelper {
 	static constexpr size_t TABLE_SIZE = 65536;
 	static std::array<float, TABLE_SIZE> SIN_TABLE;

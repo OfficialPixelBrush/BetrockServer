@@ -3,7 +3,10 @@
 #include "javaRandom.h"
 #include "world.h"
 
-/// Used for generating Oak or Birch Trees
+/**
+ * @brief Used for generating Oak or Birch Trees
+ * 
+ */
 class Beta173Tree {
   public:
 	Beta173Tree() {};
@@ -13,7 +16,10 @@ class Beta173Tree {
 						   [[maybe_unused]] double trunkShape) {};
 };
 
-/// Used for generating Big Oak Trees
+/**
+ * @brief Used for generating Big Oak Trees
+ * 
+ */
 class Beta173BigTree : public Beta173Tree {
   private:
 	int8_t branchOrientation[6] = {2, 0, 0, 1, 2, 1};
@@ -52,7 +58,10 @@ class Beta173BigTree : public Beta173Tree {
 	void Configure(double treeHeight, double branchLength, double trunkShape);
 };
 
-/// Used for generating Taiga Trees
+/**
+ * @brief Used for generating Taiga Trees
+ * 
+ */
 class Beta173TaigaTree : public Beta173Tree {
   public:
 	Beta173TaigaTree() {};
@@ -60,7 +69,10 @@ class Beta173TaigaTree : public Beta173Tree {
 	bool Generate(World *world, JavaRandom *rand, Int3 pos, bool birch = false);
 };
 
-/// Used for generating Alternative Taiga Trees
+/**
+ * @brief Used for generating Alternative Taiga Trees
+ * 
+ */
 class Beta173TaigaAltTree : public Beta173Tree {
   public:
 	Beta173TaigaAltTree() {};
