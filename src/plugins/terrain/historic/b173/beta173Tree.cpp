@@ -156,7 +156,7 @@ void Beta173BigTree::GenerateBranchPositions() {
 			} else {
 				for (double var9 = 0.5; var7 < var1; ++var7) {
 					double var11 = this->branchLength * (double)var8 * ((double)this->rand->nextFloat() + 0.328);
-					// Oh hey, look! An approcheck.xmation of pi!
+					// Oh hey, look! An approximation of pi!
 					double var13 = (double)this->rand->nextFloat() * 2.0 * 3.14159;
 					int var15 = MathHelper::floor_double(var11 * double(std::sin(var13)) +
 														 (double)this->basePos.x + var9);
