@@ -65,8 +65,8 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch)
 						// and replace any non-opaque block
 						if ((
 								(
-								std::abs(xLeaf) != treeWidth ||
-								std::abs(zLeaf) != treeWidth ||
+								JavaMath::abs(xLeaf) != treeWidth ||
+								JavaMath::abs(zLeaf) != treeWidth ||
 								(rand->nextInt(2) != 0 && widthBase != 0)
 							)) && !IsOpaque(
 								world->GetBlockType(offset))) {
@@ -166,8 +166,8 @@ void Beta173BigTree::GenerateBranchPositions() {
 					Int3 var18 = Int3{var15, var3 + this->trunkThickness, var16};
 					if (this->checkIfPathClear(var17, var18) == -1) {
 						Int3 var19 = Int3{this->basePos.x, this->basePos.y, this->basePos.z};
-						double var20 = std::sqrt(std::pow((double)std::abs(this->basePos.x - var17.x), 2.0) +
-												 std::pow((double)std::abs(this->basePos.z - var17.z), 2.0));
+						double var20 = std::sqrt(std::pow((double)JavaMath::abs(this->basePos.x - var17.x), 2.0) +
+												 std::pow((double)JavaMath::abs(this->basePos.z - var17.z), 2.0));
 						double var22 = var20 * this->field_752_i;
 						if ((double)var17.y - var22 > (double)var5) {
 							var19.y = var5;
@@ -208,7 +208,7 @@ void Beta173BigTree::func_426_a(int var1, int var2, int var3, float var4, int8_t
 		var11[var8] = var10[var8] + var12;
 
 		for (int var13 = -var7; var13 <= var7; ++var13) {
-			double var15 = std::sqrt(std::pow(std::abs(var12) + 0.5, 2.0) + std::pow(std::abs(var13) + 0.5, 2.0));
+			double var15 = std::sqrt(std::pow(JavaMath::abs(var12) + 0.5, 2.0) + std::pow(JavaMath::abs(var13) + 0.5, 2.0));
 
 			if (var15 > (double)(var4)) {
 				continue;
@@ -233,10 +233,10 @@ float Beta173BigTree::func_431_a(int var1) {
 		float var4;
 		if (var3 == 0.0F) {
 			var4 = var2;
-		} else if (std::abs(var3) >= var2) {
+		} else if (JavaMath::abs(var3) >= var2) {
 			var4 = 0.0F;
 		} else {
-			var4 = (float)std::sqrt(std::pow((double)std::abs(var2), 2.0) - std::pow((double)std::abs(var3), 2.0));
+			var4 = (float)std::sqrt(std::pow((double)JavaMath::abs(var2), 2.0) - std::pow((double)JavaMath::abs(var3), 2.0));
 		}
 
 		var4 *= 0.5F;
@@ -265,7 +265,7 @@ void Beta173BigTree::drawBlockLine(Int3 var1, Int3 var2, int blockType) {
 	int8_t var6;
 	for (var6 = 0; var5 < 3; ++var5) {
 		var4[var5] = var2[var5] - var1[var5];
-		if (std::abs(var4[var5]) > std::abs(var4[var6])) {
+		if (JavaMath::abs(var4[var5]) > JavaMath::abs(var4[var6])) {
 			var6 = var5;
 		}
 	}
@@ -351,7 +351,7 @@ int Beta173BigTree::checkIfPathClear(Int3 var1, Int3 var2) {
 	int8_t var5;
 	for (var5 = 0; var4 < 3; ++var4) {
 		var3[var4] = var2[var4] - var1[var4];
-		if (std::abs(var3[var4]) > std::abs(var3[var5])) {
+		if (JavaMath::abs(var3[var4]) > JavaMath::abs(var3[var5])) {
 			var5 = var4;
 		}
 	}
@@ -384,7 +384,7 @@ int Beta173BigTree::checkIfPathClear(Int3 var1, Int3 var2) {
 			}
 		}
 
-		return var14 == var15 ? -1 : std::abs(var14);
+		return var14 == var15 ? -1 : JavaMath::abs(var14);
 	}
 }
 
@@ -452,7 +452,7 @@ bool Beta173TaigaTree::Generate(World *world, JavaRandom *rand, Int3 pos,
 
 						for (int var16 = pos.z - var18; var16 <= pos.z + var18; ++var16) {
 							int var17 = var16 - pos.z;
-							if ((std::abs(var15) != var18 || std::abs(var17) != var18 || var18 <= 0) &&
+							if ((JavaMath::abs(var15) != var18 || JavaMath::abs(var17) != var18 || var18 <= 0) &&
 								!IsOpaque(world->GetBlockType(Int3{var14, var13, var16}))) {
 								// Spruce leaves
 								world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{var14, var13, var16});
@@ -538,7 +538,7 @@ bool Beta173TaigaAltTree::Generate(World *world, JavaRandom *rand, Int3 pos,
 
 						for (int var19 = pos.z - var21; var19 <= pos.z + var21; ++var19) {
 							int var20 = var19 - pos.z;
-							if ((std::abs(var18) != var21 || std::abs(var20) != var21 || var21 <= 0) &&
+							if ((JavaMath::abs(var18) != var21 || JavaMath::abs(var20) != var21 || var21 <= 0) &&
 								!IsOpaque(world->GetBlockType(Int3{var17, var16, var19}))) {
 								world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{var17, var16, var19});
 							}

@@ -175,7 +175,7 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
 
 bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World *pWorld, JavaRandom *pRand, int var3,
 													  int var4, int macroX) {
-	float macroZ = pRand->nextFloat() * (float)M_PI;
+	float macroZ = pRand->nextFloat() * (float)JavaMath::PI;
 	double var7 = (double)((float)(var3 + 8) + MathHelper::sin(macroZ) * 2.0F);
 	double blockY = (double)((float)(var3 + 8) - MathHelper::sin(macroZ) * 2.0F);
 	double world1 = (double)((float)(macroX + 8) + MathHelper::cos(macroZ) * 2.0F);
@@ -188,8 +188,8 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(int blockType, World *pWor
 		double rand2 = world5 + (world7 - world5) * (double)var3 / 16.0;
 		double rand4 = world1 + (world3 - world1) * (double)var3 / 16.0;
 		double rand6 = pRand->nextDouble();
-		double rand8 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0;
-		double var30 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)M_PI) + 1.0F) * rand6 + 1.0;
+		double rand8 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)JavaMath::PI) + 1.0F) * rand6 + 1.0;
+		double var30 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)JavaMath::PI) + 1.0F) * rand6 + 1.0;
 
 		for (var4 = (int)(rand0 - rand8 / 2.0); var4 <= (int)(rand0 + rand8 / 2.0); ++var4) {
 			for (macroX = (int)(rand2 - var30 / 2.0); macroX <= (int)(rand2 + var30 / 2.0); ++macroX) {
@@ -299,7 +299,7 @@ bool GeneratorInfdev20100327::PopulateChunk(Int2 chunkPos) {
 
 							for (treeY = blockY - var15; treeY <= blockY + var15; ++treeY) {
 								int var17 = treeY - blockY;
-								if (((std::abs(cX1) != var15) || (std::abs(var17) != var15) ||
+								if (((JavaMath::abs(cX1) != var15) || (JavaMath::abs(var17) != var15) ||
 									 (rand->nextInt(2) != 0 && var14 != 0)) &&
 									!IsOpaque(world->GetBlockType(Int3{blockId, cX2, treeY}))) {
 									world->SetBlockTypeAndMeta(BLOCK_LEAVES, 0, Int3{blockId, cX2, treeY});

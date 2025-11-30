@@ -55,6 +55,15 @@ inline int hashCode(std::string value) {
 }
 
 /**
+ * @brief A struct that's used like Javas Math.java library
+ * 
+ */
+struct JavaMath {
+	static constexpr double PI = 3.141592653589793;
+	static int32_t abs(int32_t a) { return (a < 0) ? -a : a; }
+};
+
+/**
  * @brief A small helper that's used to simplify or speed up some code
  * 
  */
@@ -95,6 +104,6 @@ struct MathHelper {
 inline std::array<float, MathHelper::TABLE_SIZE> MathHelper::SIN_TABLE = [] {
 	std::array<float, MathHelper::TABLE_SIZE> table{};
 	for (size_t i = 0; i < MathHelper::TABLE_SIZE; ++i)
-		table[i] = std::sinf(float(i) * float(M_PI) * 2.0f / MathHelper::TABLE_SIZE);
+		table[i] = std::sinf(float(i) * float(JavaMath::PI) * 2.0f / MathHelper::TABLE_SIZE);
 	return table;
 }();
