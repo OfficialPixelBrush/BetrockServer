@@ -3,6 +3,7 @@
 #include "datatypes.h"
 #include "inventory.h"
 #include <vector>
+#include <array>
 
 #define TILEENTITY_SIGN "Sign"
 #define TILEENTITY_CHEST "Chest"
