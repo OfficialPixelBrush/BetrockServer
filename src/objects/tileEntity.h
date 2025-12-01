@@ -4,6 +4,7 @@
 #include "inventory.h"
 #include <vector>
 #include <array>
+#include <string>
 
 #define TILEENTITY_SIGN "Sign"
 #define TILEENTITY_CHEST "Chest"
