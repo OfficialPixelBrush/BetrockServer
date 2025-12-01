@@ -1,8 +1,9 @@
 GenName = "Perlin"
-GenApiVersion = 3
+GenApiVersion = 4
 
 -- Terrain generation using seeded Perlin noise
 function GenerateChunk(cx,cz)
+    biomes = getBiomeMap(cx,cz)
     local c = {}
     -- Place blocks
     for x = 0, CHUNK_WIDTH_X do
@@ -23,10 +24,17 @@ function GenerateChunk(cx,cz)
     for x = 0, CHUNK_WIDTH_X do
         for z = 0, CHUNK_WIDTH_Z do
             local blocksSinceSkyVisible = 0;
+            biome = biomes[x+1][z+1]
             for y = CHUNK_HEIGHT, 0, -1 do
                 if (blocksSinceSkyVisible < 6) then
                     if (c[index(x, y, z)][1] == 1) then
-                        c[index(x, y, z)] = {3,0}
+                        if (biome == BIOME.DESERT or biome == BIOME.SAVANNA) then
+                            c[index(x, y, z)] = {12,0}
+                        elseif (biome == BIOME.TAIGA or biome == BIOME.TUNDRA) then
+                            c[index(x, y, z)] = {80,0}
+                        else
+                            c[index(x, y, z)] = {3,0}
+                        end
                         blocksSinceSkyVisible = blocksSinceSkyVisible+1
                     end
                 end

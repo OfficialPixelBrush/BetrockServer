@@ -18,10 +18,14 @@
 #include <ctime>
 
 #define GENERATOR_DEFAULT_NAME "Generator"
-#define GENERATOR_LATEST_VERSION 3
+#define GENERATOR_LATEST_VERSION 4
 
 class Chunk;
 
+/**
+ * @brief Generic Generator object that makes an empty world
+ * 
+ */
 class Generator {
   public:
 	Generator(int64_t seed, World *world);

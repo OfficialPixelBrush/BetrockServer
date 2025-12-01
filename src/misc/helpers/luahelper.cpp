@@ -18,3 +18,12 @@ bool CheckNum3(lua_State *L, int startIndex) {
     }
     return true;
 }
+
+// Check if 2 Numbers are passed
+bool CheckNum2(lua_State *L, int startIndex) {
+    if (!lua_isnumber(L, startIndex+0) || !lua_isnumber(L, startIndex+1)) {
+        luaL_error(L, "Expected two numeric arguments");
+        return false; // Return 0 since we raised an error
+    }
+    return true;
+}
