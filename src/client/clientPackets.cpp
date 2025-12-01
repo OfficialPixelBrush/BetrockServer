@@ -95,6 +95,8 @@ bool Client::HandleLoginRequest(World* world) {
 		Give(response,BLOCK_COBBLESTONE);
 		Give(response,BLOCK_PLANKS);
 	} else {
+		// TODO: Remove this once player saving is brought back
+		player->position = Int3ToVec3(spawnPoint);
 		UpdateInventory(response);
 	}
 
