@@ -130,11 +130,11 @@ add_executable(
 # this is only defined to expose jthreads
 target_compile_definitions(BetrockServer PRIVATE -D_LIBCPP_ENABLE_EXPERIMENTAL=1)
 
-if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(BetrockServer PRIVATE -ggdb)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
-endif ()
+endif()
 
 set(CMAKE_SYSTEM_NAME Linux)
 
