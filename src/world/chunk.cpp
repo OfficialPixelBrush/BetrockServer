@@ -358,24 +358,36 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 	const size_t blockDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT);
 	const size_t nibbleDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT / 2));
 	// Block Data
-	auto blockData = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Blocks"))->GetData();
+	auto blockTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Blocks"));
+	if (!blockTag)
+		return;
+	auto blockData = blockTag->GetData();
 	for (size_t i = 0; i < blockDataSize; i++) {
 		SetBlockType(blockData[i], BlockIndexToPosition(i));
 	}
 	// Block Metadata
-	auto metaData = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Data"))->GetData();
+	auto metaTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Data"));
+	if (!metaTag)
+		return;
+	auto metaData = metaTag->GetData();
 	for (size_t i = 0; i < nibbleDataSize; i++) {
 		SetBlockMeta((metaData[i]) & 0xF, BlockIndexToPosition(i * 2));
 		SetBlockMeta((metaData[i] >> 4) & 0xF, BlockIndexToPosition(i * 2 + 1));
 	}
 	// Block Light
-	auto blockLightData = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("BlockLight"))->GetData();
+	auto blockLightTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("BlockLight"));
+	if (!blockLightTag)
+		return;
+	auto blockLightData = blockLightTag->GetData();
 	for (size_t i = 0; i < nibbleDataSize; i++) {
 		SetBlockLight((blockLightData[i]) & 0xF, BlockIndexToPosition(i * 2));
 		SetBlockLight((blockLightData[i] >> 4) & 0xF, BlockIndexToPosition(i * 2 + 1));
 	}
 	// Sky Light
-	auto skyLightData = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("SkyLight"))->GetData();
+	auto skyLightTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("SkyLight"));
+	if (!skyLightTag)
+		return;
+	auto skyLightData = skyLightTag->GetData();
 	for (size_t i = 0; i < nibbleDataSize; i++) {
 		SetSkyLight((skyLightData[i]) & 0xF, BlockIndexToPosition(i * 2));
 		SetSkyLight((skyLightData[i] >> 4) & 0xF, BlockIndexToPosition(i * 2 + 1));
@@ -400,10 +412,18 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 			std::string type = typeTag->GetData();
 			if (type == TILEENTITY_SIGN) {
 				std::array<std::string, 4> lines;
-				lines[0] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text1"))->GetData();
-				lines[1] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text2"))->GetData();
-				lines[2] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text3"))->GetData();
-				lines[3] = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text4"))->GetData();
+				auto textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text1"));
+				if (textLineTag)
+					lines[0] = textLineTag->GetData();
+				textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text2"));
+				if (textLineTag)
+					lines[1] = textLineTag->GetData();
+				textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text3"));
+				if (textLineTag)
+					lines[2] = textLineTag->GetData();
+				textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text4"));
+				if (textLineTag)
+					lines[3] = textLineTag->GetData();
 				AddTileEntity(std::make_unique<SignTile>(Int3{x, y, z}, lines));
 				continue;
 			}

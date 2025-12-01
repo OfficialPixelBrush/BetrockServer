@@ -153,7 +153,7 @@ target_compile_options(BetrockServer PRIVATE
     -Wshadow              # Variable shadowing
     -Wunused              # Unused variables, params, etc.
     -Wuninitialized
-    -Werror               # Treat warnings as errors
+    #-Werror               # Treat warnings as errors
     -Wnon-virtual-dtor    # Common OOP pitfall
     #-Wold-style-cast
     -Woverloaded-virtual

@@ -135,25 +135,51 @@ bool Player::Load() {
 
     // Get the players saved rotation
     std::shared_ptr<ListTag> rotationList = std::dynamic_pointer_cast<ListTag>(root->Get("Rotation"));
-    yaw   = std::dynamic_pointer_cast<FloatTag>(rotationList->Get(0))->GetData();
-    pitch = std::dynamic_pointer_cast<FloatTag>(rotationList->Get(1))->GetData();
+    auto yawTag = std::dynamic_pointer_cast<FloatTag>(rotationList->Get(0));
+    if (yawTag)
+        yaw   = yawTag->GetData();
+    auto pitchTag = std::dynamic_pointer_cast<FloatTag>(rotationList->Get(1));
+    if (pitchTag)
+        pitch   = pitchTag->GetData();
 
     // Get the players saved position
     std::shared_ptr<ListTag> posList = std::dynamic_pointer_cast<ListTag>(root->Get("Pos"));
-    position.x = std::dynamic_pointer_cast<DoubleTag>(posList->Get(0))->GetData();
-    position.y = std::dynamic_pointer_cast<DoubleTag>(posList->Get(1))->GetData();
-    position.z = std::dynamic_pointer_cast<DoubleTag>(posList->Get(2))->GetData();
+    auto posTag = std::dynamic_pointer_cast<DoubleTag>(posList->Get(0));
+    if (posTag)
+        position.x = posTag->GetData();
+    posTag = std::dynamic_pointer_cast<DoubleTag>(posList->Get(1));
+    if (posTag)
+        position.y = posTag->GetData();
+    posTag = std::dynamic_pointer_cast<DoubleTag>(posList->Get(2));
+    if (posTag)
+        position.z = posTag->GetData();
 
-    health = std::dynamic_pointer_cast<ShortTag>(root->Get("Health"))->GetData();
+    auto healthTag = std::dynamic_pointer_cast<ShortTag>(root->Get("Health"));
+    if (healthTag)
+        health = healthTag->GetData();
 
     // Get the players saved inventory
     std::shared_ptr<ListTag> inventoryList = std::dynamic_pointer_cast<ListTag>(root->Get("Inventory"));
     for (size_t i = 0; i < inventoryList->GetNumberOfTags(); i++) {
         auto slot = std::dynamic_pointer_cast<CompoundTag>(inventoryList->Get(i));
-        [[maybe_unused]] int8_t  slotNumber = std::dynamic_pointer_cast<ByteTag>(slot->Get("Slot"))->GetData();
-        [[maybe_unused]] int16_t itemId = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"))->GetData();
-        [[maybe_unused]] int8_t  itemCount = std::dynamic_pointer_cast<ByteTag>(slot->Get("Count"))->GetData();
-        [[maybe_unused]] int16_t itemDamage = std::dynamic_pointer_cast<ShortTag>(slot->Get("Damage"))->GetData();
+        [[maybe_unused]] int8_t  slotNumber = 0;
+        [[maybe_unused]] int16_t itemId = -1;
+        [[maybe_unused]] int8_t  itemCount = 0;
+        [[maybe_unused]] int16_t itemDamage = 0;
+        
+        auto slotTag = std::dynamic_pointer_cast<ByteTag>(slot->Get("Slot"));
+        if (slotTag)
+            slotNumber = slotTag->GetData();
+        auto itemIdTag = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"));
+        if (itemIdTag)
+            itemId = itemIdTag->GetData();
+        auto itemCountTag = std::dynamic_pointer_cast<ByteTag>(slot->Get("Count"));
+        if (itemCountTag)
+            itemCount = itemCountTag->GetData();
+        auto itemDamageTag = std::dynamic_pointer_cast<ShortTag>(slot->Get("Damage"));
+        if (itemDamageTag)
+            itemDamage = itemDamageTag->GetData();
+
         if (slotNumber >= 100) {
             armor[InventoryMappingNbtToLocal(INVENTORY_SECTION_ARMOR, slotNumber)] = {
                 itemId,
