@@ -15,7 +15,7 @@ void QueueChunk::AddClient(const std::shared_ptr<Client> &pRequestClient) {
 }
 
 WorldManager::WorldManager(uint32_t maxThreads) {
-	if (maxThreads < 1) {
+	if (maxThreads < 1 || maxThreads > std::thread::hardware_concurrency()) {
 		workerCount = std::thread::hardware_concurrency();
 		return;
 	}

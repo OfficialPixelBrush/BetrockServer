@@ -134,7 +134,7 @@ if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     target_compile_options(BetrockServer PRIVATE -ggdb)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fsanitize=address -g")
     set(CMAKE_LINKER_FLAGS "${CMAKE_LINKER_FLAGS} -fsanitize=address")
-endif ()
+endif()
 
 set(CMAKE_SYSTEM_NAME Linux)
 
@@ -161,14 +161,6 @@ target_compile_options(BetrockServer PRIVATE
     -Wdouble-promotion
     -Wformat=2
 )
-
-# Maybe get Windows Target working
-#if (CMAKE_SYSTEM_NAME STREQUAL "Windows")
-#    set(CMAKE_C_COMPILER i686-w64-mingw32-gcc)
-#    set(CMAKE_CXX_COMPILER i686-w64-mingw32-g++)
-#    set(CMAKE_RC_COMPILER i686-w64-mingw32-windres)
-#    set(CMAKE_RANLIB i686-w64-mingw32-ranlib)
-#endif()
 
 target_link_libraries(
     BetrockServer

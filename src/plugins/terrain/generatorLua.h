@@ -21,6 +21,8 @@ class GeneratorLua : public Generator {
 	lua_State *L;
 
 	Block DecodeBlock();
+	void RegisterGlobals();
+	static int64_t GetSeed(lua_State *L);
 
 	// --- TERRAIN GEN RELATED ---
 	const siv::PerlinNoise::seed_type seedp = 0;
@@ -36,4 +38,5 @@ class GeneratorLua : public Generator {
 	static int lua_CheckChunk(lua_State *L);
 	static int lua_PlaceBlock(lua_State *L);
 	static int lua_GetBlock(lua_State *L);
+	static int lua_GetBiomeMap(lua_State *L);
 };

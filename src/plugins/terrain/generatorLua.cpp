@@ -1,4 +1,5 @@
 #include "generatorLua.h"
+#include "b173/beta173Biome.h"
 
 GeneratorLua::GeneratorLua(int64_t pSeed, World *pWorld) : Generator(pSeed, pWorld) {
 	logger = &Betrock::Logger::Instance();
@@ -13,12 +14,8 @@ GeneratorLua::GeneratorLua(int64_t pSeed, World *pWorld) : Generator(pSeed, pWor
 	lua_pushlightuserdata(L, this);
 	lua_setglobal(L, "generator_instance");
 
-	lua_pushnumber(L, CHUNK_WIDTH_X - 1);
-	lua_setglobal(L, "CHUNK_WIDTH_X");
-	lua_pushnumber(L, CHUNK_WIDTH_Z - 1);
-	lua_setglobal(L, "CHUNK_WIDTH_Z");
-	lua_pushnumber(L, CHUNK_HEIGHT - 1);
-	lua_setglobal(L, "CHUNK_HEIGHT");
+	// Register globals and enums
+	RegisterGlobals();
 
 	// Add helper functions
 	lua_register(L, "index", GeneratorLua::lua_Index);
@@ -31,6 +28,7 @@ GeneratorLua::GeneratorLua(int64_t pSeed, World *pWorld) : Generator(pSeed, pWor
 	lua_register(L, "checkChunk", lua_CheckChunk);
 	lua_register(L, "placeBlock", lua_PlaceBlock);
 	lua_register(L, "getBlock", lua_GetBlock);
+	lua_register(L, "getBiomeMap", lua_GetBiomeMap);
 
 	// Execute a Lua script
 	auto &cfg = Betrock::GlobalConfig::Instance();
@@ -63,6 +61,59 @@ GeneratorLua::GeneratorLua(int64_t pSeed, World *pWorld) : Generator(pSeed, pWor
 	}
 }
 
+int64_t GeneratorLua::GetSeed(lua_State *L) {
+	lua_getglobal(L, "seed");
+	if (!lua_isnumber(L, -1)) {
+		std::cerr << "Invalid seed value!" << "\n";
+		return 1;
+	}
+	int64_t seed = (int64_t)lua_tointeger(L, -1);
+	lua_pop(L, 1); // remove the pushed global so args remain at indices 1 and 2
+	return seed;
+}
+
+void GeneratorLua::RegisterGlobals() {
+	// Push defines
+	lua_pushinteger(L, CHUNK_WIDTH_X - 1);
+	lua_setglobal(L, "CHUNK_WIDTH_X");
+	lua_pushinteger(L, CHUNK_WIDTH_Z - 1);
+	lua_setglobal(L, "CHUNK_WIDTH_Z");
+	lua_pushinteger(L, CHUNK_HEIGHT - 1);
+	lua_setglobal(L, "CHUNK_HEIGHT");
+
+	// Push Biome Nums
+	lua_newtable(L);
+	lua_pushinteger(L, BIOME_NONE);
+	lua_setfield(L, -2, "NONE");
+	lua_pushinteger(L, BIOME_RAINFOREST);
+	lua_setfield(L, -2, "RAINFOREST");
+	lua_pushinteger(L, BIOME_SWAMPLAND);
+	lua_setfield(L, -2, "SWAMPLAND");
+	lua_pushinteger(L, BIOME_SEASONALFOREST);
+	lua_setfield(L, -2, "SEASONALFOREST");
+	lua_pushinteger(L, BIOME_FOREST);
+	lua_setfield(L, -2, "FOREST");
+	lua_pushinteger(L, BIOME_SAVANNA);
+	lua_setfield(L, -2, "SAVANNA");
+	lua_pushinteger(L, BIOME_SHRUBLAND);
+	lua_setfield(L, -2, "SHRUBLAND");
+	lua_pushinteger(L, BIOME_TAIGA);
+	lua_setfield(L, -2, "TAIGA");
+	lua_pushinteger(L, BIOME_DESERT);
+	lua_setfield(L, -2, "DESERT");
+	lua_pushinteger(L, BIOME_PLAINS);
+	lua_setfield(L, -2, "PLAINS");
+	lua_pushinteger(L, BIOME_ICEDESERT);
+	lua_setfield(L, -2, "ICEDESERT");
+	lua_pushinteger(L, BIOME_TUNDRA);
+	lua_setfield(L, -2, "TUNDRA");
+	lua_pushinteger(L, BIOME_HELL);
+	lua_setfield(L, -2, "HELL");
+	lua_pushinteger(L, BIOME_SKY);
+	lua_setfield(L, -2, "SKY");
+	lua_setglobal(L, "BIOME");
+}
+
 Block GeneratorLua::DecodeBlock() {
 	Block b;
 	if (lua_istable(L, -1)) {
@@ -93,8 +144,8 @@ std::shared_ptr<Chunk> GeneratorLua::GenerateChunk(Int2 chunkPos) {
 	if (!lua_isfunction(L, -1)) {
 		throw std::runtime_error("GenerateChunk was not found!");
 	}
-	lua_pushnumber(L, chunkPos.x);
-	lua_pushnumber(L, chunkPos.y);
+	lua_pushinteger(L, chunkPos.x);
+	lua_pushinteger(L, chunkPos.y);
 	if (CheckLua(L, lua_pcall(L, 2, 1, 0))) {
 		if (lua_istable(L, -1)) {
 			for (int i = 1; i <= CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z; i++) {
@@ -126,8 +177,8 @@ bool GeneratorLua::PopulateChunk(Int2 chunkPos) {
 		logger->Warning("PopulateChunk was not found! Skipping...");
 		return true;
 	}
-	lua_pushnumber(L, chunkPos.x);
-	lua_pushnumber(L, chunkPos.y);
+	lua_pushinteger(L, chunkPos.x);
+	lua_pushinteger(L, chunkPos.y);
 	CheckLua(L, lua_pcall(L, 2, 1, 0));
 	return true;
 }
@@ -139,31 +190,25 @@ int GeneratorLua::lua_Index(lua_State *L) {
 		return 1;
 	}
 
-	int x = (int)lua_tonumber(L, 1);
-	int y = (int)lua_tonumber(L, 2);
-	int z = (int)lua_tonumber(L, 3);
-	if (x < 0) {
+	int x = (int)lua_tointeger(L, 1);
+	int y = (int)lua_tointeger(L, 2);
+	int z = (int)lua_tointeger(L, 3);
+	if (x < 0)
 		x = 0;
-	}
-	if (x >= CHUNK_WIDTH_X) {
+	if (x >= CHUNK_WIDTH_X)
 		x = CHUNK_WIDTH_X - 1;
-	}
-	if (z < 0) {
+	if (z < 0)
 		z = 0;
-	}
-	if (z >= CHUNK_WIDTH_Z) {
+	if (z >= CHUNK_WIDTH_Z)
 		z = CHUNK_WIDTH_Z - 1;
-	}
-	if (y < 0) {
+	if (y < 0)
 		y = 0;
-	}
-	if (y >= CHUNK_HEIGHT) {
+	if (y >= CHUNK_HEIGHT)
 		y = CHUNK_HEIGHT - 1;
-	}
 
 	// Call Between and push the result
-	int32_t result = ((int32_t)(y + z * CHUNK_HEIGHT + (x * CHUNK_HEIGHT * CHUNK_WIDTH_Z))) + 1;
-	lua_pushnumber(L, result);
+	int32_t result = PositionToBlockIndex(Int3{x,y,z})+1;
+	lua_pushinteger(L, result);
 
 	return 1; // One return value on the Lua stack
 }
@@ -186,35 +231,23 @@ int GeneratorLua::lua_Between(lua_State *L) {
 }
 
 int GeneratorLua::lua_SpatialPRNG(lua_State *L) {
-	lua_getglobal(L, "seed"); // This sets the global 'seed' variable in Lua
-	if (!lua_isnumber(L, 1)) {
-		std::cerr << "Invalid seed value!" << "\n";
-		return 1;
-	}
-	int64_t seed = (int64_t)lua_tonumber(L, 1);
+	int64_t seed = GetSeed(L);
 
 	if (!CheckNum3(L)) {
 		return 1;
 	}
 
-	int x = (int)lua_tonumber(L, 1);
-	int y = (int)lua_tonumber(L, 2);
-	int z = (int)lua_tonumber(L, 3);
+	int x = (int)lua_tointeger(L, 1);
+	int y = (int)lua_tointeger(L, 2);
+	int z = (int)lua_tointeger(L, 3);
 	int result = SpatialPrng(seed, Int3{x, y, z});
 
-	lua_pushnumber(L, result);
+	lua_pushinteger(L, result);
 	return 1;
 }
 
 int GeneratorLua::lua_GetNoiseWorley(lua_State *L) {
-	// Check for global 'seed'
-	lua_getglobal(L, "seed");
-	if (!lua_isnumber(L, -1)) {
-		luaL_error(L, "Global 'seed' must be a number");
-		return 1;
-	}
-	int64_t seed = (int64_t)lua_tonumber(L, -1);
-	lua_pop(L, 1); // Pop 'seed'
+	int64_t seed = GetSeed(L);
 
 	// Validate number of arguments
 	if (lua_gettop(L) != 7) {
@@ -226,9 +259,9 @@ int GeneratorLua::lua_GetNoiseWorley(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 1;
 	}
-	int x = (int)lua_tonumber(L, 1);
-	int y = (int)lua_tonumber(L, 2);
-	int z = (int)lua_tonumber(L, 3);
+	int x = (int)lua_tointeger(L, 1);
+	int y = (int)lua_tointeger(L, 2);
+	int z = (int)lua_tointeger(L, 3);
 	Int3 position = Int3{x, y, z};
 
 	// Validate and extract threshold
@@ -256,12 +289,7 @@ int GeneratorLua::lua_GetNoiseWorley(lua_State *L) {
 
 int GeneratorLua::lua_GetNoisePerlin2D(lua_State *L) {
 	// Get the seed
-	lua_getglobal(L, "seed");
-	if (!lua_isnumber(L, 1)) {
-		std::cerr << "Invalid seed value!" << "\n";
-		return 1;
-	}
-	int64_t seed = (int64_t)lua_tonumber(L, 1);
+	int64_t seed = GetSeed(L);
 
 	// Validate and extract x, y, z
 	if (!CheckNum3(L)) {
@@ -287,12 +315,7 @@ int GeneratorLua::lua_GetNoisePerlin2D(lua_State *L) {
 
 int GeneratorLua::lua_GetNoisePerlin3D(lua_State *L) {
 	// Get the seed
-	lua_getglobal(L, "seed");
-	if (!lua_isnumber(L, 1)) {
-		std::cerr << "Invalid seed value!" << "\n";
-		return 1;
-	}
-	int64_t seed = (int64_t)lua_tonumber(L, 1);
+	int64_t seed = GetSeed(L);
 
 	// Validate and extract x, y, z
 	if (!CheckNum3(L)) {
@@ -308,7 +331,7 @@ int GeneratorLua::lua_GetNoisePerlin3D(lua_State *L) {
 		luaL_error(L, "Octaves must be a numeric value");
 		return 1;
 	}
-	int octaves = (int)lua_tonumber(L, 4);
+	int octaves = (int)lua_tointeger(L, 4);
 
 	// Call GetNoisePerlin3D and push result
 	double result = GetNoisePerlin3D(seed, position, octaves);
@@ -318,19 +341,14 @@ int GeneratorLua::lua_GetNoisePerlin3D(lua_State *L) {
 
 int GeneratorLua::lua_GetNaturalGrass(lua_State *L) {
 	// Get the seed
-	lua_getglobal(L, "seed");
-	if (!lua_isnumber(L, 1)) {
-		std::cerr << "Invalid seed value!" << "\n";
-		return 1;
-	}
-	int64_t seed = (int64_t)lua_tonumber(L, 1);
+	int64_t seed = GetSeed(L);
 
 	if (!CheckNum3(L)) {
 		return 1;
 	}
-	int x = (int)lua_tonumber(L, 1);
-	int y = (int)lua_tonumber(L, 2);
-	int z = (int)lua_tonumber(L, 3);
+	int x = (int)lua_tointeger(L, 1);
+	int y = (int)lua_tointeger(L, 2);
+	int z = (int)lua_tointeger(L, 3);
 	Int3 position = Int3{x, y, z};
 
 	// Validate and extract threshold
@@ -338,11 +356,11 @@ int GeneratorLua::lua_GetNaturalGrass(lua_State *L) {
 		luaL_error(L, "Blocks since the Sky was visible must be a numeric value");
 		return 1;
 	}
-	int bs = (int)lua_tonumber(L, 4);
+	int bs = (int)lua_tointeger(L, 4);
 
 	// Call the function
 	Block result = GetNaturalGrass(seed, position, bs);
-	lua_pushnumber(L, result.type);
+	lua_pushinteger(L, result.type);
 	return 1;
 }
 
@@ -356,8 +374,8 @@ int GeneratorLua::lua_CheckChunk(lua_State *L) {
 	if (!gen)
 		return luaL_error(L, "GeneratorLua instance not set");
 
-	int x = (int)lua_tonumber(L, 1);
-	int z = (int)lua_tonumber(L, 2);
+	int x = (int)lua_tointeger(L, 1);
+	int z = (int)lua_tointeger(L, 2);
 
 	lua_pushboolean(L, gen->world->ChunkExists(Int2{x,z}));
 	return 1;
@@ -374,9 +392,9 @@ int GeneratorLua::lua_PlaceBlock(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 0;
 	}
-	int x = (int)lua_tonumber(L, 1);
-	int y = (int)lua_tonumber(L, 2);
-	int z = (int)lua_tonumber(L, 3);
+	int x = (int)lua_tointeger(L, 1);
+	int y = (int)lua_tointeger(L, 2);
+	int z = (int)lua_tointeger(L, 3);
 	Int3 position = Int3{x, y, z};
 
 	Block b = gen->DecodeBlock();
@@ -397,17 +415,58 @@ int GeneratorLua::lua_GetBlock(lua_State *L) {
 		lua_pushnil(L);
 		return 1;
 	}
-	int x = (int)lua_tonumber(L, 1);
-	int y = (int)lua_tonumber(L, 2);
-	int z = (int)lua_tonumber(L, 3);
+	int x = (int)lua_tointeger(L, 1);
+	int y = (int)lua_tointeger(L, 2);
+	int z = (int)lua_tointeger(L, 3);
 	Int3 position = Int3{x, y, z};
 
 	// Create a table and push it to Lua stack
 	lua_newtable(L);
-	lua_pushnumber(L, gen->world->GetBlockType(position));
+	lua_pushinteger(L, gen->world->GetBlockType(position));
 	lua_rawseti(L, -2, 1);
-	lua_pushnumber(L, gen->world->GetBlockMeta(position));
+	lua_pushinteger(L, gen->world->GetBlockMeta(position));
 	lua_rawseti(L, -2, 2);
 
+	return 1;
+}
+
+/**
+ * @brief Get the Beta 1.7.3-appropriate biome at the current chunk position
+ * 
+ * @param L Currently active Lua VM
+ * @return 16x16 array of biome Enum values
+ */
+int GeneratorLua::lua_GetBiomeMap(lua_State *L) {
+	// Get the seed
+	int64_t seed = GetSeed(L);
+
+	// Get the GeneratorLua* from Lua global
+	if (!CheckNum2(L)) {
+		lua_pushnil(L);
+		return 1;
+	}
+	int x = (int)lua_tointeger(L, 1);
+	int z = (int)lua_tointeger(L, 2);
+	Int2 blockPos = Int2{x*CHUNK_WIDTH_X, z*CHUNK_WIDTH_Z};
+
+	std::vector<Biome> biomeMap;
+	std::vector<double> temp;
+	std::vector<double> humi;
+	std::vector<double> weird;
+	Beta173Biome(seed).GenerateBiomeMap(biomeMap, temp, humi, weird, blockPos, Int2{CHUNK_WIDTH_X, CHUNK_WIDTH_Z});
+	
+	// Create a table and push it to Lua stack
+	lua_newtable(L);
+	for (int xi = 0; xi < CHUNK_WIDTH_X; xi++) {
+		lua_newtable(L);
+		for (int zi = 0; zi < CHUNK_WIDTH_Z; zi++) {
+			int index = zi + (xi * CHUNK_WIDTH_Z);
+			int value = int(biomeMap[index]);
+			lua_pushinteger(L, value);
+			lua_rawseti(L, -2,  zi+1);
+		}
+
+		lua_rawseti(L, -2, xi+1);
+	}
 	return 1;
 }
