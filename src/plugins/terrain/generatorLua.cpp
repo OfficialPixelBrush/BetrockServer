@@ -144,8 +144,8 @@ std::shared_ptr<Chunk> GeneratorLua::GenerateChunk(Int2 chunkPos) {
 	if (!lua_isfunction(L, -1)) {
 		throw std::runtime_error("GenerateChunk was not found!");
 	}
-	lua_pushnumber(L, cX);
-	lua_pushnumber(L, cZ);
+	lua_pushnumber(L, chunkPos.x);
+	lua_pushnumber(L, chunkPos.y);
 	if (CheckLua(L, lua_pcall(L, 2, 1, 0))) {
 		if (lua_istable(L, -1)) {
 			for (int i = 1; i <= CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z; i++) {
@@ -165,7 +165,7 @@ std::shared_ptr<Chunk> GeneratorLua::GenerateChunk(Int2 chunkPos) {
 	return c;
 }
 
-bool GeneratorLua::PopulateChunk(int32_t cX, int32_t cZ) {
+bool GeneratorLua::PopulateChunk(Int2 chunkPos) {
 	if (apiVersion < API_GENERATOR_POPULATECHUNK) {
 		return true;
 	}
@@ -177,8 +177,8 @@ bool GeneratorLua::PopulateChunk(int32_t cX, int32_t cZ) {
 		logger->Warning("PopulateChunk was not found! Skipping...");
 		return true;
 	}
-	lua_pushnumber(L, cX);
-	lua_pushnumber(L, cZ);
+	lua_pushnumber(L, chunkPos.x);
+	lua_pushnumber(L, chunkPos.y);
 	CheckLua(L, lua_pcall(L, 2, 1, 0));
 	return true;
 }
