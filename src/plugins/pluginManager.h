@@ -18,7 +18,7 @@ class PluginManager {
         
         // Subscribe to hook
         bool SubscribeToBlockBreakHook();
-        bool SubscribeToPlaceBreakHook();
+        bool SubscribeToBlockPlaceHook();
 
         // Inform of hooked event
         bool InformOfBlockBreak();
