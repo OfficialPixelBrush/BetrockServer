@@ -9,7 +9,7 @@
 
 #include "client.h"
 #include "javaMath.h"
-#include "plugins.h"
+#include "pluginManager.h"
 #include "world.h"
 #include "worldManager.h"
 
@@ -204,7 +204,7 @@ class Server {
 	std::atomic_uint64_t upTime = 0;
 	WorldManagerMap worldManagers;
 	std::unordered_map<int8_t, std::jthread> worldManagerThreads;
-	std::vector<std::unique_ptr<Plugin>> plugins;
+	PluginManager pluginManager;
 	Int3 spawnPoint;
 	std::int8_t spawnDimension;
 	std::string spawnWorld;

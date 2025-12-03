@@ -27,3 +27,19 @@ bool CheckNum2(lua_State *L, int startIndex) {
     }
     return true;
 }
+
+Block DecodeBlock(lua_State *L) {
+	Block b;
+	if (lua_istable(L, -1)) {
+		lua_rawgeti(L, -1, 1);
+		lua_rawgeti(L, -2, 2);
+
+		if (lua_isnumber(L, -2) && lua_isnumber(L, -1)) {
+			b.type = lua_tointeger(L, -2);
+			b.meta = lua_tointeger(L, -1);
+		}
+
+		lua_pop(L, 2); // Pop both numbers
+	}
+	return b;
+}

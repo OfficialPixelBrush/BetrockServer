@@ -199,11 +199,7 @@ void Server::InitPlugins() {
 	// Load plugin file and let it sit in it's own lua VM
 	// Start Plugin script
 	for (const auto &entry : std::filesystem::directory_iterator("scripts/plugins/")) {
-		try {
-			plugins.push_back(std::make_unique<Plugin>(entry.path()));
-		} catch (const std::exception &e) {
-			Betrock::Logger::Instance().Error(e.what());
-		}
+		pluginManager.AddPlugin(entry.path());
 	}
 }
 

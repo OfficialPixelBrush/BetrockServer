@@ -100,7 +100,7 @@ void Client::HandlePacket() {
 
 		// Get the current Dimension
 		// TODO: We probably don't need to run this on every single packet!
-		World* world;
+		World* world = nullptr;
 		if (player) {
 			world = Betrock::Server::Instance().GetWorld(player->dimension);
 		}

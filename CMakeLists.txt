@@ -116,7 +116,10 @@ add_executable(
     src/plugins/terrain/historic/noise/noiseSimplex.cpp
     src/plugins/terrain/generatorLua.cpp
     src/plugins/terrain/generator.cpp
-    src/plugins/plugins.cpp
+    src/plugins/pluginManager.cpp
+    src/plugins/plugin.cpp
+    src/plugins/pluginFunctions.cpp
+    src/plugins/pluginHooks.cpp
 
     src/client/client.cpp
     src/client/clientChunks.cpp

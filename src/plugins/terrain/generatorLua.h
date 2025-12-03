@@ -20,7 +20,6 @@ class GeneratorLua : public Generator {
 	int32_t apiVersion = GENERATOR_LATEST_VERSION;
 	lua_State *L;
 
-	Block DecodeBlock();
 	void RegisterGlobals();
 	static int64_t GetSeed(lua_State *L);
 

@@ -114,22 +114,6 @@ void GeneratorLua::RegisterGlobals() {
 	lua_setglobal(L, "BIOME");
 }
 
-Block GeneratorLua::DecodeBlock() {
-	Block b;
-	if (lua_istable(L, -1)) {
-		lua_rawgeti(L, -1, 1);
-		lua_rawgeti(L, -2, 2);
-
-		if (lua_isnumber(L, -2) && lua_isnumber(L, -1)) {
-			b.type = lua_tointeger(L, -2);
-			b.meta = lua_tointeger(L, -1);
-		}
-
-		lua_pop(L, 2); // Pop both numbers
-	}
-	return b;
-}
-
 // Run the GenerateChunk function and pass its execution onto lua
 // Then retrieve the generated Chunk data
 // This step is for ma
@@ -150,7 +134,7 @@ std::shared_ptr<Chunk> GeneratorLua::GenerateChunk(Int2 chunkPos) {
 		if (lua_istable(L, -1)) {
 			for (int i = 1; i <= CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z; i++) {
 				lua_rawgeti(L, -1, i);
-				Block b = DecodeBlock();
+				Block b = DecodeBlock(L);
 				c->SetBlockTypeAndMeta(b.type, b.meta, BlockIndexToPosition(i - 1));
 				lua_pop(L, 1); // Pop table[i]
 			}
@@ -397,7 +381,7 @@ int GeneratorLua::lua_PlaceBlock(lua_State *L) {
 	int z = (int)lua_tointeger(L, 3);
 	Int3 position = Int3{x, y, z};
 
-	Block b = gen->DecodeBlock();
+	Block b = DecodeBlock(L);
 
 	gen->world->PlaceBlock(position, b.type, b.meta);
 	return 0;
