@@ -13,7 +13,7 @@
 // Save every 10 seconds
 #define SAVE_INTERVAL 10 * TICK_SPEED
 
-void HandleGracefulSignal(int) { Betrock::Server::Instance().PrepareForShutdown(); }
+void HandleGracefulSignal(int32_t) { Betrock::Server::Instance().PrepareForShutdown(); }
 
 /**
  * @brief Used by the usage-report thread to track current resource usage
