@@ -274,7 +274,7 @@ bool Client::HandlePlayerDigging(World* world) {
 		if (c) {
 			//Block* b = c->GetBlock(pos);
 			//if (b) {
-				//Betrock::Logger::Instance().Debug(IdToLabel(int(b->type)) + " " + b->str() + " at " + pos.str());
+				//Betrock::Logger::Instance().Debug(IdToLabel(int32_t(b->type)) + " " + b->str() + " at " + pos.str());
 			//}
 		}
 	}

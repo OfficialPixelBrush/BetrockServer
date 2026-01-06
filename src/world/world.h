@@ -49,8 +49,8 @@ class World {
 	bool RandomTick(Int3 &pos);
 	mutable std::shared_mutex lightUpdateMutex;
 	mutable std::shared_mutex chunkMutex;
-	std::atomic<int> lightingUpdatesCounter{0};
-	std::atomic<int> lightingUpdatesScheduled{0};
+	std::atomic<int32_t> lightingUpdatesCounter{0};
+	std::atomic<int32_t> lightingUpdatesScheduled{0};
 	bool MergeBox(Int3 &posA, Int3 &posB, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6);
 
   public:

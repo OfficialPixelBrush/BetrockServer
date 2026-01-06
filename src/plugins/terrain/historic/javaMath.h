@@ -71,21 +71,21 @@ struct MathHelper {
 	static constexpr size_t TABLE_SIZE = 65536;
 	static std::array<float, TABLE_SIZE> SIN_TABLE;
 
-	static float sin(float x) { return SIN_TABLE[static_cast<int>(x * 10430.378f) & 0xFFFF]; }
+	static float sin(float x) { return SIN_TABLE[static_cast<int32_t>(x * 10430.378f) & 0xFFFF]; }
 
-	static float cos(float x) { return SIN_TABLE[(static_cast<int>(x * 10430.378f + 16384.0f)) & 0xFFFF]; }
+	static float cos(float x) { return SIN_TABLE[(static_cast<int32_t>(x * 10430.378f + 16384.0f)) & 0xFFFF]; }
 
 	static float sqrt_float(float x) { return std::sqrt(x); }
 
 	static float sqrt_double(double x) { return static_cast<float>(std::sqrt(x)); }
 
 	static int32_t floor_float(float x) {
-		int32_t i = static_cast<int>(x);
+		int32_t i = static_cast<int32_t>(x);
 		return x < static_cast<float>(i) ? i - 1 : i;
 	}
 
 	static int32_t floor_double(double x) {
-		int32_t i = static_cast<int>(x);
+		int32_t i = static_cast<int32_t>(x);
 		return x < static_cast<double>(i) ? i - 1 : i;
 	}
 	

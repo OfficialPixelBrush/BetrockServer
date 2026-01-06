@@ -269,7 +269,7 @@ Int2 DecodeChunkHash(int64_t hash) {
 
 
 // Safely transform a string into an integer
-int32_t SafeStringToInt(std::string in) {
+int32_t SafeStringToInt32(std::string in) {
 	return std::stoi(in);
 	try {
 	} catch (const std::exception &e) {
@@ -279,7 +279,7 @@ int32_t SafeStringToInt(std::string in) {
 }
 
 // Safely transform a string into a long
-int64_t SafeStringToLong(std::string in) {
+int64_t SafeStringToInt64(std::string in) {
 	try {
 		return std::stol(in);
 	} catch (const std::exception &e) {
@@ -320,7 +320,7 @@ std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size) {
         // Print hex values
         for (size_t j = 0; j < 16; ++j) {
             if (i + j < size) {
-                oss << std::setw(2) << static_cast<int>(array[i + j]) << " ";
+                oss << std::setw(2) << static_cast<int32_t>(array[i + j]) << " ";
             } else {
                 oss << "   "; // Padding for alignment
             }

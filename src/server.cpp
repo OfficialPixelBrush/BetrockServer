@@ -168,15 +168,15 @@ void Server::LoadConfig() {
 		GlobalConfig::Instance().SaveToDisk();
 	} else {
 		GlobalConfig::Instance().LoadFromDisk();
-		chunkDistance = GlobalConfig::Instance().GetAsNumber<int>("view-distance");
+		chunkDistance = GlobalConfig::Instance().GetAsNumber<int32_t>("view-distance");
 		try {
 			seed = GlobalConfig::Instance().GetAsNumber<int64_t>("level-seed");
 		} catch (const std::invalid_argument &e) {
 			seed = (long)hashCode(GlobalConfig::Instance().GetAsString("level-seed"));
 		}
 		motd = GlobalConfig::Instance().GetAsString("motd");
-		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int>("max-players");
-		maximumThreads = GlobalConfig::Instance().GetAsNumber<int>("max-generator-threads");
+		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int32_t>("max-players");
+		maximumThreads = GlobalConfig::Instance().GetAsNumber<int32_t>("max-generator-threads");
 		whitelistEnabled = GlobalConfig::Instance().GetAsBoolean("white-list");
 	}
 

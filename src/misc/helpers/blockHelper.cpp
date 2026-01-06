@@ -145,7 +145,7 @@ uint8_t GetSignOrientation(float playerYaw) {
 	const float angleSlice = 360.0f / 16.0f;
 
 	// This is a lot easier than a huge-ass if-else chain
-	int32_t index = static_cast<int>(std::floor((playerYaw + angleSlice * 0.5f) / angleSlice)) % 16;
+	int32_t index = static_cast<int32_t>(std::floor((playerYaw + angleSlice * 0.5f) / angleSlice)) % 16;
 	if (index < 0)
 		index += 16;
 

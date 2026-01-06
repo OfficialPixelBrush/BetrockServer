@@ -151,7 +151,7 @@ void Beta173BigTree::GenerateBranchPositions() {
 		var1 = 1;
 	}
 
-	std::vector<std::array<int, 4>> var2(var1 * this->totalHeight);
+	std::vector<std::array<int32_t, 4>> var2(var1 * this->totalHeight);
 	int32_t var3 = this->basePos.y + this->totalHeight - this->trunkThickness;
 	int32_t var4 = 1;
 	int32_t var5 = this->basePos.y + this->height;

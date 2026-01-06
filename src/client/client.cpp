@@ -473,7 +473,7 @@ int8_t Client::GetPlayerOrientation() {
     float limitedYaw = fmodf(player->yaw, 360.0f);
     if (limitedYaw < 0) limitedYaw += 360.0f; // Ensure yaw is in [0, 360)
 
-    int32_t roundedYaw = static_cast<int>(roundf(limitedYaw / 90.0f)) % 4; // Round to nearest multiple of 90
+    int32_t roundedYaw = static_cast<int32_t>(roundf(limitedYaw / 90.0f)) % 4; // Round to nearest multiple of 90
 
     switch (roundedYaw) {
         case 0: return zPlus;  // 0°   -> +Z

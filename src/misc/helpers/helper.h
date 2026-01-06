@@ -47,8 +47,8 @@ std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t comp
 int64_t GetChunkHash(Int2 position);
 Int2 DecodeChunkHash(int64_t hash);
 
-int32_t SafeStringToInt(std::string in);
-int64_t SafeStringToLong(std::string in);
+int32_t SafeStringToInt32(std::string in);
+int64_t SafeStringToInt64(std::string in);
 
 std::string GetRealTime();
 std::string GetRealTimeFileFormat();

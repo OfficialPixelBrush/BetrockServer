@@ -46,7 +46,7 @@ class WorldManager {
 	std::condition_variable queueCV;
 	std::vector<std::thread> workers;
 	uint32_t workerCount = 1; // Use number of CPU cores
-	std::atomic<int> busyWorkers = 0;
+	std::atomic<int32_t> busyWorkers = 0;
 	void WorkerThread();
 	std::shared_ptr<Chunk> GetChunk(Int2 position, Generator *generator);
 

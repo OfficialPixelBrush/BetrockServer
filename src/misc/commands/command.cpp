@@ -260,12 +260,12 @@ std::string CommandGive::Execute(std::vector<std::string> pCommand, std::vector<
 		int8_t amount = -1;
 		int8_t metadata = 0;
 		if (pCommand.size() > 2) {
-			metadata = SafeStringToInt(pCommand[2].c_str());
+			metadata = SafeStringToInt32(pCommand[2].c_str());
 		}
 		if (pCommand.size() > 3) {
-			amount = SafeStringToInt(pCommand[3].c_str());
+			amount = SafeStringToInt32(pCommand[3].c_str());
 		}
-		int16_t itemId = SafeStringToInt(pCommand[1].c_str());
+		int16_t itemId = SafeStringToInt32(pCommand[1].c_str());
 		if ((itemId > BLOCK_AIR && itemId < BLOCK_MAX) || (itemId >= ITEM_SHOVEL_IRON && itemId < ITEM_MAX)) {
 			if (!client->Give(pResponse, itemId, amount, metadata)) {
 				return "Unable to give " + IdToLabel(itemId);
@@ -524,8 +524,8 @@ std::string CommandPopulated::Execute([[maybe_unused]] std::vector<std::string> 
 		return "World does not exist!";
 	std::shared_ptr<Chunk> c = w->GetChunk(
 		Int2{
-			int(player->position.x / 16.0),
-			int(player->position.z / 16.0)
+			int32_t(player->position.x / 16.0),
+			int32_t(player->position.z / 16.0)
 		}
 	);
 	if (!c)
