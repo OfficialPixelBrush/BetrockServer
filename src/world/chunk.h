@@ -3,6 +3,7 @@
 #include "datatypes.h"
 #include "tileEntity.h"
 #include "world.h"
+#include "nbt.h"
 #include <cstdint>
 
 class World;
@@ -27,14 +28,14 @@ class Chunk {
 	int32_t xPos, zPos;
 	std::vector<std::unique_ptr<TileEntity>> tileEntities;
 
-	void RelightBlock(int var1, int var2, int var3);
-	void UpdateSkylight_do(int x, int z);
-	void CheckSkylightNeighborHeight(int x, int z, int height);
+	void RelightBlock(int32_t var1, int32_t var2, int32_t var3);
+	void UpdateSkylight_do(int32_t x, int32_t z);
+	void CheckSkylightNeighborHeight(int32_t x, int32_t z, int32_t height);
 	// Block* GetBlock(Int3 pos);
 	// Block* GetBlock(int32_t x, int8_t y, int32_t z);
-	int8_t blockTypeArray[(CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT)];
-	int8_t blockMetaArray[(CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT) / 2];
-	int8_t blockLightArray[(CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT)];
+	BlockType blockTypeArray[(CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT)];
+	uint8_t blockMetaArray[(CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT) / 2];
+	uint8_t blockLightArray[(CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT)];
 
   public:
 	std::atomic<int8_t> state = ChunkState::Invalid;
@@ -52,11 +53,11 @@ class Chunk {
 	int8_t GetTotalLight(Int3 pos);
 	void ClearChunk();
 
-	void SetBlockType(int8_t type, Int3 pos);
-	int8_t GetBlockType(Int3 pos);
+	void SetBlockType(BlockType type, Int3 pos);
+	BlockType GetBlockType(Int3 pos);
 	void SetBlockMeta(int8_t meta, Int3 pos);
 	int8_t GetBlockMeta(Int3 pos);
-	void SetBlockTypeAndMeta(int8_t type, int8_t meta, Int3 pos);
+	void SetBlockTypeAndMeta(BlockType type, int8_t meta, Int3 pos);
 
 	void SetBlockLight(int8_t value, Int3 pos);
 	int8_t GetBlockLight(Int3 pos);

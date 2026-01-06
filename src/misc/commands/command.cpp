@@ -307,7 +307,7 @@ std::string CommandHealth::Execute(std::vector<std::string> pCommand, std::vecto
 	auto player = client->GetPlayer();
 
 	if (pCommand.size() > 1) {
-		int health = std::stoi(pCommand[1].c_str());
+		int32_t health = std::stoi(pCommand[1].c_str());
 		player->SetHealth(pResponse, health);
 		Respond::ChatMessage(pResponse, "§7Set Health to " + std::to_string(player->health));
 		return "";
@@ -617,13 +617,13 @@ std::string CommandPacket::Execute([[maybe_unused]] std::vector<std::string> pCo
 		part++;
 	}
 	for (part = part; part < pCommand.size(); part++) {
-		unsigned int x;
+		uint32_t x;
 		std::stringstream ss;
 		ss << std::hex << pCommand[part];
 		if (!(ss >> x) || x > 0xFF)
 			return "Invalid hex value"; // or handle error
 
-		std::cout << int(part) << ": " << int(x) << " - " << pCommand[part] << "\n";
+		std::cout << int32_t(part) << ": " << int32_t(x) << " - " << pCommand[part] << "\n";
 		if (broadcastToAll)
 			broadcast.push_back(static_cast<uint8_t>(x));
 		else

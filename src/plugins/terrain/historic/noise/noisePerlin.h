@@ -11,7 +11,7 @@
  */
 class NoisePerlin : public NoiseGenerator {
   private:
-	int permutations[512];
+	int32_t permutations[512];
 	double xCoord;
 	double yCoord;
 	double zCoord;

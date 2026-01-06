@@ -39,11 +39,11 @@ void Beta173Biome::GenerateBiomeMap(std::vector<Biome>& biomeMap, std::vector<do
 	this->humidityNoiseGen->GenerateOctaves(humidity, (double)blockPos.x, (double)blockPos.y, max.x, max.x, 0.05, 0.05, 1.0 / 3.0);
 	this->weirdnessNoiseGen->GenerateOctaves(weirdness, (double)blockPos.x, (double)blockPos.y, max.x, max.x, 0.25, 0.25,
 											 0.5882352941176471);
-	int index = 0;
+	int32_t index = 0;
 
 	// Iterate over each block column
-	for (int iX = 0; iX < max.x; ++iX) {
-		for (int iZ = 0; iZ < max.y; ++iZ) {
+	for (int32_t iX = 0; iX < max.x; ++iX) {
+		for (int32_t iZ = 0; iZ < max.y; ++iZ) {
 			double weird = weirdness[index] * 1.1 + 0.5;
 			double scale = 0.01;
 			double limit = 1.0 - scale;
@@ -89,10 +89,10 @@ void Beta173Biome::GenerateTemperature(std::vector<double>& temperature, std::ve
 											   (double)0.025F, 0.25);
 	this->weirdnessNoiseGen->GenerateOctaves(weirdness, (double)blockPos.x, (double)blockPos.y, max.x, max.y, 0.25, 0.25,
 											 0.5882352941176471);
-	int index = 0;
+	int32_t index = 0;
 
-	for (int x = 0; x < max.x; ++x) {
-		for (int z = 0; z < max.y; ++z) {
+	for (int32_t x = 0; x < max.x; ++x) {
+		for (int32_t z = 0; z < max.y; ++z) {
 			double var9 = weirdness[index] * 1.1 + 0.5;
 			double scale = 0.01;
 			double limit = 1.0 - scale;

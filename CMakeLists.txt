@@ -77,7 +77,6 @@ add_executable(
     src/coms/responses.cpp
 
     src/enums/drops.cpp
-    src/enums/blocks.cpp
     src/enums/items.cpp
     src/enums/labels.cpp
     src/enums/biomes.cpp
@@ -85,6 +84,7 @@ add_executable(
     src/logger/logger.cpp
     src/logger/style.cpp
 
+    src/misc/helpers/blockHelper.cpp
     src/misc/helpers/datatypes.cpp
     src/misc/helpers/helper.cpp
     src/misc/helpers/luahelper.cpp
@@ -151,7 +151,7 @@ target_compile_options(BetrockServer PRIVATE
     -Wall
     -Wextra
     #-Wpedantic           # Enforce strict ISO compliance
-    #-Wconversion          # Implicit conversions (int → float, etc.)
+    #-Wconversion          # Implicit conversions (int32_t → float, etc.)
     #-Wsign-conversion     # Sign mismatches
     -Wshadow              # Variable shadowing
     -Wunused              # Unused variables, params, etc.

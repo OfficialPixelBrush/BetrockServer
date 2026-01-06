@@ -1,7 +1,7 @@
 #include "luahelper.h"
 
 // Check if the current lua state is valid
-bool CheckLua(lua_State *L, int r) {
+bool CheckLua(lua_State *L, int32_t r) {
     if (r != LUA_OK)  {
         std::string errormsg = lua_tostring(L,-1);
         Betrock::Logger::Instance().Info(errormsg);
@@ -11,7 +11,7 @@ bool CheckLua(lua_State *L, int r) {
 }
 
 // Check if 3 Numbers are passed
-bool CheckNum3(lua_State *L, int startIndex) {
+bool CheckNum3(lua_State *L, int32_t startIndex) {
     if (!lua_isnumber(L, startIndex+0) || !lua_isnumber(L, startIndex+1) || !lua_isnumber(L, startIndex+2)) {
         luaL_error(L, "Expected three numeric arguments");
         return false; // Return 0 since we raised an error
@@ -20,7 +20,7 @@ bool CheckNum3(lua_State *L, int startIndex) {
 }
 
 // Check if 2 Numbers are passed
-bool CheckNum2(lua_State *L, int startIndex) {
+bool CheckNum2(lua_State *L, int32_t startIndex) {
     if (!lua_isnumber(L, startIndex+0) || !lua_isnumber(L, startIndex+1)) {
         luaL_error(L, "Expected two numeric arguments");
         return false; // Return 0 since we raised an error
@@ -35,7 +35,7 @@ Block DecodeBlock(lua_State *L) {
 		lua_rawgeti(L, -2, 2);
 
 		if (lua_isnumber(L, -2) && lua_isnumber(L, -1)) {
-			b.type = lua_tointeger(L, -2);
+			b.type = BlockType(lua_tointeger(L, -2));
 			b.meta = lua_tointeger(L, -1);
 		}
 

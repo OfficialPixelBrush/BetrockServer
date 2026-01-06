@@ -51,7 +51,7 @@ class Server {
 
 	std::string GetSpawnWorld() const noexcept;
 
-	int GetServerFd() const noexcept;
+	int32_t GetServerFd() const noexcept;
 
 	std::vector<std::shared_ptr<Client>> &GetConnectedClients() noexcept;
 
@@ -59,7 +59,7 @@ class Server {
 
 	int32_t &GetLatestEntityId() noexcept;
 
-	int GetChunkDistance() const noexcept;
+	int32_t GetChunkDistance() const noexcept;
 
 	uint64_t GetServerTime() const noexcept;
 
@@ -117,7 +117,7 @@ class Server {
 	Client *FindClientByUsername(std::string_view username) const;
 
 	// add a new world manager (and also a new world)
-	void AddWorldManager(int8_t world_id, int maxThreads = -1);
+	void AddWorldManager(int8_t world_id, int32_t maxThreads = -1);
 
 	void SaveAll();
 
@@ -135,11 +135,11 @@ class Server {
 	static void ServerJoin() {
 		auto &server = Server::Instance();
 		struct sockaddr_in address;
-		int addrlen = sizeof(address);
+		int32_t addrlen = sizeof(address);
 
 		while (server.IsAlive()) {
 			// Accept connections
-			int client_fd = accept(server.serverFd, reinterpret_cast<struct sockaddr *>(&address),
+			int32_t client_fd = accept(server.serverFd, reinterpret_cast<struct sockaddr *>(&address),
 								   reinterpret_cast<socklen_t *>(&addrlen));
 			if (client_fd < 0) {
 				if (!server.IsAlive())
@@ -194,12 +194,12 @@ class Server {
 	// =====================================================
 
 	bool alive = true; // server alive
-	int serverFd = -1;
+	int32_t serverFd = -1;
 	std::vector<std::shared_ptr<Client>> connectedClients;
 	int32_t latestEntityId = 0;
 	int32_t maximumPlayers = NO_LIMIT;
 	uint32_t maximumThreads = 0;
-	int chunkDistance = 10;
+	int32_t chunkDistance = 10;
 	std::atomic_uint64_t serverTime = 0;
 	std::atomic_uint64_t upTime = 0;
 	WorldManagerMap worldManagers;

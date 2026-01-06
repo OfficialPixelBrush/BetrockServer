@@ -32,7 +32,7 @@ class Logger {
         Logger(const Logger &&) = delete;
         Logger &operator=(const Logger &) = delete;
         Logger &operator=(const Logger &&) = delete;
-        void Log(std::string message, int level = LOG_MESSAGE);
+        void Log(std::string message, int32_t level = LOG_MESSAGE);
     public:
         static Logger &Instance() {
             // this will create the server instance just once and just return a

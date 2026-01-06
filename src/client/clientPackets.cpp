@@ -40,7 +40,7 @@ bool Client::HandleLoginRequest(World* world) {
 	}
 
 	// Login response
-	int protocolVersion = EntryToInteger(message,offset);
+	int32_t protocolVersion = EntryToInteger(message,offset);
 
 	if (protocolVersion != PROTOCOL_VERSION) {
 		// If client has wrong protocol, close

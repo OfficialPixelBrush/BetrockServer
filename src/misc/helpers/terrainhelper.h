@@ -17,6 +17,6 @@ Int3 GetPointPositionInChunk(int64_t seed, Int3 position, Vec3 scale);
 double FindDistanceToPoint(int64_t seed, Int3 position, Vec3 scale);
 double SmoothStep(double edge0, double edge1, double x);
 double GetNoiseWorley(int64_t seed, Int3 position, double threshold, Vec3 scale);
-double GetNoisePerlin2D(int64_t seed, Vec3 position, int octaves);
-double GetNoisePerlin3D(int64_t seed, Vec3 position, int octaves);
+double GetNoisePerlin2D(int64_t seed, Vec3 position, int32_t octaves);
+double GetNoisePerlin3D(int64_t seed, Vec3 position, int32_t octaves);
 Block GetNaturalGrass(int64_t seed, Int3 position, int32_t blocksSinceSkyVisible);

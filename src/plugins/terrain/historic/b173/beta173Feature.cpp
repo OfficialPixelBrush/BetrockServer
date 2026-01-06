@@ -5,7 +5,7 @@
  * 
  * @param pId Block-ID that's used by some of the generators
  */
-Beta173Feature::Beta173Feature(int16_t pId) {
+Beta173Feature::Beta173Feature(BlockType pId) {
 	this->id = pId;
 }
 
@@ -15,7 +15,7 @@ Beta173Feature::Beta173Feature(int16_t pId) {
  * @param pId Block-ID that's used by some of the generators
  * @param pMeta Meta value that's used by the placed block id
  */
-Beta173Feature::Beta173Feature(int16_t pId, int8_t pMeta) {
+Beta173Feature::Beta173Feature(BlockType pId, int8_t pMeta) {
 	this->id = pId;
 	this->meta = pMeta;
 }
@@ -39,9 +39,9 @@ bool Beta173Feature::GenerateLake(World *world, JavaRandom *rand, Int3 pos) {
 
 	pos.y -= 4;
 	bool shapeMask[2048] = {};
-	int blobCount = rand->nextInt(4) + 4;
+	int32_t blobCount = rand->nextInt(4) + 4;
 
-	for (int blobIndex = 0; blobIndex < blobCount; ++blobIndex) {
+	for (int32_t blobIndex = 0; blobIndex < blobCount; ++blobIndex) {
 		double blobRadiusX = rand->nextDouble() * 6.0 + 3.0;
 		double blobRadiusY = rand->nextDouble() * 4.0 + 2.0;
 		double blobRadiusZ = rand->nextDouble() * 6.0 + 3.0;
@@ -50,9 +50,9 @@ bool Beta173Feature::GenerateLake(World *world, JavaRandom *rand, Int3 pos) {
 		double blobCenterY = rand->nextDouble() * (8.0 - blobRadiusY - 4.0) + 2.0 + blobRadiusY / 2.0;
 		double blobCenterZ = rand->nextDouble() * (16.0 - blobRadiusZ - 2.0) + 1.0 + blobRadiusZ / 2.0;
 
-		for (int x = 1; x < 15; ++x) {
-			for (int z = 1; z < 15; ++z) {
-				for (int y = 1; y < 7; ++y) {
+		for (int32_t x = 1; x < 15; ++x) {
+			for (int32_t z = 1; z < 15; ++z) {
+				for (int32_t y = 1; y < 7; ++y) {
 					double dx = ((double)x - blobCenterX) / (blobRadiusX / 2.0);
 					double dy = ((double)y - blobCenterY) / (blobRadiusY / 2.0);
 					double dz = ((double)z - blobCenterZ) / (blobRadiusZ / 2.0);
@@ -66,9 +66,9 @@ bool Beta173Feature::GenerateLake(World *world, JavaRandom *rand, Int3 pos) {
 	}
 
 	// Check if there's no other water nearby that'd intersect our new lake
-	for (int x = 0; x < 16; ++x) {
-		for (int z = 0; z < 16; ++z) {
-			for (int y = 0; y < 8; ++y) {
+	for (int32_t x = 0; x < 16; ++x) {
+		for (int32_t z = 0; z < 16; ++z) {
+			for (int32_t y = 0; y < 8; ++y) {
 				bool edge =
 					(!shapeMask[(x * 16 + z) * 8 + y]) && (((x < 15) && (shapeMask[((x + 1) * 16 + z) * 8 + y])) ||
 														   ((x > 0) && (shapeMask[((x - 1) * 16 + z) * 8 + y])) ||
@@ -91,11 +91,11 @@ bool Beta173Feature::GenerateLake(World *world, JavaRandom *rand, Int3 pos) {
 	}
 
 	// Fill the lake
-	for (int x = 0; x < 16; ++x) {
-		for (int z = 0; z < 16; ++z) {
-			for (int y = 0; y < 8; ++y) {
+	for (int32_t x = 0; x < 16; ++x) {
+		for (int32_t z = 0; z < 16; ++z) {
+			for (int32_t y = 0; y < 8; ++y) {
 				if (shapeMask[(x * 16 + z) * 8 + y]) {
-					world->SetBlockType(y >= 4 ? BLOCK_AIR : Blocks(this->id),
+					world->SetBlockType(y >= 4 ? BLOCK_AIR : BlockType(this->id),
 										Int3{pos.x + x, pos.y + y, pos.z + z});
 				}
 			}
@@ -103,9 +103,9 @@ bool Beta173Feature::GenerateLake(World *world, JavaRandom *rand, Int3 pos) {
 	}
 
 	// Replace exposed dirt with grass
-	for (int x = 0; x < 16; ++x) {
-		for (int z = 0; z < 16; ++z) {
-			for (int y = 4; y < 8; ++y) {
+	for (int32_t x = 0; x < 16; ++x) {
+		for (int32_t z = 0; z < 16; ++z) {
+			for (int32_t y = 4; y < 8; ++y) {
 				if (shapeMask[(x * 16 + z) * 8 + y] &&
 					world->GetBlockType(Int3{pos.x + x, pos.y + y - 1, pos.z + z}) == BLOCK_DIRT &&
 					world->GetSkyLight(Int3{pos.x + x, pos.y + y, pos.z + z}) > 0) {
@@ -117,9 +117,9 @@ bool Beta173Feature::GenerateLake(World *world, JavaRandom *rand, Int3 pos) {
 
 	// If we're generating a lava lake, make the edges into stone
 	if (this->id == BLOCK_LAVA_STILL || this->id == BLOCK_LAVA_FLOWING) {
-		for (int x = 0; x < 16; ++x) {
-			for (int z = 0; z < 16; ++z) {
-				for (int y = 0; y < 8; ++y) {
+		for (int32_t x = 0; x < 16; ++x) {
+			for (int32_t z = 0; z < 16; ++z) {
+				for (int32_t y = 0; y < 8; ++y) {
 					bool edge =
 						!(shapeMask[(x * 16 + z) * 8 + y]) && ((x < 15 && shapeMask[((x + 1) * 16 + z) * 8 + y]) ||
 															   (x > 0 && shapeMask[((x - 1) * 16 + z) * 8 + y]) ||
@@ -149,14 +149,14 @@ bool Beta173Feature::GenerateLake(World *world, JavaRandom *rand, Int3 pos) {
  */
 bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
 	int8_t dungeonHeight = 3;
-	int dungeonWidthX = rand->nextInt(2) + 2;
-	int dungeonWidthZ = rand->nextInt(2) + 2;
-	int validEntires = 0;
+	int32_t dungeonWidthX = rand->nextInt(2) + 2;
+	int32_t dungeonWidthZ = rand->nextInt(2) + 2;
+	int32_t validEntires = 0;
 
 	// Determine if a dungeon can be placed
-	for (int xI = pos.x - dungeonWidthX - 1; xI <= pos.x + dungeonWidthX + 1; ++xI) {
-		for (int yI = pos.y - 1; yI <= pos.y + dungeonHeight + 1; ++yI) {
-			for (int zI = pos.z - dungeonWidthZ - 1; zI <= pos.z + dungeonWidthZ + 1; ++zI) {
+	for (int32_t xI = pos.x - dungeonWidthX - 1; xI <= pos.x + dungeonWidthX + 1; ++xI) {
+		for (int32_t yI = pos.y - 1; yI <= pos.y + dungeonHeight + 1; ++yI) {
+			for (int32_t zI = pos.z - dungeonWidthZ - 1; zI <= pos.z + dungeonWidthZ + 1; ++zI) {
 				int8_t blockType = world->GetBlockType(Int3{xI, yI, zI});
 
 				// Floor and ceiling must be solid
@@ -180,9 +180,9 @@ bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
 	}
 
 	// Build the dungeon
-	for (int xI = pos.x - dungeonWidthX - 1; xI <= pos.x + dungeonWidthX + 1; ++xI) {
-		for (int yI = pos.y + dungeonHeight; yI >= pos.y - 1; --yI) {
-			for (int zI = pos.z - dungeonWidthZ - 1; zI <= pos.z + dungeonWidthZ + 1; ++zI) {
+	for (int32_t xI = pos.x - dungeonWidthX - 1; xI <= pos.x + dungeonWidthX + 1; ++xI) {
+		for (int32_t yI = pos.y + dungeonHeight; yI >= pos.y - 1; --yI) {
+			for (int32_t zI = pos.z - dungeonWidthZ - 1; zI <= pos.z + dungeonWidthZ + 1; ++zI) {
 				// Check if the current block is not a wall
 				if (xI != pos.x - dungeonWidthX - 1 && yI != pos.y - 1 && zI != pos.z - dungeonWidthZ - 1 &&
 					xI != pos.x + dungeonWidthX + 1 && yI != pos.y + dungeonHeight + 1 &&
@@ -202,16 +202,16 @@ bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
 	}
 
 	// Try placing up to 2 chests
-	for (int chestAttempt = 0; chestAttempt < 2; ++chestAttempt) {
-		for (int attempts = 0; attempts < 3; ++attempts) {
-			int chestX = pos.x + rand->nextInt(dungeonWidthX * 2 + 1) - dungeonWidthX;
-			int chestZ = pos.z + rand->nextInt(dungeonWidthZ * 2 + 1) - dungeonWidthZ;
+	for (int32_t chestAttempt = 0; chestAttempt < 2; ++chestAttempt) {
+		for (int32_t attempts = 0; attempts < 3; ++attempts) {
+			int32_t chestX = pos.x + rand->nextInt(dungeonWidthX * 2 + 1) - dungeonWidthX;
+			int32_t chestZ = pos.z + rand->nextInt(dungeonWidthZ * 2 + 1) - dungeonWidthZ;
 
 			if (world->GetBlockType(Int3{chestX, pos.y, chestZ}) != BLOCK_AIR)
 				continue;
 
 			// Count the number of adjacent blocks
-			int adjacentSolidBlocks = 0;
+			int32_t adjacentSolidBlocks = 0;
 			if (IsSolid(world->GetBlockType(Int3{chestX - 1, pos.y, chestZ})))
 				++adjacentSolidBlocks;
 			if (IsSolid(world->GetBlockType(Int3{chestX + 1, pos.y, chestZ})))
@@ -227,10 +227,10 @@ bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
 				world->PlaceBlock(chestLocation, BLOCK_CHEST);
 				std::unique_ptr<ChestTile> chest = std::make_unique<ChestTile>(chestLocation);
 
-				for (int slotAttempt = 0; slotAttempt < 8; ++slotAttempt) {
+				for (int32_t slotAttempt = 0; slotAttempt < 8; ++slotAttempt) {
 					Item item = GenerateDungeonChestLoot(rand);
 					if (item.id != SLOT_EMPTY) {
-						int slot = rand->nextInt(chest->GetInventory().size());
+						int32_t slot = rand->nextInt(chest->GetInventory().size());
 						chest->SetSlot(slot, item);
 					}
 				}
@@ -253,7 +253,7 @@ bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
  * @return The item that's returned
  */
 Item Beta173Feature::GenerateDungeonChestLoot(JavaRandom *rand) {
-	int randValue = rand->nextInt(11);
+	int32_t randValue = rand->nextInt(11);
 	switch (randValue) {
 	case 0:
 		return Item{ITEM_SADDLE, 1, 0};
@@ -294,7 +294,7 @@ Item Beta173Feature::GenerateDungeonChestLoot(JavaRandom *rand) {
  * @return The name-id of the to be spawned monster
  */
 std::string Beta173Feature::PickMobToSpawn(JavaRandom *rand) {
-	int mobIndex = rand->nextInt(4);
+	int32_t mobIndex = rand->nextInt(4);
 	switch (mobIndex) {
 	case 0:
 		return "Skeleton";
@@ -315,7 +315,7 @@ std::string Beta173Feature::PickMobToSpawn(JavaRandom *rand) {
  * @param pos Initial position of the feature
  * @return If generation succeeded 
  */
-bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int blobSize) {
+bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int32_t blobSize) {
 	// Clay can only generate around water
 	int8_t blockType = world->GetBlockType(pos);
 	if (blockType != BLOCK_WATER_STILL && blockType != BLOCK_WATER_FLOWING) {
@@ -332,7 +332,7 @@ bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int 
 	double yEnd = (double)(pos.y + rand->nextInt(3) + 2);
 
 	// Interpolate between the start and end
-	for (int i = 0; i <= blobSize; ++i) {
+	for (int32_t i = 0; i <= blobSize; ++i) {
 		double xCenter = xStart + (xEnd - xStart) * (double)i / (double)blobSize;
 		double yCenter = yStart + (yEnd - yStart) * (double)i / (double)blobSize;
 		double zCenter = zStart + (zEnd - zStart) * (double)i / (double)blobSize;
@@ -341,22 +341,22 @@ bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int 
 			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		double blobRadiusY =
 			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
-		int minX = int(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
-		int maxX = int(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
-		int minY = int(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
-		int maxY = int(MathHelper::floor_double(yCenter + blobRadiusY / 2.0));
-		int minZ = int(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));
-		int maxZ = int(MathHelper::floor_double(zCenter + blobRadiusXZ / 2.0));
+		int32_t minX = int(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
+		int32_t maxX = int(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
+		int32_t minY = int(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
+		int32_t maxY = int(MathHelper::floor_double(yCenter + blobRadiusY / 2.0));
+		int32_t minZ = int(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));
+		int32_t maxZ = int(MathHelper::floor_double(zCenter + blobRadiusXZ / 2.0));
 
 		// Replace sand blocks in the relevant area
-		for (int x = minX; x <= maxX; ++x) {
-			for (int y = minY; y <= maxY; ++y) {
-				for (int z = minZ; z <= maxZ; ++z) {
+		for (int32_t x = minX; x <= maxX; ++x) {
+			for (int32_t y = minY; y <= maxY; ++y) {
+				for (int32_t z = minZ; z <= maxZ; ++z) {
 					double dx = ((double)x + 0.5 - xCenter) / (blobRadiusXZ / 2.0);
 					double dy = ((double)y + 0.5 - yCenter) / (blobRadiusY / 2.0);
 					double dz = ((double)z + 0.5 - zCenter) / (blobRadiusXZ / 2.0);
 					if (dx * dx + dy * dy + dz * dz < 1.0) {
-						int currentBlock = world->GetBlockType(Int3{x, y, z});
+						int32_t currentBlock = world->GetBlockType(Int3{x, y, z});
 						if (currentBlock == BLOCK_SAND) {
 							world->PlaceBlock(Int3{x, y, z}, BLOCK_CLAY);
 						}
@@ -377,7 +377,7 @@ bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int 
  * @param pos Initial position of the feature
  * @return If generation succeeded 
  */
-bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, int blobSize) {
+bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, int32_t blobSize) {
 	// Get angle of clay blob
 	float angle = rand->nextFloat() * (float)JavaMath::PI;
 	// Then determine the bounds of the blob
@@ -389,7 +389,7 @@ bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, i
 	double yEnd = (double)(pos.y + rand->nextInt(3) + 2);
 
 	// Interpolate between the start and end
-	for (int i = 0; i <= blobSize; ++i) {
+	for (int32_t i = 0; i <= blobSize; ++i) {
 		double xCenter = xStart + (xEnd - xStart) * (double)i / (double)blobSize;
 		double yCenter = yStart + (yEnd - yStart) * (double)i / (double)blobSize;
 		double zCenter = zStart + (zEnd - zStart) * (double)i / (double)blobSize;
@@ -398,25 +398,25 @@ bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, i
 			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		double blobRadiusY =
 			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
-		int minX = int(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
-		int maxX = int(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
-		int minY = int(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));
-		int maxY = int(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
-		int minZ = int(MathHelper::floor_double(yCenter + blobRadiusY / 2.0));
-		int maxZ = int(MathHelper::floor_double(zCenter + blobRadiusXZ / 2.0));
+		int32_t minX = int(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
+		int32_t maxX = int(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
+		int32_t minY = int(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));
+		int32_t maxY = int(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
+		int32_t minZ = int(MathHelper::floor_double(yCenter + blobRadiusY / 2.0));
+		int32_t maxZ = int(MathHelper::floor_double(zCenter + blobRadiusXZ / 2.0));
 
 		// Replace stone blocks in the relevant area
-		for (int x = minX; x <= maxY; ++x) {
+		for (int32_t x = minX; x <= maxY; ++x) {
 			double dx = ((double)x + 0.5 - xCenter) / (blobRadiusXZ / 2.0);
 			if (dx * dx < 1.0) {
-				for (int z = maxX; z <= minZ; ++z) {
+				for (int32_t z = maxX; z <= minZ; ++z) {
 					double dz = ((double)z + 0.5 - yCenter) / (blobRadiusY / 2.0);
 					if (dx * dx + dz * dz < 1.0) {
-						for (int y = minY; y <= maxZ; ++y) {
+						for (int32_t y = minY; y <= maxZ; ++y) {
 							double dy = ((double)y + 0.5 - zCenter) / (blobRadiusXZ / 2.0);
 							if (dx * dx + dz * dz + dy * dy < 1.0 &&
 								world->GetBlockType(Int3{x, z, y}) == BLOCK_STONE) {
-								world->SetBlockType(int8_t(this->id), Int3{x, z, y});
+								world->SetBlockType(BlockType(this->id), Int3{x, z, y});
 							}
 						}
 					}
@@ -437,10 +437,10 @@ bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, i
  * @return If generation succeeded 
  */
 bool Beta173Feature::GenerateFlowers(World *world, JavaRandom *rand, Int3 pos) {
-	for (int i = 0; i < CHUNK_HEIGHT / 2; ++i) {
-		int offsetX = pos.x + rand->nextInt(8) - rand->nextInt(8);
-		int offsetY = pos.y + rand->nextInt(4) - rand->nextInt(4);
-		int offsetZ = pos.z + rand->nextInt(8) - rand->nextInt(8);
+	for (int32_t i = 0; i < CHUNK_HEIGHT / 2; ++i) {
+		int32_t offsetX = pos.x + rand->nextInt(8) - rand->nextInt(8);
+		int32_t offsetY = pos.y + rand->nextInt(4) - rand->nextInt(4);
+		int32_t offsetZ = pos.z + rand->nextInt(8) - rand->nextInt(8);
 		if (world->GetBlockType(Int3{offsetX, offsetY, offsetZ}) == BLOCK_AIR &&
 			CanStay(this->id, world, Int3{offsetX, offsetY, offsetZ})) {
 			world->SetBlockType(this->id, Int3{offsetX, offsetY, offsetZ});
@@ -460,12 +460,12 @@ bool Beta173Feature::GenerateFlowers(World *world, JavaRandom *rand, Int3 pos) {
  */
 bool Beta173Feature::GenerateTallgrass(World *world, JavaRandom *rand, Int3 pos) {
 	while (true) {
-		int blockType = world->GetBlockType(Int3{pos.x, pos.y, pos.z});
+		int32_t blockType = world->GetBlockType(Int3{pos.x, pos.y, pos.z});
 		if ((blockType != 0 && blockType != BLOCK_LEAVES) || pos.y <= 0) {
-			for (int y = 0; y < CHUNK_HEIGHT; ++y) {
-				int offsetX = pos.x + rand->nextInt(8) - rand->nextInt(8);
-				int offsetY = pos.y + rand->nextInt(4) - rand->nextInt(4);
-				int offsetZ = pos.z + rand->nextInt(8) - rand->nextInt(8);
+			for (int32_t y = 0; y < CHUNK_HEIGHT; ++y) {
+				int32_t offsetX = pos.x + rand->nextInt(8) - rand->nextInt(8);
+				int32_t offsetY = pos.y + rand->nextInt(4) - rand->nextInt(4);
+				int32_t offsetZ = pos.z + rand->nextInt(8) - rand->nextInt(8);
 				if (world->GetBlockType(Int3{offsetX, offsetY, offsetZ}) == BLOCK_AIR &&
 					CanStay(this->id, world, Int3{offsetX, offsetY, offsetZ})) {
 					world->SetBlockTypeAndMeta(this->id, this->meta, Int3{offsetX, offsetY, offsetZ});
@@ -489,12 +489,12 @@ bool Beta173Feature::GenerateTallgrass(World *world, JavaRandom *rand, Int3 pos)
  */
 bool Beta173Feature::GenerateDeadbush(World *world, JavaRandom *rand, Int3 pos) {
 	while (true) {
-		int blockType = world->GetBlockType(Int3{pos.x, pos.y, pos.z});
+		int32_t blockType = world->GetBlockType(Int3{pos.x, pos.y, pos.z});
 		if ((blockType != 0 && blockType != BLOCK_LEAVES) || pos.y <= 0) {
-			for (int i = 0; i < 4; ++i) {
-				int offsetX = pos.x + rand->nextInt(8) - rand->nextInt(8);
-				int offsetY = pos.y + rand->nextInt(4) - rand->nextInt(4);
-				int offsetZ = pos.z + rand->nextInt(8) - rand->nextInt(8);
+			for (int32_t i = 0; i < 4; ++i) {
+				int32_t offsetX = pos.x + rand->nextInt(8) - rand->nextInt(8);
+				int32_t offsetY = pos.y + rand->nextInt(4) - rand->nextInt(4);
+				int32_t offsetZ = pos.z + rand->nextInt(8) - rand->nextInt(8);
 				if (world->GetBlockType(Int3{offsetX, offsetY, offsetZ}) == BLOCK_AIR &&
 					CanStay(this->id, world, Int3{offsetX, offsetY, offsetZ})) {
 					world->SetBlockType(this->id, Int3{offsetX, offsetY, offsetZ});
@@ -517,9 +517,9 @@ bool Beta173Feature::GenerateDeadbush(World *world, JavaRandom *rand, Int3 pos) 
  * @return If generation succeeded 
  */
 bool Beta173Feature::GenerateSugarcane(World *world, JavaRandom *rand, Int3 pos) {
-	for (int i = 0; i < 20; ++i) {
-		int xOffset = pos.x + rand->nextInt(4) - rand->nextInt(4);
-		int zOffset = pos.z + rand->nextInt(4) - rand->nextInt(4);
+	for (int32_t i = 0; i < 20; ++i) {
+		int32_t xOffset = pos.x + rand->nextInt(4) - rand->nextInt(4);
+		int32_t zOffset = pos.z + rand->nextInt(4) - rand->nextInt(4);
 		if (world->GetBlockType(Int3{xOffset, pos.y, zOffset}) == BLOCK_AIR &&
 			(world->GetBlockType(Int3{xOffset - 1, pos.y - 1, zOffset}) == BLOCK_WATER_STILL ||
 			 world->GetBlockType(Int3{xOffset - 1, pos.y - 1, zOffset}) == BLOCK_WATER_FLOWING ||
@@ -529,9 +529,9 @@ bool Beta173Feature::GenerateSugarcane(World *world, JavaRandom *rand, Int3 pos)
 			 world->GetBlockType(Int3{xOffset, pos.y - 1, zOffset - 1}) == BLOCK_WATER_FLOWING ||
 			 world->GetBlockType(Int3{xOffset, pos.y - 1, zOffset + 1}) == BLOCK_WATER_STILL ||
 			 world->GetBlockType(Int3{xOffset, pos.y - 1, zOffset + 1}) == BLOCK_WATER_FLOWING)) {
-			int height = 2 + rand->nextInt(rand->nextInt(3) + 1);
+			int32_t height = 2 + rand->nextInt(rand->nextInt(3) + 1);
 
-			for (int h = 0; h < height; ++h) {
+			for (int32_t h = 0; h < height; ++h) {
 				if (CanStay(BLOCK_SUGARCANE, world, Int3{xOffset, pos.y + h, zOffset})) {
 					world->SetBlockType(BLOCK_SUGARCANE, Int3{xOffset, pos.y + h, zOffset});
 				}
@@ -551,10 +551,10 @@ bool Beta173Feature::GenerateSugarcane(World *world, JavaRandom *rand, Int3 pos)
  * @return If generation succeeded 
  */
 bool Beta173Feature::GeneratePumpkins(World *world, JavaRandom *rand, Int3 pos) {
-	for (int i = 0; i < 64; ++i) {
-		int xOffset = pos.x + rand->nextInt(8) - rand->nextInt(8);
-		int yOffset = pos.y + rand->nextInt(4) - rand->nextInt(4);
-		int zOffset = pos.z + rand->nextInt(8) - rand->nextInt(8);
+	for (int32_t i = 0; i < 64; ++i) {
+		int32_t xOffset = pos.x + rand->nextInt(8) - rand->nextInt(8);
+		int32_t yOffset = pos.y + rand->nextInt(4) - rand->nextInt(4);
+		int32_t zOffset = pos.z + rand->nextInt(8) - rand->nextInt(8);
 		if (world->GetBlockType(Int3{xOffset, yOffset, zOffset}) == BLOCK_AIR &&
 			world->GetBlockType(Int3{xOffset, yOffset - 1, zOffset}) == BLOCK_GRASS &&
 			CanBePlaced(BLOCK_PUMPKIN, world, Int3{xOffset, yOffset, zOffset})) {
@@ -573,14 +573,14 @@ bool Beta173Feature::GeneratePumpkins(World *world, JavaRandom *rand, Int3 pos) 
  * @return If generation succeeded 
  */
 bool Beta173Feature::GenerateCacti(World *world, JavaRandom *rand, Int3 pos) {
-	for (int i = 0; i < 10; ++i) {
-		int xOffset = pos.x + rand->nextInt(8) - rand->nextInt(8);
-		int yOffset = pos.y + rand->nextInt(4) - rand->nextInt(4);
-		int zOffset = pos.z + rand->nextInt(8) - rand->nextInt(8);
+	for (int32_t i = 0; i < 10; ++i) {
+		int32_t xOffset = pos.x + rand->nextInt(8) - rand->nextInt(8);
+		int32_t yOffset = pos.y + rand->nextInt(4) - rand->nextInt(4);
+		int32_t zOffset = pos.z + rand->nextInt(8) - rand->nextInt(8);
 		if (world->GetBlockType(Int3{xOffset, yOffset, zOffset}) == BLOCK_AIR) {
-			int height = 1 + rand->nextInt(rand->nextInt(3) + 1);
+			int32_t height = 1 + rand->nextInt(rand->nextInt(3) + 1);
 
-			for (int h = 0; h < height; ++h) {
+			for (int32_t h = 0; h < height; ++h) {
 				if (CanStay(BLOCK_CACTUS, world, Int3{xOffset, yOffset + h, zOffset})) {
 					world->SetBlockType(BLOCK_CACTUS, Int3{xOffset, yOffset + h, zOffset});
 				}
@@ -609,7 +609,7 @@ bool Beta173Feature::GenerateLiquid(World *world, [[maybe_unused]] JavaRandom *r
 		return false;
 	} else {
 		// Check for surrounding stone along non-vertical directions
-		int surroundingStone = 0;
+		int32_t surroundingStone = 0;
 		if (world->GetBlockType(Int3{pos.x - 1, pos.y, pos.z}) == BLOCK_STONE)
 			++surroundingStone;
 		if (world->GetBlockType(Int3{pos.x + 1, pos.y, pos.z}) == BLOCK_STONE)
@@ -620,7 +620,7 @@ bool Beta173Feature::GenerateLiquid(World *world, [[maybe_unused]] JavaRandom *r
 			++surroundingStone;
 
 		// Check for surrounding air along non-vertical directions
-		int surroundingAir = 0;
+		int32_t surroundingAir = 0;
 		if (world->GetBlockType(Int3{pos.x - 1, pos.y, pos.z}) == BLOCK_AIR)
 			++surroundingAir;
 		if (world->GetBlockType(Int3{pos.x + 1, pos.y, pos.z}) == BLOCK_AIR)

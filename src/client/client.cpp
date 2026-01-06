@@ -43,7 +43,7 @@ ssize_t Client::Setup() {
 	return read(clientFd, message, PACKET_MAX);
 }
 
-// Print the received data
+// Print32_t the received data
 void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
 	std::string debugMessage = "";
 	if (debugReceivedPacketType) {
@@ -473,7 +473,7 @@ int8_t Client::GetPlayerOrientation() {
     float limitedYaw = fmodf(player->yaw, 360.0f);
     if (limitedYaw < 0) limitedYaw += 360.0f; // Ensure yaw is in [0, 360)
 
-    int roundedYaw = static_cast<int>(roundf(limitedYaw / 90.0f)) % 4; // Round to nearest multiple of 90
+    int32_t roundedYaw = static_cast<int>(roundf(limitedYaw / 90.0f)) % 4; // Round to nearest multiple of 90
 
     switch (roundedYaw) {
         case 0: return zPlus;  // 0°   -> +Z
@@ -612,7 +612,7 @@ void Client::ClickedSlot(
 	Item testItem {50,48,0};
 
 	// Translate network slots into local slots
-	int slotOffset = 0;
+	int32_t slotOffset = 0;
 	switch(activeWindowType) {
 		case INVENTORY_DISPENSER:
 			slotOffset = INVENTORY_DISPENSER_SIZE;
@@ -659,14 +659,14 @@ void Client::ClickedSlot(
 
 // Clear the clients inventory
 void Client::ClearInventory() {
-    for (int i = 0; i < INVENTORY_CRAFTING_SIZE; ++i) {
+    for (int32_t i = 0; i < INVENTORY_CRAFTING_SIZE; ++i) {
         player->crafting[i] = Item{-1, 0, 0};
     }
-    for (int i = 0; i < INVENTORY_ARMOR_SIZE; ++i) {
+    for (int32_t i = 0; i < INVENTORY_ARMOR_SIZE; ++i) {
         player->armor[i] = Item{-1, 0, 0};
     }
     // Fill inventory with empty slots
-    for (int i = 0; i < INVENTORY_MAIN_SIZE; ++i) {
+    for (int32_t i = 0; i < INVENTORY_MAIN_SIZE; ++i) {
         player->inventory[i] = Item{-1, 0, 0};
     }
 }
@@ -787,7 +787,7 @@ void Client::SendPlayerEntity(std::vector<uint8_t> &resp, Client* c, Player* p) 
 		c->GetHeldItem().damage
 	);
 
-	for (int i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
+	for (int32_t i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
 		if (p->armor[i].id > 0) {
 			Respond::EntityEquipment(
 				resp,

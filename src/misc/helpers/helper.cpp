@@ -1,7 +1,7 @@
 #include "helper.h"
 
 // Check if the passed value is between a and b
-bool Between(int value, int a, int b) {
+bool Between(int32_t value, int32_t a, int32_t b) {
 	if (a < b) {
 		if (value > a && value < b) {
 			return true;
@@ -184,7 +184,7 @@ std::string PacketIdToLabel(Packet packet) {
 }
 
 // Get the Block position from the Index
-Int3 GetBlockPosition(int index) {
+Int3 GetBlockPosition(int32_t index) {
     Int3 position;
 
     position.x = index / (CHUNK_HEIGHT * CHUNK_WIDTH_Z);  // Get x-coordinate
@@ -239,7 +239,7 @@ std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t comp
     auto decompressed_data = std::make_unique<char[]>(decompressed_size);
 
     // Decompress the data
-    int result = libdeflate_zlib_decompress(decompressor, compressed_data, compressed_size,
+    int32_t result = libdeflate_zlib_decompress(decompressor, compressed_data, compressed_size,
                                              decompressed_data.get(), decompressed_size, &decompressed_size);
 
     // Check if decompression succeeded

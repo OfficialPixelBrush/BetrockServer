@@ -15,7 +15,7 @@
  */
 inline double lerp(double t, double a, double b) { return a + t * (b - a); }
 
-inline double grad(int var0, double var1, double var3, double var5) {
+inline double grad(int32_t var0, double var1, double var3, double var5) {
 	var0 &= 15;
 	double var8 = var0 < 8 ? var1 : var3;
 	double var10 = var0 < 4 ? var3 : (var0 != 12 && var0 != 14 ? var5 : var1);
@@ -23,8 +23,8 @@ inline double grad(int var0, double var1, double var3, double var5) {
 }
 
 // These may be very similar, dunno if this is some Java quirk
-inline double altGrad(int var1, double var2, double var4) {
-	int var6 = var1 & 15;
+inline double altGrad(int32_t var1, double var2, double var4) {
+	int32_t var6 = var1 & 15;
 	double var7 = double(1 - ((var6 & 8) >> 3)) * var2;
 	double var9 = var6 < 4 ? 0.0 : (var6 != 12 && var6 != 14 ? var4 : var2);
 	return ((var6 & 1) == 0 ? var7 : -var7) + ((var6 & 2) == 0 ? var9 : -var9);
@@ -44,8 +44,8 @@ inline double fade(double value) { return value * value * value * (value * (valu
  * @param value The input string
  * @return Hashed string expressed as an integer
  */
-inline int hashCode(std::string value) {
-	int h = 0;
+inline int32_t hashCode(std::string value) {
+	int32_t h = 0;
 	if (h == 0 && value.size() > 0) {
 		for (size_t i = 0; i < value.size(); i++) {
 			h = 31 * h + value[i];
@@ -79,13 +79,13 @@ struct MathHelper {
 
 	static float sqrt_double(double x) { return static_cast<float>(std::sqrt(x)); }
 
-	static int floor_float(float x) {
-		int i = static_cast<int>(x);
+	static int32_t floor_float(float x) {
+		int32_t i = static_cast<int>(x);
 		return x < static_cast<float>(i) ? i - 1 : i;
 	}
 
-	static int floor_double(double x) {
-		int i = static_cast<int>(x);
+	static int32_t floor_double(double x) {
+		int32_t i = static_cast<int>(x);
 		return x < static_cast<double>(i) ? i - 1 : i;
 	}
 	

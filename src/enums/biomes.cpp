@@ -1,13 +1,13 @@
 #include "biomes.h"
 
-uint8_t GetTopBlock(Biome biome) {
+BlockType GetTopBlock(Biome biome) {
 	if (biome == BIOME_DESERT || biome == BIOME_ICEDESERT) {
 		return BLOCK_SAND;
 	}
 	return BLOCK_GRASS;
 }
 
-uint8_t GetFillerBlock(Biome biome) {
+BlockType GetFillerBlock(Biome biome) {
 	if (biome == BIOME_DESERT || biome == BIOME_ICEDESERT) {
 		return BLOCK_SAND;
 	}
@@ -52,15 +52,15 @@ Biome GetBiome(float temperature, float humidity) {
 }
 
 void GenerateBiomeLookup() {
-	for (int temp = 0; temp < 64; ++temp) {
-		for (int humi = 0; humi < 64; ++humi) {
+	for (int32_t temp = 0; temp < 64; ++temp) {
+		for (int32_t humi = 0; humi < 64; ++humi) {
 			BiomeLUT[temp + humi * 64] = GetBiome(float(temp) / 63.0f, float(humi) / 63.0f);
 		}
 	}
 }
 
 Biome GetBiomeFromLookup(float temperature, float humidity) {
-	int temp = int(temperature * 63.0f);
-	int humi = int(humidity * 63.0f);
+	int32_t temp = int(temperature * 63.0f);
+	int32_t humi = int(humidity * 63.0f);
 	return BiomeLUT[temp + humi * 64];
 }

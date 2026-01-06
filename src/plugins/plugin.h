@@ -25,8 +25,8 @@ class Plugin {
 	}
 	std::string GetName();
 	int32_t GetApiVersion();
-	int BlockBreakHook();
-	int BlockPlaceHook();
+	int32_t BlockBreakHook();
+	int32_t BlockPlaceHook();
 
   private:
 	Betrock::Logger *logger;
@@ -35,10 +35,10 @@ class Plugin {
 	lua_State *L;
 
 	// --- Lua Bindings Functions ---
-	static int lua_GlobalChat(lua_State *L);
-	static int lua_Chat(lua_State *L);
-	static int lua_GetPlayerList(lua_State *L);
-	static int lua_GetPlayer(lua_State *L);
-	static int lua_GetBlock(lua_State *L);
-	static int lua_SetBlock(lua_State *L);
+	static int32_t lua_GlobalChat(lua_State *L);
+	static int32_t lua_Chat(lua_State *L);
+	static int32_t lua_GetPlayerList(lua_State *L);
+	static int32_t lua_GetPlayer(lua_State *L);
+	static int32_t lua_GetBlock(lua_State *L);
+	static int32_t lua_SetBlock(lua_State *L);
 };

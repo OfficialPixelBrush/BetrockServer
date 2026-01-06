@@ -51,7 +51,7 @@ RegionFile::RegionFile(std::filesystem::path pFilePath) {
 		// std::cout << std::hex << offset << ",";
 		offsets[i] = offset;
 		if ((offset != 0 && (offset >> 8) + (offset & 0xFF)) <= freeSectors.size()) {
-			for (uint sectorSet = 0; sectorSet < (offset & 0xFF); sectorSet++) {
+			for (uint32_t sectorSet = 0; sectorSet < (offset & 0xFF); sectorSet++) {
 				freeSectors[(offset >> 8) + sectorSet] = false;
 			}
 		}
@@ -59,7 +59,7 @@ RegionFile::RegionFile(std::filesystem::path pFilePath) {
 	// std::cout << "Read Offsets" << "\n";
 
 	// Read Timestamps
-	for (int i = 0; i < MCREGION_CHUNKS; i++) {
+	for (int32_t i = 0; i < MCREGION_CHUNKS; i++) {
 		uint32_t timestamp = 0;
 		regionStream.read(reinterpret_cast<char *>(&timestamp), sizeof(timestamp));
 		timestamps[i] = Swap32(timestamp);

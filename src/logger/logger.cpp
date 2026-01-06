@@ -17,7 +17,7 @@ Logger::Logger() {
 }
 
 // Log a message with the passed Level
-void Logger::Log(std::string message, int level) {
+void Logger::Log(std::string message, int32_t level) {
     switch(level) {
         case LOG_CHAT:
             ChatMessage(message);

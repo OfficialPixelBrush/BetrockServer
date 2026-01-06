@@ -60,8 +60,8 @@ void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
 
     // Remove chunks that are out of range
     for (auto it = visibleChunks.begin(); it != visibleChunks.end(); ) {
-        int distanceX = abs(pX - it->x);
-        int distanceZ = abs(pZ - it->y);
+        int32_t distanceX = abs(pX - it->x);
+        int32_t distanceZ = abs(pZ - it->y);
         if (distanceX > chunkDistance || distanceZ > chunkDistance) {
             // Tell client chunk is no longer visible
             Respond::PreChunk(response, Int2{it->x, it->y}, 0);
@@ -74,17 +74,17 @@ void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
     auto wm = server.GetWorldManager(player->dimension);
 
 	// Iterate over all chunks within a bounding box defined by chunkDistance
-	for (int r = 0; r < chunkDistance; r++) {
+	for (int32_t r = 0; r < chunkDistance; r++) {
 		// Top and Bottom rows
-		for (int x = -r; x <= r; x++) {
-			for (int z : {-r, r}) {
+		for (int32_t x = -r; x <= r; x++) {
+			for (int32_t z : {-r, r}) {
 				Int2 position = Int2{x+pX, z+pZ};
 				ProcessChunk(position, wm);
 			}
 		}
 		// Left and Right columns (excluding corners to avoid duplicates)
-		for (int z = -r + 1; z <= r - 1; z++) {
-			for (int x : {-r, r}) {
+		for (int32_t z = -r + 1; z <= r - 1; z++) {
+			for (int32_t x : {-r, r}) {
 				Int2 position = Int2{x+pX, z+pZ};
 				ProcessChunk(position, wm);
 			}
@@ -98,7 +98,7 @@ void Client::DetermineVisibleChunks(bool forcePlayerAsCenter) {
 void Client::SendNewChunks() {
 	// Send chunks in batches of 10
 	// TODO: Dynamically size this based on remaining space in response
-	int sentThisCycle = 10;
+	int32_t sentThisCycle = 10;
 	auto wm = Betrock::Server::Instance().GetWorldManager(player->dimension);
 	std::unique_lock<std::mutex> lock(newChunksMutex, std::try_to_lock);
 	if (!lock.owns_lock()) {

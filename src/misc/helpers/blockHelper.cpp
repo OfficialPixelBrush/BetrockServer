@@ -1,4 +1,4 @@
-#include "blocks.h"
+#include "blockHelper.h"
 #include "world.h"
 
 // Roughly based on how they're defined in Beta 1.7.3
@@ -145,7 +145,7 @@ uint8_t GetSignOrientation(float playerYaw) {
 	const float angleSlice = 360.0f / 16.0f;
 
 	// This is a lot easier than a huge-ass if-else chain
-	int index = static_cast<int>(std::floor((playerYaw + angleSlice * 0.5f) / angleSlice)) % 16;
+	int32_t index = static_cast<int>(std::floor((playerYaw + angleSlice * 0.5f) / angleSlice)) % 16;
 	if (index < 0)
 		index += 16;
 
@@ -158,7 +158,7 @@ uint8_t GetSignOrientation(float playerYaw) {
 // Figure out which block should be placed based on the passed parameters
 Block GetPlacedBlock(World *world, Int3 pos, int8_t face, float playerYaw, int8_t playerDirection, int16_t id,
 					 int16_t damage) {
-	Block b = Block{(int8_t)id, (int8_t)damage, 0,0};
+	Block b = Block{BlockType(id), int8_t(damage), 0,0};
 
 	// Handle items that place as blocks
 	if (id == ITEM_HOE_DIAMOMD || id == ITEM_HOE_GOLD || id == ITEM_HOE_IRON || id == ITEM_HOE_STONE ||
@@ -207,16 +207,16 @@ Block GetPlacedBlock(World *world, Int3 pos, int8_t face, float playerYaw, int8_
 		// Check the block above this one
 		// TODO: Any non-solid block should work
 		if (world->GetBlockType(pos + Int3{0, 1, 0}) != BLOCK_AIR || face != yPlus) {
-			b.type = SLOT_EMPTY;
+			b.type = BLOCK_INVALID;
 			return b;
 		}
 		// Determine the door type
 		switch (id) {
 		case ITEM_DOOR_WOOD:
-			b.type = 64;
+			b.type = BLOCK_DOOR_WOOD;
 			break;
 		case ITEM_DOOR_IRON:
-			b.type = 71;
+			b.type = BLOCK_DOOR_IRON;
 			break;
 		}
 		// Determine the direction
@@ -260,7 +260,7 @@ Block GetPlacedBlock(World *world, Int3 pos, int8_t face, float playerYaw, int8_
 		}
 		// TODO: Any non-solid block should work
 		if (world->GetBlockType(pos + headboardOffset) != BLOCK_AIR || face != yPlus) {
-			b.type = SLOT_EMPTY;
+			b.type = BLOCK_INVALID;
 			return b;
 		}
 		// Determine the door type
@@ -291,7 +291,7 @@ Block GetPlacedBlock(World *world, Int3 pos, int8_t face, float playerYaw, int8_
 	// If it hasn't been caught yet by any of the items
 	// its an invalid block, so we don't care.
 	if (id > BLOCK_MAX) {
-		b.type = 0;
+		b.type = BLOCK_INVALID;
 		return b;
 	}
 
@@ -363,7 +363,7 @@ Block GetPlacedBlock(World *world, Int3 pos, int8_t face, float playerYaw, int8_
 	if (id == BLOCK_TORCH || id == BLOCK_REDSTONE_TORCH_OFF || id == BLOCK_REDSTONE_TORCH_ON) {
 		switch (face) {
 		case yMinus:
-			b.type = SLOT_EMPTY;
+			b.type = BLOCK_INVALID;
 			return b;
 		case zPlus:
 			b.meta = 3;

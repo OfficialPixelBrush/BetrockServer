@@ -53,7 +53,7 @@ class Client : public std::enable_shared_from_this<Client> {
         int8_t windowIndex = 0;
 
         int64_t lastPacketTime = 0;
-        int clientFd;
+        int32_t clientFd;
         std::atomic<ConnectionStatus> connectionStatus = ConnectionStatus::Disconnected;
         
         std::vector<Int2> visibleChunks;
@@ -114,10 +114,10 @@ class Client : public std::enable_shared_from_this<Client> {
     public:
         void SetConnectionStatus(ConnectionStatus status) { this->connectionStatus = status; }
         ConnectionStatus GetConnectionStatus() { return this->connectionStatus; }
-        void SetClientFd(int pClientFd) { this->clientFd = pClientFd; }
-        int &GetClientFd() { return this->clientFd; }
+        void SetClientFd(int32_t pClientFd) { this->clientFd = pClientFd; }
+        int32_t &GetClientFd() { return this->clientFd; }
 
-        Client(int pClientFd) : clientFd(pClientFd) {}
+        Client(int32_t pClientFd) : clientFd(pClientFd) {}
         void HandleClient();
         void DisconnectClient(std::string disconnectMessage = "", bool tellOthers = false, bool tellPlayer = true);
 

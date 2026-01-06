@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include "blocks.h"
 
 #define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH_X 16
@@ -34,7 +35,7 @@ struct Item {
 
 // Block Struct
 struct Block {
-    int8_t type = 0;
+    BlockType type = BLOCK_AIR;
     int8_t meta = 0;
     int8_t blocklight = 0;
     int8_t skylight = 0;
@@ -81,11 +82,11 @@ struct Vec3 {
         return oss.str();
     }
 
-    double& operator[](int i) {
+    double& operator[](int32_t i) {
         return *(&x + i);
     }
     
-    const double& operator[](int i) const {
+    const double& operator[](int32_t i) const {
         return *(&x + i);
     }
 };
@@ -119,11 +120,11 @@ struct Vec2 {
         return oss.str();
     }
 
-    double& operator[](int i) {
+    double& operator[](int32_t i) {
         return *(&x + i);
     }
     
-    const double& operator[](int i) const {
+    const double& operator[](int32_t i) const {
         return *(&x + i);
     }
 };

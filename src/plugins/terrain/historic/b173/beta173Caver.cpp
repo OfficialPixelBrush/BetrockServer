@@ -2,14 +2,14 @@
 Beta173Caver::Beta173Caver() { rand = std::make_unique<JavaRandom>(); }
 
 void Beta173Caver::GenerateCavesForChunk(World *world, Int2 chunkPos, std::shared_ptr<Chunk> &c) {
-	int carveExtent = this->carveExtentLimit;
+	int32_t carveExtent = this->carveExtentLimit;
 	this->rand->setSeed(world->seed);
 	long xOffset = this->rand->nextLong() / 2L * 2L + 1L;
 	long zOffset = this->rand->nextLong() / 2L * 2L + 1L;
 
 	// Iterate beyond the current chunk by 8 chunks in every direction
-	for (int cXoffset = chunkPos.x - carveExtent; cXoffset <= chunkPos.x + carveExtent; ++cXoffset) {
-		for (int cZoffset = chunkPos.y - carveExtent; cZoffset <= chunkPos.y + carveExtent; ++cZoffset) {
+	for (int32_t cXoffset = chunkPos.x - carveExtent; cXoffset <= chunkPos.x + carveExtent; ++cXoffset) {
+		for (int32_t cZoffset = chunkPos.y - carveExtent; cZoffset <= chunkPos.y + carveExtent; ++cZoffset) {
 			this->rand->setSeed(((long(cXoffset) * xOffset) + (long(cZoffset) * zOffset)) ^ world->seed);
 			this->GenerateCaves(Int2{cXoffset, cZoffset}, chunkPos, c);
 		}
@@ -19,23 +19,23 @@ void Beta173Caver::GenerateCavesForChunk(World *world, Int2 chunkPos, std::share
 // TODO: This is only the cave generator for the overworld.
 // The one for the nether is different!
 void Beta173Caver::GenerateCaves(Int2 chunkOffset, Int2 chunkPos, std::shared_ptr<Chunk> &c) {
-	int numberOfCaves = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(40) + 1) + 1);
+	int32_t numberOfCaves = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(40) + 1) + 1);
 	if (this->rand->nextInt(15) != 0) {
 		numberOfCaves = 0;
 	}
 
-	for (int caveIndex = 0; caveIndex < numberOfCaves; ++caveIndex) {
+	for (int32_t caveIndex = 0; caveIndex < numberOfCaves; ++caveIndex) {
 		Vec3 offset = Vec3{0,0,0};
 		offset.x = double(chunkOffset.x * CHUNK_WIDTH_X + this->rand->nextInt(CHUNK_WIDTH_X));
 		offset.y = double(this->rand->nextInt(this->rand->nextInt(120) + 8));
 		offset.z = double(chunkOffset.y * CHUNK_WIDTH_Z + this->rand->nextInt(CHUNK_WIDTH_Z));
-		int numberOfNodes = 1;
+		int32_t numberOfNodes = 1;
 		if (this->rand->nextInt(4) == 0) {
 			this->CarveCave(chunkPos, c, offset);
 			numberOfNodes += this->rand->nextInt(4);
 		}
 
-		for (int nodeIndex = 0; nodeIndex < numberOfNodes; ++nodeIndex) {
+		for (int32_t nodeIndex = 0; nodeIndex < numberOfNodes; ++nodeIndex) {
 			float carveYaw = this->rand->nextFloat() * (float)JavaMath::PI * 2.0F;
 			float carvePitch = (this->rand->nextFloat() - 0.5F) * 2.0F / 8.0F;
 			float tunnelRadius = this->rand->nextFloat() * 2.0F + this->rand->nextFloat();
@@ -50,7 +50,7 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 }
 
 void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offset,
-							 float tunnelRadius, float carveYaw, float carvePitch, int tunnelStep, int tunnelLength,
+							 float tunnelRadius, float carveYaw, float carvePitch, int32_t tunnelStep, int32_t tunnelLength,
 							 double verticalScale) {
 	double chunkCenterX = double(chunkPos.x * CHUNK_WIDTH_X + 8);
 	double chunkCenterZ = double(chunkPos.y * CHUNK_WIDTH_Z + 8);
@@ -58,7 +58,7 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 	float var22 = 0.0F;
 	std::unique_ptr<JavaRandom> rand2 = std::make_unique<JavaRandom>(this->rand->nextLong());
 	if (tunnelLength <= 0) {
-		int var24 = this->carveExtentLimit * 16 - 16;
+		int32_t var24 = this->carveExtentLimit * 16 - 16;
 		tunnelLength = var24 - rand2->nextInt(var24 / 4);
 	}
 
@@ -68,7 +68,7 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 		var52 = true;
 	}
 
-	int var25 = rand2->nextInt(tunnelLength / 2) + tunnelLength / 4;
+	int32_t var25 = rand2->nextInt(tunnelLength / 2) + tunnelLength / 4;
 
 	for (bool var26 = rand2->nextInt(6) == 0; tunnelStep < tunnelLength; ++tunnelStep) {
 		double var27 = 1.5 + (double)(MathHelper::sin((float)tunnelStep * (float)JavaMath::PI / (float)tunnelLength) *
@@ -110,12 +110,12 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 
 			if (offset.x >= chunkCenterX - 16.0 - var27 * 2.0 && offset.z >= chunkCenterZ - 16.0 - var27 * 2.0 &&
 				offset.x <= chunkCenterX + 16.0 + var27 * 2.0 && offset.z <= chunkCenterZ + 16.0 + var27 * 2.0) {
-				int xMin = MathHelper::floor_double(offset.x - var27) - chunkPos.x * 16 - 1;
-				int xMax = MathHelper::floor_double(offset.x + var27) - chunkPos.x * 16 + 1;
-				int yMin = MathHelper::floor_double(offset.y - var29) - 1;
-				int yMax = MathHelper::floor_double(offset.y + var29) + 1;
-				int zMin = MathHelper::floor_double(offset.z - var27) - chunkPos.y * 16 - 1;
-				int zMax = MathHelper::floor_double(offset.z + var27) - chunkPos.y * 16 + 1;
+				int32_t xMin = MathHelper::floor_double(offset.x - var27) - chunkPos.x * 16 - 1;
+				int32_t xMax = MathHelper::floor_double(offset.x + var27) - chunkPos.x * 16 + 1;
+				int32_t yMin = MathHelper::floor_double(offset.y - var29) - 1;
+				int32_t yMax = MathHelper::floor_double(offset.y + var29) + 1;
+				int32_t zMin = MathHelper::floor_double(offset.z - var27) - chunkPos.y * 16 - 1;
+				int32_t zMax = MathHelper::floor_double(offset.z + var27) - chunkPos.y * 16 + 1;
 				// Limiting to chunk boundaries
 				if (xMin < 0)
 					xMin = 0;
@@ -132,10 +132,10 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 
 				bool waterIsPresent = false;
 
-				for (int blockX = xMin; !waterIsPresent && blockX < xMax; ++blockX) {
-					for (int blockZ = zMin; !waterIsPresent && blockZ < zMax; ++blockZ) {
-						for (int blockY = yMax + 1; !waterIsPresent && blockY >= yMin - 1; --blockY) {
-							int blockIndex = (blockX * CHUNK_WIDTH_Z + blockZ) * CHUNK_HEIGHT + blockY;
+				for (int32_t blockX = xMin; !waterIsPresent && blockX < xMax; ++blockX) {
+					for (int32_t blockZ = zMin; !waterIsPresent && blockZ < zMax; ++blockZ) {
+						for (int32_t blockY = yMax + 1; !waterIsPresent && blockY >= yMin - 1; --blockY) {
+							int32_t blockIndex = (blockX * CHUNK_WIDTH_Z + blockZ) * CHUNK_HEIGHT + blockY;
 							if (blockY >= 0 && blockY < CHUNK_HEIGHT) {
 
 								if (c->GetBlockType(BlockIndexToPosition(blockIndex)) == BLOCK_WATER_FLOWING ||
@@ -153,15 +153,15 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 				}
 
 				if (!waterIsPresent) {
-					for (int blockX = xMin; blockX < xMax; ++blockX) {
+					for (int32_t blockX = xMin; blockX < xMax; ++blockX) {
 						double var57 = ((double)(blockX + chunkPos.x * 16) + 0.5 - offset.x) / var27;
 
-						for (int blockZ = zMin; blockZ < zMax; ++blockZ) {
+						for (int32_t blockZ = zMin; blockZ < zMax; ++blockZ) {
 							double var44 = ((double)(blockZ + chunkPos.y * 16) + 0.5 - offset.z) / var27;
-							int blockIndex = (blockX * CHUNK_WIDTH_Z + blockZ) * CHUNK_HEIGHT + yMax;
+							int32_t blockIndex = (blockX * CHUNK_WIDTH_Z + blockZ) * CHUNK_HEIGHT + yMax;
 							bool var47 = false;
 							if (var57 * var57 + var44 * var44 < 1.0) {
-								for (int var48 = yMax - 1; var48 >= yMin; --var48) {
+								for (int32_t var48 = yMax - 1; var48 >= yMin; --var48) {
 									double var49 = ((double)var48 + 0.5 - offset.y) / var29;
 									if (var49 > -0.7 && var57 * var57 + var49 * var49 + var44 * var44 < 1.0) {
 										uint8_t blockType = c->GetBlockType(BlockIndexToPosition(blockIndex));

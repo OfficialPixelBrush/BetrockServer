@@ -4,9 +4,9 @@
  * @brief Run if a block was broken
  * 
  * @param L 
- * @return int 
+ * @return int32_t 
  */
-int Plugin::BlockBreakHook() {
+int32_t Plugin::BlockBreakHook() {
 	lua_getglobal(L, "blockBreakHook");
 	if (lua_isfunction(L, -1)) {
 		CheckLua(L, lua_pcall(L, 0, 0, 0));
@@ -18,9 +18,9 @@ int Plugin::BlockBreakHook() {
  * @brief Run if a block was placed
  * 
  * @param L 
- * @return int 
+ * @return int32_t 
  */
-int Plugin::BlockPlaceHook() {
+int32_t Plugin::BlockPlaceHook() {
 	lua_getglobal(L, "blockPlaceHook");
 	if (lua_isfunction(L, -1)) {
 		CheckLua(L, lua_pcall(L, 0, 0, 0));

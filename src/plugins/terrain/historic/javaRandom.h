@@ -26,7 +26,7 @@ class JavaRandom {
 	 * 
 	 * @return Pseudorandom 32-bit integer value
 	 */
-	int32_t next(int bits) {
+	int32_t next(int32_t bits) {
 		seed = (seed * multiplier + addend) & mask;
 		return static_cast<int32_t>(seed >> (48 - bits));
 	}
@@ -56,18 +56,18 @@ class JavaRandom {
 	void setSeed(int64_t s) { seed = (s ^ multiplier) & mask; }
 
 	/**
-	 * @brief Returns the next int (32-bit integer)
+	 * @brief Returns the next int32_t (32-bit integer)
 	 * 
 	 * @return Pseudorandom 32-bit integer value
 	 */
 	int32_t nextInt() { return next(32); }
 
 	/**
-	 * @brief Returns the next bound int (32-bit integer)
+	 * @brief Returns the next bound int32_t (32-bit integer)
 	 * 
 	 * @return Pseudorandom 32-bit integer value
 	 */
-	int32_t nextInt(int bound) {
+	int32_t nextInt(int32_t bound) {
 		if (bound <= 0)
 			throw std::invalid_argument("bound must be positive");
 
