@@ -45,12 +45,12 @@ class Beta173BigTree : public Beta173Tree {
 	void GenerateTrunk();
 	void GenerateBranches();
 	float func_431_a(int32_t var1);
-	float func_429_b(int32_t var1);
+	float GetTrunkLayerRadius(int32_t layerIndex);
 	void func_423_a(int32_t var1, int32_t var2, int32_t var3);
-	void drawBlockLine(Int3 posA, Int3 posB, BlockType blockType);
-	int32_t checkIfPathClear(Int3 var1, Int3 var2);
-	void func_426_a(int32_t var1, int32_t var2, int32_t var3, float var4, int8_t var5, int32_t var6);
-	bool canGenerateBranchAtHeight(int32_t var1);
+	void DrawBlockLine(Int3 posA, Int3 posB, BlockType blockType);
+	int32_t CheckIfPathClear(Int3 var1, Int3 var2);
+	void PlaceCircularLayer(Int3 centerPos, float radius, int8_t axis, BlockType blockType);
+	bool CanGenerateBranchAtHeight(int32_t var1);
 
   public:
 	Beta173BigTree() { this->rand = std::make_unique<JavaRandom>(); };

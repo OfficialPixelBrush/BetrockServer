@@ -91,6 +91,13 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch)
 	return false;
 }
 
+/**
+ * @brief Configures the settings of a BigTree
+ * 
+ * @param pTreeHeight Sets the maximum tree height (this is internally multiplied by 12)
+ * @param pBranchLength Sets the maximum branch length
+ * @param pTrunkShape Determines the trunk shape
+ */
 void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double pTrunkShape) {
 	this->maximumTreeHeight = (int)(pTreeHeight * 12.0);
 	if (pTreeHeight > 0.5) {
@@ -101,14 +108,23 @@ void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double 
 	this->trunkShape = pTrunkShape;
 }
 
-bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom *pRand, [[maybe_unused]] Int3 pos,
-							  [[maybe_unused]] bool pBirch) {
-	// Waste one rand cycle to get closer to being accurate
 
+/**
+ * @brief Attempts to generate a big oak tree
+ * 
+ * @param pWorld Pointer to the world where it'll generate
+ * @param pRand Pointer to the JavaRandom that'll be utilized
+ * @param pPos Position of the lowest trunk-block
+ * @param pBirch If the tree should be birch or oak (not used for big trees)
+ * @return If tree successfully generated
+ */
+bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom *pRand, [[maybe_unused]] Int3 pPos,
+							  [[maybe_unused]] bool pBirch) {
 	this->world = pWorld;
 	long seed = pRand->nextLong();
 	this->rand->setSeed(seed);
-	this->basePos = pos;
+	this->basePos = pPos;
+	// If the height wasn't set, generate a new random height
 	if (this->totalHeight == 0) {
 		this->totalHeight = 5 + this->rand->nextInt(this->maximumTreeHeight);
 	}
@@ -164,7 +180,7 @@ void Beta173BigTree::GenerateBranchPositions() {
 														 (double)this->basePos.z + var9);
 					Int3 var17 = Int3{var15, var3, var16};
 					Int3 var18 = Int3{var15, var3 + this->trunkThickness, var16};
-					if (this->checkIfPathClear(var17, var18) == -1) {
+					if (this->CheckIfPathClear(var17, var18) == -1) {
 						Int3 var19 = Int3{this->basePos.x, this->basePos.y, this->basePos.z};
 						double var20 = std::sqrt(std::pow((double)JavaMath::abs(this->basePos.x - var17.x), 2.0) +
 												 std::pow((double)JavaMath::abs(this->basePos.z - var17.z), 2.0));
@@ -175,7 +191,7 @@ void Beta173BigTree::GenerateBranchPositions() {
 							var19.y = (int)((double)var17.y - var22);
 						}
 
-						if (this->checkIfPathClear(var19, var17) == -1) {
+						if (this->CheckIfPathClear(var19, var17) == -1) {
 							var2[var4][0] = var15;
 							var2[var4][1] = var3;
 							var2[var4][2] = var16;
@@ -196,29 +212,40 @@ void Beta173BigTree::GenerateBranchPositions() {
 	}
 }
 
-void Beta173BigTree::func_426_a(int32_t var1, int32_t var2, int32_t var3, float var4, int8_t var5, int32_t var6) {
-	int32_t var7 = int(double(var4) + 0.618);
-	int8_t var8 = branchOrientation[var5];
-	int8_t var9 = branchOrientation[var5 + 3];
-	Int3 var10{var1, var2, var3};
-	Int3 var11{0, 0, 0};
+/**
+ * @brief Place a circle of blocks along the specified plane
+ * 
+ * @param centerPos Center position of the circle
+ * @param radius Radius of the circle
+ * @param axis Axis along which the circle will grow
+ * @param blockType Blocktype of the circle
+ */
+void Beta173BigTree::PlaceCircularLayer(Int3 centerPos, float radius, int8_t axis, BlockType blockType) {
+	int32_t intRadius = int32_t(double(radius) + 0.618);
+	int8_t axisU = branchOrientation[axis];
+	int8_t axisV = branchOrientation[axis + 3];
+	Int3 currentPos{0, 0, 0};
 
-	for (int32_t var12 = -var7; var12 <= var7; ++var12) {
-		var11[var5] = var10[var5];
-		var11[var8] = var10[var8] + var12;
+	for (int32_t du = -intRadius; du <= intRadius; ++du) {
+		currentPos[axis] = centerPos[axis];
+		currentPos[axisU] = centerPos[axisU] + du;
 
-		for (int32_t var13 = -var7; var13 <= var7; ++var13) {
-			double var15 = std::sqrt(std::pow(JavaMath::abs(var12) + 0.5, 2.0) + std::pow(JavaMath::abs(var13) + 0.5, 2.0));
+		for (int32_t dv = -intRadius; dv <= intRadius; ++dv) {
+			// Pythagorean Theorem
+			double distance = std::sqrt(
+				std::pow(JavaMath::abs(du) + 0.5, 2.0) +
+				std::pow(JavaMath::abs(dv) + 0.5, 2.0)
+			);
 
-			if (var15 > (double)(var4)) {
+			if (distance > (double)(radius))
 				continue;
-			}
 
-			var11[var9] = var10[var9] + var13;
-			int32_t var14 = this->world->GetBlockType(var11);
+			currentPos[axisV] = centerPos[axisV] + dv;
+			BlockType otherType = this->world->GetBlockType(currentPos);
 
-			if (var14 == 0 || var14 == 18) {
-				this->world->PlaceBlock(var11, BlockType(var6));
+			// Only place if block can be overwritten
+			if (otherType == BLOCK_AIR || otherType == BLOCK_LEAVES) {
+				this->world->PlaceBlock(currentPos, blockType);
 			}
 		}
 	}
@@ -244,21 +271,39 @@ float Beta173BigTree::func_431_a(int32_t var1) {
 	}
 }
 
-float Beta173BigTree::func_429_b(int32_t var1) {
-	return var1 >= 0 && var1 < this->trunkThickness ? (var1 != 0 && var1 != this->trunkThickness - 1 ? 3.0F : 2.0F)
-													: -1.0F;
+/**
+ * @brief Get the radius of the current trunk layer
+ * 
+ * @param layerIndex The index of the layer
+ * @return float Trunk layer radius
+ */
+float Beta173BigTree::GetTrunkLayerRadius(int32_t layerIndex) {
+    if (layerIndex < 0 || layerIndex >= this->trunkThickness)
+        return -1.0f;
+    // Top and bottom of trunk are thinner
+    if (layerIndex == 0 || layerIndex == this->trunkThickness - 1)
+        return 2.0f;
+    // Middle of trunk is thicker
+    return 3.0f;
 }
 
 void Beta173BigTree::func_423_a(int32_t var1, int32_t var2, int32_t var3) {
 	int32_t var4 = var2;
 
 	for (int32_t var5 = var2 + this->trunkThickness; var4 < var5; ++var4) {
-		float var6 = this->func_429_b(var4 - var2);
-		this->func_426_a(var1, var4, var3, var6, (int8_t)1, 18);
+		float var6 = this->GetTrunkLayerRadius(var4 - var2);
+		this->PlaceCircularLayer(Int3{var1, var4, var3}, var6, (int8_t)1, BLOCK_LEAVES);
 	}
 }
 
-void Beta173BigTree::drawBlockLine(Int3 posA, Int3 posB, BlockType blockType) {
+/**
+ * @brief Draws a line of blockType between two coordinates
+ * 
+ * @param posA The start position
+ * @param posB The end position
+ * @param blockType The block that should be drawn along this line
+ */
+void Beta173BigTree::DrawBlockLine(Int3 posA, Int3 posB, BlockType blockType) {
 	Int3 diff = Int3{0, 0, 0};
 	int8_t var5 = 0;
 
@@ -305,7 +350,7 @@ void Beta173BigTree::GenerateLeafClusters() {
 	}
 }
 
-bool Beta173BigTree::canGenerateBranchAtHeight(int32_t var1) { return (double)var1 >= (double)this->totalHeight * 0.2; }
+bool Beta173BigTree::CanGenerateBranchAtHeight(int32_t var1) { return (double)var1 >= (double)this->totalHeight * 0.2; }
 
 void Beta173BigTree::GenerateTrunk() {
 	int32_t var1 = this->basePos.x;
@@ -314,17 +359,17 @@ void Beta173BigTree::GenerateTrunk() {
 	int32_t var4 = this->basePos.z;
 	Int3 var5 = Int3{var1, var2, var4};
 	Int3 var6 = Int3{var1, var3, var4};
-	this->drawBlockLine(var5, var6, BLOCK_LOG);
+	this->DrawBlockLine(var5, var6, BLOCK_LOG);
 	if (this->branchDensity == 2) {
 		++var5[0];
 		++var6[0];
-		this->drawBlockLine(var5, var6, BLOCK_LOG);
+		this->DrawBlockLine(var5, var6, BLOCK_LOG);
 		++var5[2];
 		++var6[2];
-		this->drawBlockLine(var5, var6, BLOCK_LOG);
+		this->DrawBlockLine(var5, var6, BLOCK_LOG);
 		var5[0] += -1;
 		var6[0] += -1;
-		this->drawBlockLine(var5, var6, BLOCK_LOG);
+		this->DrawBlockLine(var5, var6, BLOCK_LOG);
 	}
 }
 
@@ -338,46 +383,53 @@ void Beta173BigTree::GenerateBranches() {
 		Int3 var5 = Int3{var4[0], var4[1], var4[2]};
 		var3[1] = varBaseY;
 		int32_t var6 = var3[1] - this->basePos.y;
-		if (this->canGenerateBranchAtHeight(var6)) {
-			this->drawBlockLine(var3, var5, BLOCK_LOG);
+		if (this->CanGenerateBranchAtHeight(var6)) {
+			this->DrawBlockLine(var3, var5, BLOCK_LOG);
 		}
 	}
 }
 
-int32_t Beta173BigTree::checkIfPathClear(Int3 var1, Int3 var2) {
-	Int3 var3 = Int3{0, 0, 0};
+/**
+ * @brief Check if the path is unobstructed between start and end in a straight line
+ * 
+ * @param posA The start position
+ * @param posB The end position
+ * @return int32_t 
+ */
+int32_t Beta173BigTree::CheckIfPathClear(Int3 posA, Int3 posB) {
+	Int3 diff = Int3{0, 0, 0};
 	int8_t var4 = 0;
 
 	int8_t var5;
 	for (var5 = 0; var4 < 3; ++var4) {
-		var3[var4] = var2[var4] - var1[var4];
-		if (JavaMath::abs(var3[var4]) > JavaMath::abs(var3[var5])) {
+		diff[var4] = posB[var4] - posA[var4];
+		if (JavaMath::abs(var3[var4]) > JavaMath::abs(diff[var5])) {
 			var5 = var4;
 		}
 	}
 
-	if (var3[var5] == 0) {
+	if (diff[var5] == 0) {
 		return -1;
 	} else {
 		int8_t var6 = branchOrientation[var5];
 		int8_t var7 = branchOrientation[var5 + 3];
 		int8_t var8;
-		if (var3[var5] > 0) {
+		if (diff[var5] > 0) {
 			var8 = 1;
 		} else {
 			var8 = -1;
 		}
 
-		double var9 = (double)var3[var6] / (double)var3[var5];
-		double var11 = (double)var3[var7] / (double)var3[var5];
+		double var9 = (double)diff[var6] / (double)diff[var5];
+		double var11 = (double)diff[var7] / (double)diff[var5];
 		Int3 var13 = Int3{0, 0, 0};
 		int32_t var14 = 0;
 
 		int32_t var15;
-		for (var15 = var3[var5] + var8; var14 != var15; var14 += var8) {
-			var13[var5] = var1[var5] + var14;
-			var13[var6] = MathHelper::floor_double((double)var1[var6] + (double)var14 * var9);
-			var13[var7] = MathHelper::floor_double((double)var1[var7] + (double)var14 * var11);
+		for (var15 = diff[var5] + var8; var14 != var15; var14 += var8) {
+			var13[var5] = posA[var5] + var14;
+			var13[var6] = MathHelper::floor_double((double)posA[var6] + (double)var14 * var9);
+			var13[var7] = MathHelper::floor_double((double)posA[var7] + (double)var14 * var11);
 			int32_t var16 = this->world->GetBlockType(var13);
 			if (var16 != 0 && var16 != 18) {
 				break;
@@ -395,7 +447,7 @@ bool Beta173BigTree::ValidPlacement() {
 	if (var3 != 2 && var3 != 3) {
 		return false;
 	} else {
-		int32_t var4 = this->checkIfPathClear(var1, var2);
+		int32_t var4 = this->CheckIfPathClear(var1, var2);
 		if (var4 == -1) {
 			return true;
 		} else if (var4 < 6) {

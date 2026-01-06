@@ -1,6 +1,13 @@
 #include "beta173Caver.h"
 Beta173Caver::Beta173Caver() { rand = std::make_unique<JavaRandom>(); }
 
+/**
+ * @brief Attempts to generate a cave in the current chunk
+ * 
+ * @param world The world this cave is being generated in
+ * @param chunkPos The (x,z) position of the chunk
+ * @param c The pointer to the chunk
+ */
 void Beta173Caver::GenerateCavesForChunk(World *world, Int2 chunkPos, std::shared_ptr<Chunk> &c) {
 	int32_t carveExtent = this->carveExtentLimit;
 	this->rand->setSeed(world->seed);
