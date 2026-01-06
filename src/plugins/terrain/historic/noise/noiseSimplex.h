@@ -25,6 +25,6 @@ class NoiseSimplex : public NoiseGenerator {
 					   double xScale, double yScale, double amplitude);
 };
 
-inline int32_t wrap(double grad) { return grad > 0.0 ? int(grad) : int(grad) - 1; }
+inline int32_t wrap(double grad) { return grad > 0.0 ? int32_t(grad) : int32_t(grad) - 1; }
 
 inline double dotProd(int32_t grad[3], double x, double y) { return double(grad[0]) * x + double(grad[1]) * y; }

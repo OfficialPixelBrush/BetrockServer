@@ -341,12 +341,12 @@ bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int3
 			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		double blobRadiusY =
 			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
-		int32_t minX = int(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
-		int32_t maxX = int(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
-		int32_t minY = int(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
-		int32_t maxY = int(MathHelper::floor_double(yCenter + blobRadiusY / 2.0));
-		int32_t minZ = int(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));
-		int32_t maxZ = int(MathHelper::floor_double(zCenter + blobRadiusXZ / 2.0));
+		int32_t minX = int32_t(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
+		int32_t maxX = int32_t(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
+		int32_t minY = int32_t(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
+		int32_t maxY = int32_t(MathHelper::floor_double(yCenter + blobRadiusY / 2.0));
+		int32_t minZ = int32_t(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));
+		int32_t maxZ = int32_t(MathHelper::floor_double(zCenter + blobRadiusXZ / 2.0));
 
 		// Replace sand blocks in the relevant area
 		for (int32_t x = minX; x <= maxX; ++x) {
@@ -398,12 +398,12 @@ bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, i
 			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		double blobRadiusY =
 			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
-		int32_t minX = int(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
-		int32_t maxX = int(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
-		int32_t minY = int(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));
-		int32_t maxY = int(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
-		int32_t minZ = int(MathHelper::floor_double(yCenter + blobRadiusY / 2.0));
-		int32_t maxZ = int(MathHelper::floor_double(zCenter + blobRadiusXZ / 2.0));
+		int32_t minX = int32_t(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
+		int32_t maxX = int32_t(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
+		int32_t minY = int32_t(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));
+		int32_t maxY = int32_t(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
+		int32_t minZ = int32_t(MathHelper::floor_double(yCenter + blobRadiusY / 2.0));
+		int32_t maxZ = int32_t(MathHelper::floor_double(zCenter + blobRadiusXZ / 2.0));
 
 		// Replace stone blocks in the relevant area
 		for (int32_t x = minX; x <= maxY; ++x) {

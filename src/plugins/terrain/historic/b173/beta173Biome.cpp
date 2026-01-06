@@ -27,7 +27,7 @@ Beta173Biome::Beta173Biome(int64_t seed) {
  */
 void Beta173Biome::GenerateBiomeMap(std::vector<Biome>& biomeMap, std::vector<double>& temperature, std::vector<double>& humidity, std::vector<double>& weirdness, Int2 blockPos, Int2 max) {
 	// Init Biome map
-	if (biomeMap.empty() || int(biomeMap.size()) < max.x * max.y) {
+	if (biomeMap.empty() || int32_t(biomeMap.size()) < max.x * max.y) {
 		biomeMap.resize(max.x * max.y, BIOME_NONE);
 	}
 

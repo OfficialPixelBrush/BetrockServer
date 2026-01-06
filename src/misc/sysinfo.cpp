@@ -2,7 +2,7 @@
 
 int32_t parseLine(char *line) {
 	// This assumes that a digit will be found and the line ends in " Kb".
-	int32_t i = int(strlen(line));
+	int32_t i = int32_t(strlen(line));
 	const char *p = line;
 	while (*p < '0' || *p > '9')
 		p++;

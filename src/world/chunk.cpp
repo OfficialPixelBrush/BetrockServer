@@ -44,7 +44,7 @@ void Chunk::PrintHeightmap() {
 	for (int32_t x = 0; x < 16; ++x) {
 		std::cout << "[";
 		for (int32_t z = 0; z < 16; ++z) {
-			std::cout << "0x" << int(this->heightMap[(z & 15) << 4 | (x & 15)]);
+			std::cout << "0x" << int32_t(this->heightMap[(z & 15) << 4 | (x & 15)]);
 			if (z < 15)
 				std::cout << ",";
 		}

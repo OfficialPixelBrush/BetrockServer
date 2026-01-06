@@ -445,7 +445,7 @@ int32_t GeneratorLua::lua_GetBiomeMap(lua_State *L) {
 		lua_newtable(L);
 		for (int32_t zi = 0; zi < CHUNK_WIDTH_Z; zi++) {
 			int32_t index = zi + (xi * CHUNK_WIDTH_Z);
-			int32_t value = int(biomeMap[index]);
+			int32_t value = int32_t(biomeMap[index]);
 			lua_pushinteger(L, value);
 			lua_rawseti(L, -2,  zi+1);
 		}

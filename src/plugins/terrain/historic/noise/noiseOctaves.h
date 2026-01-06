@@ -112,7 +112,7 @@ void NoiseOctaves<T>::GenerateOctaves(std::vector<double> &noiseField, double va
 									  double var8, double var10, double var12, double var14) {
 	var8 /= 1.5;
 	var10 /= 1.5;
-	if (!noiseField.empty() && int(noiseField.size()) >= var6 * scale) {
+	if (!noiseField.empty() && int32_t(noiseField.size()) >= var6 * scale) {
 		for (size_t i = 0; i < noiseField.size(); ++i) {
 			noiseField[i] = 0.0;
 		}

@@ -43,7 +43,7 @@ ssize_t Client::Setup() {
 	return read(clientFd, message, PACKET_MAX);
 }
 
-// Print32_t the received data
+// Print the received data
 void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
 	std::string debugMessage = "";
 	if (debugReceivedPacketType) {
@@ -601,7 +601,7 @@ void Client::ClickedSlot(
 	// We're interacting with a window we're not
 	// currently looking at; something messed up!
 	if (windowId != windowIndex) {
-		std::cerr << "Was looking at " << int(windowIndex) << " but got click for " << int(windowId) << "!" << "\n";
+		std::cerr << "Was looking at " << int32_t(windowIndex) << " but got click for " << int32_t(windowId) << "!" << "\n";
 		return;
 	}
 
@@ -646,10 +646,10 @@ void Client::ClickedSlot(
 	}
 
 	if (slotId < slotOffset) {
-		std::cout << "Clicking in other inventory (" << int(slotId) << ")" << "\n";
+		std::cout << "Clicking in other inventory (" << int32_t(slotId) << ")" << "\n";
 	} else {
 		slotId -= slotOffset;
-		std::cout << "Clicking in player inventory (" << int(slotId) << ")" << "\n";
+		std::cout << "Clicking in player inventory (" << int32_t(slotId) << ")" << "\n";
 	}
 	
 	lastClickedSlot = slotId;
