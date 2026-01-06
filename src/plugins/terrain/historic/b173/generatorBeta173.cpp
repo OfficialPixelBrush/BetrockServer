@@ -513,7 +513,7 @@ bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
 	// Determine the number of trees that should be generated
 	double fraction = 0.5;
 	int32_t treeDensitySample =
-		int((this->treeDensityNoiseGen->GenerateOctaves(double(blockPos.x) * fraction, double(blockPos.y) * fraction) / 8.0 +
+		int32_t((this->treeDensityNoiseGen->GenerateOctaves(double(blockPos.x) * fraction, double(blockPos.y) * fraction) / 8.0 +
 			 this->rand->nextDouble() * 4.0 + 4.0) /
 			3.0);
 

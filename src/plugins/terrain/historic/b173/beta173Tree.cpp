@@ -206,7 +206,7 @@ void Beta173BigTree::GenerateBranchPositions() {
 			}
 		}
 
-		this->branchStartEnd = std::vector<std::array<int, 4>>(var4);
+		this->branchStartEnd = std::vector<std::array<int32_t, 4>>(var4);
 		std::copy(var2.begin(), var2.begin() + var4, this->branchStartEnd.begin());
 		return;
 	}
