@@ -40,7 +40,7 @@ class World {
 	std::unordered_map<std::string, std::shared_ptr<RegionFile>> openRegions;
 	std::mutex regionMutex;
 
-	std::unordered_map<long, std::shared_ptr<Chunk>> chunks;
+	std::unordered_map<int64_t, std::shared_ptr<Chunk>> chunks;
 	std::deque<LightUpdate> lightingToUpdate;
 	std::filesystem::path dirPath;
 	void RemoveChunk(Int2 position);

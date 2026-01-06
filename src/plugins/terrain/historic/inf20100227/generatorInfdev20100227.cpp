@@ -75,7 +75,7 @@ std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(Int2 chunkPos) {
 				}
 
 				// Generate Brick Pyramids
-				this->rand->setSeed((long)(regionX + regionZ * 13871));
+				this->rand->setSeed(int64_t(regionX + regionZ * 13871));
 				int32_t pyramidOffsetX = (regionX << 10) + CHUNK_HEIGHT + this->rand->nextInt(512);
 				int32_t pyramidOffsetZ = (regionZ << 10) + CHUNK_HEIGHT + this->rand->nextInt(512);
 				pyramidOffsetX = blockX - pyramidOffsetX;

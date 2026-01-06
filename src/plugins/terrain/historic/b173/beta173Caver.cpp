@@ -11,13 +11,13 @@ Beta173Caver::Beta173Caver() { rand = std::make_unique<JavaRandom>(); }
 void Beta173Caver::GenerateCavesForChunk(World *world, Int2 chunkPos, std::shared_ptr<Chunk> &c) {
 	int32_t carveExtent = this->carveExtentLimit;
 	this->rand->setSeed(world->seed);
-	long xOffset = this->rand->nextLong() / 2L * 2L + 1L;
-	long zOffset = this->rand->nextLong() / 2L * 2L + 1L;
+	int64_t xOffset = this->rand->nextLong() / 2L * 2L + 1L;
+	int64_t zOffset = this->rand->nextLong() / 2L * 2L + 1L;
 
 	// Iterate beyond the current chunk by 8 chunks in every direction
 	for (int32_t cXoffset = chunkPos.x - carveExtent; cXoffset <= chunkPos.x + carveExtent; ++cXoffset) {
 		for (int32_t cZoffset = chunkPos.y - carveExtent; cZoffset <= chunkPos.y + carveExtent; ++cZoffset) {
-			this->rand->setSeed(((long(cXoffset) * xOffset) + (long(cZoffset) * zOffset)) ^ world->seed);
+			this->rand->setSeed(((int64_t(cXoffset) * xOffset) + (int64_t(cZoffset) * zOffset)) ^ world->seed);
 			this->GenerateCaves(Int2{cXoffset, cZoffset}, chunkPos, c);
 		}
 	}

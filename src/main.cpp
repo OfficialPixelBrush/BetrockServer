@@ -86,7 +86,7 @@ int main() {
 	server.InitPlugins();
 
 	// Generate spawn area
-	short radius = 196;
+	int16_t radius = 196;
 	auto startTime = std::chrono::steady_clock::now();
 	auto lastTime = std::chrono::steady_clock::now();
 	int32_t worldIndex = 0;

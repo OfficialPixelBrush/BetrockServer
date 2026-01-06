@@ -121,7 +121,7 @@ void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double 
 bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom *pRand, [[maybe_unused]] Int3 pPos,
 							  [[maybe_unused]] bool pBirch) {
 	this->world = pWorld;
-	long seed = pRand->nextLong();
+	int64_t seed = pRand->nextLong();
 	this->rand->setSeed(seed);
 	this->basePos = pPos;
 	// If the height wasn't set, generate a new random height

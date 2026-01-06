@@ -172,7 +172,7 @@ void Server::LoadConfig() {
 		try {
 			seed = GlobalConfig::Instance().GetAsNumber<int64_t>("level-seed");
 		} catch (const std::invalid_argument &e) {
-			seed = (long)hashCode(GlobalConfig::Instance().GetAsString("level-seed"));
+			seed = int64_t(hashCode(GlobalConfig::Instance().GetAsString("level-seed")));
 		}
 		motd = GlobalConfig::Instance().GetAsString("motd");
 		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int32_t>("max-players");

@@ -36,7 +36,7 @@ GeneratorBeta173::GeneratorBeta173(int64_t pSeed, World *pWorld) : Generator(pSe
 std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(Int2 chunkPos) {
 	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, chunkPos);
 	c->state = ChunkState::Generating;
-	this->rand->setSeed((long)chunkPos.x * 341873128712L + (long)chunkPos.y * 132897987541L);
+	this->rand->setSeed(int64_t(chunkPos.x) * 341873128712L + int64_t(chunkPos.y) * 132897987541L);
 
 	// Allocate empty chunk
 	c->ClearChunk();
@@ -397,9 +397,9 @@ bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
 	};
 	Biome biome = GetBiomeAt(Int2{blockPos.x + 16, blockPos.y + 16});
 	this->rand->setSeed(this->world->seed);
-	long xOffset = this->rand->nextLong() / 2L * 2L + 1L;
-	long zOffset = this->rand->nextLong() / 2L * 2L + 1L;
-	this->rand->setSeed(((long(chunkPos.x) * xOffset) + (long(chunkPos.y) * zOffset)) ^ this->world->seed);
+	int64_t xOffset = this->rand->nextLong() / 2L * 2L + 1L;
+	int64_t zOffset = this->rand->nextLong() / 2L * 2L + 1L;
+	this->rand->setSeed(((int64_t(chunkPos.x) * xOffset) + (int64_t(chunkPos.y) * zOffset)) ^ this->world->seed);
 	[[maybe_unused]] Int3 coord;
 
 	// Generate lakes
