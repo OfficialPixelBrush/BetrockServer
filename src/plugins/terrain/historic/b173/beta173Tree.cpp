@@ -99,7 +99,7 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch)
  * @param pTrunkShape Determines the trunk shape
  */
 void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double pTrunkShape) {
-	this->maximumTreeHeight = (int)(pTreeHeight * 12.0);
+	this->maximumTreeHeight = int32_t(pTreeHeight * 12.0);
 	if (pTreeHeight > 0.5) {
 		this->trunkThickness = 5;
 	}
@@ -141,12 +141,12 @@ bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom *pRand,
 }
 
 void Beta173BigTree::GenerateBranchPositions() {
-	this->height = (int)((double)this->totalHeight * this->heightFactor);
+	this->height = int32_t((double)this->totalHeight * this->heightFactor);
 	if (this->height >= this->totalHeight) {
 		this->height = this->totalHeight - 1;
 	}
 
-	int32_t var1 = (int)(1.382 + std::pow(this->trunkShape * (double)this->totalHeight / 13.0, 2.0));
+	int32_t var1 = int32_t(1.382 + std::pow(this->trunkShape * (double)this->totalHeight / 13.0, 2.0));
 	if (var1 < 1) {
 		var1 = 1;
 	}
@@ -188,7 +188,7 @@ void Beta173BigTree::GenerateBranchPositions() {
 						if ((double)var17.y - var22 > (double)var5) {
 							var19.y = var5;
 						} else {
-							var19.y = (int)((double)var17.y - var22);
+							var19.y = int32_t((double)var17.y - var22);
 						}
 
 						if (this->CheckIfPathClear(var19, var17) == -1) {
@@ -403,7 +403,7 @@ int32_t Beta173BigTree::CheckIfPathClear(Int3 posA, Int3 posB) {
 	int8_t var5;
 	for (var5 = 0; var4 < 3; ++var4) {
 		diff[var4] = posB[var4] - posA[var4];
-		if (JavaMath::abs(var3[var4]) > JavaMath::abs(diff[var5])) {
+		if (JavaMath::abs(diff[var4]) > JavaMath::abs(diff[var5])) {
 			var5 = var4;
 		}
 	}

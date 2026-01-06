@@ -56,9 +56,9 @@ int32_t Plugin::lua_GetBlock(lua_State *L) {
 		return 1;
 	}
 	// Get position
-	int32_t x = (int)lua_tointeger(L, 1);
-	int32_t y = (int)lua_tointeger(L, 2);
-	int32_t z = (int)lua_tointeger(L, 3);
+	int32_t x = int32_t(lua_tointeger(L, 1));
+	int32_t y = int32_t(lua_tointeger(L, 2));
+	int32_t z = int32_t(lua_tointeger(L, 3));
 	Int3 pos(x,y,z);
 
 	// Get world
@@ -85,9 +85,9 @@ int32_t Plugin::lua_SetBlock(lua_State *L) {
 		return 1;
 	}
 	// Get position
-	int32_t x = (int)lua_tointeger(L, 1);
-	int32_t y = (int)lua_tointeger(L, 2);
-	int32_t z = (int)lua_tointeger(L, 3);
+	int32_t x = int32_t(lua_tointeger(L, 1));
+	int32_t y = int32_t(lua_tointeger(L, 2));
+	int32_t z = int32_t(lua_tointeger(L, 3));
 	Int3 pos(x,y,z);
 
 	Block b = DecodeBlock(L);

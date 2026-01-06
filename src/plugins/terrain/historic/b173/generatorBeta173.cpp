@@ -97,7 +97,7 @@ void GeneratorBeta173::ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chun
 			bool sandActive = this->sandNoise[x + z * CHUNK_WIDTH_X] + this->rand->nextDouble() * 0.2 > 0.0;
 			bool gravelActive = this->gravelNoise[x + z * CHUNK_WIDTH_X] + this->rand->nextDouble() * 0.2 > 3.0;
 			int32_t stoneActive =
-				(int)(this->stoneNoise[x + z * CHUNK_WIDTH_X] / 3.0 + 3.0 + this->rand->nextDouble() * 0.25);
+				int32_t(this->stoneNoise[x + z * CHUNK_WIDTH_X] / 3.0 + 3.0 + this->rand->nextDouble() * 0.25);
 			int32_t stoneDepth = -1;
 			// Get biome-appropriate top and filler blocks
 			BlockType topBlock = GetTopBlock(biome);

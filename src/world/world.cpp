@@ -291,7 +291,7 @@ void World::SpreadLight(bool skyLight, Int3 pos, int32_t newLightLevel) {
 	// Enqueue for further propagation (push to back to follow Java semantics of add -> remove last)
 	{
 		std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
-		if ((int)lightingToUpdate.size() >= MAX_LIGHTING_UPDATES) {
+		if (int32_t(lightingToUpdate.size()) >= MAX_LIGHTING_UPDATES) {
 			// drop silently to avoid unbounded memory; you can log if desired
 		} else {
 			lightingToUpdate.emplace_back(LightUpdate{skyLight, pos, Int3{}});
@@ -328,7 +328,7 @@ void World::ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool che
 		// Duplicate suppression: scan up to last SCHEDULE_DUP_SCAN entries
 		if (checkDuplicates) {
 			std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
-			int32_t scan = std::min((int)lightingToUpdate.size(), SCHEDULE_DUP_SCAN);
+			int32_t scan = std::min(int32_t(lightingToUpdate.size()), SCHEDULE_DUP_SCAN);
 			for (int32_t i = 0; i < scan; ++i) {
 				LightUpdate &lu = lightingToUpdate[lightingToUpdate.size() - 1 - i];
 
@@ -344,7 +344,7 @@ void World::ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool che
 		// push new scheduled update as a single-point32_t LightUpdate using posA,posB to store bbox if needed
 		{
 			std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
-			if ((int)lightingToUpdate.size() >= MAX_LIGHTING_UPDATES) {
+			if (int32_t(lightingToUpdate.size()) >= MAX_LIGHTING_UPDATES) {
 				// too many, clear as Java did (or drop)
 				lightingToUpdate.clear();
 			} else {
@@ -423,7 +423,7 @@ void World::ProcessSingleLightUpdate(const LightUpdate &current) {
 				c->SetLight(current.skyLight, {n.x & 15, n.y, n.z & 15}, newLevel);
 				// schedule further propagation by pushing new LightUpdate
 				std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
-				if ((int)lightingToUpdate.size() < MAX_LIGHTING_UPDATES) {
+				if (int32_t(lightingToUpdate.size()) < MAX_LIGHTING_UPDATES) {
 					lightingToUpdate.emplace_back(LightUpdate{current.skyLight, n, Int3{}});
 				}
 			}

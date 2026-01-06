@@ -174,9 +174,9 @@ int32_t GeneratorLua::lua_Index(lua_State *L) {
 		return 1;
 	}
 
-	int32_t x = (int)lua_tointeger(L, 1);
-	int32_t y = (int)lua_tointeger(L, 2);
-	int32_t z = (int)lua_tointeger(L, 3);
+	int32_t x = int32_t(lua_tointeger(L, 1));
+	int32_t y = int32_t(lua_tointeger(L, 2));
+	int32_t z = int32_t(lua_tointeger(L, 3));
 	if (x < 0)
 		x = 0;
 	if (x >= CHUNK_WIDTH_X)
@@ -203,9 +203,9 @@ int32_t GeneratorLua::lua_Between(lua_State *L) {
 		return 1;
 	}
 
-	int32_t i = (int)lua_tonumber(L, 1);
-	int32_t a = (int)lua_tonumber(L, 2);
-	int32_t b = (int)lua_tonumber(L, 3);
+	int32_t i = int32_t(lua_tonumber(L, 1));
+	int32_t a = int32_t(lua_tonumber(L, 2));
+	int32_t b = int32_t(lua_tonumber(L, 3));
 
 	// Call Between and push the result
 	bool result = Between(i, a, b);
@@ -221,9 +221,9 @@ int32_t GeneratorLua::lua_SpatialPRNG(lua_State *L) {
 		return 1;
 	}
 
-	int32_t x = (int)lua_tointeger(L, 1);
-	int32_t y = (int)lua_tointeger(L, 2);
-	int32_t z = (int)lua_tointeger(L, 3);
+	int32_t x = int32_t(lua_tointeger(L, 1));
+	int32_t y = int32_t(lua_tointeger(L, 2));
+	int32_t z = int32_t(lua_tointeger(L, 3));
 	int32_t result = SpatialPrng(seed, Int3{x, y, z});
 
 	lua_pushinteger(L, result);
@@ -243,9 +243,9 @@ int32_t GeneratorLua::lua_GetNoiseWorley(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 1;
 	}
-	int32_t x = (int)lua_tointeger(L, 1);
-	int32_t y = (int)lua_tointeger(L, 2);
-	int32_t z = (int)lua_tointeger(L, 3);
+	int32_t x = int32_t(lua_tointeger(L, 1));
+	int32_t y = int32_t(lua_tointeger(L, 2));
+	int32_t z = int32_t(lua_tointeger(L, 3));
 	Int3 position = Int3{x, y, z};
 
 	// Validate and extract threshold
@@ -289,7 +289,7 @@ int32_t GeneratorLua::lua_GetNoisePerlin2D(lua_State *L) {
 		luaL_error(L, "Octaves must be a numeric value");
 		return 1;
 	}
-	int32_t octaves = (int)lua_tonumber(L, 4);
+	int32_t octaves = int32_t(lua_tonumber(L, 4));
 
 	// Call GetNoisePerlin2D and push result
 	double result = GetNoisePerlin2D(seed, position, octaves);
@@ -315,7 +315,7 @@ int32_t GeneratorLua::lua_GetNoisePerlin3D(lua_State *L) {
 		luaL_error(L, "Octaves must be a numeric value");
 		return 1;
 	}
-	int32_t octaves = (int)lua_tointeger(L, 4);
+	int32_t octaves = int32_t(lua_tointeger(L, 4));
 
 	// Call GetNoisePerlin3D and push result
 	double result = GetNoisePerlin3D(seed, position, octaves);
@@ -330,9 +330,9 @@ int32_t GeneratorLua::lua_GetNaturalGrass(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 1;
 	}
-	int32_t x = (int)lua_tointeger(L, 1);
-	int32_t y = (int)lua_tointeger(L, 2);
-	int32_t z = (int)lua_tointeger(L, 3);
+	int32_t x = int32_t(lua_tointeger(L, 1));
+	int32_t y = int32_t(lua_tointeger(L, 2));
+	int32_t z = int32_t(lua_tointeger(L, 3));
 	Int3 position = Int3{x, y, z};
 
 	// Validate and extract threshold
@@ -340,7 +340,7 @@ int32_t GeneratorLua::lua_GetNaturalGrass(lua_State *L) {
 		luaL_error(L, "Blocks since the Sky was visible must be a numeric value");
 		return 1;
 	}
-	int32_t bs = (int)lua_tointeger(L, 4);
+	int32_t bs = int32_t(lua_tointeger(L, 4));
 
 	// Call the function
 	Block result = GetNaturalGrass(seed, position, bs);
@@ -358,8 +358,8 @@ int32_t GeneratorLua::lua_CheckChunk(lua_State *L) {
 	if (!gen)
 		return luaL_error(L, "GeneratorLua instance not set");
 
-	int32_t x = (int)lua_tointeger(L, 1);
-	int32_t z = (int)lua_tointeger(L, 2);
+	int32_t x = int32_t(lua_tointeger(L, 1));
+	int32_t z = int32_t(lua_tointeger(L, 2));
 
 	lua_pushboolean(L, gen->world->ChunkExists(Int2{x,z}));
 	return 1;
@@ -376,9 +376,9 @@ int32_t GeneratorLua::lua_PlaceBlock(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 0;
 	}
-	int32_t x = (int)lua_tointeger(L, 1);
-	int32_t y = (int)lua_tointeger(L, 2);
-	int32_t z = (int)lua_tointeger(L, 3);
+	int32_t x = int32_t(lua_tointeger(L, 1));
+	int32_t y = int32_t(lua_tointeger(L, 2));
+	int32_t z = int32_t(lua_tointeger(L, 3));
 	Int3 position = Int3{x, y, z};
 
 	Block b = DecodeBlock(L);
@@ -399,9 +399,9 @@ int32_t GeneratorLua::lua_GetBlock(lua_State *L) {
 		lua_pushnil(L);
 		return 1;
 	}
-	int32_t x = (int)lua_tointeger(L, 1);
-	int32_t y = (int)lua_tointeger(L, 2);
-	int32_t z = (int)lua_tointeger(L, 3);
+	int32_t x = int32_t(lua_tointeger(L, 1));
+	int32_t y = int32_t(lua_tointeger(L, 2));
+	int32_t z = int32_t(lua_tointeger(L, 3));
 	Int3 position = Int3{x, y, z};
 
 	// Create a table and push it to Lua stack
@@ -429,8 +429,8 @@ int32_t GeneratorLua::lua_GetBiomeMap(lua_State *L) {
 		lua_pushnil(L);
 		return 1;
 	}
-	int32_t x = (int)lua_tointeger(L, 1);
-	int32_t z = (int)lua_tointeger(L, 2);
+	int32_t x = int32_t(lua_tointeger(L, 1));
+	int32_t z = int32_t(lua_tointeger(L, 2));
 	Int2 blockPos = Int2{x*CHUNK_WIDTH_X, z*CHUNK_WIDTH_Z};
 
 	std::vector<Biome> biomeMap;

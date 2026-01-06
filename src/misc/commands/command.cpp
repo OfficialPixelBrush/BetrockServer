@@ -368,7 +368,7 @@ std::string CommandPose::Execute(std::vector<std::string> pCommand, std::vector<
 		}
 		std::vector<uint8_t> broadcastResponse;
 		int8_t pResponseByte = (player->sitting << 2 | player->crouching << 1 | player->onFire);
-		Respond::ChatMessage(pResponse, "§7Set Pose " + std::to_string((int)pResponseByte));
+		Respond::ChatMessage(pResponse, "§7Set Pose " + std::to_string(int32_t(pResponseByte)));
 		Respond::EntityMetadata(broadcastResponse, player->entityId, pResponseByte);
 		BroadcastToClients(broadcastResponse);
 		return "";
