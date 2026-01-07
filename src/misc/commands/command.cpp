@@ -569,7 +569,7 @@ std::string CommandRegion::Execute(std::vector<std::string> pCommand, [[maybe_un
 		std::unique_ptr<RegionFile> rf = std::make_unique<RegionFile>(std::filesystem::current_path() / "r.0.0.mcr");
 		auto root = rf->GetChunkNbt(Int2{0, 0});
 		if (root) {
-			root->NbtPrintData();
+			std::cout << *root;
 		}
 		return std::to_string(rf->freeSectors.size());
 	}

@@ -70,9 +70,6 @@ include_directories(
 add_executable(
     BetrockServer
 
-    include/pixnbt/nbt.cpp
-    include/pixnbt/tags/tag.cpp
-
     src/coms/coms.cpp
     src/coms/responses.cpp
 

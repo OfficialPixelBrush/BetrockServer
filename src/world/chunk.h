@@ -3,7 +3,7 @@
 #include "datatypes.h"
 #include "tileEntity.h"
 #include "world.h"
-#include "nbt.h"
+#include "pixnbt.h"
 #include <cstdint>
 
 class World;
@@ -40,8 +40,8 @@ class Chunk {
   public:
 	std::atomic<int8_t> state = ChunkState::Invalid;
 	std::atomic<bool> modified = false;
-	std::shared_ptr<CompoundTag> GetAsNbt();
-	void ReadFromNbt(std::shared_ptr<CompoundTag> readRoot);
+	std::shared_ptr<CompoundNbtTag> GetAsNbt();
+	void ReadFromNbt(std::shared_ptr<CompoundNbtTag> readRoot);
 
 	Chunk(World *pWorld, Int2 pos) : world(pWorld), xPos(pos.x), zPos(pos.y) {}
 	int8_t GetHeightValue(uint8_t x, uint8_t z);

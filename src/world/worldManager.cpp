@@ -275,28 +275,28 @@ void WorldManager::FreeAndSave() {
 // Saves the world metadata to an NBT-format file
 void WorldManager::SaveNbt() {
 	auto &server = Betrock::Server::Instance();
-	auto root = std::make_shared<CompoundTag>("");
-	auto data = std::make_shared<CompoundTag>("Data");
+	auto root = std::make_shared<CompoundNbtTag>("");
+	auto data = std::make_shared<CompoundNbtTag>("Data");
 	root->Put(data);
 
 	Int3 spawn = server.GetSpawnPoint();
 
 	// For ease of programming, this currently goes unused.
 	// The relevant variables are stored in server.properties
-	data->Put(std::make_shared<LongTag>("RandomSeed", seed));
-	data->Put(std::make_shared<IntTag>("SpawnY", spawn.y));
-	data->Put(std::make_shared<IntTag>("rainTime", 87264));
-	data->Put(std::make_shared<IntTag>("thunderTime", 26271));
-	data->Put(std::make_shared<IntTag>("SpawnZ", spawn.z));
-	data->Put(std::make_shared<IntTag>("SpawnX", spawn.x));
-	data->Put(std::make_shared<ByteTag>("raining", 0));
-	data->Put(std::make_shared<LongTag>("Time", server.GetServerTime()));
-	data->Put(std::make_shared<ByteTag>("thundering", 0));
-	data->Put(std::make_shared<IntTag>("version", 19132));
-	data->Put(std::make_shared<LongTag>("LastPlayed", 1740410572431));
+	data->Put(std::make_shared<LongNbtTag>("RandomSeed", seed));
+	data->Put(std::make_shared<IntNbtTag>("SpawnY", spawn.y));
+	data->Put(std::make_shared<IntNbtTag>("rainTime", 87264));
+	data->Put(std::make_shared<IntNbtTag>("thunderTime", 26271));
+	data->Put(std::make_shared<IntNbtTag>("SpawnZ", spawn.z));
+	data->Put(std::make_shared<IntNbtTag>("SpawnX", spawn.x));
+	data->Put(std::make_shared<ByteNbtTag>("raining", 0));
+	data->Put(std::make_shared<LongNbtTag>("Time", server.GetServerTime()));
+	data->Put(std::make_shared<ByteNbtTag>("thundering", 0));
+	data->Put(std::make_shared<IntNbtTag>("version", 19132));
+	data->Put(std::make_shared<LongNbtTag>("LastPlayed", 1740410572431));
 	std::string levelName = std::string(Betrock::GlobalConfig::Instance().Get("level-name"));
-	data->Put(std::make_shared<StringTag>("LevelName", levelName));
-	data->Put(std::make_shared<LongTag>("SizeOnDisk", 3956736));
+	data->Put(std::make_shared<StringNbtTag>("LevelName", levelName));
+	data->Put(std::make_shared<LongNbtTag>("SizeOnDisk", 3956736));
 
 	std::ofstream writeFile(levelName + "/level.dat", std::ios::binary);
 	NbtWrite(writeFile, root);

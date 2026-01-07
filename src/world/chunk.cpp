@@ -318,47 +318,47 @@ std::vector<SignTile *> Chunk::GetSigns() {
 	return signs;
 }
 
-std::shared_ptr<CompoundTag> Chunk::GetAsNbt() {
-	auto root = std::make_shared<CompoundTag>("");
-	auto level = std::make_shared<CompoundTag>("Level");
+std::shared_ptr<CompoundNbtTag> Chunk::GetAsNbt() {
+	auto root = std::make_shared<CompoundNbtTag>("");
+	auto level = std::make_shared<CompoundNbtTag>("Level");
 	root->Put(level);
-	level->Put(std::make_shared<ByteArrayTag>("Blocks", GetBlockTypes()));
-	level->Put(std::make_shared<ByteArrayTag>("Data", GetBlockMetas()));
-	level->Put(std::make_shared<ByteArrayTag>("BlockLight", GetBlockLights()));
-	level->Put(std::make_shared<ByteArrayTag>("SkyLight", GetSkyLights()));
-	level->Put(std::make_shared<ByteTag>("TerrainPopulated", this->state == ChunkState::Populated));
-	level->Put(std::make_shared<IntTag>("xPos", xPos));
-	level->Put(std::make_shared<IntTag>("zPos", zPos));
-	auto tileEntitiesNbt = std::make_shared<ListTag>("TileEntities");
+	level->Put(std::make_shared<ByteArrayNbtTag>("Blocks", GetBlockTypes()));
+	level->Put(std::make_shared<ByteArrayNbtTag>("Data", GetBlockMetas()));
+	level->Put(std::make_shared<ByteArrayNbtTag>("BlockLight", GetBlockLights()));
+	level->Put(std::make_shared<ByteArrayNbtTag>("SkyLight", GetSkyLights()));
+	level->Put(std::make_shared<ByteNbtTag>("TerrainPopulated", this->state == ChunkState::Populated));
+	level->Put(std::make_shared<IntNbtTag>("xPos", xPos));
+	level->Put(std::make_shared<IntNbtTag>("zPos", zPos));
+	auto tileEntitiesNbt = std::make_shared<ListNbtTag>("TileEntities");
 	level->Put(tileEntitiesNbt);
 	for (auto &te : tileEntities) {
-		auto subtag = std::make_shared<CompoundTag>("TileEntities");
+		auto subtag = std::make_shared<CompoundNbtTag>("TileEntities");
 		// Shared between all tile entities
-		subtag->Put(std::make_shared<IntTag>("x", te->position.x));
-		subtag->Put(std::make_shared<IntTag>("y", te->position.y));
-		subtag->Put(std::make_shared<IntTag>("z", te->position.z));
-		subtag->Put(std::make_shared<StringTag>("id", te->type));
+		subtag->Put(std::make_shared<IntNbtTag>("x", te->position.x));
+		subtag->Put(std::make_shared<IntNbtTag>("y", te->position.y));
+		subtag->Put(std::make_shared<IntNbtTag>("z", te->position.z));
+		subtag->Put(std::make_shared<StringNbtTag>("id", te->type));
 		// TODO: Add NBT Writeability to the TEs themselves
 		if (te->type == TILEENTITY_SIGN) {
 			auto sign = static_cast<SignTile *>(te.get());
-			subtag->Put(std::make_shared<StringTag>("Text1", sign->lines[0]));
-			subtag->Put(std::make_shared<StringTag>("Text2", sign->lines[1]));
-			subtag->Put(std::make_shared<StringTag>("Text3", sign->lines[2]));
-			subtag->Put(std::make_shared<StringTag>("Text4", sign->lines[3]));
+			subtag->Put(std::make_shared<StringNbtTag>("Text1", sign->lines[0]));
+			subtag->Put(std::make_shared<StringNbtTag>("Text2", sign->lines[1]));
+			subtag->Put(std::make_shared<StringNbtTag>("Text3", sign->lines[2]));
+			subtag->Put(std::make_shared<StringNbtTag>("Text4", sign->lines[3]));
 		}
 		tileEntitiesNbt->Put(subtag);
 	}
 	return root;
 }
 
-void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
-	auto root = std::dynamic_pointer_cast<CompoundTag>(readRoot);
-	auto level = std::dynamic_pointer_cast<CompoundTag>(root->Get("Level"));
+void Chunk::ReadFromNbt(std::shared_ptr<CompoundNbtTag> readRoot) {
+	auto root = std::dynamic_pointer_cast<CompoundNbtTag>(readRoot);
+	auto level = std::dynamic_pointer_cast<CompoundNbtTag>(root->Get("Level"));
 
 	const size_t blockDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT);
 	const size_t nibbleDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT / 2));
 	// Block Data
-	auto blockTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Blocks"));
+	auto blockTag = std::dynamic_pointer_cast<ByteArrayNbtTag>(level->Get("Blocks"));
 	if (!blockTag)
 		return;
 	auto blockData = blockTag->GetData();
@@ -366,7 +366,7 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 		SetBlockType(BlockType(blockData[i]), BlockIndexToPosition(i));
 	}
 	// Block Metadata
-	auto metaTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Data"));
+	auto metaTag = std::dynamic_pointer_cast<ByteArrayNbtTag>(level->Get("Data"));
 	if (!metaTag)
 		return;
 	auto metaData = metaTag->GetData();
@@ -375,7 +375,7 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 		SetBlockMeta((metaData[i] >> 4) & 0xF, BlockIndexToPosition(i * 2 + 1));
 	}
 	// Block Light
-	auto blockLightTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("BlockLight"));
+	auto blockLightTag = std::dynamic_pointer_cast<ByteArrayNbtTag>(level->Get("BlockLight"));
 	if (!blockLightTag)
 		return;
 	auto blockLightData = blockLightTag->GetData();
@@ -384,7 +384,7 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 		SetBlockLight((blockLightData[i] >> 4) & 0xF, BlockIndexToPosition(i * 2 + 1));
 	}
 	// Sky Light
-	auto skyLightTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("SkyLight"));
+	auto skyLightTag = std::dynamic_pointer_cast<ByteArrayNbtTag>(level->Get("SkyLight"));
 	if (!skyLightTag)
 		return;
 	auto skyLightData = skyLightTag->GetData();
@@ -394,15 +394,15 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 	}
 
 	// Load Tile Entity Data
-	auto tileEntitiesNbt = std::dynamic_pointer_cast<ListTag>(level->Get("TileEntities"));
+	auto tileEntitiesNbt = std::dynamic_pointer_cast<ListNbtTag>(level->Get("TileEntities"));
 	if (tileEntitiesNbt && tileEntitiesNbt->GetNumberOfTags() > 0) {
 		for (auto teNbt : tileEntitiesNbt->GetTags()) {
-			auto teNbtTag = std::dynamic_pointer_cast<CompoundTag>(teNbt);
+			auto teNbtTag = std::dynamic_pointer_cast<CompoundNbtTag>(teNbt);
 			// Shared between all tile entities
-			auto xTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("x"));
-			auto yTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("y"));
-			auto zTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("z"));
-			auto typeTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("id"));
+			auto xTag = std::dynamic_pointer_cast<IntNbtTag>(teNbtTag->Get("x"));
+			auto yTag = std::dynamic_pointer_cast<IntNbtTag>(teNbtTag->Get("y"));
+			auto zTag = std::dynamic_pointer_cast<IntNbtTag>(teNbtTag->Get("z"));
+			auto typeTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("id"));
 			if (!xTag || !yTag || !zTag || !typeTag)
 				continue;
 
@@ -412,16 +412,16 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 			std::string type = typeTag->GetData();
 			if (type == TILEENTITY_SIGN) {
 				std::array<std::string, 4> lines;
-				auto textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text1"));
+				auto textLineTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("Text1"));
 				if (textLineTag)
 					lines[0] = textLineTag->GetData();
-				textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text2"));
+				textLineTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("Text2"));
 				if (textLineTag)
 					lines[1] = textLineTag->GetData();
-				textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text3"));
+				textLineTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("Text3"));
 				if (textLineTag)
 					lines[2] = textLineTag->GetData();
-				textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text4"));
+				textLineTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("Text4"));
 				if (textLineTag)
 					lines[3] = textLineTag->GetData();
 				AddTileEntity(std::make_unique<SignTile>(Int3{x, y, z}, lines));
@@ -430,7 +430,7 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 		}
 	}
 
-	auto populatedTag = std::dynamic_pointer_cast<ByteTag>(level->Get("TerrainPopulated"));
+	auto populatedTag = std::dynamic_pointer_cast<ByteNbtTag>(level->Get("TerrainPopulated"));
 	if (populatedTag && populatedTag->GetData() != 0) {
 		state = ChunkState::Populated;
 	}

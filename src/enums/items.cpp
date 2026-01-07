@@ -1,11 +1,11 @@
 #include "items.h"
 
-std::shared_ptr<Tag> NbtItem(int8_t slot, int16_t id, int8_t count, int16_t damage) {
-	auto invSlot = std::make_shared<CompoundTag>(std::to_string(static_cast<int32_t>(slot)));
-	invSlot->Put(std::make_shared<ByteTag>("Slot", slot));
-	invSlot->Put(std::make_shared<ShortTag>("id", id));
-	invSlot->Put(std::make_shared<ByteTag>("Count", count));
-	invSlot->Put(std::make_shared<ShortTag>("Damage", damage));
+std::shared_ptr<NbtTag> NbtItem(int8_t slot, int16_t id, int8_t count, int16_t damage) {
+	auto invSlot = std::make_shared<CompoundNbtTag>(std::to_string(static_cast<int32_t>(slot)));
+	invSlot->Put(std::make_shared<ByteNbtTag>("Slot", slot));
+	invSlot->Put(std::make_shared<ShortNbtTag>("id", id));
+	invSlot->Put(std::make_shared<ByteNbtTag>("Count", count));
+	invSlot->Put(std::make_shared<ShortNbtTag>("Damage", damage));
 	return invSlot;
 }
 

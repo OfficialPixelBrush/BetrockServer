@@ -47,7 +47,7 @@ RegionFile::RegionFile(std::filesystem::path pFilePath) {
 	for (size_t i = 0; i < MCREGION_CHUNKS; i++) {
 		uint32_t offset = 0;
 		regionStream.read(reinterpret_cast<char *>(&offset), sizeof(offset));
-		offset = Swap32(offset);
+		offset = NbtSwap32(offset);
 		// std::cout << std::hex << offset << ",";
 		offsets[i] = offset;
 		if ((offset != 0 && (offset >> 8) + (offset & 0xFF)) <= freeSectors.size()) {
@@ -62,14 +62,14 @@ RegionFile::RegionFile(std::filesystem::path pFilePath) {
 	for (int32_t i = 0; i < MCREGION_CHUNKS; i++) {
 		uint32_t timestamp = 0;
 		regionStream.read(reinterpret_cast<char *>(&timestamp), sizeof(timestamp));
-		timestamps[i] = Swap32(timestamp);
+		timestamps[i] = NbtSwap32(timestamp);
 	}
 	// std::cout << "Read Timestamps" << "\n";
 }
 
 int32_t RegionFile::GetChunkOffset(Int2 position) { return this->offsets[position.x + position.y * REGION_CHUNKS_X]; }
 
-std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(Int2 position) {
+std::shared_ptr<CompoundNbtTag> RegionFile::GetChunkNbt(Int2 position) {
 	streamMutex.lock();
 	std::lock_guard lock(streamMutex);
 	if (!regionStream.good()) {
@@ -104,7 +104,7 @@ std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(Int2 position) {
 	regionStream.seekg((upperOffset * SECTOR_SIZE));
 	uint32_t dataLength = 0;
 	regionStream.read(reinterpret_cast<char *>(&dataLength), sizeof(dataLength));
-	dataLength = Swap32(dataLength);
+	dataLength = NbtSwap32(dataLength);
 	if (dataLength > uint32_t(SECTOR_SIZE * lowerOffset)) {
 		std::cout << "READ " << position << " invalid length "
 				  << std::to_string(dataLength) << " > 4096 * " << std::to_string(lowerOffset) << "\n";
@@ -123,10 +123,10 @@ std::shared_ptr<CompoundTag> RegionFile::GetChunkNbt(Int2 position) {
 	switch (compressionFormat) {
 	case 1:
 		// Gzip compressed
-		return std::dynamic_pointer_cast<CompoundTag>(NbtRead(dataStream, NBT_GZIP, -1, CHUNK_DATA_SIZE * 20));
+		return std::dynamic_pointer_cast<CompoundNbtTag>(NbtRead(dataStream, NBT_GZIP, -1, CHUNK_DATA_SIZE * 20));
 	case 2:
 		// ZLib compressed
-		return std::dynamic_pointer_cast<CompoundTag>(NbtRead(dataStream, NBT_ZLIB, -1, CHUNK_DATA_SIZE * 20));
+		return std::dynamic_pointer_cast<CompoundNbtTag>(NbtRead(dataStream, NBT_ZLIB, -1, CHUNK_DATA_SIZE * 20));
 	}
 
 	std::cout << "READ " << position << " unknown version "

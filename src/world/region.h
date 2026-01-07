@@ -4,12 +4,12 @@
 #include <fstream>
 
 #include "helper.h"
-#include "nbt.h"
+#include "pixnbt.h"
 
 #define SECTOR_SIZE 4096
 #define REGION_CHUNKS_X 32
 #define REGION_CHUNKS_Z 32
-#define MCREGION_CHUNKS REGION_CHUNKS_X *REGION_CHUNKS_Z // 1024
+#define MCREGION_CHUNKS REGION_CHUNKS_X * REGION_CHUNKS_Z // 1024
 
 class RegionFile {
   public:
@@ -24,7 +24,7 @@ class RegionFile {
 	RegionFile(std::filesystem::path filePath);
 	void Write();
 	std::fstream GetChunkDataStream(Int2 position);
-	std::shared_ptr<CompoundTag> GetChunkNbt(Int2 position);
+	std::shared_ptr<CompoundNbtTag> GetChunkNbt(Int2 position);
 
   private:
 	bool IsOutOfBounds(Int2 position);

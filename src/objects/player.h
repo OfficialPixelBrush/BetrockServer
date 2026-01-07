@@ -6,7 +6,7 @@
 #include "entity.h"
 #include "coms.h"
 #include "inventory.h"
-#include "nbt.h"
+#include "pixnbt.h"
 
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62

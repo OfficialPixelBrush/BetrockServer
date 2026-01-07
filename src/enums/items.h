@@ -1,10 +1,10 @@
 #pragma once
-#include "nbt.h"
+#include "pixnbt.h"
 #include <cstdint>
 
 #define SLOT_EMPTY -1
 
-std::shared_ptr<Tag> NbtItem(int8_t slot, int16_t id, int8_t count, int16_t damage);
+std::shared_ptr<NbtTag> NbtItem(int8_t slot, int16_t id, int8_t count, int16_t damage);
 
 enum Items : int16_t {
 	ITEM_INVALID = -1,

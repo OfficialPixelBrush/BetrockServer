@@ -200,14 +200,14 @@ std::shared_ptr<Chunk> World::LoadMcRegionChunk(Int2 position) {
 		// TODO: Keep track of which regions already exist
 		std::unique_ptr<RegionFile> rf = std::make_unique<RegionFile>(regionPath);
 
-		std::shared_ptr<Tag> readRoot;
+		std::shared_ptr<NbtTag> readRoot;
 		readRoot = rf->GetChunkNbt(position);
 
 		if (!readRoot) {
 			return nullptr;
 		}
 		std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this, position);
-		c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
+		c->ReadFromNbt(std::dynamic_pointer_cast<CompoundNbtTag>(readRoot));
 		c->state = ChunkState::Populated;
 		c->modified = false;
 		return AddChunk(position, std::move(c));
@@ -602,13 +602,13 @@ std::shared_ptr<Chunk> World::LoadOldV2Chunk(Int2 posiiton) {
 
 	try {
 		std::ifstream readFile(entryPath, std::ios::binary);
-		std::shared_ptr<Tag> readRoot = NbtRead(readFile, NBT_ZLIB, -1, CHUNK_DATA_SIZE * 2);
+		std::shared_ptr<NbtTag> readRoot = NbtRead(readFile, NBT_ZLIB, -1, CHUNK_DATA_SIZE * 2);
 		readFile.close();
 		if (!readRoot) {
 			throw std::runtime_error("Unable to read NBT data!");
 		}
 		std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this, posiiton);
-		c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
+		c->ReadFromNbt(std::dynamic_pointer_cast<CompoundNbtTag>(readRoot));
 		c->state = ChunkState::Populated;
 		c->modified = false;
 		return AddChunk(posiiton, std::move(c));
