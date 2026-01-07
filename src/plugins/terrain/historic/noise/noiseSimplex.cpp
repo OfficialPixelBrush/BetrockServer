@@ -7,29 +7,29 @@ NoiseSimplex::NoiseSimplex(JavaRandom *rand) {
 	this->yCoord = rand->nextDouble() * 256.0;
 	this->zCoord = rand->nextDouble() * 256.0;
 
-	for (int i = 0; i < 256; ++i) {
+	for (int32_t i = 0; i < 256; ++i) {
 		this->permutations[i] = i;
 	}
 
-	for (int i = 0; i < 256; ++i) {
-		int j = rand->nextInt(256 - i) + i;
+	for (int32_t i = 0; i < 256; ++i) {
+		int32_t j = rand->nextInt(256 - i) + i;
 		std::swap(this->permutations[i], this->permutations[j]);
 		this->permutations[i + 256] = this->permutations[i];
 	}
 }
 
-void NoiseSimplex::GenerateNoise(std::vector<double> &noiseField, double xOffset, double yOffset, int width, int height,
+void NoiseSimplex::GenerateNoise(std::vector<double> &noiseField, double xOffset, double yOffset, int32_t width, int32_t height,
 								 double xScale, double yScale, double amplitude) {
-	int index = 0;
+	int32_t index = 0;
 
-	for (int xI = 0; xI < width; ++xI) {
+	for (int32_t xI = 0; xI < width; ++xI) {
 		double xPos = (xOffset + (double)xI) * xScale + this->xCoord;
 
-		for (int yI = 0; yI < height; ++yI) {
+		for (int32_t yI = 0; yI < height; ++yI) {
 			double yPos = (yOffset + (double)yI) * yScale + this->yCoord;
 			double skew = (xPos + yPos) * skewing;
-			int x0 = wrap(xPos + skew);
-			int y0 = wrap(yPos + skew);
+			int32_t x0 = wrap(xPos + skew);
+			int32_t y0 = wrap(yPos + skew);
 			double unskewed = (double)(x0 + y0) * unskewing;
 			double x0a = (double)x0 - unskewed;
 			double y0a = (double)y0 - unskewed;
@@ -49,11 +49,11 @@ void NoiseSimplex::GenerateNoise(std::vector<double> &noiseField, double xOffset
 			double y0c = y0b - (double)j + unskewing;
 			double x1c = x0b - 1.0 + 2.0 * unskewing;
 			double y1c = y0b - 1.0 + 2.0 * unskewing;
-			int xInt = x0 & 255;
-			int yInt = y0 & 255;
-			int grad0 = this->permutations[xInt + this->permutations[yInt]] % 12;
-			int grad1 = this->permutations[xInt + i + this->permutations[yInt + j]] % 12;
-			int grad2 = this->permutations[xInt + 1 + this->permutations[yInt + 1]] % 12;
+			int32_t xInt = x0 & 255;
+			int32_t yInt = y0 & 255;
+			int32_t grad0 = this->permutations[xInt + this->permutations[yInt]] % 12;
+			int32_t grad1 = this->permutations[xInt + i + this->permutations[yInt + j]] % 12;
+			int32_t grad2 = this->permutations[xInt + 1 + this->permutations[yInt + 1]] % 12;
 			double term0 = 0.5 - x0b * x0b - y0b * y0b;
 			double contrib0;
 			if (term0 < 0.0) {

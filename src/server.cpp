@@ -13,7 +13,7 @@ int8_t Server::GetSpawnDimension() const noexcept { return this->spawnDimension;
 
 std::string Server::GetSpawnWorld() const noexcept { return this->spawnWorld; }
 
-int Server::GetServerFd() const noexcept { return this->serverFd; }
+int32_t Server::GetServerFd() const noexcept { return this->serverFd; }
 
 std::vector<std::shared_ptr<Client>> &Server::GetConnectedClients() noexcept { return this->connectedClients; }
 
@@ -21,7 +21,7 @@ std::vector<std::string> &Server::GetWhitelist() noexcept { return this->whiteli
 
 int32_t &Server::GetLatestEntityId() noexcept { return this->latestEntityId; }
 
-int Server::GetChunkDistance() const noexcept { return this->chunkDistance; }
+int32_t Server::GetChunkDistance() const noexcept { return this->chunkDistance; }
 
 uint64_t Server::GetServerTime() const noexcept { return this->serverTime; }
 
@@ -68,7 +68,7 @@ Client *Server::FindClientByUsername(std::string_view username) const {
 	return client == connectedClients.end() ? nullptr : std::to_address(*client);
 }
 
-void Server::AddWorldManager(int8_t worldId, int maxThreads) {
+void Server::AddWorldManager(int8_t worldId, int32_t maxThreads) {
 	const auto &[wmEntry, wmWorked] =
 		this->worldManagers.try_emplace(worldId, std::make_unique<WorldManager>(maxThreads));
 
@@ -168,15 +168,15 @@ void Server::LoadConfig() {
 		GlobalConfig::Instance().SaveToDisk();
 	} else {
 		GlobalConfig::Instance().LoadFromDisk();
-		chunkDistance = GlobalConfig::Instance().GetAsNumber<int>("view-distance");
+		chunkDistance = GlobalConfig::Instance().GetAsNumber<int32_t>("view-distance");
 		try {
 			seed = GlobalConfig::Instance().GetAsNumber<int64_t>("level-seed");
 		} catch (const std::invalid_argument &e) {
-			seed = (long)hashCode(GlobalConfig::Instance().GetAsString("level-seed"));
+			seed = int64_t(hashCode(GlobalConfig::Instance().GetAsString("level-seed")));
 		}
 		motd = GlobalConfig::Instance().GetAsString("motd");
-		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int>("max-players");
-		maximumThreads = GlobalConfig::Instance().GetAsNumber<int>("max-generator-threads");
+		maximumPlayers = GlobalConfig::Instance().GetAsNumber<int32_t>("max-players");
+		maximumThreads = GlobalConfig::Instance().GetAsNumber<int32_t>("max-generator-threads");
 		whitelistEnabled = GlobalConfig::Instance().GetAsBoolean("white-list");
 	}
 
@@ -199,11 +199,7 @@ void Server::InitPlugins() {
 	// Load plugin file and let it sit in it's own lua VM
 	// Start Plugin script
 	for (const auto &entry : std::filesystem::directory_iterator("scripts/plugins/")) {
-		try {
-			plugins.push_back(std::make_unique<Plugin>(entry.path()));
-		} catch (const std::exception &e) {
-			Betrock::Logger::Instance().Error(e.what());
-		}
+		pluginManager.AddPlugin(entry.path());
 	}
 }
 
@@ -311,7 +307,7 @@ bool Server::SocketBootstrap(uint16_t port) {
 		return false;
 	}
 
-	if (int opt = 1; setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+	if (int32_t opt = 1; setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
 		perror("setsockopt failed");
 		return false;
 	}

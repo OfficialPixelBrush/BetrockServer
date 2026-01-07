@@ -9,8 +9,12 @@
 #include "luahelper.h"
 
 #define PLUGIN_DEFAULT_NAME "Plugin"
-#define PLUGIN_LATEST_VERSION 1
+#define PLUGIN_LATEST_VERSION 2
 
+/**
+ * @brief A Plugin with its own dedicated Lua VM
+ * 
+ */
 class Plugin {
   public:
 	Plugin(std::string path);
@@ -21,6 +25,8 @@ class Plugin {
 	}
 	std::string GetName();
 	int32_t GetApiVersion();
+	int32_t BlockBreakHook();
+	int32_t BlockPlaceHook();
 
   private:
 	Betrock::Logger *logger;
@@ -29,6 +35,10 @@ class Plugin {
 	lua_State *L;
 
 	// --- Lua Bindings Functions ---
-	int lua_GlobalChat(lua_State *L);
-	int lua_Chat(lua_State *L);
+	static int32_t lua_GlobalChat(lua_State *L);
+	static int32_t lua_Chat(lua_State *L);
+	static int32_t lua_GetPlayerList(lua_State *L);
+	static int32_t lua_GetPlayer(lua_State *L);
+	static int32_t lua_GetBlock(lua_State *L);
+	static int32_t lua_SetBlock(lua_State *L);
 };

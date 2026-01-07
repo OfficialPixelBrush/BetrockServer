@@ -30,6 +30,8 @@ cmake --build . --config Debug
 - Doxygen Documentation Generator
 
 ## Style Guide
+- Use types that guarantee a known bit-width (i.e. `int32_t`, `int16_t` or `int8_t`)
 - If possible, do not pass values separately. Make use of structs that combine them
-    - i.e. instead of `int posX, int posY, int posZ`, just use `Int3 pos`
+    - i.e. instead of `int32_t posX, int32_t posY, int32_t posZ`, just use `Int3 pos`
 - Run `clang-format -i` over the files you changed
+- Do not use raw block IDs. Make use of the Blocks enum

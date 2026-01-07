@@ -40,7 +40,7 @@ bool Client::HandleLoginRequest(World* world) {
 	}
 
 	// Login response
-	int protocolVersion = EntryToInteger(message,offset);
+	int32_t protocolVersion = EntryToInteger(message,offset);
 
 	if (protocolVersion != PROTOCOL_VERSION) {
 		// If client has wrong protocol, close
@@ -274,7 +274,7 @@ bool Client::HandlePlayerDigging(World* world) {
 		if (c) {
 			//Block* b = c->GetBlock(pos);
 			//if (b) {
-				//Betrock::Logger::Instance().Debug(IdToLabel(int(b->type)) + " " + b->str() + " at " + pos.str());
+				//Betrock::Logger::Instance().Debug(IdToLabel(int32_t(b->type)) + " " + b->str() + " at " + pos.str());
 			//}
 		}
 	}
@@ -453,7 +453,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 // Handle the Client closing a Window
 bool Client::HandleCloseWindow() {
 	int8_t windowId = EntryToByte(message, offset);
-	//std::cout << int(windowId) << "\n";
+	//std::cout << int32_t(windowId) << "\n";
 	// Ignore inventory
 	if (windowId == 0) return true;
 	
@@ -481,7 +481,7 @@ bool Client::HandleWindowClick() {
 	[[maybe_unused]] int16_t itemId		= EntryToShort(message,offset);
 	[[maybe_unused]] int8_t itemCount	= 1;
 	[[maybe_unused]] int16_t itemUses	= 0;
-	//std::cout << int(window) << " (" << int(slot) << ")" << "\n";
+	//std::cout << int32_t(window) << " (" << int32_t(slot) << ")" << "\n";
 	if (itemId > 0) {
 		itemCount		= EntryToByte(message, offset);
 		itemUses		= EntryToShort(message,offset);

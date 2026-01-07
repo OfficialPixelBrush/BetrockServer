@@ -8,12 +8,12 @@
  */
 class NoiseSimplex : public NoiseGenerator {
   private:
-	int permutations[512];
+	int32_t permutations[512];
 	double xCoord;
 	double yCoord;
 	double zCoord;
 	double GenerateNoiseBase(double x, double y, double z);
-	int gradients[12][3] = {{1, 1, 0},	{-1, 1, 0},	 {1, -1, 0}, {-1, -1, 0}, {1, 0, 1},  {-1, 0, 1},
+	int32_t gradients[12][3] = {{1, 1, 0},	{-1, 1, 0},	 {1, -1, 0}, {-1, -1, 0}, {1, 0, 1},  {-1, 0, 1},
 							{1, 0, -1}, {-1, 0, -1}, {0, 1, 1},	 {0, -1, 1},  {0, 1, -1}, {0, -1, -1}};
 	double skewing = 0.5 * (sqrt(3.0) - 1.0);
 	double unskewing = (3.0 - sqrt(3.0)) / 6.0;
@@ -21,10 +21,10 @@ class NoiseSimplex : public NoiseGenerator {
   public:
 	NoiseSimplex();
 	NoiseSimplex(JavaRandom *rand);
-	void GenerateNoise(std::vector<double> &noiseField, double xOffset, double yOffset, int width, int height,
+	void GenerateNoise(std::vector<double> &noiseField, double xOffset, double yOffset, int32_t width, int32_t height,
 					   double xScale, double yScale, double amplitude);
 };
 
-inline int wrap(double grad) { return grad > 0.0 ? int(grad) : int(grad) - 1; }
+inline int32_t wrap(double grad) { return grad > 0.0 ? int32_t(grad) : int32_t(grad) - 1; }
 
-inline double dotProd(int grad[3], double x, double y) { return double(grad[0]) * x + double(grad[1]) * y; }
+inline double dotProd(int32_t grad[3], double x, double y) { return double(grad[0]) * x + double(grad[1]) * y; }

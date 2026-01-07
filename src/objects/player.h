@@ -6,7 +6,7 @@
 #include "entity.h"
 #include "coms.h"
 #include "inventory.h"
-#include "nbt.h"
+#include "pixnbt.h"
 
 #define HEALTH_MAX 20
 #define STANCE_OFFSET 1.62
@@ -48,7 +48,7 @@ class Player : public Entity {
         Item armor[INVENTORY_ARMOR_SIZE];
         Item crafting[INVENTORY_CRAFTING_SIZE];
 
-        Player(int& pEntityId, Vec3 pPosition, int8_t pDimension, std::string pWorld, Vec3 pSpawnPosition, int8_t pSpawnDimension, std::string pSpawnWorld)
+        Player(int32_t& pEntityId, Vec3 pPosition, int8_t pDimension, std::string pWorld, Vec3 pSpawnPosition, int8_t pSpawnDimension, std::string pSpawnWorld)
             : Entity(pEntityId, pPosition, pDimension, pWorld),
             spawnPosition(pSpawnPosition),
             spawnDimension(pSpawnDimension),

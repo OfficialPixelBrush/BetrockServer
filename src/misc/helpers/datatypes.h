@@ -2,6 +2,7 @@
 #include <iostream>
 #include <string>
 #include <sstream>
+#include "blocks.h"
 
 #define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH_X 16
@@ -21,7 +22,7 @@ struct Item {
     int16_t damage = 0; // Also known as metadata
 
     friend std::ostream& operator<<(std::ostream& os, const Item& i) {
-        os << "(" << int(i.id) << ":" << int(i.damage) << "x" << int(i.amount) << ")";
+        os << "(" << int32_t(i.id) << ":" << int32_t(i.damage) << "x" << int32_t(i.amount) << ")";
         return os;
     }
     
@@ -34,13 +35,13 @@ struct Item {
 
 // Block Struct
 struct Block {
-    int8_t type = 0;
+    BlockType type = BLOCK_AIR;
     int8_t meta = 0;
     int8_t blocklight = 0;
     int8_t skylight = 0;
 
     friend std::ostream& operator<<(std::ostream& os, const Block& b) {
-        os << "(" << int(b.type) << ":" << int(b.meta) << ")";
+        os << "(" << int32_t(b.type) << ":" << int32_t(b.meta) << ")";
         return os;
     }
     
@@ -81,11 +82,11 @@ struct Vec3 {
         return oss.str();
     }
 
-    double& operator[](int i) {
+    double& operator[](int32_t i) {
         return *(&x + i);
     }
     
-    const double& operator[](int i) const {
+    const double& operator[](int32_t i) const {
         return *(&x + i);
     }
 };
@@ -119,11 +120,11 @@ struct Vec2 {
         return oss.str();
     }
 
-    double& operator[](int i) {
+    double& operator[](int32_t i) {
         return *(&x + i);
     }
     
-    const double& operator[](int i) const {
+    const double& operator[](int32_t i) const {
         return *(&x + i);
     }
 };

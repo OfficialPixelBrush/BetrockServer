@@ -40,7 +40,7 @@ class World {
 	std::unordered_map<std::string, std::shared_ptr<RegionFile>> openRegions;
 	std::mutex regionMutex;
 
-	std::unordered_map<long, std::shared_ptr<Chunk>> chunks;
+	std::unordered_map<int64_t, std::shared_ptr<Chunk>> chunks;
 	std::deque<LightUpdate> lightingToUpdate;
 	std::filesystem::path dirPath;
 	void RemoveChunk(Int2 position);
@@ -49,26 +49,26 @@ class World {
 	bool RandomTick(Int3 &pos);
 	mutable std::shared_mutex lightUpdateMutex;
 	mutable std::shared_mutex chunkMutex;
-	std::atomic<int> lightingUpdatesCounter{0};
-	std::atomic<int> lightingUpdatesScheduled{0};
-	bool MergeBox(Int3 &posA, Int3 &posB, int a1, int a2, int a3, int a4, int a5, int a6);
+	std::atomic<int32_t> lightingUpdatesCounter{0};
+	std::atomic<int32_t> lightingUpdatesScheduled{0};
+	bool MergeBox(Int3 &posA, Int3 &posB, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6);
 
   public:
 	int64_t seed;
 	World(const std::string &extra = "");
 
 	// Block-related
-	void PlaceBlock(Int3 position, int8_t type = BLOCK_AIR, int8_t meta = 0);
-	void PlaceBlockUpdate(Int3 position, int8_t type = BLOCK_AIR, int8_t meta = 0, bool sendUpdate = true);
+	void PlaceBlock(Int3 position, BlockType type = BLOCK_AIR, int8_t meta = 0);
+	void PlaceBlockUpdate(Int3 position, BlockType type = BLOCK_AIR, int8_t meta = 0, bool sendUpdate = true);
 	void PlaceSponge(Int3 position);
 	bool BlockExists(Int3 position);
 
-	int8_t GetBlockType(Int3 pos);
-	void SetBlockType(int8_t blockType, Int3 pos);
+	BlockType GetBlockType(Int3 pos);
+	void SetBlockType(BlockType blockType, Int3 pos);
 	int8_t GetBlockMeta(Int3 pos);
 	void SetBlockMeta(int8_t blockMeta, Int3 pos);
 
-	void SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos);
+	void SetBlockTypeAndMeta(BlockType blockType, int8_t blockMeta, Int3 pos);
 
 	int8_t GetBlockLight(Int3 pos);
 	void SetBlockLight(int8_t value, Int3 pos);
@@ -79,7 +79,7 @@ class World {
 	bool InteractWithBlock(Int3 pos);
 
 	// Light-related
-	void SpreadLight(bool skyLight, Int3 pos, int limit);
+	void SpreadLight(bool skyLight, Int3 pos, int32_t limit);
 	void ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool checkDuplicates = true);
 	bool UpdatingLighting();
 	void ProcessSingleLightUpdate(const LightUpdate &current);
@@ -106,12 +106,12 @@ class World {
 
 	// Misc
 	void Save();
-	int GetNumberOfChunks();
-	int GetNumberOfPopulatedChunks();
-	int GetNumberOfModifiedChunks();
+	int32_t GetNumberOfChunks();
+	int32_t GetNumberOfPopulatedChunks();
+	int32_t GetNumberOfModifiedChunks();
 	int8_t GetHeightValue(Int2 position);
 	int8_t GetFirstUncoveredBlock(Int3 &position);
 	void AddTileEntity(std::unique_ptr<TileEntity> &&te);
 	TileEntity *GetTileEntity(Int3 position);
-	int GetHighestSolidOrLiquidBlock(Int2 position);
+	int32_t GetHighestSolidOrLiquidBlock(Int2 position);
 };

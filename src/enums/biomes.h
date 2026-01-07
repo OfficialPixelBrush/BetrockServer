@@ -22,5 +22,5 @@ Biome GetBiome(float temperature, float humidity);
 void GenerateBiomeLookup();
 Biome GetBiomeFromLookup(float temperature, float humidity);
 
-uint8_t GetTopBlock(Biome biome);
-uint8_t GetFillerBlock(Biome biome);
+BlockType GetTopBlock(Biome biome);
+BlockType GetFillerBlock(Biome biome);

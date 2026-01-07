@@ -1,6 +1,11 @@
-#include "plugins.h"
+#include "plugin.h"
+#include "server.h"
 
-// Initialize a newly loaded plugin
+/**
+ * @brief Initialize a newly loaded plugin
+ * 
+ * @param path Path from which to load the plugins .lua file
+ */
 Plugin::Plugin(std::string path) {
 	logger = &Betrock::Logger::Instance();
 	L = luaL_newstate();
@@ -42,7 +47,36 @@ Plugin::Plugin(std::string path) {
 	} else {
 		CheckLua(L, lua_pcall(L, 0, 0, 0));
 	}
+
+	// Check for hooks
+	lua_getglobal(L, "blockPlaceHook");
+	if (lua_isfunction(L, -1)) {
+		// Add hook
+	}
+	lua_pop(L, 1);
+	lua_getglobal(L, "blockBreakHook");
+	if (lua_isfunction(L, -1)) {
+		// Add hook
+	}
+	lua_pop(L, 1);
+
+	// Register Lua API
+	lua_register(L, "globalChat", Plugin::lua_GlobalChat);
+	lua_register(L, "getPlayerList", Plugin::lua_GetPlayerList);
+	lua_register(L, "getBlock", Plugin::lua_GetBlock);
+	lua_register(L, "setBlock", Plugin::lua_SetBlock);
 }
 
+/**
+ * @brief Gets the name of the plugin
+ * 
+ * @return Plugin name
+ */
 std::string Plugin::GetName() { return this->name; }
+
+/**
+ * @brief Get the version integer the plugin has
+ * 
+ * @return Version Integer
+ */
 int32_t Plugin::GetApiVersion() { return this->apiVersion; }

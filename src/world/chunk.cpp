@@ -3,14 +3,14 @@
 int8_t Chunk::GetHeightValue(uint8_t x, uint8_t z) { return this->heightMap[(z & 15) << 4 | (x & 15)]; }
 
 void Chunk::GenerateHeightMap() {
-	int lowestBlock = CHUNK_HEIGHT - 1;
-	int x, z;
+	int32_t lowestBlock = CHUNK_HEIGHT - 1;
+	int32_t x, z;
 	for (x = 0; x < CHUNK_WIDTH_X; ++x) {
 		for (z = 0; z < CHUNK_WIDTH_Z; ++z) {
-			int y = CHUNK_HEIGHT - 1;
+			int32_t y = CHUNK_HEIGHT - 1;
 
 			for (y = CHUNK_HEIGHT - 1; y > 0; --y) {
-				if (GetOpacity(GetBlockType(Int3{x, y-1, z})) != 0)
+				if (GetOpacity(int16_t(GetBlockType(Int3{x, y-1, z}))) != 0)
 					break;
 			}
 
@@ -22,7 +22,7 @@ void Chunk::GenerateHeightMap() {
 			// Check if the world has no sky (nether)
 			int8_t light = 15;
 			for (y = CHUNK_HEIGHT - 1; y > 0; --y) {
-				light -= GetOpacity(GetBlockType(Int3{x, y, z}));
+				light -= GetOpacity(int16_t(GetBlockType(Int3{x, y, z})));
 				if (light <= 0)
 					break;
 				SetSkyLight(light, Int3{x, y, z});
@@ -41,10 +41,10 @@ void Chunk::GenerateHeightMap() {
 
 void Chunk::PrintHeightmap() {
 	std::cout << std::hex;
-	for (int x = 0; x < 16; ++x) {
+	for (int32_t x = 0; x < 16; ++x) {
 		std::cout << "[";
-		for (int z = 0; z < 16; ++z) {
-			std::cout << "0x" << int(this->heightMap[(z & 15) << 4 | (x & 15)]);
+		for (int32_t z = 0; z < 16; ++z) {
+			std::cout << "0x" << int32_t(this->heightMap[(z & 15) << 4 | (x & 15)]);
 			if (z < 15)
 				std::cout << ",";
 		}
@@ -60,9 +60,9 @@ void Chunk::ClearChunk() {
 	std::fill(std::begin(heightMap), std::end(heightMap), 0);
 }
 
-void Chunk::RelightBlock(int x, int y, int z) {
-	int oldY = this->heightMap[(z << 4) | x] & 255;
-	int newY = oldY;
+void Chunk::RelightBlock(int32_t x, int32_t y, int32_t z) {
+	int32_t oldY = this->heightMap[(z << 4) | x] & 255;
+	int32_t newY = oldY;
 	if (y > oldY)
 		newY = y;
 
@@ -79,10 +79,10 @@ void Chunk::RelightBlock(int x, int y, int z) {
 		if (newY < this->lowestBlockHeight) {
 			this->lowestBlockHeight = newY;
 		} else {
-			int m = CHUNK_HEIGHT - 1;
-			for (int ix = 0; ix < 16; ++ix) {
-				for (int iz = 0; iz < 16; ++iz) {
-					int h = this->heightMap[(iz << 4) | ix] & 255;
+			int32_t m = CHUNK_HEIGHT - 1;
+			for (int32_t ix = 0; ix < 16; ++ix) {
+				for (int32_t iz = 0; iz < 16; ++iz) {
+					int32_t h = this->heightMap[(iz << 4) | ix] & 255;
 					if (h < m)
 						m = h;
 				}
@@ -90,29 +90,29 @@ void Chunk::RelightBlock(int x, int y, int z) {
 			this->lowestBlockHeight = m;
 		}
 
-		int wx = (this->xPos << 4) + x;
-		int wz = (this->zPos << 4) + z;
+		int32_t wx = (this->xPos << 4) + x;
+		int32_t wz = (this->zPos << 4) + z;
 
 		// height lowered
 		if (newY < oldY) {
-			for (int yy = newY; yy < oldY; ++yy)
+			for (int32_t yy = newY; yy < oldY; ++yy)
 				this->SetSkyLight(15, {x, yy, z});
 		}
 		// height raised
 		else {
 			this->world->ScheduleLightingUpdate(true, {wx, oldY, wz}, {wx, newY, wz});
-			for (int yy = oldY; yy < newY; ++yy)
+			for (int32_t yy = oldY; yy < newY; ++yy)
 				this->SetSkyLight(0, {x, yy, z});
 		}
 
-		int light = 15;
-		int stopY = newY; // var10
-		int yy = newY;
+		int32_t light = 15;
+		int32_t stopY = newY; // var10
+		int32_t yy = newY;
 
 		// propagate downward
 		while (yy > 0 && light > 0) {
 			--yy;
-			int op = GetOpacity(GetBlockType({x, yy, z}));
+			int32_t op = GetOpacity(GetBlockType({x, yy, z}));
 			if (op == 0)
 				op = 1;
 			light -= op;
@@ -133,8 +133,8 @@ void Chunk::RelightBlock(int x, int y, int z) {
 	}
 }
 
-void Chunk::UpdateSkylight_do(int x, int z) {
-	int height = this->GetHeightValue(x, z);
+void Chunk::UpdateSkylight_do(int32_t x, int32_t z) {
+	int32_t height = this->GetHeightValue(x, z);
 	x += this->xPos << 4;
 	z += this->zPos << 4;
 	this->CheckSkylightNeighborHeight(x - 1, z, height);
@@ -143,8 +143,8 @@ void Chunk::UpdateSkylight_do(int x, int z) {
 	this->CheckSkylightNeighborHeight(x, z + 1, height);
 }
 
-void Chunk::CheckSkylightNeighborHeight(int x, int z, int height) {
-	int worldHeight = this->world->GetHeightValue(Int2{x, z});
+void Chunk::CheckSkylightNeighborHeight(int32_t x, int32_t z, int32_t height) {
+	int32_t worldHeight = this->world->GetHeightValue(Int2{x, z});
 	if (worldHeight > height) {
 		this->world->ScheduleLightingUpdate(true, Int3{x, height, z}, Int3{x, worldHeight, z});
 	} else if (worldHeight < height) {
@@ -200,13 +200,13 @@ void Chunk::SetLight(bool skyLight, Int3 pos, int8_t newLight) {
 	this->modified = true;
 }
 
-int8_t Chunk::GetBlockType(Int3 pos) {
+BlockType Chunk::GetBlockType(Int3 pos) {
 	if (!InChunkBounds(pos))
 		return BLOCK_AIR;
 	return blockTypeArray[PositionToBlockIndex(pos)];
 }
 
-void Chunk::SetBlockType(int8_t type, Int3 pos) {
+void Chunk::SetBlockType(BlockType type, Int3 pos) {
 	if (!InChunkBounds(pos))
 		return;
 	blockTypeArray[PositionToBlockIndex(pos)] = type;
@@ -217,7 +217,7 @@ void Chunk::SetBlockType(int8_t type, Int3 pos) {
 int8_t Chunk::GetBlockMeta(Int3 pos) {
 	if (!InChunkBounds(pos))
 		return 0;
-	const int index = PositionToBlockIndex(pos) / 2;
+	const int32_t index = PositionToBlockIndex(pos) / 2;
 	uint8_t value = blockMetaArray[index];
 
 	if ((pos.y & 1) == 0) {
@@ -230,7 +230,7 @@ int8_t Chunk::GetBlockMeta(Int3 pos) {
 void Chunk::SetBlockMeta(int8_t meta, Int3 pos) {
 	if (!InChunkBounds(pos))
 		return;
-	const int index = PositionToBlockIndex(pos) / 2;
+	const int32_t index = PositionToBlockIndex(pos) / 2;
 	meta &= 0x0F;
 	if ((pos.y & 1) == 0) {
 		blockMetaArray[index] &= 0x0F;
@@ -251,7 +251,7 @@ int8_t Chunk::GetBlockLight(Int3 pos) {
 void Chunk::SetBlockLight(int8_t value, Int3 pos) {
 	if (!InChunkBounds(pos))
 		return;
-	int index = PositionToBlockIndex(pos);
+	int32_t index = PositionToBlockIndex(pos);
 	blockLightArray[index] &= 0x0F;
 	blockLightArray[index] |= ((value & 0xF) << 4);
 	this->modified = true;
@@ -266,13 +266,13 @@ int8_t Chunk::GetSkyLight(Int3 pos) {
 void Chunk::SetSkyLight(int8_t value, Int3 pos) {
 	if (!InChunkBounds(pos))
 		return;
-	int index = PositionToBlockIndex(pos);
+	int32_t index = PositionToBlockIndex(pos);
 	blockLightArray[index] &= 0xF0;
 	blockLightArray[index] |= (value & 0xF);
 	this->modified = true;
 }
 
-void Chunk::SetBlockTypeAndMeta(int8_t type, int8_t meta, Int3 pos) {
+void Chunk::SetBlockTypeAndMeta(BlockType type, int8_t meta, Int3 pos) {
 	SetBlockType(type, pos);
 	SetBlockMeta(meta, pos);
 	this->modified = true;
@@ -318,55 +318,55 @@ std::vector<SignTile *> Chunk::GetSigns() {
 	return signs;
 }
 
-std::shared_ptr<CompoundTag> Chunk::GetAsNbt() {
-	auto root = std::make_shared<CompoundTag>("");
-	auto level = std::make_shared<CompoundTag>("Level");
+std::shared_ptr<CompoundNbtTag> Chunk::GetAsNbt() {
+	auto root = std::make_shared<CompoundNbtTag>("");
+	auto level = std::make_shared<CompoundNbtTag>("Level");
 	root->Put(level);
-	level->Put(std::make_shared<ByteArrayTag>("Blocks", GetBlockTypes()));
-	level->Put(std::make_shared<ByteArrayTag>("Data", GetBlockMetas()));
-	level->Put(std::make_shared<ByteArrayTag>("BlockLight", GetBlockLights()));
-	level->Put(std::make_shared<ByteArrayTag>("SkyLight", GetSkyLights()));
-	level->Put(std::make_shared<ByteTag>("TerrainPopulated", this->state == ChunkState::Populated));
-	level->Put(std::make_shared<IntTag>("xPos", xPos));
-	level->Put(std::make_shared<IntTag>("zPos", zPos));
-	auto tileEntitiesNbt = std::make_shared<ListTag>("TileEntities");
+	level->Put(std::make_shared<ByteArrayNbtTag>("Blocks", GetBlockTypes()));
+	level->Put(std::make_shared<ByteArrayNbtTag>("Data", GetBlockMetas()));
+	level->Put(std::make_shared<ByteArrayNbtTag>("BlockLight", GetBlockLights()));
+	level->Put(std::make_shared<ByteArrayNbtTag>("SkyLight", GetSkyLights()));
+	level->Put(std::make_shared<ByteNbtTag>("TerrainPopulated", this->state == ChunkState::Populated));
+	level->Put(std::make_shared<IntNbtTag>("xPos", xPos));
+	level->Put(std::make_shared<IntNbtTag>("zPos", zPos));
+	auto tileEntitiesNbt = std::make_shared<ListNbtTag>("TileEntities");
 	level->Put(tileEntitiesNbt);
 	for (auto &te : tileEntities) {
-		auto subtag = std::make_shared<CompoundTag>("TileEntities");
+		auto subtag = std::make_shared<CompoundNbtTag>("TileEntities");
 		// Shared between all tile entities
-		subtag->Put(std::make_shared<IntTag>("x", te->position.x));
-		subtag->Put(std::make_shared<IntTag>("y", te->position.y));
-		subtag->Put(std::make_shared<IntTag>("z", te->position.z));
-		subtag->Put(std::make_shared<StringTag>("id", te->type));
+		subtag->Put(std::make_shared<IntNbtTag>("x", te->position.x));
+		subtag->Put(std::make_shared<IntNbtTag>("y", te->position.y));
+		subtag->Put(std::make_shared<IntNbtTag>("z", te->position.z));
+		subtag->Put(std::make_shared<StringNbtTag>("id", te->type));
 		// TODO: Add NBT Writeability to the TEs themselves
 		if (te->type == TILEENTITY_SIGN) {
 			auto sign = static_cast<SignTile *>(te.get());
-			subtag->Put(std::make_shared<StringTag>("Text1", sign->lines[0]));
-			subtag->Put(std::make_shared<StringTag>("Text2", sign->lines[1]));
-			subtag->Put(std::make_shared<StringTag>("Text3", sign->lines[2]));
-			subtag->Put(std::make_shared<StringTag>("Text4", sign->lines[3]));
+			subtag->Put(std::make_shared<StringNbtTag>("Text1", sign->lines[0]));
+			subtag->Put(std::make_shared<StringNbtTag>("Text2", sign->lines[1]));
+			subtag->Put(std::make_shared<StringNbtTag>("Text3", sign->lines[2]));
+			subtag->Put(std::make_shared<StringNbtTag>("Text4", sign->lines[3]));
 		}
 		tileEntitiesNbt->Put(subtag);
 	}
 	return root;
 }
 
-void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
-	auto root = std::dynamic_pointer_cast<CompoundTag>(readRoot);
-	auto level = std::dynamic_pointer_cast<CompoundTag>(root->Get("Level"));
+void Chunk::ReadFromNbt(std::shared_ptr<CompoundNbtTag> readRoot) {
+	auto root = std::dynamic_pointer_cast<CompoundNbtTag>(readRoot);
+	auto level = std::dynamic_pointer_cast<CompoundNbtTag>(root->Get("Level"));
 
 	const size_t blockDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * CHUNK_HEIGHT);
 	const size_t nibbleDataSize = (CHUNK_WIDTH_X * CHUNK_WIDTH_Z * (CHUNK_HEIGHT / 2));
 	// Block Data
-	auto blockTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Blocks"));
+	auto blockTag = std::dynamic_pointer_cast<ByteArrayNbtTag>(level->Get("Blocks"));
 	if (!blockTag)
 		return;
 	auto blockData = blockTag->GetData();
 	for (size_t i = 0; i < blockDataSize; i++) {
-		SetBlockType(blockData[i], BlockIndexToPosition(i));
+		SetBlockType(BlockType(blockData[i]), BlockIndexToPosition(i));
 	}
 	// Block Metadata
-	auto metaTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("Data"));
+	auto metaTag = std::dynamic_pointer_cast<ByteArrayNbtTag>(level->Get("Data"));
 	if (!metaTag)
 		return;
 	auto metaData = metaTag->GetData();
@@ -375,7 +375,7 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 		SetBlockMeta((metaData[i] >> 4) & 0xF, BlockIndexToPosition(i * 2 + 1));
 	}
 	// Block Light
-	auto blockLightTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("BlockLight"));
+	auto blockLightTag = std::dynamic_pointer_cast<ByteArrayNbtTag>(level->Get("BlockLight"));
 	if (!blockLightTag)
 		return;
 	auto blockLightData = blockLightTag->GetData();
@@ -384,7 +384,7 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 		SetBlockLight((blockLightData[i] >> 4) & 0xF, BlockIndexToPosition(i * 2 + 1));
 	}
 	// Sky Light
-	auto skyLightTag = std::dynamic_pointer_cast<ByteArrayTag>(level->Get("SkyLight"));
+	auto skyLightTag = std::dynamic_pointer_cast<ByteArrayNbtTag>(level->Get("SkyLight"));
 	if (!skyLightTag)
 		return;
 	auto skyLightData = skyLightTag->GetData();
@@ -394,34 +394,34 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 	}
 
 	// Load Tile Entity Data
-	auto tileEntitiesNbt = std::dynamic_pointer_cast<ListTag>(level->Get("TileEntities"));
+	auto tileEntitiesNbt = std::dynamic_pointer_cast<ListNbtTag>(level->Get("TileEntities"));
 	if (tileEntitiesNbt && tileEntitiesNbt->GetNumberOfTags() > 0) {
 		for (auto teNbt : tileEntitiesNbt->GetTags()) {
-			auto teNbtTag = std::dynamic_pointer_cast<CompoundTag>(teNbt);
+			auto teNbtTag = std::dynamic_pointer_cast<CompoundNbtTag>(teNbt);
 			// Shared between all tile entities
-			auto xTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("x"));
-			auto yTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("y"));
-			auto zTag = std::dynamic_pointer_cast<IntTag>(teNbtTag->Get("z"));
-			auto typeTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("id"));
+			auto xTag = std::dynamic_pointer_cast<IntNbtTag>(teNbtTag->Get("x"));
+			auto yTag = std::dynamic_pointer_cast<IntNbtTag>(teNbtTag->Get("y"));
+			auto zTag = std::dynamic_pointer_cast<IntNbtTag>(teNbtTag->Get("z"));
+			auto typeTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("id"));
 			if (!xTag || !yTag || !zTag || !typeTag)
 				continue;
 
-			int x = xTag->GetData();
-			int y = yTag->GetData();
-			int z = zTag->GetData();
+			int32_t x = xTag->GetData();
+			int32_t y = yTag->GetData();
+			int32_t z = zTag->GetData();
 			std::string type = typeTag->GetData();
 			if (type == TILEENTITY_SIGN) {
 				std::array<std::string, 4> lines;
-				auto textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text1"));
+				auto textLineTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("Text1"));
 				if (textLineTag)
 					lines[0] = textLineTag->GetData();
-				textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text2"));
+				textLineTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("Text2"));
 				if (textLineTag)
 					lines[1] = textLineTag->GetData();
-				textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text3"));
+				textLineTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("Text3"));
 				if (textLineTag)
 					lines[2] = textLineTag->GetData();
-				textLineTag = std::dynamic_pointer_cast<StringTag>(teNbtTag->Get("Text4"));
+				textLineTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("Text4"));
 				if (textLineTag)
 					lines[3] = textLineTag->GetData();
 				AddTileEntity(std::make_unique<SignTile>(Int3{x, y, z}, lines));
@@ -430,7 +430,7 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 		}
 	}
 
-	auto populatedTag = std::dynamic_pointer_cast<ByteTag>(level->Get("TerrainPopulated"));
+	auto populatedTag = std::dynamic_pointer_cast<ByteNbtTag>(level->Get("TerrainPopulated"));
 	if (populatedTag && populatedTag->GetData() != 0) {
 		state = ChunkState::Populated;
 	}
@@ -439,12 +439,12 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundTag> readRoot) {
 // Get all the Block Data of a Chunk as an array
 std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> Chunk::GetBlockTypes() {
 	std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> data;
-	int index = 0;
+	int32_t index = 0;
 	// BlockData
 	for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
 		for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
 			for (uint8_t cY = 0; cY < CHUNK_HEIGHT; cY++) {
-				data[index++] = GetBlockType(Int3{cX, cY, cZ});
+				data[index++] = uint8_t(GetBlockType(Int3{cX, cY, cZ}));
 			}
 		}
 	}
@@ -454,7 +454,7 @@ std::array<uint8_t, CHUNK_WIDTH_X * CHUNK_HEIGHT * CHUNK_WIDTH_Z> Chunk::GetBloc
 // Get all the Meta Data of a Chunk as an array
 std::array<uint8_t, CHUNK_WIDTH_X *(CHUNK_HEIGHT / 2) * CHUNK_WIDTH_Z> Chunk::GetBlockMetas() {
 	std::array<uint8_t, CHUNK_WIDTH_X *(CHUNK_HEIGHT / 2) * CHUNK_WIDTH_Z> data;
-	int index = 0;
+	int32_t index = 0;
 	// Block Metadata
 	for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
 		for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
@@ -472,7 +472,7 @@ std::array<uint8_t, CHUNK_WIDTH_X *(CHUNK_HEIGHT / 2) * CHUNK_WIDTH_Z> Chunk::Ge
 // Get all the Block Light Data of a Chunk as an array
 std::array<uint8_t, CHUNK_WIDTH_X *(CHUNK_HEIGHT / 2) * CHUNK_WIDTH_Z> Chunk::GetBlockLights() {
 	std::array<uint8_t, CHUNK_WIDTH_X *(CHUNK_HEIGHT / 2) * CHUNK_WIDTH_Z> data;
-	int index = 0;
+	int32_t index = 0;
 	// Block Light
 	for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {
 		for (int8_t cZ = 0; cZ < CHUNK_WIDTH_Z; cZ++) {
@@ -490,7 +490,7 @@ std::array<uint8_t, CHUNK_WIDTH_X *(CHUNK_HEIGHT / 2) * CHUNK_WIDTH_Z> Chunk::Ge
 // Get all the Sky Light Data of a Chunk as an array
 std::array<uint8_t, CHUNK_WIDTH_X *(CHUNK_HEIGHT / 2) * CHUNK_WIDTH_Z> Chunk::GetSkyLights() {
 	std::array<uint8_t, CHUNK_WIDTH_X *(CHUNK_HEIGHT / 2) * CHUNK_WIDTH_Z> data;
-	int index = 0;
+	int32_t index = 0;
 
 	// Sky Light
 	for (int8_t cX = 0; cX < CHUNK_WIDTH_X; cX++) {

@@ -5,7 +5,7 @@
 #include <fstream>
 #include <iomanip>
 
-extern int GetUsedMemory();
+extern int32_t GetUsedMemory();
 extern double GetUsedMemoryMB();
 extern std::string GetUsedMemoryMBString();
 extern std::string GetDetailedMemoryMetricsMBString();

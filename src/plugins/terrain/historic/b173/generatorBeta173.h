@@ -4,6 +4,7 @@
 #include "beta173Biome.h"
 #include "biomes.h"
 #include "generator.h"
+#include "blockHelper.h"
 
 /**
  * @brief A faithful reimplementation of the Beta 1.7.3 world generator

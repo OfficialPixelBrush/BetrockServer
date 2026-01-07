@@ -27,7 +27,7 @@ int32_t PositionToBlockIndex(Int3 pos);
 
 int8_t ConvertFloatToPackedByte(float value);
 
-bool Between(int value, int a, int b);
+bool Between(int32_t value, int32_t a, int32_t b);
 
 double GetEuclidianDistance(Vec3 a, Vec3 b);
 double GetEuclidianDistance(Int3 a, Int3 b);
@@ -40,15 +40,15 @@ double GetChebyshevDistance(Int3 a, Int3 b);
 std::string PacketIdToLabel(Packet packet);
 
 // Handling of Chunk and Block Data
-Int3 GetBlockPosition(int index);
+Int3 GetBlockPosition(int32_t index);
 std::unique_ptr<char[]> CompressChunk(uint8_t* chunk, size_t &compressed_size);
 std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size);
 
 int64_t GetChunkHash(Int2 position);
 Int2 DecodeChunkHash(int64_t hash);
 
-int32_t SafeStringToInt(std::string in);
-int64_t SafeStringToLong(std::string in);
+int32_t SafeStringToInt32(std::string in);
+int64_t SafeStringToInt64(std::string in);
 
 std::string GetRealTime();
 std::string GetRealTimeFileFormat();

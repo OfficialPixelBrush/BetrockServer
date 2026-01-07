@@ -100,7 +100,7 @@ void Client::HandlePacket() {
 
 		// Get the current Dimension
 		// TODO: We probably don't need to run this on every single packet!
-		World* world;
+		World* world = nullptr;
 		if (player) {
 			world = Betrock::Server::Instance().GetWorld(player->dimension);
 		}
@@ -473,7 +473,7 @@ int8_t Client::GetPlayerOrientation() {
     float limitedYaw = fmodf(player->yaw, 360.0f);
     if (limitedYaw < 0) limitedYaw += 360.0f; // Ensure yaw is in [0, 360)
 
-    int roundedYaw = static_cast<int>(roundf(limitedYaw / 90.0f)) % 4; // Round to nearest multiple of 90
+    int32_t roundedYaw = static_cast<int32_t>(roundf(limitedYaw / 90.0f)) % 4; // Round to nearest multiple of 90
 
     switch (roundedYaw) {
         case 0: return zPlus;  // 0°   -> +Z
@@ -601,7 +601,7 @@ void Client::ClickedSlot(
 	// We're interacting with a window we're not
 	// currently looking at; something messed up!
 	if (windowId != windowIndex) {
-		std::cerr << "Was looking at " << int(windowIndex) << " but got click for " << int(windowId) << "!" << "\n";
+		std::cerr << "Was looking at " << int32_t(windowIndex) << " but got click for " << int32_t(windowId) << "!" << "\n";
 		return;
 	}
 
@@ -612,7 +612,7 @@ void Client::ClickedSlot(
 	Item testItem {50,48,0};
 
 	// Translate network slots into local slots
-	int slotOffset = 0;
+	int32_t slotOffset = 0;
 	switch(activeWindowType) {
 		case INVENTORY_DISPENSER:
 			slotOffset = INVENTORY_DISPENSER_SIZE;
@@ -646,10 +646,10 @@ void Client::ClickedSlot(
 	}
 
 	if (slotId < slotOffset) {
-		std::cout << "Clicking in other inventory (" << int(slotId) << ")" << "\n";
+		std::cout << "Clicking in other inventory (" << int32_t(slotId) << ")" << "\n";
 	} else {
 		slotId -= slotOffset;
-		std::cout << "Clicking in player inventory (" << int(slotId) << ")" << "\n";
+		std::cout << "Clicking in player inventory (" << int32_t(slotId) << ")" << "\n";
 	}
 	
 	lastClickedSlot = slotId;
@@ -659,14 +659,14 @@ void Client::ClickedSlot(
 
 // Clear the clients inventory
 void Client::ClearInventory() {
-    for (int i = 0; i < INVENTORY_CRAFTING_SIZE; ++i) {
+    for (int32_t i = 0; i < INVENTORY_CRAFTING_SIZE; ++i) {
         player->crafting[i] = Item{-1, 0, 0};
     }
-    for (int i = 0; i < INVENTORY_ARMOR_SIZE; ++i) {
+    for (int32_t i = 0; i < INVENTORY_ARMOR_SIZE; ++i) {
         player->armor[i] = Item{-1, 0, 0};
     }
     // Fill inventory with empty slots
-    for (int i = 0; i < INVENTORY_MAIN_SIZE; ++i) {
+    for (int32_t i = 0; i < INVENTORY_MAIN_SIZE; ++i) {
         player->inventory[i] = Item{-1, 0, 0};
     }
 }
@@ -787,7 +787,7 @@ void Client::SendPlayerEntity(std::vector<uint8_t> &resp, Client* c, Player* p) 
 		c->GetHeldItem().damage
 	);
 
-	for (int i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
+	for (int32_t i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
 		if (p->armor[i].id > 0) {
 			Respond::EntityEquipment(
 				resp,

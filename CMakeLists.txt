@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.3.0)
+project(BetrockServer VERSION 0.3.1)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -70,14 +70,10 @@ include_directories(
 add_executable(
     BetrockServer
 
-    include/pixnbt/nbt.cpp
-    include/pixnbt/tags/tag.cpp
-
     src/coms/coms.cpp
     src/coms/responses.cpp
 
     src/enums/drops.cpp
-    src/enums/blocks.cpp
     src/enums/items.cpp
     src/enums/labels.cpp
     src/enums/biomes.cpp
@@ -85,6 +81,7 @@ add_executable(
     src/logger/logger.cpp
     src/logger/style.cpp
 
+    src/misc/helpers/blockHelper.cpp
     src/misc/helpers/datatypes.cpp
     src/misc/helpers/helper.cpp
     src/misc/helpers/luahelper.cpp
@@ -116,7 +113,10 @@ add_executable(
     src/plugins/terrain/historic/noise/noiseSimplex.cpp
     src/plugins/terrain/generatorLua.cpp
     src/plugins/terrain/generator.cpp
-    src/plugins/plugins.cpp
+    src/plugins/pluginManager.cpp
+    src/plugins/plugin.cpp
+    src/plugins/pluginFunctions.cpp
+    src/plugins/pluginHooks.cpp
 
     src/client/client.cpp
     src/client/clientChunks.cpp
@@ -148,7 +148,7 @@ target_compile_options(BetrockServer PRIVATE
     -Wall
     -Wextra
     #-Wpedantic           # Enforce strict ISO compliance
-    #-Wconversion          # Implicit conversions (int → float, etc.)
+    #-Wconversion          # Implicit conversions (int32_t → float, etc.)
     #-Wsign-conversion     # Sign mismatches
     -Wshadow              # Variable shadowing
     -Wunused              # Unused variables, params, etc.

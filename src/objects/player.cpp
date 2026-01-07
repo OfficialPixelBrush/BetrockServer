@@ -31,45 +31,45 @@ void Player::PrintStats() {
 void Player::Save() {
     // Note: Right now this implements all tags that a Beta 1.7.3 player.nbt has
     // This does not mean we actually, properly implement all of these just yet
-	auto root = std::make_shared<CompoundTag>("");
+	auto root = std::make_shared<CompoundNbtTag>("");
 
     // TODO: Probably calulated based on where the player was in the previous tick?
     // Could use lastTickPosition
-	auto motionList = std::make_shared<ListTag>("Motion");
+	auto motionList = std::make_shared<ListNbtTag>("Motion");
 	root->Put(motionList);
-	motionList->Put(std::make_shared<DoubleTag>("x",0.0));
-	motionList->Put(std::make_shared<DoubleTag>("y",-0.0784000015258789));
-	motionList->Put(std::make_shared<DoubleTag>("z",0.0));
+	motionList->Put(std::make_shared<DoubleNbtTag>("x",0.0));
+	motionList->Put(std::make_shared<DoubleNbtTag>("y",-0.0784000015258789));
+	motionList->Put(std::make_shared<DoubleNbtTag>("z",0.0));
 
-	root->Put(std::make_shared<ShortTag>("SleepTimer", 0));
-	root->Put(std::make_shared<ShortTag>("Health",health));
-	root->Put(std::make_shared<ShortTag>("Air",300));
-	root->Put(std::make_shared<ByteTag>("OnGround",onGround));
-	root->Put(std::make_shared<IntTag>("Dimension",dimension));
+	root->Put(std::make_shared<ShortNbtTag>("SleepTimer", 0));
+	root->Put(std::make_shared<ShortNbtTag>("Health",health));
+	root->Put(std::make_shared<ShortNbtTag>("Air",300));
+	root->Put(std::make_shared<ByteNbtTag>("OnGround",onGround));
+	root->Put(std::make_shared<IntNbtTag>("Dimension",dimension));
 
-	auto rotationList = std::make_shared<ListTag>("Rotation");
-	rotationList->Put(std::make_shared<FloatTag>("Yaw"  ,yaw));
-	rotationList->Put(std::make_shared<FloatTag>("Pitch",pitch));
+	auto rotationList = std::make_shared<ListNbtTag>("Rotation");
+	rotationList->Put(std::make_shared<FloatNbtTag>("Yaw"  ,yaw));
+	rotationList->Put(std::make_shared<FloatNbtTag>("Pitch",pitch));
 	root->Put(rotationList);
 	
-	root->Put(std::make_shared<FloatTag>("FallDistance", 0.0));
-	root->Put(std::make_shared<ByteTag>("Sleeping", 0));
+	root->Put(std::make_shared<FloatNbtTag>("FallDistance", 0.0));
+	root->Put(std::make_shared<ByteNbtTag>("Sleeping", 0));
 
-	auto posList = std::make_shared<ListTag>("Pos");
-	posList->Put(std::make_shared<DoubleTag>("x",position.x));
-	posList->Put(std::make_shared<DoubleTag>("y",position.y));
-	posList->Put(std::make_shared<DoubleTag>("z",position.z));
+	auto posList = std::make_shared<ListNbtTag>("Pos");
+	posList->Put(std::make_shared<DoubleNbtTag>("x",position.x));
+	posList->Put(std::make_shared<DoubleNbtTag>("y",position.y));
+	posList->Put(std::make_shared<DoubleNbtTag>("z",position.z));
 	root->Put(posList);
 
-	root->Put(std::make_shared<ShortTag>("DeathTime",0));
-	root->Put(std::make_shared<ShortTag>("Fire",-20));
-	root->Put(std::make_shared<ShortTag>("HurtTime",0));
-	root->Put(std::make_shared<ShortTag>("AttackTime",0));
+	root->Put(std::make_shared<ShortNbtTag>("DeathTime",0));
+	root->Put(std::make_shared<ShortNbtTag>("Fire",-20));
+	root->Put(std::make_shared<ShortNbtTag>("HurtTime",0));
+	root->Put(std::make_shared<ShortNbtTag>("AttackTime",0));
 
-	auto nbtInventory = std::make_shared<ListTag>("Inventory");
+	auto nbtInventory = std::make_shared<ListNbtTag>("Inventory");
 	root->Put(nbtInventory);
 
-    for (int i = 0; i < INVENTORY_MAIN_SIZE; i++) {
+    for (int32_t i = 0; i < INVENTORY_MAIN_SIZE; i++) {
         Item item = inventory[i];
         if (item.id == SLOT_EMPTY) {
             continue;
@@ -84,7 +84,7 @@ void Player::Save() {
         );
     }
 
-    for (int i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
+    for (int32_t i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
         Item item = armor[i];
         if (item.id == SLOT_EMPTY) {
             continue;
@@ -130,53 +130,53 @@ bool Player::Load() {
 
     // Load the NBT Data into the root node
     std::ifstream readFile(entryPath, std::ios::binary);
-    auto root = std::dynamic_pointer_cast<CompoundTag>(NbtRead(readFile));
+    auto root = std::dynamic_pointer_cast<CompoundNbtTag>(NbtRead(readFile));
     readFile.close();
 
     // Get the players saved rotation
-    std::shared_ptr<ListTag> rotationList = std::dynamic_pointer_cast<ListTag>(root->Get("Rotation"));
-    auto yawTag = std::dynamic_pointer_cast<FloatTag>(rotationList->Get(0));
+    std::shared_ptr<ListNbtTag> rotationList = std::dynamic_pointer_cast<ListNbtTag>(root->Get("Rotation"));
+    auto yawTag = std::dynamic_pointer_cast<FloatNbtTag>(rotationList->Get(0));
     if (yawTag)
         yaw   = yawTag->GetData();
-    auto pitchTag = std::dynamic_pointer_cast<FloatTag>(rotationList->Get(1));
+    auto pitchTag = std::dynamic_pointer_cast<FloatNbtTag>(rotationList->Get(1));
     if (pitchTag)
         pitch   = pitchTag->GetData();
 
     // Get the players saved position
-    std::shared_ptr<ListTag> posList = std::dynamic_pointer_cast<ListTag>(root->Get("Pos"));
-    auto posTag = std::dynamic_pointer_cast<DoubleTag>(posList->Get(0));
+    std::shared_ptr<ListNbtTag> posList = std::dynamic_pointer_cast<ListNbtTag>(root->Get("Pos"));
+    auto posTag = std::dynamic_pointer_cast<DoubleNbtTag>(posList->Get(0));
     if (posTag)
         position.x = posTag->GetData();
-    posTag = std::dynamic_pointer_cast<DoubleTag>(posList->Get(1));
+    posTag = std::dynamic_pointer_cast<DoubleNbtTag>(posList->Get(1));
     if (posTag)
         position.y = posTag->GetData();
-    posTag = std::dynamic_pointer_cast<DoubleTag>(posList->Get(2));
+    posTag = std::dynamic_pointer_cast<DoubleNbtTag>(posList->Get(2));
     if (posTag)
         position.z = posTag->GetData();
 
-    auto healthTag = std::dynamic_pointer_cast<ShortTag>(root->Get("Health"));
+    auto healthTag = std::dynamic_pointer_cast<ShortNbtTag>(root->Get("Health"));
     if (healthTag)
         health = healthTag->GetData();
 
     // Get the players saved inventory
-    std::shared_ptr<ListTag> inventoryList = std::dynamic_pointer_cast<ListTag>(root->Get("Inventory"));
+    std::shared_ptr<ListNbtTag> inventoryList = std::dynamic_pointer_cast<ListNbtTag>(root->Get("Inventory"));
     for (size_t i = 0; i < inventoryList->GetNumberOfTags(); i++) {
-        auto slot = std::dynamic_pointer_cast<CompoundTag>(inventoryList->Get(i));
+        auto slot = std::dynamic_pointer_cast<CompoundNbtTag>(inventoryList->Get(i));
         [[maybe_unused]] int8_t  slotNumber = 0;
         [[maybe_unused]] int16_t itemId = -1;
         [[maybe_unused]] int8_t  itemCount = 0;
         [[maybe_unused]] int16_t itemDamage = 0;
         
-        auto slotTag = std::dynamic_pointer_cast<ByteTag>(slot->Get("Slot"));
+        auto slotTag = std::dynamic_pointer_cast<ByteNbtTag>(slot->Get("Slot"));
         if (slotTag)
             slotNumber = slotTag->GetData();
-        auto itemIdTag = std::dynamic_pointer_cast<ShortTag>(slot->Get("id"));
+        auto itemIdTag = std::dynamic_pointer_cast<ShortNbtTag>(slot->Get("id"));
         if (itemIdTag)
             itemId = itemIdTag->GetData();
-        auto itemCountTag = std::dynamic_pointer_cast<ByteTag>(slot->Get("Count"));
+        auto itemCountTag = std::dynamic_pointer_cast<ByteNbtTag>(slot->Get("Count"));
         if (itemCountTag)
             itemCount = itemCountTag->GetData();
-        auto itemDamageTag = std::dynamic_pointer_cast<ShortTag>(slot->Get("Damage"));
+        auto itemDamageTag = std::dynamic_pointer_cast<ShortNbtTag>(slot->Get("Damage"));
         if (itemDamageTag)
             itemDamage = itemDamageTag->GetData();
 

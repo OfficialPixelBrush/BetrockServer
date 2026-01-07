@@ -13,6 +13,7 @@
 #include "noiseOctaves.h"
 #include "terrainhelper.h"
 #include "world.h"
+#include "blockHelper.h"
 
 #include <cstdlib>
 #include <ctime>
@@ -21,6 +22,7 @@
 #define GENERATOR_LATEST_VERSION 4
 
 class Chunk;
+class World;
 
 /**
  * @brief Generic Generator object that makes an empty world

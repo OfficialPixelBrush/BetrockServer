@@ -3,10 +3,10 @@
 #include "server.h"
 
 // Returns the number of Chunks that're currently loaded into memory
-int World::GetNumberOfChunks() { return chunks.size(); }
+int32_t World::GetNumberOfChunks() { return chunks.size(); }
 
-int World::GetNumberOfPopulatedChunks() {
-	int populatedChunks = 0;
+int32_t World::GetNumberOfPopulatedChunks() {
+	int32_t populatedChunks = 0;
 	for (const auto &[key, chunkPtr] : chunks) {
 		if (chunkPtr && chunkPtr->state == ChunkState::Populated) {
 			populatedChunks++;
@@ -15,8 +15,8 @@ int World::GetNumberOfPopulatedChunks() {
 	return populatedChunks;
 }
 
-int World::GetNumberOfModifiedChunks() {
-	int modifiedChunks = 0;
+int32_t World::GetNumberOfModifiedChunks() {
+	int32_t modifiedChunks = 0;
 	for (const auto &[key, chunkPtr] : chunks) {
 		if (chunkPtr && chunkPtr->modified) {
 			modifiedChunks++;
@@ -200,14 +200,14 @@ std::shared_ptr<Chunk> World::LoadMcRegionChunk(Int2 position) {
 		// TODO: Keep track of which regions already exist
 		std::unique_ptr<RegionFile> rf = std::make_unique<RegionFile>(regionPath);
 
-		std::shared_ptr<Tag> readRoot;
+		std::shared_ptr<NbtTag> readRoot;
 		readRoot = rf->GetChunkNbt(position);
 
 		if (!readRoot) {
 			return nullptr;
 		}
 		std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this, position);
-		c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
+		c->ReadFromNbt(std::dynamic_pointer_cast<CompoundNbtTag>(readRoot));
 		c->state = ChunkState::Populated;
 		c->modified = false;
 		return AddChunk(position, std::move(c));
@@ -246,9 +246,9 @@ void World::SaveChunk(Int2 position, std::shared_ptr<Chunk> chunk) {
 
 void World::PlaceSponge(Int3 position) {
 	PlaceBlockUpdate(position, BLOCK_SPONGE);
-	for (int x = -2; x <= 2; x++) {
-		for (int z = -2; z <= 2; z++) {
-			for (int y = -2; y <= 2; y++) {
+	for (int32_t x = -2; x <= 2; x++) {
+		for (int32_t z = -2; z <= 2; z++) {
+			for (int32_t y = -2; y <= 2; y++) {
 				int8_t blockType = GetBlockType(position + Int3{x, y, z});
 				if (blockType == BLOCK_WATER_STILL || blockType == BLOCK_WATER_FLOWING) {
 					PlaceBlockUpdate(position + Int3{x, y, z}, BLOCK_AIR);
@@ -258,28 +258,28 @@ void World::PlaceSponge(Int3 position) {
 	}
 }
 
-void World::PlaceBlock(Int3 position, int8_t type, int8_t meta) { PlaceBlockUpdate(position, type, meta, false); }
+void World::PlaceBlock(Int3 position, BlockType type, int8_t meta) { PlaceBlockUpdate(position, type, meta, false); }
 
 // Place a block at the passed position
 // This position must be within a currently loaded Chunk
-void World::PlaceBlockUpdate(Int3 pos, int8_t type, int8_t meta, bool sendUpdate) {
+void World::PlaceBlockUpdate(Int3 pos, BlockType type, int8_t meta, bool sendUpdate) {
 	// Get Block Position within Chunk
 	SetBlockTypeAndMeta(type, meta, pos);
 	if (sendUpdate)
 		UpdateBlock(pos);
 }
 
-static constexpr int MAX_LIGHTING_UPDATES = 1'000'000;
-static constexpr int SCHEDULE_DUP_SCAN = 5;
-static constexpr int UPDATING_ITER_LIMIT = 500;
-static constexpr int MAX_CONCURRENT_SCHEDULED = 50;
+static constexpr int32_t MAX_LIGHTING_UPDATES = 1'000'000;
+static constexpr int32_t SCHEDULE_DUP_SCAN = 5;
+static constexpr int32_t UPDATING_ITER_LIMIT = 500;
+static constexpr int32_t MAX_CONCURRENT_SCHEDULED = 50;
 
 // ---- SpreadLight (unchanged semantics; ensure it pushes to back) ----
-void World::SpreadLight(bool skyLight, Int3 pos, int newLightLevel) {
+void World::SpreadLight(bool skyLight, Int3 pos, int32_t newLightLevel) {
 	if (!BlockExists(pos))
 		return;
 
-	int oldLevel = GetLight(skyLight, pos);
+	int32_t oldLevel = GetLight(skyLight, pos);
 	if (newLightLevel <= oldLevel)
 		return; // no improvement, skip
 
@@ -291,7 +291,7 @@ void World::SpreadLight(bool skyLight, Int3 pos, int newLightLevel) {
 	// Enqueue for further propagation (push to back to follow Java semantics of add -> remove last)
 	{
 		std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
-		if ((int)lightingToUpdate.size() >= MAX_LIGHTING_UPDATES) {
+		if (int32_t(lightingToUpdate.size()) >= MAX_LIGHTING_UPDATES) {
 			// drop silently to avoid unbounded memory; you can log if desired
 		} else {
 			lightingToUpdate.emplace_back(LightUpdate{skyLight, pos, Int3{}});
@@ -311,8 +311,8 @@ void World::ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool che
 			return;
 		}
 
-		int midX = (pos1.x + pos2.x) / 2;
-		int midZ = (pos1.z + pos2.z) / 2;
+		int32_t midX = (pos1.x + pos2.x) / 2;
+		int32_t midZ = (pos1.z + pos2.z) / 2;
 
 		if (!BlockExists({midX, 64, midZ})) {
 			--lightingUpdatesScheduled;
@@ -328,8 +328,8 @@ void World::ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool che
 		// Duplicate suppression: scan up to last SCHEDULE_DUP_SCAN entries
 		if (checkDuplicates) {
 			std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
-			int scan = std::min((int)lightingToUpdate.size(), SCHEDULE_DUP_SCAN);
-			for (int i = 0; i < scan; ++i) {
+			int32_t scan = std::min(int32_t(lightingToUpdate.size()), SCHEDULE_DUP_SCAN);
+			for (int32_t i = 0; i < scan; ++i) {
 				LightUpdate &lu = lightingToUpdate[lightingToUpdate.size() - 1 - i];
 
 				// Here we compare skyLight plus bounding-box overlap heuristic.
@@ -341,10 +341,10 @@ void World::ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool che
 			}
 		}
 
-		// push new scheduled update as a single-point LightUpdate using posA,posB to store bbox if needed
+		// push new scheduled update as a single-point32_t LightUpdate using posA,posB to store bbox if needed
 		{
 			std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
-			if ((int)lightingToUpdate.size() >= MAX_LIGHTING_UPDATES) {
+			if (int32_t(lightingToUpdate.size()) >= MAX_LIGHTING_UPDATES) {
 				// too many, clear as Java did (or drop)
 				lightingToUpdate.clear();
 			} else {
@@ -362,13 +362,13 @@ void World::ScheduleLightingUpdate(bool skyLight, Int3 pos1, Int3 pos2, bool che
 
 bool World::UpdatingLighting() {
 	// limit concurrent updating runs
-	int counter = lightingUpdatesCounter.load();
+	int32_t counter = lightingUpdatesCounter.load();
 	if (counter >= MAX_CONCURRENT_SCHEDULED) {
 		return false;
 	}
 	++lightingUpdatesCounter;
 	try {
-		int iterationsLeft = UPDATING_ITER_LIMIT;
+		int32_t iterationsLeft = UPDATING_ITER_LIMIT;
 
 		while (true) {
 			LightUpdate task;
@@ -405,8 +405,8 @@ void World::ProcessSingleLightUpdate(const LightUpdate &current) {
 	if (!BlockExists(pos))
 		return;
 
-	int currentLevel = GetLight(current.skyLight, pos);
-	int translucency = std::max<uint8_t>(1, GetOpacity(GetBlockType(pos)));
+	int32_t currentLevel = GetLight(current.skyLight, pos);
+	int32_t translucency = std::max<uint8_t>(1, GetOpacity(GetBlockType(pos)));
 
 	static const Int3 dirs[6] = {{1, 0, 0}, {-1, 0, 0}, {0, 1, 0}, {0, -1, 0}, {0, 0, 1}, {0, 0, -1}};
 
@@ -415,15 +415,15 @@ void World::ProcessSingleLightUpdate(const LightUpdate &current) {
 		if (!BlockExists(n))
 			continue;
 
-		int neighborLevel = GetLight(current.skyLight, n);
-		int newLevel = std::max(0, currentLevel - translucency);
+		int32_t neighborLevel = GetLight(current.skyLight, n);
+		int32_t newLevel = std::max(0, currentLevel - translucency);
 
 		if (newLevel > neighborLevel) {
 			if (std::shared_ptr<Chunk> c = GetChunk(Int2{n.x >> 4, n.z >> 4})) {
 				c->SetLight(current.skyLight, {n.x & 15, n.y, n.z & 15}, newLevel);
 				// schedule further propagation by pushing new LightUpdate
 				std::unique_lock<std::shared_mutex> lock(lightUpdateMutex);
-				if ((int)lightingToUpdate.size() < MAX_LIGHTING_UPDATES) {
+				if (int32_t(lightingToUpdate.size()) < MAX_LIGHTING_UPDATES) {
 					lightingToUpdate.emplace_back(LightUpdate{current.skyLight, n, Int3{}});
 				}
 			}
@@ -431,29 +431,29 @@ void World::ProcessSingleLightUpdate(const LightUpdate &current) {
 	}
 }
 
-bool World::MergeBox(Int3 &posA, Int3 &posB, int a1, int a2, int a3, int a4, int a5, int a6) {
-	int &bx1 = posA.x, &by1 = posA.y, &bz1 = posA.z;
-	int &bx2 = posB.x, &by2 = posB.y, &bz2 = posB.z;
+bool World::MergeBox(Int3 &posA, Int3 &posB, int32_t a1, int32_t a2, int32_t a3, int32_t a4, int32_t a5, int32_t a6) {
+	int32_t &bx1 = posA.x, &by1 = posA.y, &bz1 = posA.z;
+	int32_t &bx2 = posB.x, &by2 = posB.y, &bz2 = posB.z;
 
 	// fully inside
 	if (a1 >= bx1 && a2 >= by1 && a3 >= bz1 && a4 <= bx2 && a5 <= by2 && a6 <= bz2)
 		return true;
 
-	const int t = 1;
+	const int32_t t = 1;
 	if (a1 >= bx1 - t && a2 >= by1 - t && a3 >= bz1 - t && a4 <= bx2 + t && a5 <= by2 + t && a6 <= bz2 + t) {
 
-		int old_dx = bx2 - bx1, old_dy = by2 - by1, old_dz = bz2 - bz1;
-		int old_vol = old_dx * old_dy * old_dz;
+		int32_t old_dx = bx2 - bx1, old_dy = by2 - by1, old_dz = bz2 - bz1;
+		int32_t old_vol = old_dx * old_dy * old_dz;
 
-		int nx1 = (a1 > bx1 ? bx1 : a1);
-		int ny1 = (a2 > by1 ? by1 : a2);
-		int nz1 = (a3 > bz1 ? bz1 : a3);
-		int nx2 = (a4 < bx2 ? bx2 : a4);
-		int ny2 = (a5 < by2 ? by2 : a5);
-		int nz2 = (a6 < bz2 ? bz2 : a6);
+		int32_t nx1 = (a1 > bx1 ? bx1 : a1);
+		int32_t ny1 = (a2 > by1 ? by1 : a2);
+		int32_t nz1 = (a3 > bz1 ? bz1 : a3);
+		int32_t nx2 = (a4 < bx2 ? bx2 : a4);
+		int32_t ny2 = (a5 < by2 ? by2 : a5);
+		int32_t nz2 = (a6 < bz2 ? bz2 : a6);
 
-		int new_dx = nx2 - nx1, new_dy = ny2 - ny1, new_dz = nz2 - nz1;
-		int new_vol = new_dx * new_dy * new_dz;
+		int32_t new_dx = nx2 - nx1, new_dy = ny2 - ny1, new_dz = nz2 - nz1;
+		int32_t new_vol = new_dx * new_dy * new_dz;
 
 		if (new_vol - old_vol <= 2) {
 			bx1 = nx1;
@@ -525,7 +525,7 @@ std::vector<SignTile *> World::GetChunkSigns(Int2 position) {
 
 // Get all the block,meta,block light and sky light data of a Chunk in a Binary Format
 void World::GetChunkData(uint8_t *chunkData, Int2 position) {
-	int index = 0;
+	int32_t index = 0;
 	std::shared_ptr<Chunk> c = GetChunk(position);
 	if (!c)
 		return;
@@ -602,13 +602,13 @@ std::shared_ptr<Chunk> World::LoadOldV2Chunk(Int2 posiiton) {
 
 	try {
 		std::ifstream readFile(entryPath, std::ios::binary);
-		std::shared_ptr<Tag> readRoot = NbtRead(readFile, NBT_ZLIB, -1, CHUNK_DATA_SIZE * 2);
+		std::shared_ptr<NbtTag> readRoot = NbtRead(readFile, NBT_ZLIB, -1, CHUNK_DATA_SIZE * 2);
 		readFile.close();
 		if (!readRoot) {
 			throw std::runtime_error("Unable to read NBT data!");
 		}
 		std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this, posiiton);
-		c->ReadFromNbt(std::dynamic_pointer_cast<CompoundTag>(readRoot));
+		c->ReadFromNbt(std::dynamic_pointer_cast<CompoundNbtTag>(readRoot));
 		c->state = ChunkState::Populated;
 		c->modified = false;
 		return AddChunk(posiiton, std::move(c));
@@ -665,7 +665,7 @@ std::shared_ptr<Chunk> World::LoadOldChunk(Int2 posiiton) {
 	for (size_t i = 0; i < decompressedSize; i++) {
 		if (i < blockDataSize) {
 			// Block Data
-			c->SetBlockType(chunkData[i], BlockIndexToPosition(i));
+			c->SetBlockType(BlockType(chunkData[i]), BlockIndexToPosition(i));
 		} else if (
 			// Metadata
 			i >= blockDataSize && i < blockDataSize + nibbleDataSize) {
@@ -694,7 +694,7 @@ std::shared_ptr<Chunk> World::LoadOldChunk(Int2 posiiton) {
 }
 
 bool World::InteractWithBlock(Int3 pos) {
-	int8_t blockType = GetBlockType(pos);
+	BlockType blockType = GetBlockType(pos);
 	int8_t blockMeta = GetBlockMeta(pos);
 	if (blockType == BLOCK_TRAPDOOR) {
 		blockMeta ^= 0b100;
@@ -711,7 +711,7 @@ bool World::InteractWithBlock(Int3 pos) {
 			// Update Top
 			nPos = pos + Int3{0, 1, 0};
 		}
-		int8_t otherBlockType = GetBlockType(nPos);
+		BlockType otherBlockType = GetBlockType(nPos);
 		int8_t otherBlockMeta = GetBlockMeta(nPos);
 		if (otherBlockType == blockType) {
 			otherBlockMeta ^= 0b100;
@@ -732,8 +732,8 @@ void World::TickChunks() {
 	// std::uniform_int_distribution<int32_t> dist6(0,CHUNK_WIDTH_X*CHUNK_HEIGHT*CHUNK_WIDTH_Z);
 	/*
 	// Choose a batch of random blocks within a chunk to run RandomTick on
-	for (int i = 0; i < 16; i++) {
-		int blockIndex = dist6(rng);
+	for (int32_t i = 0; i < 16; i++) {
+		int32_t blockIndex = dist6(rng);
 		Block* b = &chunk->blocks[blockIndex];
 		if (!b) continue;
 
@@ -831,7 +831,7 @@ int8_t World::GetBlockMeta(Int3 pos) {
 	}
 }
 
-void World::SetBlockType(int8_t blockType, Int3 pos) {
+void World::SetBlockType(BlockType blockType, Int3 pos) {
 	if (pos.y < 0) {
 		return;
 	} else if (pos.y >= CHUNK_HEIGHT) {
@@ -846,7 +846,7 @@ void World::SetBlockType(int8_t blockType, Int3 pos) {
 	}
 }
 
-int8_t World::GetBlockType(Int3 pos) {
+BlockType World::GetBlockType(Int3 pos) {
 	if (pos.y < 0) {
 		return BLOCK_AIR;
 	} else if (pos.y >= CHUNK_HEIGHT) {
@@ -854,14 +854,14 @@ int8_t World::GetBlockType(Int3 pos) {
 	} else {
 		std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.z >> 4});
 		if (!c)
-			return 0;
+			return BLOCK_AIR; // TODO: Could be BLOCK_INVALID too
 		pos.x &= 15;
 		pos.z &= 15;
 		return c->GetBlockType(pos);
 	}
 }
 
-void World::SetBlockTypeAndMeta(int8_t blockType, int8_t blockMeta, Int3 pos) {
+void World::SetBlockTypeAndMeta(BlockType blockType, int8_t blockMeta, Int3 pos) {
 	if (pos.y < 0) {
 		return;
 	} else if (pos.y >= CHUNK_HEIGHT) {
@@ -897,11 +897,11 @@ bool World::CanBlockSeeTheSky(Int3 pos) {
 	return c->CanBlockSeeTheSky(pos);
 }
 
-int World::GetHighestSolidOrLiquidBlock(Int2 pos) {
+int32_t World::GetHighestSolidOrLiquidBlock(Int2 pos) {
 	std::shared_ptr<Chunk> c = this->GetChunk(Int2{pos.x >> 4, pos.y >> 4});
 	if (!c)
 		return -1;
-	for (int y = CHUNK_HEIGHT - 1; y > 0; --y) {
+	for (int32_t y = CHUNK_HEIGHT - 1; y > 0; --y) {
 		int8_t blockType = this->GetBlockType(Int3{pos.x, y, pos.y});
 		if (blockType == BLOCK_AIR)
 			continue;

@@ -26,7 +26,7 @@ void UsageReport() {
 	auto &server = Betrock::Server::Instance();
 	std::ofstream logFile;
 	logFile.open("usage.csv");
-	[[maybe_unused]] int pseudoTicks = 0;
+	[[maybe_unused]] int32_t pseudoTicks = 0;
 	logFile << "Ticks,Players,Chunks,Populated,Queued,Busy,Usage (MB)" << "\n";
 	while (server.IsAlive()) {
 		World *overworld = server.GetWorld(0);
@@ -86,20 +86,20 @@ int main() {
 	server.InitPlugins();
 
 	// Generate spawn area
-	short radius = 196;
+	int16_t radius = 196;
 	auto startTime = std::chrono::steady_clock::now();
 	auto lastTime = std::chrono::steady_clock::now();
-	int worldIndex = 0;
-	int totalQueuedChunks = 0;
+	int32_t worldIndex = 0;
+	int32_t totalQueuedChunks = 0;
 
-	// for (int worldIndex = 0; worldIndex < worldManagers.size(); ++worldIndex) {
+	// for (int32_t worldIndex = 0; worldIndex < worldManagers.size(); ++worldIndex) {
 	logger.Info("Preparing start region for level " + std::to_string(worldIndex));
 
 	WorldManager *wm = server.GetWorldManager(0);
 	World *overworld = server.GetWorld(0);
 
-	for (int x = -radius; x <= radius && server.IsAlive(); x += 16) {
-		for (int z = -radius; z <= radius && server.IsAlive(); z += 16) {
+	for (int32_t x = -radius; x <= radius && server.IsAlive(); x += 16) {
+		for (int32_t z = -radius; z <= radius && server.IsAlive(); z += 16) {
 			wm->ForceGenerateChunk(Int2{x >> 4, z >> 4});
 			totalQueuedChunks++;
 		}
@@ -110,8 +110,8 @@ int main() {
 		auto elapsed = std::chrono::duration_cast<std::chrono::milliseconds>(now - lastTime).count();
 
 		if (elapsed > 1000) {
-			int done = totalQueuedChunks - wm->GetQueueSize();
-			int percent = (done * 100) / totalQueuedChunks;
+			int32_t done = totalQueuedChunks - wm->GetQueueSize();
+			int32_t percent = (done * 100) / totalQueuedChunks;
 			logger.Info("Preparing spawn area: " + std::to_string(percent) + "%");
 			lastTime = now;
 		}

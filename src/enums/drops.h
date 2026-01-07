@@ -1,5 +1,5 @@
 #pragma once
-#include "blocks.h"
+#include "items.h"
 #include "datatypes.h"
 
 // Returns true if the destroyed item maintains its NBT data upon being dropped

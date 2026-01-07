@@ -31,7 +31,7 @@ class Entity {
 
         int8_t health;
 
-        Entity(int& pEntityId, Vec3 pPosition, int8_t pDimension, std::string pWorld)
+        Entity(int32_t& pEntityId, Vec3 pPosition, int8_t pDimension, std::string pWorld)
             : entityId(pEntityId), position(pPosition), dimension(pDimension), world(pWorld)
         {
             ++pEntityId;

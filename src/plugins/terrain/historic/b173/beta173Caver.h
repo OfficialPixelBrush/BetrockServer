@@ -10,7 +10,7 @@
  */
 class Beta173Caver {
   private:
-	const int carveExtentLimit = 8;
+	const int32_t carveExtentLimit = 8;
 	std::unique_ptr<JavaRandom> rand;
 
   public:
@@ -19,6 +19,6 @@ class Beta173Caver {
 	void GenerateCaves(Int2 chunkOffset, Int2 chunkPos, std::shared_ptr<Chunk> &c);
 	void CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offset);
 	void CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offset,
-				   float tunnelRadius, float carveYaw, float carvePitch, int tunnelStep, int tunnelLength,
+				   float tunnelRadius, float carveYaw, float carvePitch, int32_t tunnelStep, int32_t tunnelLength,
 				   double verticalScale);
 };

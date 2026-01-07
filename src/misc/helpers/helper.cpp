@@ -1,7 +1,7 @@
 #include "helper.h"
 
 // Check if the passed value is between a and b
-bool Between(int value, int a, int b) {
+bool Between(int32_t value, int32_t a, int32_t b) {
 	if (a < b) {
 		if (value > a && value < b) {
 			return true;
@@ -184,7 +184,7 @@ std::string PacketIdToLabel(Packet packet) {
 }
 
 // Get the Block position from the Index
-Int3 GetBlockPosition(int index) {
+Int3 GetBlockPosition(int32_t index) {
     Int3 position;
 
     position.x = index / (CHUNK_HEIGHT * CHUNK_WIDTH_Z);  // Get x-coordinate
@@ -239,7 +239,7 @@ std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t comp
     auto decompressed_data = std::make_unique<char[]>(decompressed_size);
 
     // Decompress the data
-    int result = libdeflate_zlib_decompress(decompressor, compressed_data, compressed_size,
+    int32_t result = libdeflate_zlib_decompress(decompressor, compressed_data, compressed_size,
                                              decompressed_data.get(), decompressed_size, &decompressed_size);
 
     // Check if decompression succeeded
@@ -269,7 +269,7 @@ Int2 DecodeChunkHash(int64_t hash) {
 
 
 // Safely transform a string into an integer
-int32_t SafeStringToInt(std::string in) {
+int32_t SafeStringToInt32(std::string in) {
 	return std::stoi(in);
 	try {
 	} catch (const std::exception &e) {
@@ -279,7 +279,7 @@ int32_t SafeStringToInt(std::string in) {
 }
 
 // Safely transform a string into a long
-int64_t SafeStringToLong(std::string in) {
+int64_t SafeStringToInt64(std::string in) {
 	try {
 		return std::stol(in);
 	} catch (const std::exception &e) {
@@ -320,7 +320,7 @@ std::string Uint8ArrayToHexDump(const uint8_t* array, size_t size) {
         // Print hex values
         for (size_t j = 0; j < 16; ++j) {
             if (i + j < size) {
-                oss << std::setw(2) << static_cast<int>(array[i + j]) << " ";
+                oss << std::setw(2) << static_cast<int32_t>(array[i + j]) << " ";
             } else {
                 oss << "   "; // Padding for alignment
             }

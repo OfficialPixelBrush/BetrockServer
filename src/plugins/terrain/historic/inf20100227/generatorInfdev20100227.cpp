@@ -17,14 +17,14 @@ GeneratorInfdev20100227::GeneratorInfdev20100227(int64_t pSeed, World *pWorld) :
 std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(Int2 chunkPos) {
 	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, chunkPos);
 	c->state = ChunkState::Generating;
-	int chunkStartX = chunkPos.x << 4;
-	int chunkStartZ = chunkPos.y << 4;
-	int blockIndex = 0;
+	int32_t chunkStartX = chunkPos.x << 4;
+	int32_t chunkStartZ = chunkPos.y << 4;
+	int32_t blockIndex = 0;
 
-	for (int blockX = chunkStartX; blockX < chunkStartX + 16; ++blockX) {
-		for (int blockZ = chunkStartZ; blockZ < chunkStartZ + 16; ++blockZ) {
-			int regionX = blockX / 1024;
-			int regionZ = blockZ / 1024;
+	for (int32_t blockX = chunkStartX; blockX < chunkStartX + 16; ++blockX) {
+		for (int32_t blockZ = chunkStartZ; blockZ < chunkStartZ + 16; ++blockZ) {
+			int32_t regionX = blockX / 1024;
+			int32_t regionZ = blockZ / 1024;
 			// Generate terrain height
 			float noiseGen1Value =
 				(float)(this->noiseGen1.get()->GenerateOctaves((double)((float)blockX / 0.03125F), 0.0,
@@ -45,7 +45,7 @@ std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(Int2 chunkPos) {
 					: (float)(this->noiseGen4.get()->GenerateOctaves((double)((float)blockX * 0.25714284F),
 																	 (double)((float)blockZ * 0.25714284F)) *
 							  (double)noiseGen6Value);
-			int terrainHeight = (int)(noiseGen1Value + 64.0F + noiseGen5Value);
+			int32_t terrainHeight = int32_t(noiseGen1Value + 64.0F + noiseGen5Value);
 			if ((float)this->noiseGen5.get()->GenerateOctaves((double)blockX, (double)blockZ) < 0.0F) {
 				terrainHeight = terrainHeight / 2 << 1;
 				if ((float)this->noiseGen5.get()->GenerateOctaves((double)(blockX / 5), (double)(blockZ / 5)) < 0.0F) {
@@ -57,9 +57,9 @@ std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(Int2 chunkPos) {
 			// TODO: Maybe replace this with java random for accuracy?
 			float decorationChance = static_cast<float>(std::rand()) / RAND_MAX;
 
-			for (int blockY = 0; blockY < CHUNK_HEIGHT; ++blockY) {
+			for (int32_t blockY = 0; blockY < CHUNK_HEIGHT; ++blockY) {
 				// Determine Block Type based on parameters
-				int blockType = BLOCK_AIR;
+				BlockType blockType = BLOCK_AIR;
 				if ((blockX == 0 || blockZ == 0) && blockY <= terrainHeight + 2) {
 					blockType = BLOCK_OBSIDIAN;
 				} else if (blockY == terrainHeight + 1 && terrainHeight >= WATER_LEVEL && decorationChance < 0.02f) {
@@ -75,9 +75,9 @@ std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(Int2 chunkPos) {
 				}
 
 				// Generate Brick Pyramids
-				this->rand->setSeed((long)(regionX + regionZ * 13871));
-				int pyramidOffsetX = (regionX << 10) + CHUNK_HEIGHT + this->rand->nextInt(512);
-				int pyramidOffsetZ = (regionZ << 10) + CHUNK_HEIGHT + this->rand->nextInt(512);
+				this->rand->setSeed(int64_t(regionX + regionZ * 13871));
+				int32_t pyramidOffsetX = (regionX << 10) + CHUNK_HEIGHT + this->rand->nextInt(512);
+				int32_t pyramidOffsetZ = (regionZ << 10) + CHUNK_HEIGHT + this->rand->nextInt(512);
 				pyramidOffsetX = blockX - pyramidOffsetX;
 				pyramidOffsetZ = blockZ - pyramidOffsetZ;
 				if (pyramidOffsetX < 0)

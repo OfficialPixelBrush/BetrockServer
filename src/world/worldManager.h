@@ -26,7 +26,7 @@ class QueueChunk {
   public:
 	Int2 position;
 	std::vector<std::weak_ptr<Client>> requestedClients;
-	int generationAttempt = 0;
+	int32_t generationAttempt = 0;
 	QueueChunk() : position(Int2()), requestedClients() {}
 	QueueChunk(Int2 position, const std::shared_ptr<Client> &requestClient = nullptr);
 	void AddClient(const std::shared_ptr<Client> &requestClient);
@@ -45,8 +45,8 @@ class WorldManager {
 	int64_t seed;
 	std::condition_variable queueCV;
 	std::vector<std::thread> workers;
-	uint workerCount = 1; // Use number of CPU cores
-	std::atomic<int> busyWorkers = 0;
+	uint32_t workerCount = 1; // Use number of CPU cores
+	std::atomic<int32_t> busyWorkers = 0;
 	void WorkerThread();
 	std::shared_ptr<Chunk> GetChunk(Int2 position, Generator *generator);
 

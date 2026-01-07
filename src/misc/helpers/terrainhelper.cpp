@@ -61,8 +61,8 @@ double FindDistanceToPoint(int64_t seed, Int3 position, Vec3 scale) {
     double smallestDistance = std::numeric_limits<double>::max();
     
     // Check neighboring chunks horizontally
-    for (int cX = -1; cX < 2; cX++) {
-        for (int cZ = -1; cZ < 2; cZ++) {
+    for (int32_t cX = -1; cX < 2; cX++) {
+        for (int32_t cZ = -1; cZ < 2; cZ++) {
             Int3 goalChunkPos = chunkPos;
             goalChunkPos.x += cX;
             goalChunkPos.z += cZ;
@@ -92,11 +92,11 @@ double GetNoiseWorley(int64_t seed, Int3 position, double threshold, Vec3 scale)
     return 1.0 - SmoothStep(0.0, threshold, distance);
 }
 
-double GetNoisePerlin2D([[maybe_unused]] int64_t seed, Vec3 position, int octaves) {
+double GetNoisePerlin2D([[maybe_unused]] int64_t seed, Vec3 position, int32_t octaves) {
     return perlin.octave2D_01(position.x, position.z, octaves);
 }
 
-double GetNoisePerlin3D([[maybe_unused]] int64_t seed, Vec3 position, int octaves) {
+double GetNoisePerlin3D([[maybe_unused]] int64_t seed, Vec3 position, int32_t octaves) {
     return perlin.octave3D_01(position.x, position.y, position.z, octaves);
 }
 

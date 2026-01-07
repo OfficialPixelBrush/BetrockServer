@@ -260,12 +260,12 @@ std::string CommandGive::Execute(std::vector<std::string> pCommand, std::vector<
 		int8_t amount = -1;
 		int8_t metadata = 0;
 		if (pCommand.size() > 2) {
-			metadata = SafeStringToInt(pCommand[2].c_str());
+			metadata = SafeStringToInt32(pCommand[2].c_str());
 		}
 		if (pCommand.size() > 3) {
-			amount = SafeStringToInt(pCommand[3].c_str());
+			amount = SafeStringToInt32(pCommand[3].c_str());
 		}
-		int16_t itemId = SafeStringToInt(pCommand[1].c_str());
+		int16_t itemId = SafeStringToInt32(pCommand[1].c_str());
 		if ((itemId > BLOCK_AIR && itemId < BLOCK_MAX) || (itemId >= ITEM_SHOVEL_IRON && itemId < ITEM_MAX)) {
 			if (!client->Give(pResponse, itemId, amount, metadata)) {
 				return "Unable to give " + IdToLabel(itemId);
@@ -307,7 +307,7 @@ std::string CommandHealth::Execute(std::vector<std::string> pCommand, std::vecto
 	auto player = client->GetPlayer();
 
 	if (pCommand.size() > 1) {
-		int health = std::stoi(pCommand[1].c_str());
+		int32_t health = std::stoi(pCommand[1].c_str());
 		player->SetHealth(pResponse, health);
 		Respond::ChatMessage(pResponse, "§7Set Health to " + std::to_string(player->health));
 		return "";
@@ -368,7 +368,7 @@ std::string CommandPose::Execute(std::vector<std::string> pCommand, std::vector<
 		}
 		std::vector<uint8_t> broadcastResponse;
 		int8_t pResponseByte = (player->sitting << 2 | player->crouching << 1 | player->onFire);
-		Respond::ChatMessage(pResponse, "§7Set Pose " + std::to_string((int)pResponseByte));
+		Respond::ChatMessage(pResponse, "§7Set Pose " + std::to_string(int32_t(pResponseByte)));
 		Respond::EntityMetadata(broadcastResponse, player->entityId, pResponseByte);
 		BroadcastToClients(broadcastResponse);
 		return "";
@@ -524,8 +524,8 @@ std::string CommandPopulated::Execute([[maybe_unused]] std::vector<std::string> 
 		return "World does not exist!";
 	std::shared_ptr<Chunk> c = w->GetChunk(
 		Int2{
-			int(player->position.x / 16.0),
-			int(player->position.z / 16.0)
+			int32_t(player->position.x / 16.0),
+			int32_t(player->position.z / 16.0)
 		}
 	);
 	if (!c)
@@ -569,7 +569,7 @@ std::string CommandRegion::Execute(std::vector<std::string> pCommand, [[maybe_un
 		std::unique_ptr<RegionFile> rf = std::make_unique<RegionFile>(std::filesystem::current_path() / "r.0.0.mcr");
 		auto root = rf->GetChunkNbt(Int2{0, 0});
 		if (root) {
-			root->NbtPrintData();
+			std::cout << *root;
 		}
 		return std::to_string(rf->freeSectors.size());
 	}
@@ -617,13 +617,13 @@ std::string CommandPacket::Execute([[maybe_unused]] std::vector<std::string> pCo
 		part++;
 	}
 	for (part = part; part < pCommand.size(); part++) {
-		unsigned int x;
+		uint32_t x;
 		std::stringstream ss;
 		ss << std::hex << pCommand[part];
 		if (!(ss >> x) || x > 0xFF)
 			return "Invalid hex value"; // or handle error
 
-		std::cout << int(part) << ": " << int(x) << " - " << pCommand[part] << "\n";
+		std::cout << int32_t(part) << ": " << int32_t(x) << " - " << pCommand[part] << "\n";
 		if (broadcastToAll)
 			broadcast.push_back(static_cast<uint8_t>(x));
 		else
