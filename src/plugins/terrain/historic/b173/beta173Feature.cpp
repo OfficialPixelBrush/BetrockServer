@@ -637,7 +637,6 @@ bool Beta173Feature::GenerateLiquid(World *world, [[maybe_unused]] JavaRandom *r
 			// Block.blocksList[this.liquidBlockId].updateTick(var1, var3, var4, var5, var2);
 			// var1.scheduledUpdatesAreImmediate = false;
 		}
-
 		return true;
 	}
 }

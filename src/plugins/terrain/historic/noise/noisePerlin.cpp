@@ -26,7 +26,7 @@ double NoisePerlin::GenerateNoiseBase(Vec3 pos) {
 	pos.y += this->yCoord;
 	pos.z += this->zCoord;
 	// The farlands are caused by this getting cast to a 32-Bit Integer.
-	// Change these int32_ts to int64_ts to fix the farlands,
+	// Change these int32_t to int64_t to fix the farlands,
 	// however, this will change Beta tree generation slightly
 	// due to rounding differences
 	int32_t xInt = int32_t(pos.x);

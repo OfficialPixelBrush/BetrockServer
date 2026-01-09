@@ -346,7 +346,7 @@ void Client::SendResponse(bool autoclear) {
 
 	std::string debugMessage = "";
 	if (debugSentPacketType) {
-		debugMessage += "Sending " + PacketIdToLabel(Packet(response[0])) + " to " + player->username + "(" + std::to_string(player->entityId) + ") ! (" + std::to_string(response.size()) + " Bytes)";
+		debugMessage += "Sending " + PacketIdToLabel(Packet(response[0])) + " to " + this->username + "! (" + std::to_string(response.size()) + " Bytes)";
 	}
 	if (debugSentBytes) {
 		if ((Packet(response[0]) == Packet::Chunk || Packet(response[0]) == Packet::PreChunk) && debugDisablePrintChunk) {

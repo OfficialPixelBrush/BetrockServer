@@ -56,9 +56,9 @@ std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(Int2 chunkPos) {
 
 	// Testing for pack.png seed
 	// std::cout << std::hex;
-	if (chunkPos.x == 5 && chunkPos.y == -5) {
+	//if (chunkPos.x == 5 && chunkPos.y == -5) {
 		// c->PrintHeightmap();
-	}
+	//}
 
 	c->state = ChunkState::Generated;
 	c->modified = true;
@@ -112,7 +112,7 @@ void GeneratorBeta173::ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chun
 					continue;
 				}
 
-				uint8_t currentBlock = c->GetBlockType(BlockIndexToPosition(blockIndex));
+				BlockType currentBlock = c->GetBlockType(BlockIndexToPosition(blockIndex));
 				// Ignore air
 				if (currentBlock == BLOCK_AIR) {
 					stoneDepth = -1;
@@ -395,7 +395,12 @@ bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
 		chunkPos.x * CHUNK_WIDTH_X,
 		chunkPos.y * CHUNK_WIDTH_Z
 	};
-	Biome biome = GetBiomeAt(Int2{blockPos.x + 16, blockPos.y + 16});
+	Biome biome = GetBiomeAt(
+		Int2{
+			blockPos.x + CHUNK_WIDTH_X, 
+			blockPos.y + CHUNK_WIDTH_Z
+		}
+	);
 	this->rand->setSeed(this->world->seed);
 	int64_t xOffset = this->rand->nextLong() / 2L * 2L + 1L;
 	int64_t zOffset = this->rand->nextLong() / 2L * 2L + 1L;
@@ -542,8 +547,8 @@ bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
 
 	// Attempt to generate the specified number of trees
 	for (int32_t i = 0; i < numberOfTrees; ++i) {
-		coord.x = blockPos.x + this->rand->nextInt(16) + 8;
-		coord.z = blockPos.y + this->rand->nextInt(16) + 8;
+		coord.x = blockPos.x + this->rand->nextInt(CHUNK_WIDTH_X) + 8;
+		coord.z = blockPos.y + this->rand->nextInt(CHUNK_WIDTH_Z) + 8;
 		coord.y = world->GetHeightValue(Int2{coord.x, coord.z});
 
 		enum TreeState {
@@ -753,12 +758,12 @@ bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
 
 	// Place Snow in cold regions
 	Beta173Biome(seed).GenerateTemperature(temperature,weirdness,Int2{blockPos.x + 8, blockPos.y + 8}, Int2{CHUNK_WIDTH_X, CHUNK_WIDTH_Z});
-	for (int32_t x = blockPos.x + 8; x < blockPos.x + 8 + 16; ++x) {
-		for (int32_t z = blockPos.y + 8; z < blockPos.y + 8 + 16; ++z) {
+	for (int32_t x = blockPos.x + 8; x < blockPos.x + 8 + CHUNK_WIDTH_X; ++x) {
+		for (int32_t z = blockPos.y + 8; z < blockPos.y + 8 + CHUNK_WIDTH_Z; ++z) {
 			int32_t offsetX = x - (blockPos.x + 8);
 			int32_t offsetZ = z - (blockPos.y + 8);
 			int32_t highestBlock = world->GetHighestSolidOrLiquidBlock(Int2{x, z});
-			double temp = this->temperature[offsetX * 16 + offsetZ] - (double)(highestBlock - 64) / 64.0 * 0.3;
+			double temp = this->temperature[offsetX * CHUNK_WIDTH_X + offsetZ] - (double)(highestBlock - 64) / 64.0 * 0.3;
 			if (temp < 0.5 && highestBlock > 0 && highestBlock < CHUNK_HEIGHT &&
 				world->GetBlockType(Int3{x, highestBlock, z}) == BLOCK_AIR &&
 				IsSolid(world->GetBlockType(Int3{x, highestBlock - 1, z})) &&
