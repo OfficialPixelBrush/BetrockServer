@@ -44,33 +44,72 @@ inline double fade(double value) { return value * value * value * (value * (valu
  * 
  */
 struct Java {
+	// The following should be somewhat faithful implementation of
+	// Java's casting functions, as defined in
+	// "Chapter 5. Conversions and Contexts"
+	/**
+	 * @brief Casts a double to a 64-bit integer
+	 */
 	static int64_t DoubleToInt64(double value) {
-		if (value > INT64_MAX)
+		if (std::isnan(value))
+			return 0;
+		if (value > double(INT64_MAX))
 			return INT64_MAX;
-		if (value < INT64_MIN)
+		if (value < double(INT64_MIN))
 			return INT64_MIN;
-		return int64_t(std::floor(value));
+		if (value > 0)
+			return int64_t(std::floor(value));
+		if (value < 0)
+			return int64_t(std::ceil(value));
+		return 0;
 	}
+	/**
+	 * @brief Casts a double to a 32-bit integer
+	 */
 	static int32_t DoubleToInt32(double value) {
-		if (value > INT32_MAX)
+		if (std::isnan(value))
+			return 0;
+		if (value > double(INT32_MAX))
 			return INT32_MAX;
-		if (value < INT32_MIN)
+		if (value < double(INT32_MIN))
 			return INT32_MIN;
-		return int32_t(std::floor(value));
+		if (value > 0)
+			return int32_t(std::floor(value));
+		if (value < 0)
+			return int32_t(std::ceil(value));
+		return 0;
 	}
+	/**
+	 * @brief Casts a float to a 64-bit integer
+	 */
 	static int64_t FloatToInt64(float value) {
-		if (value > INT64_MAX)
+		if (std::isnan(value))
+			return 0;
+		if (value > float(INT64_MAX))
 			return INT64_MAX;
-		if (value < INT64_MIN)
+		if (value < float(INT64_MIN))
 			return INT64_MIN;
-		return int64_t(std::floor(value));
+		if (value > 0)
+			return int64_t(std::floor(value));
+		if (value < 0)
+			return int64_t(std::ceil(value));
+		return 0;
 	}
+	/**
+	 * @brief Casts a float to a 32-bit integer
+	 */
 	static int32_t FloatToInt32(float value) {
-		if (value > INT32_MAX)
+		if (std::isnan(value))
+			return 0;
+		if (value > float(INT32_MAX))
 			return INT32_MAX;
-		if (value < INT32_MIN)
+		if (value < float(INT32_MIN))
 			return INT32_MIN;
-		return int32_t(std::floor(value));
+		if (value > 0)
+			return int32_t(std::floor(value));
+		if (value < 0)
+			return int32_t(std::ceil(value));
+		return 0;
 	}
 };
 
