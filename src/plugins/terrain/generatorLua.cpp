@@ -48,11 +48,11 @@ GeneratorLua::GeneratorLua(int64_t pSeed, World *pWorld) : Generator(pSeed, pWor
 
 	// Load the plugins API version
 	lua_getglobal(L, "GenApiVersion");
-	if (!lua_isnumber(L, -1)) {
+	if (!lua_isinteger(L, -1)) {
 		lua_close(L);
 		throw std::runtime_error("Invalid GenApiVersion!");
 	} else {
-		apiVersion = (int32_t)lua_tonumber(L, -1);
+		apiVersion = int32_t(lua_tointeger(L, -1));
 	}
 
 	if (apiVersion > GENERATOR_LATEST_VERSION) {
@@ -67,7 +67,7 @@ int64_t GeneratorLua::GetSeed(lua_State *L) {
 		std::cerr << "Invalid seed value!" << "\n";
 		return 1;
 	}
-	int64_t seed = (int64_t)lua_tointeger(L, -1);
+	int64_t seed = int64_t(lua_tointeger(L, -1));
 	lua_pop(L, 1); // remove the pushed global so args remain at indices 1 and 2
 	return seed;
 }
@@ -173,25 +173,22 @@ int32_t GeneratorLua::lua_Index(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 1;
 	}
-
-	int32_t x = int32_t(lua_tointeger(L, 1));
-	int32_t y = int32_t(lua_tointeger(L, 2));
-	int32_t z = int32_t(lua_tointeger(L, 3));
-	if (x < 0)
-		x = 0;
-	if (x >= CHUNK_WIDTH_X)
-		x = CHUNK_WIDTH_X - 1;
-	if (z < 0)
-		z = 0;
-	if (z >= CHUNK_WIDTH_Z)
-		z = CHUNK_WIDTH_Z - 1;
-	if (y < 0)
-		y = 0;
-	if (y >= CHUNK_HEIGHT)
-		y = CHUNK_HEIGHT - 1;
+	Int3 pos = GetInt3(L);
+	if (pos.x < 0)
+		pos.x = 0;
+	if (pos.x >= CHUNK_WIDTH_X)
+		pos.x = CHUNK_WIDTH_X - 1;
+	if (pos.z < 0)
+		pos.z = 0;
+	if (pos.z >= CHUNK_WIDTH_Z)
+		pos.z = CHUNK_WIDTH_Z - 1;
+	if (pos.y < 0)
+		pos.y = 0;
+	if (pos.y >= CHUNK_HEIGHT)
+		pos.y = CHUNK_HEIGHT - 1;
 
 	// Call Between and push the result
-	int32_t result = PositionToBlockIndex(Int3{x,y,z})+1;
+	int32_t result = PositionToBlockIndex(pos)+1;
 	lua_pushinteger(L, result);
 
 	return 1; // One return value on the Lua stack
@@ -220,11 +217,7 @@ int32_t GeneratorLua::lua_SpatialPRNG(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 1;
 	}
-
-	int32_t x = int32_t(lua_tointeger(L, 1));
-	int32_t y = int32_t(lua_tointeger(L, 2));
-	int32_t z = int32_t(lua_tointeger(L, 3));
-	int32_t result = SpatialPrng(seed, Int3{x, y, z});
+	int32_t result = SpatialPrng(seed, GetInt3(L));
 
 	lua_pushinteger(L, result);
 	return 1;
@@ -243,27 +236,21 @@ int32_t GeneratorLua::lua_GetNoiseWorley(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 1;
 	}
-	int32_t x = int32_t(lua_tointeger(L, 1));
-	int32_t y = int32_t(lua_tointeger(L, 2));
-	int32_t z = int32_t(lua_tointeger(L, 3));
-	Int3 position = Int3{x, y, z};
+	Int3 position = GetInt3(L);
 
 	// Validate and extract threshold
 	if (!lua_isnumber(L, 4)) {
 		luaL_error(L, "Threshold must be a numeric value");
 		return 1;
 	}
-	double threshold = (double)lua_tonumber(L, 4);
+	double threshold = double(lua_tonumber(L, 4));
 
 	// Validate and extract verticalScale
 	if (!CheckNum3(L, 5)) {
 		luaL_error(L, "Scale must be a numeric values");
 		return 1;
 	}
-	double scaleX = lua_tonumber(L, 5);
-	double scaleY = lua_tonumber(L, 6);
-	double scaleZ = lua_tonumber(L, 7);
-	Vec3 scale = {scaleX, scaleY, scaleZ};
+	Vec3 scale = GetVec3(L,5);
 
 	// Call GetNoiseWorley and push result
 	double result = GetNoiseWorley(seed, position, threshold, scale);
@@ -279,10 +266,7 @@ int32_t GeneratorLua::lua_GetNoisePerlin2D(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 1;
 	}
-	double x = (double)lua_tonumber(L, 1);
-	double y = (double)lua_tonumber(L, 2);
-	double z = (double)lua_tonumber(L, 3);
-	Vec3 position = Vec3{x, y, z};
+	Vec3 position = GetVec3(L);
 
 	// Validate and extract octaves
 	if (!lua_isnumber(L, 4)) {
@@ -305,10 +289,7 @@ int32_t GeneratorLua::lua_GetNoisePerlin3D(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 1;
 	}
-	double x = (double)lua_tonumber(L, 1);
-	double y = (double)lua_tonumber(L, 2);
-	double z = (double)lua_tonumber(L, 3);
-	Vec3 position = Vec3{x, y, z};
+	Vec3 position = GetVec3(L);
 
 	// Validate and extract octaves
 	if (!lua_isnumber(L, 4)) {
@@ -330,10 +311,7 @@ int32_t GeneratorLua::lua_GetNaturalGrass(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 1;
 	}
-	int32_t x = int32_t(lua_tointeger(L, 1));
-	int32_t y = int32_t(lua_tointeger(L, 2));
-	int32_t z = int32_t(lua_tointeger(L, 3));
-	Int3 position = Int3{x, y, z};
+	Int3 position = GetInt3(L);
 
 	// Validate and extract threshold
 	if (!lua_isnumber(L, 4)) {
@@ -376,13 +354,8 @@ int32_t GeneratorLua::lua_PlaceBlock(lua_State *L) {
 	if (!CheckNum3(L)) {
 		return 0;
 	}
-	int32_t x = int32_t(lua_tointeger(L, 1));
-	int32_t y = int32_t(lua_tointeger(L, 2));
-	int32_t z = int32_t(lua_tointeger(L, 3));
-	Int3 position = Int3{x, y, z};
-
+	Int3 position = GetInt3(L);
 	Block b = DecodeBlock(L);
-
 	gen->world->PlaceBlock(position, b.type, b.meta);
 	return 0;
 }
@@ -399,10 +372,7 @@ int32_t GeneratorLua::lua_GetBlock(lua_State *L) {
 		lua_pushnil(L);
 		return 1;
 	}
-	int32_t x = int32_t(lua_tointeger(L, 1));
-	int32_t y = int32_t(lua_tointeger(L, 2));
-	int32_t z = int32_t(lua_tointeger(L, 3));
-	Int3 position = Int3{x, y, z};
+	Int3 position = GetInt3(L);
 
 	// Create a table and push it to Lua stack
 	lua_newtable(L);

@@ -245,7 +245,7 @@ void Beta173BigTree::PlaceCircularLayer(Int3 centerPos, float radius, BranchAxis
 				std::pow(JavaMath::abs(dv) + 0.5, 2.0)
 			);
 
-			if (distance > (double)(radius))
+			if (distance > double(radius))
 				continue;
 
 			currentPos[axisV] = centerPos[axisV] + dv;
@@ -266,7 +266,7 @@ void Beta173BigTree::PlaceCircularLayer(Int3 centerPos, float radius, BranchAxis
  * @return Radius in blocks
  */
 float Beta173BigTree::GetCanopyRadius(int32_t y) {
-	if ((double)y < (double)((float)this->totalHeight) * 0.3) {
+	if ((double)y < double((float)this->totalHeight) * 0.3) {
 		return -1.618F;
 	} else {
 		float halfHeight = (float)this->totalHeight / 2.0F;

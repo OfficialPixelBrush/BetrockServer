@@ -39,7 +39,7 @@ double GetUsedMemoryMB(std::string text) {
 		}
 	}
 	fclose(file);
-	return ((double)result / 1024.0);
+	return (double(result) / 1024.0);
 }
 
 std::string GetUsedMemoryMBString() {

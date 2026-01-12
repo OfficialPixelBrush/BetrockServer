@@ -4,9 +4,9 @@
 // Convert an Int3 into a Vec3
 Vec3 Int3ToVec3(Int3 i) {
 	Vec3 v = {
-		(double)i.x+0.5,
-		(double)i.y,
-		(double)i.z+0.5
+		double(i.x)+0.5,
+		double(i.y),
+		double(i.z)+0.5
 	};
 	return v;
 }
@@ -14,9 +14,9 @@ Vec3 Int3ToVec3(Int3 i) {
 // Convert an Vec3 into a Int3
 Int3 Vec3ToInt3(Vec3 v) {
 	Int3 i = {
-		(int32_t)v.x,
-		(int32_t)v.y,
-		(int32_t)v.z
+		int32_t(v.x),
+		int32_t(v.y),
+		int32_t(v.z)
 	};
 	return i;
 }

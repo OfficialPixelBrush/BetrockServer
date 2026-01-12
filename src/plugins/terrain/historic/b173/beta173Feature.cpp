@@ -53,9 +53,9 @@ bool Beta173Feature::GenerateLake(World *world, JavaRandom *rand, Int3 pos) {
 		for (int32_t x = 1; x < 15; ++x) {
 			for (int32_t z = 1; z < 15; ++z) {
 				for (int32_t y = 1; y < 7; ++y) {
-					double dx = ((double)x - blobCenterX) / (blobRadiusX / 2.0);
-					double dy = ((double)y - blobCenterY) / (blobRadiusY / 2.0);
-					double dz = ((double)z - blobCenterZ) / (blobRadiusZ / 2.0);
+					double dx = (double(x) - blobCenterX) / (blobRadiusX / 2.0);
+					double dy = (double(y) - blobCenterY) / (blobRadiusY / 2.0);
+					double dz = (double(z) - blobCenterZ) / (blobRadiusZ / 2.0);
 					double distance = dx * dx + dy * dy + dz * dz;
 					if (distance < 1.0) {
 						shapeMask[(x * 16 + z) * 8 + y] = true;
@@ -324,23 +324,23 @@ bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int3
 	// Get angle of clay blob
 	float angle = rand->nextFloat() * (float)JavaMath::PI;
 	// Then determine the bounds of the blob
-	double xStart = (double)((float)(pos.x + 8) + MathHelper::sin(angle) * (float)blobSize / 8.0F);
-	double xEnd = (double)((float)(pos.x + 8) - MathHelper::sin(angle) * (float)blobSize / 8.0F);
-	double zStart = (double)((float)(pos.z + 8) + MathHelper::cos(angle) * (float)blobSize / 8.0F);
-	double zEnd = (double)((float)(pos.z + 8) - MathHelper::cos(angle) * (float)blobSize / 8.0F);
-	double yStart = (double)(pos.y + rand->nextInt(3) + 2);
-	double yEnd = (double)(pos.y + rand->nextInt(3) + 2);
+	double xStart 	= double(float(pos.x + 8) + MathHelper::sin(angle) * (float)blobSize / 8.0F);
+	double xEnd 	= double(float(pos.x + 8) - MathHelper::sin(angle) * (float)blobSize / 8.0F);
+	double zStart 	= double(float(pos.z + 8) + MathHelper::cos(angle) * (float)blobSize / 8.0F);
+	double zEnd 	= double(float(pos.z + 8) - MathHelper::cos(angle) * (float)blobSize / 8.0F);
+	double yStart 	= double(pos.y + rand->nextInt(3) + 2);
+	double yEnd 	= double(pos.y + rand->nextInt(3) + 2);
 
 	// Interpolate between the start and end
 	for (int32_t i = 0; i <= blobSize; ++i) {
-		double xCenter = xStart + (xEnd - xStart) * (double)i / (double)blobSize;
-		double yCenter = yStart + (yEnd - yStart) * (double)i / (double)blobSize;
-		double zCenter = zStart + (zEnd - zStart) * (double)i / (double)blobSize;
-		double blobScale = rand->nextDouble() * (double)blobSize / 16.0;
+		double xCenter = xStart + (xEnd - xStart) * double(i) / double(blobSize);
+		double yCenter = yStart + (yEnd - yStart) * double(i) / double(blobSize);
+		double zCenter = zStart + (zEnd - zStart) * double(i) / double(blobSize);
+		double blobScale = rand->nextDouble() * double(blobSize) / 16.0;
 		double blobRadiusXZ =
-			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
+			double(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		double blobRadiusY =
-			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
+			double(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		int32_t minX = int32_t(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
 		int32_t maxX = int32_t(MathHelper::floor_double(xCenter + blobRadiusXZ / 2.0));
 		int32_t minY = int32_t(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
@@ -352,9 +352,9 @@ bool Beta173Feature::GenerateClay(World *world, JavaRandom *rand, Int3 pos, int3
 		for (int32_t x = minX; x <= maxX; ++x) {
 			for (int32_t y = minY; y <= maxY; ++y) {
 				for (int32_t z = minZ; z <= maxZ; ++z) {
-					double dx = ((double)x + 0.5 - xCenter) / (blobRadiusXZ / 2.0);
-					double dy = ((double)y + 0.5 - yCenter) / (blobRadiusY / 2.0);
-					double dz = ((double)z + 0.5 - zCenter) / (blobRadiusXZ / 2.0);
+					double dx = (double(x) + 0.5 - xCenter) / (blobRadiusXZ / 2.0);
+					double dy = (double(y) + 0.5 - yCenter) / (blobRadiusY  / 2.0);
+					double dz = (double(z) + 0.5 - zCenter) / (blobRadiusXZ / 2.0);
 					if (dx * dx + dy * dy + dz * dz < 1.0) {
 						BlockType currentBlock = world->GetBlockType(Int3{x, y, z});
 						if (currentBlock == BLOCK_SAND) {
@@ -381,12 +381,12 @@ bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, i
 	// Get angle of clay blob
 	float angle = rand->nextFloat() * (float)JavaMath::PI;
 	// Then determine the bounds of the blob
-	double xStart = (double)((float)(pos.x + 8) + MathHelper::sin(angle) * (float)blobSize / 8.0F);
-	double xEnd = (double)((float)(pos.x + 8) - MathHelper::sin(angle) * (float)blobSize / 8.0F);
-	double zStart = (double)((float)(pos.z + 8) + MathHelper::cos(angle) * (float)blobSize / 8.0F);
-	double zEnd = (double)((float)(pos.z + 8) - MathHelper::cos(angle) * (float)blobSize / 8.0F);
-	double yStart = (double)(pos.y + rand->nextInt(3) + 2);
-	double yEnd = (double)(pos.y + rand->nextInt(3) + 2);
+	double xStart = double(float(pos.x + 8) + MathHelper::sin(angle) * (float)blobSize / 8.0F);
+	double xEnd = double(float(pos.x + 8) - MathHelper::sin(angle) * (float)blobSize / 8.0F);
+	double zStart = double(float(pos.z + 8) + MathHelper::cos(angle) * (float)blobSize / 8.0F);
+	double zEnd = double(float(pos.z + 8) - MathHelper::cos(angle) * (float)blobSize / 8.0F);
+	double yStart = double(pos.y + rand->nextInt(3) + 2);
+	double yEnd = double(pos.y + rand->nextInt(3) + 2);
 
 	// Interpolate between the start and end
 	for (int32_t i = 0; i <= blobSize; ++i) {
@@ -395,9 +395,9 @@ bool Beta173Feature::GenerateMinable(World *world, JavaRandom *rand, Int3 pos, i
 		double zCenter = zStart + (zEnd - zStart) * (double)i / (double)blobSize;
 		double blobScale = rand->nextDouble() * (double)blobSize / 16.0;
 		double blobRadiusXZ =
-			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
+			double(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		double blobRadiusY =
-			(double)(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
+			double(MathHelper::sin((float)i * (float)JavaMath::PI / (float)blobSize) + 1.0F) * blobScale + 1.0;
 		int32_t minX = int32_t(MathHelper::floor_double(xCenter - blobRadiusXZ / 2.0));
 		int32_t maxX = int32_t(MathHelper::floor_double(yCenter - blobRadiusY / 2.0));
 		int32_t minY = int32_t(MathHelper::floor_double(zCenter - blobRadiusXZ / 2.0));

@@ -30,7 +30,7 @@ void NoiseSimplex::GenerateNoise(std::vector<double> &noiseField, double xOffset
 			double skew = (xPos + yPos) * skewing;
 			int32_t x0 = wrap(xPos + skew);
 			int32_t y0 = wrap(yPos + skew);
-			double unskewed = (double)(x0 + y0) * unskewing;
+			double unskewed = double(x0 + y0) * unskewing;
 			double x0a = (double)x0 - unskewed;
 			double y0a = (double)y0 - unskewed;
 			double x0b = xPos - x0a;

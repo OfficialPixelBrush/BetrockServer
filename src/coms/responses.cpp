@@ -86,7 +86,7 @@ void Respond::PlayerDigging(std::vector<uint8_t> &response, int8_t status, Int3 
     response.push_back((uint8_t)Packet::PlayerDigging);
     response.push_back(status);
     AppendIntegerToVector(response, position.x);
-    response.push_back((int8_t)position.y);
+    response.push_back(int8_t(position.y));
     AppendIntegerToVector(response, position.z);
     response.push_back(face);
 }
@@ -94,7 +94,7 @@ void Respond::PlayerDigging(std::vector<uint8_t> &response, int8_t status, Int3 
 void Respond::PlayerBlockPlacement(std::vector<uint8_t> &response, Int3 position, int8_t direction, int16_t id, int8_t amount, int16_t damage) {
     response.push_back((uint8_t)Packet::PlayerBlockPlacement);
     AppendIntegerToVector(response, position.x);
-    response.push_back((int8_t)position.y);
+    response.push_back(int8_t(position.y));
     AppendIntegerToVector(response, position.z);
     response.push_back(direction);
     AppendShortToVector(response, id);
@@ -222,7 +222,7 @@ void Respond::Chunk(std::vector<uint8_t> &response, Int3 position, uint8_t sizeX
     if (compressedSize == 0 || compressedData == nullptr) { return; }
     response.push_back(0x33);
     AppendIntegerToVector(response,position.x);
-    AppendShortToVector(response,(int16_t)position.y);
+    AppendShortToVector(response,int16_t(position.y));
     AppendIntegerToVector(response,position.z);
     response.push_back(sizeX);
     response.push_back(sizeY);
@@ -234,7 +234,7 @@ void Respond::Chunk(std::vector<uint8_t> &response, Int3 position, uint8_t sizeX
 void Respond::BlockChange(std::vector<uint8_t> &response, Int3 position, BlockType type, int8_t meta) {
     response.push_back((uint8_t)Packet::BlockChange);
     AppendIntegerToVector(response,position.x);
-    response.push_back((int8_t)position.y);
+    response.push_back(int8_t(position.y));
     AppendIntegerToVector(response,position.z);
     response.push_back(type);
     response.push_back(meta);
@@ -244,7 +244,7 @@ void Respond::Soundeffect(std::vector<uint8_t> &response, int32_t sound, Int3 po
     response.push_back((uint8_t)Packet::Soundeffect);
     AppendIntegerToVector(response,sound);
     AppendIntegerToVector(response,position.x);
-    response.push_back((int8_t)position.y);
+    response.push_back(int8_t(position.y));
     AppendIntegerToVector(response,position.z);
     AppendIntegerToVector(response,extra);
 }
@@ -294,7 +294,7 @@ void Respond::UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::array<st
 void Respond::UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::string line1, std::string line2, std::string line3, std::string line4) {
     response.push_back((uint8_t)Packet::UpdateSign);
     AppendIntegerToVector(response,pos.x);
-    AppendShortToVector(response,(int16_t)pos.y);
+    AppendShortToVector(response,int16_t(pos.y));
     AppendIntegerToVector(response,pos.z);
     AppendString16ToVector(response,line1);
     AppendString16ToVector(response,line2);

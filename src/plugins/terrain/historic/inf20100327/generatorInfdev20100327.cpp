@@ -31,9 +31,9 @@ std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(Int2 chunkPos) {
 			// 33 == size of var7's first
 			for (int32_t var10 = 0; var10 < 33; ++var10) {
 				var7[var10][0] = this->InitializeNoiseField((double)macroY, (double)var10, (double)blockY);
-				var7[var10][1] = this->InitializeNoiseField((double)macroY, (double)var10, (double)(blockY + 1));
-				var7[var10][2] = this->InitializeNoiseField((double)(macroY + 1), (double)var10, (double)blockY);
-				var7[var10][3] = this->InitializeNoiseField((double)(macroY + 1), (double)var10, (double)(blockY + 1));
+				var7[var10][1] = this->InitializeNoiseField((double)macroY, (double)var10, double(blockY + 1));
+				var7[var10][2] = this->InitializeNoiseField(double(macroY + 1), (double)var10, (double)blockY);
+				var7[var10][3] = this->InitializeNoiseField(double(macroY + 1), (double)var10, double(blockY + 1));
 			}
 
 			for (macroY = 0; macroY < 32; ++macroY) {
@@ -176,20 +176,20 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
 bool GeneratorInfdev20100327::WorldGenMinableGenerate(BlockType blockType, World *pWorld, JavaRandom *pRand, int32_t var3,
 													  int32_t var4, int32_t macroX) {
 	float macroZ = pRand->nextFloat() * (float)JavaMath::PI;
-	double var7 = (double)((float)(var3 + 8) + MathHelper::sin(macroZ) * 2.0F);
-	double blockY = (double)((float)(var3 + 8) - MathHelper::sin(macroZ) * 2.0F);
-	double world1 = (double)((float)(macroX + 8) + MathHelper::cos(macroZ) * 2.0F);
-	double world3 = (double)((float)(macroX + 8) - MathHelper::cos(macroZ) * 2.0F);
-	double world5 = (double)(var4 + pRand->nextInt(3) + 2);
-	double world7 = (double)(var4 + pRand->nextInt(3) + 2);
+	double var7 = double(float(var3 + 8) + MathHelper::sin(macroZ) * 2.0F);
+	double blockY = double(float(var3 + 8) - MathHelper::sin(macroZ) * 2.0F);
+	double world1 = double(float(macroX + 8) + MathHelper::cos(macroZ) * 2.0F);
+	double world3 = double(float(macroX + 8) - MathHelper::cos(macroZ) * 2.0F);
+	double world5 = double(var4 + pRand->nextInt(3) + 2);
+	double world7 = double(var4 + pRand->nextInt(3) + 2);
 
 	for (var3 = 0; var3 <= 16; ++var3) {
 		double rand0 = var7 + (blockY - var7) * (double)var3 / 16.0;
 		double rand2 = world5 + (world7 - world5) * (double)var3 / 16.0;
 		double rand4 = world1 + (world3 - world1) * (double)var3 / 16.0;
 		double rand6 = pRand->nextDouble();
-		double rand8 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)JavaMath::PI) + 1.0F) * rand6 + 1.0;
-		double var30 = (double)(MathHelper::sin((float)var3 / 16.0F * (float)JavaMath::PI) + 1.0F) * rand6 + 1.0;
+		double rand8 = double(MathHelper::sin((float)var3 / 16.0F * (float)JavaMath::PI) + 1.0F) * rand6 + 1.0;
+		double var30 = double(MathHelper::sin((float)var3 / 16.0F * (float)JavaMath::PI) + 1.0F) * rand6 + 1.0;
 
 		for (var4 = int32_t(rand0 - rand8 / 2.0); var4 <= int32_t(rand0 + rand8 / 2.0); ++var4) {
 			for (macroX = int32_t(rand2 - var30 / 2.0); macroX <= int32_t(rand2 + var30 / 2.0); ++macroX) {
@@ -210,7 +210,7 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(BlockType blockType, World
 }
 
 bool GeneratorInfdev20100327::PopulateChunk(Int2 chunkPos) {
-	rand->setSeed((int64_t)chunkPos.x * 318279123L + (int64_t)chunkPos.y * 919871212L);
+	rand->setSeed(int64_t(chunkPos.x) * 318279123L + int64_t(chunkPos.y) * 919871212L);
 	int32_t chunkZOffset = chunkPos.x << 4;
 	chunkPos.x = chunkPos.y << 4;
 

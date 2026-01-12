@@ -27,11 +27,11 @@ Plugin::Plugin(std::string path) {
 
 	// Load the plugins API version
 	lua_getglobal(L, "PluginApiVersion");
-	if (!lua_isnumber(L, -1)) {
+	if (!lua_isinteger(L, -1)) {
 		lua_close(L);
 		throw std::runtime_error("Invalid PluginApiVersion!");
 	} else {
-		apiVersion = (int32_t)lua_tonumber(L, -1);
+		apiVersion = int32_t(lua_tointeger(L, -1));
 	}
 
 	if (apiVersion > PLUGIN_LATEST_VERSION) {

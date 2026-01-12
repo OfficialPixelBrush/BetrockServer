@@ -79,13 +79,13 @@ void GeneratorBeta173::ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chun
 	this->stoneNoise.resize(256, 0.0);
 
 	// Populate noise maps
-	this->sandGravelNoiseGen->GenerateOctaves(this->sandNoise, (double)(chunkPos.x * CHUNK_WIDTH_X),
-											  (double)(chunkPos.y * CHUNK_WIDTH_Z), 0.0, 16, 16, 1, oneThirtySecond,
+	this->sandGravelNoiseGen->GenerateOctaves(this->sandNoise, double(chunkPos.x * CHUNK_WIDTH_X),
+											  double(chunkPos.y * CHUNK_WIDTH_Z), 0.0, 16, 16, 1, oneThirtySecond,
 											  oneThirtySecond, 1.0);
-	this->sandGravelNoiseGen->GenerateOctaves(this->gravelNoise, (double)(chunkPos.x * CHUNK_WIDTH_X), 109.0134,
-											  (double)(chunkPos.y * CHUNK_WIDTH_Z), 16, 1, 16, oneThirtySecond, 1.0,
+	this->sandGravelNoiseGen->GenerateOctaves(this->gravelNoise, double(chunkPos.x * CHUNK_WIDTH_X), 109.0134,
+											  double(chunkPos.y * CHUNK_WIDTH_Z), 16, 1, 16, oneThirtySecond, 1.0,
 											  oneThirtySecond);
-	this->stoneNoiseGen->GenerateOctaves(this->stoneNoise, (double)(chunkPos.x * CHUNK_WIDTH_X), (double)(chunkPos.y * CHUNK_WIDTH_Z),
+	this->stoneNoiseGen->GenerateOctaves(this->stoneNoise, double(chunkPos.x * CHUNK_WIDTH_X), double(chunkPos.y * CHUNK_WIDTH_Z),
 										 0.0, 16, 16, 1, oneThirtySecond * 2.0, oneThirtySecond * 2.0,
 										 oneThirtySecond * 2.0);
 
@@ -356,7 +356,7 @@ void GeneratorBeta173::GenerateTerrainNoise(std::vector<double> &terrainMap, Int
 				terrainDensity -= densityOffset;
 				// Reduce density towards max height
 				if (iY > max.y - 4) {
-					double heightEdgeFade = (double)((float)(iY - (max.y - 4)) / 3.0F);
+					double heightEdgeFade = double(float(iY - (max.y - 4)) / 3.0F);
 					terrainDensity = terrainDensity * (1.0 - heightEdgeFade) + -10.0 * heightEdgeFade;
 				}
 
@@ -763,7 +763,7 @@ bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
 			int32_t offsetX = x - (blockPos.x + 8);
 			int32_t offsetZ = z - (blockPos.y + 8);
 			int32_t highestBlock = world->GetHighestSolidOrLiquidBlock(Int2{x, z});
-			double temp = this->temperature[offsetX * CHUNK_WIDTH_X + offsetZ] - (double)(highestBlock - 64) / 64.0 * 0.3;
+			double temp = this->temperature[offsetX * CHUNK_WIDTH_X + offsetZ] - double(highestBlock - 64) / 64.0 * 0.3;
 			if (temp < 0.5 && highestBlock > 0 && highestBlock < CHUNK_HEIGHT &&
 				world->GetBlockType(Int3{x, highestBlock, z}) == BLOCK_AIR &&
 				IsSolid(world->GetBlockType(Int3{x, highestBlock - 1, z})) &&

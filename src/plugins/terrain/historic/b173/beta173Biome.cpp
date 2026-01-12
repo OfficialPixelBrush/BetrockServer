@@ -34,10 +34,10 @@ void Beta173Biome::GenerateBiomeMap(std::vector<Biome>& biomeMap, std::vector<do
 	// Get noise values
 	// We found an oversight in the original code! max.z is NEVER used for getting the noise range!
 	// Although this is irrelevant for all intents and purposes, as max.x always equals max.z
-	this->temperatureNoiseGen->GenerateOctaves(temperature, (double)blockPos.x, (double)blockPos.y, max.x, max.x, 0.025, 0.025,
+	this->temperatureNoiseGen->GenerateOctaves(temperature, double(blockPos.x), double(blockPos.y), max.x, max.x, 0.025, 0.025,
 											   0.25);
-	this->humidityNoiseGen->GenerateOctaves(humidity, (double)blockPos.x, (double)blockPos.y, max.x, max.x, 0.05, 0.05, 1.0 / 3.0);
-	this->weirdnessNoiseGen->GenerateOctaves(weirdness, (double)blockPos.x, (double)blockPos.y, max.x, max.x, 0.25, 0.25,
+	this->humidityNoiseGen->GenerateOctaves(humidity, double(blockPos.x), double(blockPos.y), max.x, max.x, 0.05, 0.05, 1.0 / 3.0);
+	this->weirdnessNoiseGen->GenerateOctaves(weirdness, double(blockPos.x), double(blockPos.y), max.x, max.x, 0.25, 0.25,
 											 0.5882352941176471);
 	int32_t index = 0;
 
@@ -85,9 +85,9 @@ void Beta173Biome::GenerateTemperature(std::vector<double>& temperature, std::ve
 		temperature.resize(max.x * max.y, 0.0);
 	}
 
-	this->temperatureNoiseGen->GenerateOctaves(temperature, (double)blockPos.x, (double)blockPos.y, max.x, max.y, (double)0.025F,
-											   (double)0.025F, 0.25);
-	this->weirdnessNoiseGen->GenerateOctaves(weirdness, (double)blockPos.x, (double)blockPos.y, max.x, max.y, 0.25, 0.25,
+	this->temperatureNoiseGen->GenerateOctaves(temperature, double(blockPos.x), double(blockPos.y), max.x, max.y, double(0.025F),
+											   double(0.025F), 0.25);
+	this->weirdnessNoiseGen->GenerateOctaves(weirdness, double(blockPos.x), double(blockPos.y), max.x, max.y, 0.25, 0.25,
 											 0.5882352941176471);
 	int32_t index = 0;
 

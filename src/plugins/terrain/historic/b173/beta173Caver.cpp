@@ -78,14 +78,14 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 	int32_t var25 = rand2->nextInt(tunnelLength / 2) + tunnelLength / 4;
 
 	for (bool var26 = rand2->nextInt(6) == 0; tunnelStep < tunnelLength; ++tunnelStep) {
-		double var27 = 1.5 + (double)(MathHelper::sin((float)tunnelStep * (float)JavaMath::PI / (float)tunnelLength) *
+		double var27 = 1.5 + double(MathHelper::sin((float)tunnelStep * (float)JavaMath::PI / (float)tunnelLength) *
 									   tunnelRadius * 1.0F);
 		double var29 = var27 * verticalScale;
 		float var31 = MathHelper::cos(carvePitch);
 		float var32 = MathHelper::sin(carvePitch);
-		offset.x += (double)(MathHelper::cos(carveYaw) * var31);
-		offset.y += (double)var32;
-		offset.z += (double)(MathHelper::sin(carveYaw) * var31);
+		offset.x += double(MathHelper::cos(carveYaw) * var31);
+		offset.y += double(var32);
+		offset.z += double(MathHelper::sin(carveYaw) * var31);
 		if (var26) {
 			carvePitch *= 0.92F;
 		} else {
@@ -109,8 +109,8 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 		if (var52 || rand2->nextInt(4) != 0) {
 			double var33 = offset.x - chunkCenterX;
 			double var35 = offset.z - chunkCenterZ;
-			double var37 = (double)(tunnelLength - tunnelStep);
-			double var39 = (double)(tunnelRadius + 2.0F + 16.0F);
+			double var37 = double(tunnelLength - tunnelStep);
+			double var39 = double(tunnelRadius + 2.0F + 16.0F);
 			if (var33 * var33 + var35 * var35 - var37 * var37 > var39 * var39) {
 				return;
 			}
@@ -161,15 +161,15 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 
 				if (!waterIsPresent) {
 					for (int32_t blockX = xMin; blockX < xMax; ++blockX) {
-						double var57 = ((double)(blockX + chunkPos.x * 16) + 0.5 - offset.x) / var27;
+						double var57 = (double(blockX + chunkPos.x * 16) + 0.5 - offset.x) / var27;
 
 						for (int32_t blockZ = zMin; blockZ < zMax; ++blockZ) {
-							double var44 = ((double)(blockZ + chunkPos.y * 16) + 0.5 - offset.z) / var27;
+							double var44 = (double(blockZ + chunkPos.y * 16) + 0.5 - offset.z) / var27;
 							int32_t blockIndex = (blockX * CHUNK_WIDTH_Z + blockZ) * CHUNK_HEIGHT + yMax;
 							bool var47 = false;
 							if (var57 * var57 + var44 * var44 < 1.0) {
 								for (int32_t var48 = yMax - 1; var48 >= yMin; --var48) {
-									double var49 = ((double)var48 + 0.5 - offset.y) / var29;
+									double var49 = (double(var48) + 0.5 - offset.y) / var29;
 									if (var49 > -0.7 && var57 * var57 + var49 * var49 + var44 * var44 < 1.0) {
 										BlockType blockType = c->GetBlockType(BlockIndexToPosition(blockIndex));
 										if (blockType == BLOCK_GRASS) {
