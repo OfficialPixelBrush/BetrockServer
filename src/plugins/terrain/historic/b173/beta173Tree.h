@@ -25,10 +25,15 @@ class Beta173Tree {
  */
 class Beta173BigTree : public Beta173Tree {
   private:
+	struct BranchPos {
+		Int3 pos;
+		int32_t trunkY;
+	};
 	enum BranchAxis : int8_t {
 		AXIS_X = 0,
 		AXIS_Y = 1,
-		AXIS_Z = 2
+		AXIS_Z = 2,
+		TRUNK_Y = 3
 	};
 	BranchAxis branchOrientation[6] = {
 		AXIS_Z, // X to Z
@@ -40,7 +45,7 @@ class Beta173BigTree : public Beta173Tree {
 	};
 	std::unique_ptr<JavaRandom> rand;
 	World *world;
-	Int3 basePos = Int3{0, 0, 0};
+	Int3 basePos = INT3_ZERO;
 	int32_t totalHeight = 0;
 	int32_t height;
 	double heightFactor = 0.618;
@@ -51,7 +56,7 @@ class Beta173BigTree : public Beta173Tree {
 	int32_t branchDensity = 1;
 	int32_t maximumTreeHeight = 12;
 	int32_t trunkThickness = 4;
-	std::vector<std::array<int32_t, 4>> branchStartEnd;
+	std::vector<BranchPos> branchStartEnd;
 
 	bool ValidPlacement();
 	void GenerateBranchPositions();
@@ -61,9 +66,9 @@ class Beta173BigTree : public Beta173Tree {
 	float GetCanopyRadius(int32_t y);
 	float GetTrunkLayerRadius(int32_t layerIndex);
 	void PlaceLeavesAroundPoint(Int3 base);
-	void DrawBlockLine(Int3 posA, Int3 posB, BlockType blockType);
-	int32_t CheckIfPathClear(Int3 posA, Int3 posB);
-	void PlaceCircularLayer(Int3 centerPos, float radius, int8_t axis, BlockType blockType);
+	void DrawBlockLine(Int3 startPos, Int3 endPos, BlockType blockType);
+	int32_t CheckIfPathClear(Int3 startPos, Int3 endPos);
+	void PlaceCircularLayer(Int3 centerPos, float radius, BranchAxis axis, BlockType blockType);
 	bool CanGenerateBranchAtHeight(int32_t y);
 
   public:

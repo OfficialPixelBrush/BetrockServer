@@ -26,7 +26,7 @@ class RegionFile;
 struct LightUpdate {
 	bool skyLight;
 	Int3 posA, posB;
-	LightUpdate() : skyLight(false), posA(Int3{0, 0, 0}), posB(Int3{0, 0, 0}) {}
+	LightUpdate() : skyLight(false), posA(INT3_ZERO), posB(INT3_ZERO) {}
 	LightUpdate(bool pSkyLight, Int3 pPosA, Int3 pPosB) : skyLight(pSkyLight), posA(pPosA), posB(pPosB) {}
 };
 typedef struct LightUpdate LightUpdate;

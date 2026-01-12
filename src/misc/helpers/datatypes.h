@@ -91,6 +91,9 @@ struct Vec3 {
     }
 };
 
+#define VEC3_ZERO Vec3{0.0,0.0,0.0}
+#define VEC3_ONE Vec3{1.0,1.0,1.0}
+
 /**
  * @brief A struct that contains 2 doubles (x,y)
  * 
@@ -128,6 +131,9 @@ struct Vec2 {
         return *(&x + i);
     }
 };
+
+#define VEC2_ZERO Vec2{0.0,0.0}
+#define VEC2_ONE Vec2{1.0,1.0}
 
 /**
  * @brief A struct that contains 3 integers (x,y,z)
@@ -167,6 +173,9 @@ struct Int3 {
     }
 };
 
+#define INT3_ZERO Int3{0,0,0}
+#define INT3_ONE Int3{1,1,1}
+
 
 /**
  * @brief A struct that contains 2 integers (x,y)
@@ -205,6 +214,9 @@ struct Int2 {
         return *(&x + i);
     }
 };
+
+#define INT2_ZERO Int2{0,0}
+#define INT2_ONE Int2{1,1}
 
 /**
  * @brief Axis-aligned Bounding Box

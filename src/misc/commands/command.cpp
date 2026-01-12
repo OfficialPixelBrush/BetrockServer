@@ -567,7 +567,7 @@ std::string CommandRegion::Execute(std::vector<std::string> pCommand, [[maybe_un
 	// Read in region data
 	if (pCommand[1] == "load") {
 		std::unique_ptr<RegionFile> rf = std::make_unique<RegionFile>(std::filesystem::current_path() / "r.0.0.mcr");
-		auto root = rf->GetChunkNbt(Int2{0, 0});
+		auto root = rf->GetChunkNbt(INT2_ZERO);
 		if (root) {
 			std::cout << *root;
 		}

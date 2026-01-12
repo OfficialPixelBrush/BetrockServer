@@ -32,7 +32,7 @@ void Beta173Caver::GenerateCaves(Int2 chunkOffset, Int2 chunkPos, std::shared_pt
 	}
 
 	for (int32_t caveIndex = 0; caveIndex < numberOfCaves; ++caveIndex) {
-		Vec3 offset = Vec3{0,0,0};
+		Vec3 offset = VEC3_ZERO;
 		offset.x = double(chunkOffset.x * CHUNK_WIDTH_X + this->rand->nextInt(CHUNK_WIDTH_X));
 		offset.y = double(this->rand->nextInt(this->rand->nextInt(120) + 8));
 		offset.z = double(chunkOffset.y * CHUNK_WIDTH_Z + this->rand->nextInt(CHUNK_WIDTH_Z));
