@@ -300,22 +300,20 @@ void GeneratorBeta173::GenerateTerrainNoise(std::vector<double> &terrainMap, Int
 			humi *= humi;
 			humi *= humi;
 			humi = 1.0 - humi;
-			// Apply contientalness
+			// Sample contientalness noise
 			double continentalness = (this->continentalnessNoiseField[xzIndex] + 256.0) / 512.0;
 			continentalness *= humi;
 			if (continentalness > 1.0)
 				continentalness = 1.0;
-
+			// Sample depth noise
 			double depthNoise = this->depthNoiseField[xzIndex] / 8000.0;
 			if (depthNoise < 0.0)
 				depthNoise = -depthNoise * 0.3;
-
 			depthNoise = depthNoise * 3.0 - 2.0;
 			if (depthNoise < 0.0) {
 				depthNoise /= 2.0;
 				if (depthNoise < -1.0)
 					depthNoise = -1.0;
-
 				depthNoise /= 1.4;
 				depthNoise /= 2.0;
 				continentalness = 0.0;
@@ -324,14 +322,11 @@ void GeneratorBeta173::GenerateTerrainNoise(std::vector<double> &terrainMap, Int
 					depthNoise = 1.0;
 				depthNoise /= 8.0;
 			}
-
-			if (continentalness < 0.0) {
+			if (continentalness < 0.0)
 				continentalness = 0.0;
-			}
-
 			continentalness += 0.5;
-			depthNoise = depthNoise * (double)max.y / 16.0;
-			double elevationOffset = (double)max.y / 2.0 + depthNoise * 4.0;
+			depthNoise = depthNoise * double(max.y) / 16.0;
+			double elevationOffset = double(max.y) / 2.0 + depthNoise * 4.0;
 			++xzIndex;
 
 			for (int32_t iY = 0; iY < max.y; ++iY) {
@@ -341,9 +336,11 @@ void GeneratorBeta173::GenerateTerrainNoise(std::vector<double> &terrainMap, Int
 				if (densityOffset < 0.0) {
 					densityOffset *= 4.0;
 				}
-
+				// Sample low noise
 				double lowNoise = this->lowNoiseField[xyzIndex] / 512.0;
+				// Sample high noise
 				double highNoise = this->highNoiseField[xyzIndex] / 512.0;
+				// Sample selector noise
 				double selectorNoise = (this->selectorNoiseField[xyzIndex] / 10.0 + 1.0) / 2.0;
 				if (selectorNoise < 0.0) {
 					terrainDensity = lowNoise;
@@ -357,7 +354,7 @@ void GeneratorBeta173::GenerateTerrainNoise(std::vector<double> &terrainMap, Int
 				// Reduce density towards max height
 				if (iY > max.y - 4) {
 					double heightEdgeFade = double(float(iY - (max.y - 4)) / 3.0F);
-					terrainDensity = terrainDensity * (1.0 - heightEdgeFade) + -10.0 * heightEdgeFade;
+					terrainDensity = (terrainDensity * (1.0 - heightEdgeFade)) + (-10.0 * heightEdgeFade);
 				}
 
 				terrainMap[xyzIndex] = terrainDensity;
