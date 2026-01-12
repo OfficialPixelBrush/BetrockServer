@@ -191,9 +191,9 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(BlockType blockType, World
 		double rand8 = double(MathHelper::sin((float)var3 / 16.0F * (float)JavaMath::PI) + 1.0F) * rand6 + 1.0;
 		double var30 = double(MathHelper::sin((float)var3 / 16.0F * (float)JavaMath::PI) + 1.0F) * rand6 + 1.0;
 
-		for (var4 = int32_t(rand0 - rand8 / 2.0); var4 <= int32_t(rand0 + rand8 / 2.0); ++var4) {
-			for (macroX = int32_t(rand2 - var30 / 2.0); macroX <= int32_t(rand2 + var30 / 2.0); ++macroX) {
-				for (int32_t var41 = int32_t(rand4 - rand8 / 2.0); var41 <= int32_t(rand4 + rand8 / 2.0); ++var41) {
+		for (var4 = Java::DoubleToInt32(rand0 - rand8 / 2.0); var4 <= Java::DoubleToInt32(rand0 + rand8 / 2.0); ++var4) {
+			for (macroX = Java::DoubleToInt32(rand2 - var30 / 2.0); macroX <= Java::DoubleToInt32(rand2 + var30 / 2.0); ++macroX) {
+				for (int32_t var41 = Java::DoubleToInt32(rand4 - rand8 / 2.0); var41 <= Java::DoubleToInt32(rand4 + rand8 / 2.0); ++var41) {
 					double var35 = ((double)var4 + 0.5 - rand0) / (rand8 / 2.0);
 					double var37 = ((double)macroX + 0.5 - rand2) / (var30 / 2.0);
 					double var39 = ((double)var41 + 0.5 - rand4) / (rand8 / 2.0);
@@ -245,7 +245,7 @@ bool GeneratorInfdev20100327::PopulateChunk(Int2 chunkPos) {
 		WorldGenMinableGenerate(BLOCK_ORE_DIAMOND, this->world, this->rand.get(), chunkPos.y, oreZ, oreY);
 	}
 
-	chunkPos.y = int32_t(this->mobSpawnerNoise->GenerateOctaves((double)chunkZOffset * 0.25, (double)chunkPos.x * 0.25)) << 3;
+	chunkPos.y = Java::DoubleToInt32(this->mobSpawnerNoise->GenerateOctaves((double)chunkZOffset * 0.25, (double)chunkPos.x * 0.25)) << 3;
 
 	for (oreZ = 0; oreZ < chunkPos.y; ++oreZ) {
 		oreY = chunkZOffset + rand->nextInt(16);

@@ -1,6 +1,7 @@
 #pragma once
 #include <array>
 #include <cmath>
+#include <cstdint>
 #include <string>
 
 // Library for emulating Java/Java Edition math functions
@@ -39,11 +40,46 @@ inline double altGrad(int32_t var1, double var2, double var4) {
 inline double fade(double value) { return value * value * value * (value * (value * 6.0 - 15.0) + 10.0); }
 
 /**
- * @brief Java-equivalent hashing function
+ * @brief Java-equivalent functions
  * 
- * @param value The input string
- * @return Hashed string expressed as an integer
  */
+struct Java {
+	static int64_t DoubleToInt64(double value) {
+		if (value > INT64_MAX)
+			return INT64_MAX;
+		if (value < INT64_MIN)
+			return INT64_MIN;
+		return int64_t(std::floor(value));
+	}
+	static int32_t DoubleToInt32(double value) {
+		if (value > INT32_MAX)
+			return INT32_MAX;
+		if (value < INT32_MIN)
+			return INT32_MIN;
+		return int32_t(std::floor(value));
+	}
+	static int64_t FloatToInt64(float value) {
+		if (value > INT64_MAX)
+			return INT64_MAX;
+		if (value < INT64_MIN)
+			return INT64_MIN;
+		return int64_t(std::floor(value));
+	}
+	static int32_t FloatToInt32(float value) {
+		if (value > INT32_MAX)
+			return INT32_MAX;
+		if (value < INT32_MIN)
+			return INT32_MIN;
+		return int32_t(std::floor(value));
+	}
+};
+
+/**
+* @brief Java-equivalent hashing function
+* 
+* @param value The input string
+* @return Hashed string expressed as an integer
+*/
 inline int32_t hashCode(std::string value) {
 	int32_t h = 0;
 	if (h == 0 && value.size() > 0) {
@@ -71,21 +107,21 @@ struct MathHelper {
 	static constexpr size_t TABLE_SIZE = 65536;
 	static std::array<float, TABLE_SIZE> SIN_TABLE;
 
-	static float sin(float x) { return SIN_TABLE[static_cast<int32_t>(x * 10430.378f) & 0xFFFF]; }
+	static float sin(float x) { return SIN_TABLE[Java::FloatToInt32(x * 10430.378f) & 0xFFFF]; }
 
-	static float cos(float x) { return SIN_TABLE[(static_cast<int32_t>(x * 10430.378f + 16384.0f)) & 0xFFFF]; }
+	static float cos(float x) { return SIN_TABLE[(Java::FloatToInt32(x * 10430.378f + 16384.0f)) & 0xFFFF]; }
 
 	static float sqrt_float(float x) { return std::sqrt(x); }
 
 	static float sqrt_double(double x) { return static_cast<float>(std::sqrt(x)); }
 
 	static int32_t floor_float(float x) {
-		int32_t i = static_cast<int32_t>(x);
+		int32_t i = Java::FloatToInt32(x);
 		return x < static_cast<float>(i) ? i - 1 : i;
 	}
 
 	static int32_t floor_double(double x) {
-		int32_t i = static_cast<int32_t>(x);
+		int32_t i = Java::DoubleToInt32(x);
 		return x < static_cast<double>(i) ? i - 1 : i;
 	}
 	

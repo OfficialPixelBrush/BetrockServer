@@ -45,7 +45,7 @@ std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(Int2 chunkPos) {
 					: float(this->noiseGen4.get()->GenerateOctaves(double((float)blockX * 0.25714284F),
 																	 double((float)blockZ * 0.25714284F)) *
 							  (double)noiseGen6Value);
-			int32_t terrainHeight = int32_t(noiseGen1Value + 64.0F + noiseGen5Value);
+			int32_t terrainHeight = Java::DoubleToInt32(noiseGen1Value + 64.0F + noiseGen5Value);
 			if ((float)this->noiseGen5.get()->GenerateOctaves((double)blockX, (double)blockZ) < 0.0F) {
 				terrainHeight = terrainHeight / 2 << 1;
 				if ((float)this->noiseGen5.get()->GenerateOctaves(double(blockX / 5), double(blockZ / 5)) < 0.0F) {

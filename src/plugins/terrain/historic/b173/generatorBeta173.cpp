@@ -97,7 +97,7 @@ void GeneratorBeta173::ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chun
 			bool sandActive = this->sandNoise[x + z * CHUNK_WIDTH_X] + this->rand->nextDouble() * 0.2 > 0.0;
 			bool gravelActive = this->gravelNoise[x + z * CHUNK_WIDTH_X] + this->rand->nextDouble() * 0.2 > 3.0;
 			int32_t stoneActive =
-				int32_t(this->stoneNoise[x + z * CHUNK_WIDTH_X] / 3.0 + 3.0 + this->rand->nextDouble() * 0.25);
+				Java::DoubleToInt32(this->stoneNoise[x + z * CHUNK_WIDTH_X] / 3.0 + 3.0 + this->rand->nextDouble() * 0.25);
 			int32_t stoneDepth = -1;
 			// Get biome-appropriate top and filler blocks
 			BlockType topBlock = GetTopBlock(biome);
@@ -515,7 +515,7 @@ bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
 	// Determine the number of trees that should be generated
 	double fraction = 0.5;
 	int32_t treeDensitySample =
-		int32_t((this->treeDensityNoiseGen->GenerateOctaves(double(blockPos.x) * fraction, double(blockPos.y) * fraction) / 8.0 +
+		Java::DoubleToInt32((this->treeDensityNoiseGen->GenerateOctaves(double(blockPos.x) * fraction, double(blockPos.y) * fraction) / 8.0 +
 			 this->rand->nextDouble() * 4.0 + 4.0) /
 			3.0);
 

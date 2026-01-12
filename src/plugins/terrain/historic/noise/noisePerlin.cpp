@@ -29,9 +29,9 @@ double NoisePerlin::GenerateNoiseBase(Vec3 pos) {
 	// Change these int32_t to int64_t to fix the farlands,
 	// however, this will change Beta tree generation slightly
 	// due to rounding differences
-	int32_t xInt = int32_t(pos.x);
-	int32_t yInt = int32_t(pos.y);
-	int32_t zInt = int32_t(pos.z);
+	int32_t xInt = Java::DoubleToInt32(pos.x);
+	int32_t yInt = Java::DoubleToInt32(pos.y);
+	int32_t zInt = Java::DoubleToInt32(pos.z);
 	if (pos.x < double(xInt))
 		--xInt;
 	if (pos.y < double(yInt))
@@ -82,7 +82,7 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
         for (int32_t x = 0; x < size.x; ++x) {
             double fx = (offset.x + x) * scale.x + this->xCoord;
-            int32_t ix = int32_t(fx);
+            int32_t ix = Java::DoubleToInt32(fx);
             if (fx < ix) --ix;
             int32_t px = ix & 255;
             fx -= ix;
@@ -90,7 +90,7 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
             for (int32_t z = 0; z < size.z; ++z) {
                 double fz = (offset.z + z) * scale.z + this->zCoord;
-                int32_t iz = int32_t(fz);
+                int32_t iz = Java::DoubleToInt32(fz);
                 if (fz < iz) --iz;
                 int32_t pz = iz & 255;
                 fz -= iz;
@@ -123,7 +123,7 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
         for (int32_t x = 0; x < size.x; ++x) {
             double fx = (offset.x + x) * scale.x + this->xCoord;
-            int32_t ix = int32_t(fx);
+            int32_t ix = Java::DoubleToInt32(fx);
             if (fx < ix) --ix;
             int32_t px = ix & 255;
             fx -= ix;
@@ -131,7 +131,7 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
             for (int32_t z = 0; z < size.z; ++z) {
                 double fz = (offset.z + z) * scale.z + this->zCoord;
-                int32_t iz = int32_t(fz);
+                int32_t iz = Java::DoubleToInt32(fz);
                 if (fz < iz) --iz;
                 int32_t pz = iz & 255;
                 fz -= iz;
@@ -139,7 +139,7 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
                 for (int32_t y = 0; y < size.y; ++y) {
                     double fy = (offset.y + y) * scale.y + this->yCoord;
-                    int32_t iy = int32_t(fy);
+                    int32_t iy = Java::DoubleToInt32(fy);
                     if (fy < iy) --iy;
                     int32_t py = iy & 255;
                     fy -= iy;

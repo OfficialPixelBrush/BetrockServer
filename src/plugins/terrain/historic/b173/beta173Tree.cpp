@@ -99,7 +99,7 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch)
  * @param pTrunkShape Determines the trunk shape
  */
 void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double pTrunkShape) {
-	this->maximumTreeHeight = int32_t(pTreeHeight * 12.0);
+	this->maximumTreeHeight = Java::DoubleToInt32(pTreeHeight * 12.0);
 	if (pTreeHeight > 0.5) {
 		this->trunkThickness = 5;
 	}
@@ -143,12 +143,12 @@ bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom *pRand,
  * 
  */
 void Beta173BigTree::GenerateBranchPositions() {
-	this->height = int32_t(double(this->totalHeight) * this->heightFactor);
+	this->height = Java::DoubleToInt32(double(this->totalHeight) * this->heightFactor);
 	if (this->height >= this->totalHeight) {
 		this->height = this->totalHeight - 1;
 	}
 
-	int32_t branchesPerLayer = int32_t(1.382 + std::pow(this->trunkShape * double(this->totalHeight) / 13.0, 2.0));
+	int32_t branchesPerLayer = Java::DoubleToInt32(1.382 + std::pow(this->trunkShape * double(this->totalHeight) / 13.0, 2.0));
 	if (branchesPerLayer < 1) {
 		branchesPerLayer = 1;
 	}
@@ -196,7 +196,7 @@ void Beta173BigTree::GenerateBranchPositions() {
 						if ((double)branchBase.y - verticalDrop > (double)targetY) {
 							trunkConnection.y = targetY;
 						} else {
-							trunkConnection.y = int32_t(double(branchBase.y) - verticalDrop);
+							trunkConnection.y = Java::DoubleToInt32(double(branchBase.y) - verticalDrop);
 						}
 
 						if (this->CheckIfPathClear(trunkConnection, branchBase) == -1) {
@@ -229,7 +229,7 @@ void Beta173BigTree::GenerateBranchPositions() {
  * @param blockType Blocktype of the circle
  */
 void Beta173BigTree::PlaceCircularLayer(Int3 centerPos, float radius, BranchAxis axis, BlockType blockType) {
-	int32_t intRadius = int32_t(double(radius) + 0.618);
+	int32_t intRadius = Java::DoubleToInt32(double(radius) + 0.618);
 	BranchAxis axisU = branchOrientation[axis];
 	BranchAxis axisV = branchOrientation[axis + AXIS_OFFSET];
 	Int3 currentPos{0, 0, 0};
