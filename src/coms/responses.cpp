@@ -231,7 +231,7 @@ void Respond::Chunk(std::vector<uint8_t> &response, Int3 position, uint8_t sizeX
     response.insert(response.end(), compressedData, compressedData + compressedSize);
 }
 
-void Respond::BlockChange(std::vector<uint8_t> &response, Int3 position, int8_t type, int8_t meta) {
+void Respond::BlockChange(std::vector<uint8_t> &response, Int3 position, BlockType type, int8_t meta) {
     response.push_back((uint8_t)Packet::BlockChange);
     AppendIntegerToVector(response,position.x);
     response.push_back((int8_t)position.y);

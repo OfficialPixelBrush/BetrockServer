@@ -11,13 +11,13 @@
  */
 class Beta173Feature {
   private:
-	BlockType id = BLOCK_AIR;
+	BlockType type = BLOCK_AIR;
 	int8_t meta = 0;
 
   public:
 	Beta173Feature() {};
-	Beta173Feature(BlockType id);
-	Beta173Feature(BlockType id, int8_t meta);
+	Beta173Feature(BlockType type);
+	Beta173Feature(BlockType type, int8_t meta);
 	bool GenerateLake(World *world, JavaRandom *rand, Int3 pos);
 	bool GenerateDungeon(World *world, JavaRandom *rand, Int3 pos);
 	Item GenerateDungeonChestLoot(JavaRandom *rand);

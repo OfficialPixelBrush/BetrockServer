@@ -266,7 +266,7 @@ bool Client::HandlePlayerDigging(World* world) {
 	EntryToByte(message, offset);
 
 	Int3 pos = Int3(x,y,z);
-	int8_t blockType = world->GetBlockType(pos);
+	BlockType blockType = world->GetBlockType(pos);
 	int8_t blockMeta = world->GetBlockMeta(pos);
 	
 	if (debugPunchBlockInfo) {
@@ -354,7 +354,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	}
 
 	Int3 pos = Int3{x,y,z};
-	int8_t blockType = world->GetBlockType(pos);
+	BlockType blockType = world->GetBlockType(pos);
 	int8_t blockMeta = world->GetBlockMeta(pos);
 	if (blockType == BLOCK_AIR) { return false; }
 
@@ -383,6 +383,8 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 				break;
 			case BLOCK_DISPENSER:
 				OpenWindow(INVENTORY_DISPENSER);
+				break;
+			default:
 				break;
 		}
 		return true;

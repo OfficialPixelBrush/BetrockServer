@@ -171,7 +171,7 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 								for (int32_t var48 = yMax - 1; var48 >= yMin; --var48) {
 									double var49 = ((double)var48 + 0.5 - offset.y) / var29;
 									if (var49 > -0.7 && var57 * var57 + var49 * var49 + var44 * var44 < 1.0) {
-										uint8_t blockType = c->GetBlockType(BlockIndexToPosition(blockIndex));
+										BlockType blockType = c->GetBlockType(BlockIndexToPosition(blockIndex));
 										if (blockType == BLOCK_GRASS) {
 											var47 = true;
 										}

@@ -477,8 +477,8 @@ int32_t Beta173BigTree::CheckIfPathClear(Int3 posA, Int3 posB) {
 bool Beta173BigTree::ValidPlacement() {
 	Int3 var1 = basePos;
 	Int3 var2 = Int3{this->basePos.x, this->basePos.y + this->totalHeight - 1, this->basePos.z};
-	BlockType type = this->world->GetBlockType(Int3{this->basePos.x, this->basePos.y - 1, this->basePos.z});
-	if (type != BLOCK_GRASS && type != BLOCK_DIRT) {
+	BlockType blockType = this->world->GetBlockType(Int3{this->basePos.x, this->basePos.y - 1, this->basePos.z});
+	if (blockType != BLOCK_GRASS && blockType != BLOCK_DIRT) {
 		return false;
 	}
 	int32_t var4 = this->CheckIfPathClear(var1, var2);

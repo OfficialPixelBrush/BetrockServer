@@ -40,7 +40,7 @@ class Respond {
         static void EntityMetadata(std::vector<uint8_t> &response, int32_t& entityId, int8_t byte);
         static void PreChunk(std::vector<uint8_t> &response, Int2 posiiton, bool mode);
         static void Chunk(std::vector<uint8_t> &response, Int3 position, uint8_t sizeX, uint8_t sizeY, uint8_t sizeZ, size_t compressedSize, char* compressedData);
-        static void BlockChange(std::vector<uint8_t> &response, Int3 position, int8_t type, int8_t meta);
+        static void BlockChange(std::vector<uint8_t> &response, Int3 position, BlockType type, int8_t meta);
         static void Soundeffect(std::vector<uint8_t> &response, int32_t sound, Int3 position, int32_t extra);
         static void OpenWindow(std::vector<uint8_t> &response, int8_t windowId, uint8_t type, std::string name, int8_t size);
         static void CloseWindow(std::vector<uint8_t> &response, int8_t windowId);

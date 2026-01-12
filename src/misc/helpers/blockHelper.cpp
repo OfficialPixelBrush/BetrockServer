@@ -440,11 +440,11 @@ bool CanStay(int8_t type, World *world, Int3 pos) {
 			IsSolid(world->GetBlockType(pos + Int3{0, 0, -1})) || IsSolid(world->GetBlockType(pos + Int3{0, 0, 1}))) {
 			return false;
 		}
-		int8_t blockType = world->GetBlockType(pos + Int3{0, -1, 0});
+		BlockType blockType = world->GetBlockType(pos + Int3{0, -1, 0});
 		return (blockType == BLOCK_CACTUS || blockType == BLOCK_SAND);
 	}
 	case BLOCK_SUGARCANE: {
-		int8_t blockType = world->GetBlockType(pos + Int3{0, -1, 0});
+		BlockType blockType = world->GetBlockType(pos + Int3{0, -1, 0});
 		if (blockType == type)
 			return true;
 		if (blockType != BLOCK_GRASS && blockType != BLOCK_DIRT)
