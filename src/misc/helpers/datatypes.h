@@ -71,6 +71,22 @@ struct Vec3 {
         return Vec3{x - other.x, y - other.y, z - other.z};
     }
 
+    Vec3 operator*(const Vec3& other) const {
+        return Vec3{x * other.x, y * other.y, z * other.z};
+    }
+
+    Vec3 operator/(const Vec3& other) const {
+        return Vec3{x / other.x, y / other.y, z / other.z};
+    }
+
+    Vec3 operator*(const double& other) const {
+        return Vec3{x * other, y * other, z * other};
+    }
+
+    Vec3 operator/(const double& other) const {
+        return Vec3{x / other, y / other, z / other};
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
         os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
         return os;
@@ -110,6 +126,22 @@ struct Vec2 {
 
     Vec2 operator-(const Vec2& other) const {
         return Vec2{x - other.x, y - other.y};
+    }
+
+    Vec2 operator*(const Vec2& other) const {
+        return Vec2{x * other.x, y * other.y};
+    }
+
+    Vec2 operator/(const Vec2& other) const {
+        return Vec2{x / other.x, y / other.y};
+    }
+
+    Vec2 operator*(const double& other) const {
+        return Vec2{x * other, y * other};
+    }
+
+    Vec2 operator/(const double& other) const {
+        return Vec2{x / other, y / other};
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Vec2& vec) {
@@ -152,6 +184,22 @@ struct Int3 {
     Int3 operator-(const Int3& other) const {
         return Int3{x - other.x, y - other.y, z - other.z};
     }
+
+    Int3 operator*(const Int3& other) const {
+        return Int3{x * other.x, y * other.y, z * other.z};
+    }
+
+    Int3 operator/(const Int3& other) const {
+        return Int3{x / other.x, y / other.y, z / other.z};
+    }
+
+    Int3 operator*(const int32_t& other) const {
+        return Int3{x * other, y * other, z * other};
+    }
+
+    Int3 operator/(const int32_t& other) const {
+        return Int3{x / other, y / other, z / other};
+    }
     
     friend std::ostream& operator<<(std::ostream& os, const Int3& i) {
         os << "(" << i.x << ", " << i.y << ", " << i.z << ")";
@@ -193,6 +241,22 @@ struct Int2 {
 
     Int2 operator-(const Int2& other) const {
         return Int2{x - other.x, y - other.y};
+    }
+
+    Int2 operator*(const Int2& other) const {
+        return Int2{x * other.x, y * other.y};
+    }
+
+    Int2 operator/(const Int2& other) const {
+        return Int2{x / other.x, y / other.y};
+    }
+
+    Int2 operator*(const int32_t& other) const {
+        return Int2{x * other, y * other};
+    }
+
+    Int2 operator/(const int32_t& other) const {
+        return Int2{x / other, y / other};
     }
     
     friend std::ostream& operator<<(std::ostream& os, const Int2& i) {
