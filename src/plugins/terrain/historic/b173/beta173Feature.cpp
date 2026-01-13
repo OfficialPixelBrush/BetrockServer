@@ -201,6 +201,8 @@ bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
 		}
 	}
 
+	std::cout << pos << std::endl;
+
 	// Try placing up to 2 chests
 	for (int32_t chestAttempt = 0; chestAttempt < 2; ++chestAttempt) {
 		for (int32_t attempts = 0; attempts < 3; ++attempts) {
@@ -230,8 +232,13 @@ bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
 				for (int32_t slotAttempt = 0; slotAttempt < 8; ++slotAttempt) {
 					Item item = GenerateDungeonChestLoot(rand);
 					if (item.id != SLOT_EMPTY) {
-						int32_t slot = rand->nextInt(chest->GetInventory().size());
-						chest->SetSlot(slot, item);
+						int32_t slot = rand->nextInt(INVENTORY_CHEST_ROWS * INVENTORY_CHEST_COLS);
+						chest->inventory.SetSlot(
+							Int2{
+								slot % INVENTORY_CHEST_COLS,
+								slot / INVENTORY_CHEST_ROWS
+							}, item
+						);
 					}
 				}
 				world->AddTileEntity(std::move(chest));

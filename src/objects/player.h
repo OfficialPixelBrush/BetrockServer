@@ -40,13 +40,9 @@ class Player : public Entity {
         int8_t health = HEALTH_MAX;
 
         // Inventory
-        Item inventory[INVENTORY_MAIN_SIZE];
-        // 3 = helmet
-        // 2 = chestplate
-        // 1 = leggings
-        // 0 = boots
-        Item armor[INVENTORY_ARMOR_SIZE];
-        Item crafting[INVENTORY_CRAFTING_SIZE];
+        Inventory craftingSlots = Inventory(INVENTORY_MAIN_CRAFTING);
+        InventoryRow armorSlots = InventoryRow(INVENTORY_MAIN_ARMOR_COLS);
+        Inventory inventory = Inventory(INVENTORY_MAIN);
 
         Player(int32_t& pEntityId, Vec3 pPosition, int8_t pDimension, std::string pWorld, Vec3 pSpawnPosition, int8_t pSpawnDimension, std::string pSpawnWorld)
             : Entity(pEntityId, pPosition, pDimension, pWorld),

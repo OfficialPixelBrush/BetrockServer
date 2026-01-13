@@ -417,7 +417,8 @@ void Client::Respawn(std::vector<uint8_t> &pResponse) {
 }
 
 // Attempt to put an item into a slot
-bool Client::TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &damage) {
+bool Client::TryToPutInSlot([[maybe_unused]] int16_t slot, [[maybe_unused]] int16_t &id, [[maybe_unused]] int8_t &amount, [[maybe_unused]] int16_t &damage) {
+	/*
     // First, try to stack into existing slots
     if (player->inventory[slot].id == id && player->inventory[slot].damage == damage) {
         // Skip the slot if its full
@@ -439,6 +440,7 @@ bool Client::TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &
         player->inventory[slot] = { id, amount, damage };
         return true;
     }
+	*/
     return false;
 }
 
@@ -447,7 +449,8 @@ bool Client::TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &
 #define RANGE_INVENTORY 2
 
 // Spread the item to any available slots
-bool Client::SpreadToSlots(int16_t id, int8_t amount, int16_t damage, int8_t preferredRange) {
+bool Client::SpreadToSlots([[maybe_unused]] int16_t id, [[maybe_unused]] int8_t amount, [[maybe_unused]] int16_t damage, [[maybe_unused]] int8_t preferredRange) {
+	/*
     if ((preferredRange == RANGE_HOTBAR) || (preferredRange == RANGE_DEFAULT)) {
         for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST; i++) {
             if (TryToPutInSlot(i, id, amount, damage)) {
@@ -463,6 +466,7 @@ bool Client::SpreadToSlots(int16_t id, int8_t amount, int16_t damage, int8_t pre
             }
         }
     }
+	*/
 
     // If there are still items left, inventory is full
     return false;
@@ -507,6 +511,7 @@ bool Client::Give(std::vector<uint8_t> &pResponse, int16_t item, int8_t amount, 
 bool Client::UpdateInventory(std::vector<uint8_t> &pResponse, Int3 targetBlockPosition) {
 	World* world = Betrock::Server::Instance().GetWorld(player->dimension);
 	std::vector<Item> v;
+	std::vector<Item> otherSlots;
 	switch(activeWindowType) {
 		case INVENTORY_CHEST:
 		{
@@ -514,8 +519,10 @@ bool Client::UpdateInventory(std::vector<uint8_t> &pResponse, Int3 targetBlockPo
 			if (!te) return false;
 			ChestTile* ct = dynamic_cast<ChestTile*>(te);
 			if (!ct) return false;
-			for (auto &item : ct->GetInventory()) v.push_back(item);
-			//for (auto &item : player->inventory) v.push_back(item);
+			otherSlots = ct->inventory.GetLinearSlots();
+			v.insert(v.end(), otherSlots.begin(), otherSlots.end());
+			otherSlots = player->inventory.GetLinearSlots();
+			v.insert(v.end(), otherSlots.begin(), otherSlots.end());
 			break;
 		}
 		case INVENTORY_NONE:
@@ -523,9 +530,12 @@ bool Client::UpdateInventory(std::vector<uint8_t> &pResponse, Int3 targetBlockPo
 			// Crafting slot cannot be controlled by the server-side
 			// however, the client still expects it to be sent
 			v.push_back(Item{-1,0,0});
-			for (auto &item : player->crafting) v.push_back(item);
-			for (auto &item : player->armor) v.push_back(item);
-			for (auto &item : player->inventory) v.push_back(item);
+			otherSlots = player->craftingSlots.GetLinearSlots();
+			v.insert(v.end(), otherSlots.begin(), otherSlots.end());
+			otherSlots = player->armorSlots.GetLinearSlots();
+			v.insert(v.end(), otherSlots.begin(), otherSlots.end());
+			otherSlots = player->inventory.GetLinearSlots();
+			v.insert(v.end(), otherSlots.begin(), otherSlots.end());
 			break;
 	}
     
@@ -542,12 +552,12 @@ void Client::ChangeHeldItem(std::vector<uint8_t> &pResponse, int16_t slotId) {
 
 // Get the hotbar slot the client currently has selected
 int16_t Client::GetHotbarSlot() {
-    return INVENTORY_HOTBAR + currentHotbarSlot;
+    return currentHotbarSlot;
 }
 
 // Get the currently held item of the client
 Item Client::GetHeldItem() {
-    return player->inventory[GetHotbarSlot()];
+    return player->inventory.GetSlot(Int2{INVENTORY_HOTBAR_ROW, currentHotbarSlot});
 }
 
 // TODO: Implement Right-clicking
@@ -571,6 +581,7 @@ void Client::ClickedSlot(
 	
 	// Only handle Player inventory for now
 	if (windowId == 0) {
+		/*
 		slotId -= 9;
 		// Shift Click Behavior
 		if (shift) {
@@ -595,6 +606,7 @@ void Client::ClickedSlot(
 			player->inventory[slotId] = hoveringItem;
 			hoveringItem = temp;
 		}
+		*/
 		lastClickedSlot = slotId;
 	}
 	/*
@@ -659,16 +671,9 @@ void Client::ClickedSlot(
 
 // Clear the clients inventory
 void Client::ClearInventory() {
-    for (int32_t i = 0; i < INVENTORY_CRAFTING_SIZE; ++i) {
-        player->crafting[i] = Item{-1, 0, 0};
-    }
-    for (int32_t i = 0; i < INVENTORY_ARMOR_SIZE; ++i) {
-        player->armor[i] = Item{-1, 0, 0};
-    }
-    // Fill inventory with empty slots
-    for (int32_t i = 0; i < INVENTORY_MAIN_SIZE; ++i) {
-        player->inventory[i] = Item{-1, 0, 0};
-    }
+	player->craftingSlots.ClearSlots();
+	player->armorSlots.ClearSlots();
+	player->inventory.ClearSlots();
 }
 
 // Check if the currently held item can be decremented
@@ -682,7 +687,7 @@ bool Client::CanDecrementHotbar() {
 
 // Decrement the held item by 1
 void Client::DecrementHotbar(std::vector<uint8_t> &pResponse) {
-    Item* i = &player->inventory[GetHotbarSlot()];
+    Item* i = player->inventory.GetSlotRef(Int2{INVENTORY_HOTBAR_ROW, GetHotbarSlot()});
 	// TODO: This is bad. Investigate making items better.
 	if (IsHoe(i->id)) {
 		// Damage Tool
@@ -708,19 +713,19 @@ void Client::OpenWindow(int8_t type) {
     windowIndex++;
     switch(type) {
         case INVENTORY_CHEST:
-            Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Chest", INVENTORY_CHEST_SIZE);
+            Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Chest", INVENTORY_CHEST_ROWS*INVENTORY_CHEST_COLS);
             break;
         case INVENTORY_CHEST_LARGE:
-            Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Large chest", INVENTORY_CHEST_LARGE_SIZE);
+            Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Large chest", INVENTORY_CHEST_LARGE_ROWS*INVENTORY_CHEST_COLS);
             break;
         case INVENTORY_CRAFTING_TABLE:
-            Respond::OpenWindow(response, windowIndex, INVENTORY_CRAFTING_TABLE, "", INVENTORY_CRAFTING_TABLE_SIZE);
+            Respond::OpenWindow(response, windowIndex, INVENTORY_CRAFTING_TABLE, "", INVENTORY_3x3*INVENTORY_3x3);
             break;
         case INVENTORY_FURNACE:
-            Respond::OpenWindow(response, windowIndex, INVENTORY_FURNACE, "", INVENTORY_FURNACE_SIZE);
+            Respond::OpenWindow(response, windowIndex, INVENTORY_FURNACE, "", INVENTORY_FURNACE_COLS);
             break;
         case INVENTORY_DISPENSER:
-            Respond::OpenWindow(response, windowIndex, INVENTORY_DISPENSER, "", INVENTORY_DISPENSER_SIZE);
+            Respond::OpenWindow(response, windowIndex, INVENTORY_DISPENSER, "", INVENTORY_3x3*INVENTORY_3x3);
             break;
         default:
             windowIndex--;
@@ -787,14 +792,15 @@ void Client::SendPlayerEntity(std::vector<uint8_t> &resp, Client* c, Player* p) 
 		c->GetHeldItem().damage
 	);
 
-	for (int32_t i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
-		if (p->armor[i].id > 0) {
+	for (int32_t i = 0; i < INVENTORY_MAIN_ARMOR_COLS; i++) {
+		std::vector<Item> slots = p->armorSlots.GetLinearSlots();
+		if (slots[i].id > BLOCK_AIR) {
 			Respond::EntityEquipment(
 				resp,
 				p->entityId,
 				0,
-				p->armor[i].id,
-				p->armor[i].damage
+				slots[i].id,
+				slots[i].damage
 			);
 		}
 	}

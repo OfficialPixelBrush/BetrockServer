@@ -37,11 +37,12 @@ class SignTile : public TileEntity {
 
 class ChestTile : public TileEntity {
     public:
-        std::array<Item,INVENTORY_CHEST_SIZE> inventory;
+        Inventory inventory = Inventory(INVENTORY_CHEST);
 
-        ChestTile(Int3 pPosition, const std::array<Item,INVENTORY_CHEST_SIZE>& pInv = {})
+        ChestTile(Int3 pPosition, const Inventory& pInv = Inventory(INVENTORY_CHEST))
             : TileEntity(pPosition, TILEENTITY_CHEST), inventory(pInv) {}
-        void SetInventory(std::array<Item,INVENTORY_CHEST_SIZE> pInv) { this->inventory = pInv; }
+    /*
+        void SetInventory(Inventory pInv) { this->inventory = pInv; }
         std::array<Item,INVENTORY_CHEST_SIZE> GetInventory() { return inventory; }
         void SetSlot(int8_t pSlot, Item pItem) {
             inventory[size_t(pSlot)] = pItem;
@@ -49,6 +50,7 @@ class ChestTile : public TileEntity {
         Item GetSlot(int8_t pSlot) { 
             return inventory[size_t(pSlot)];
         }
+    */
 };
 
 class MobSpawnerTile : public TileEntity {

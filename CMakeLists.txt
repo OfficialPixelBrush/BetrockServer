@@ -90,6 +90,7 @@ add_executable(
     src/misc/commands/command.cpp
     src/misc/commands/commandManager.cpp
     src/misc/gamerules.cpp
+    src/misc/inventory.cpp
     #src/misc/lighting.cpp
     src/misc/sysinfo.cpp
 

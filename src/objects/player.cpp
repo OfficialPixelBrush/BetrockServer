@@ -66,6 +66,7 @@ void Player::Save() {
 	root->Put(std::make_shared<ShortNbtTag>("HurtTime",0));
 	root->Put(std::make_shared<ShortNbtTag>("AttackTime",0));
 
+    /*
 	auto nbtInventory = std::make_shared<ListNbtTag>("Inventory");
 	root->Put(nbtInventory);
 
@@ -98,6 +99,7 @@ void Player::Save() {
             )
         );
     }
+    */
 
 	// Yeet to file
     std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
@@ -159,6 +161,7 @@ bool Player::Load() {
         health = healthTag->GetData();
 
     // Get the players saved inventory
+    /*
     std::shared_ptr<ListNbtTag> inventoryList = std::dynamic_pointer_cast<ListNbtTag>(root->Get("Inventory"));
     for (size_t i = 0; i < inventoryList->GetNumberOfTags(); i++) {
         auto slot = std::dynamic_pointer_cast<CompoundNbtTag>(inventoryList->Get(i));
@@ -194,6 +197,7 @@ bool Player::Load() {
             };
         }
     }
+    */
     return true;
 }
 

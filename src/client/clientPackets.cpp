@@ -404,7 +404,10 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	if (!CanDecrementHotbar()) return false;
 
 	// Check if the server-side inventory item is valid
-	Item currentItem = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
+	Item currentItem = player->inventory.GetSlot(Int2{
+		INVENTORY_HOTBAR_ROW,
+		currentHotbarSlot
+	});
 	
 	// Special handling for Slabs
 	if (
