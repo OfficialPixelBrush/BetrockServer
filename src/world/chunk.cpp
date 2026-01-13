@@ -1,4 +1,6 @@
 #include "chunk.h"
+#include "inventory.h"
+#include "tileEntity.h"
 
 int8_t Chunk::GetHeightValue(uint8_t x, uint8_t z) { return this->heightMap[(z & 15) << 4 | (x & 15)]; }
 
@@ -294,6 +296,7 @@ TileEntity *Chunk::GetTileEntity(Int3 pos) {
 			return ts.get();
 		}
 	}
+	std::cerr << "No tile entity found!\n";
 	return nullptr;
 }
 
@@ -332,21 +335,29 @@ std::shared_ptr<CompoundNbtTag> Chunk::GetAsNbt() {
 	auto tileEntitiesNbt = std::make_shared<ListNbtTag>("TileEntities");
 	level->Put(tileEntitiesNbt);
 	for (auto &te : tileEntities) {
-		auto subtag = std::make_shared<CompoundNbtTag>("TileEntities");
-		// Shared between all tile entities
-		subtag->Put(std::make_shared<IntNbtTag>("x", te->position.x));
-		subtag->Put(std::make_shared<IntNbtTag>("y", te->position.y));
-		subtag->Put(std::make_shared<IntNbtTag>("z", te->position.z));
-		subtag->Put(std::make_shared<StringNbtTag>("id", te->type));
-		// TODO: Add NBT Writeability to the TEs themselves
+		auto teTag = std::make_shared<CompoundNbtTag>("");
+		// Unique Data
 		if (te->type == TILEENTITY_SIGN) {
 			auto sign = static_cast<SignTile *>(te.get());
-			subtag->Put(std::make_shared<StringNbtTag>("Text1", sign->lines[0]));
-			subtag->Put(std::make_shared<StringNbtTag>("Text2", sign->lines[1]));
-			subtag->Put(std::make_shared<StringNbtTag>("Text3", sign->lines[2]));
-			subtag->Put(std::make_shared<StringNbtTag>("Text4", sign->lines[3]));
+			sign->GetAsNbt(teTag);
 		}
-		tileEntitiesNbt->Put(subtag);
+		if (te->type == TILEENTITY_CHEST) {
+			auto chest = static_cast<ChestTile *>(te.get());
+			chest->GetAsNbt(teTag);
+		}
+		if (te->type == TILEENTITY_MOBSPAWNER) {
+			auto mobSpawner = static_cast<MobSpawnerTile *>(te.get());
+			mobSpawner->GetAsNbt(teTag);
+		}
+		if (te->type == TILEENTITY_DISPENSER) {
+			auto dispenser = static_cast<DispenserTile *>(te.get());
+			dispenser->GetAsNbt(teTag);
+		}
+		if (te->type == TILEENTITY_FURNACE) {
+			auto furnace = static_cast<FurnaceTile *>(te.get());
+			furnace->GetAsNbt(teTag);
+		}
+		tileEntitiesNbt->Put(teTag);
 	}
 	return root;
 }
@@ -410,6 +421,7 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundNbtTag> readRoot) {
 			int32_t y = yTag->GetData();
 			int32_t z = zTag->GetData();
 			std::string type = typeTag->GetData();
+			// TODO: Make TEs do this themselves
 			if (type == TILEENTITY_SIGN) {
 				std::array<std::string, 4> lines;
 				auto textLineTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("Text1"));
@@ -424,7 +436,51 @@ void Chunk::ReadFromNbt(std::shared_ptr<CompoundNbtTag> readRoot) {
 				textLineTag = std::dynamic_pointer_cast<StringNbtTag>(teNbtTag->Get("Text4"));
 				if (textLineTag)
 					lines[3] = textLineTag->GetData();
+				std::cout << "Sign added at " << Int3{x, y, z} << "\n";
 				AddTileEntity(std::make_unique<SignTile>(Int3{x, y, z}, lines));
+				continue;
+			}
+			if (type == TILEENTITY_CHEST) {
+				Inventory inv;
+    			std::shared_ptr<ListNbtTag> inventoryList = std::dynamic_pointer_cast<ListNbtTag>(root->Get("Items"));
+				if (!inventoryList)
+					continue;
+				InventoryRow nbtInv = InventoryRow(INVENTORY_CHEST_TOTAL);
+    			for (size_t i = 0; i < inventoryList->GetNumberOfTags(); i++) {
+					auto slot = std::dynamic_pointer_cast<CompoundNbtTag>(inventoryList->Get(i));
+					[[maybe_unused]] int8_t  slotNumber = 0;
+					[[maybe_unused]] int16_t itemId = -1;
+					[[maybe_unused]] int8_t  itemCount = 0;
+					[[maybe_unused]] int16_t itemDamage = 0;
+					
+					auto slotTag = std::dynamic_pointer_cast<ByteNbtTag>(slot->Get("Slot"));
+					if (slotTag)
+						slotNumber = slotTag->GetData();
+					auto itemIdTag = std::dynamic_pointer_cast<ShortNbtTag>(slot->Get("id"));
+					if (itemIdTag)
+						itemId = itemIdTag->GetData();
+					auto itemCountTag = std::dynamic_pointer_cast<ByteNbtTag>(slot->Get("Count"));
+					if (itemCountTag)
+						itemCount = itemCountTag->GetData();
+					auto itemDamageTag = std::dynamic_pointer_cast<ShortNbtTag>(slot->Get("Damage"));
+					if (itemDamageTag)
+						itemDamage = itemDamageTag->GetData();
+
+					Item newItem = Item{
+						itemId,
+						itemCount,
+						itemDamage
+					};
+					inv.SetSlot(
+						Int2{
+							slotNumber % INVENTORY_CHEST_COLS,
+							slotNumber % INVENTORY_CHEST_ROWS
+						},
+						newItem
+					);
+				}
+				std::cout << "Chest added at " << Int3{x, y, z} << "\n";
+				AddTileEntity(std::make_unique<ChestTile>(Int3{x, y, z}, inv));
 				continue;
 			}
 		}

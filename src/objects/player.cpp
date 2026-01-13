@@ -1,5 +1,6 @@
 #include "player.h"
 #include "client.h"
+#include "inventory.h"
 #include <cstdint>
 
 // Get the players velocity
@@ -78,8 +79,10 @@ void Player::Save() {
     int slotId = 0;
 
     for (auto& ivs : nbtInv.GetLinearSlots()) {
-        if (ivs.id == SLOT_EMPTY)
+        if (ivs.id == SLOT_EMPTY) {
+            slotId++;
             continue;
+        }
         nbtInventory->Put(
             NbtItem(
                 slotId++,
@@ -93,8 +96,10 @@ void Player::Save() {
     // Armor slots in NBT order
     slotId = 100; // Starts at boots, goes up to helmet
     for (auto& i : armorSlots.GetLinearSlots()) {
-        if (i.id == SLOT_EMPTY)
+        if (i.id == SLOT_EMPTY) {
+            slotId++;
             continue;
+        }
         nbtInventory->Put(
             NbtItem(
                 slotId++,
@@ -167,7 +172,7 @@ bool Player::Load() {
     // Get the players saved inventory
     std::shared_ptr<ListNbtTag> inventoryList = std::dynamic_pointer_cast<ListNbtTag>(root->Get("Inventory"));
     // This approach is a little hacky, but it works
-    InventoryRow nbtInv = InventoryRow(INVENTORY_MAIN_ROWS * INVENTORY_MAIN_COLS);
+    InventoryRow nbtInv = InventoryRow(INVENTORY_MAIN_TOTAL);
     for (size_t i = 0; i < inventoryList->GetNumberOfTags(); i++) {
         auto slot = std::dynamic_pointer_cast<CompoundNbtTag>(inventoryList->Get(i));
         [[maybe_unused]] int8_t  slotNumber = 0;

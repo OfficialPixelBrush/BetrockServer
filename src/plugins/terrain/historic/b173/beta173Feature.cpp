@@ -201,7 +201,7 @@ bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
 		}
 	}
 
-	//std::cout << pos << std::endl;
+	std::cout << pos << std::endl;
 
 	// Try placing up to 2 chests
 	for (int32_t chestAttempt = 0; chestAttempt < 2; ++chestAttempt) {
@@ -527,7 +527,7 @@ bool Beta173Feature::GenerateSugarcane(World *world, JavaRandom *rand, Int3 pos)
 	for (int32_t i = 0; i < 20; ++i) {
 		int32_t xOffset = pos.x + rand->nextInt(4) - rand->nextInt(4);
 		int32_t zOffset = pos.z + rand->nextInt(4) - rand->nextInt(4);
-		if (world->GetBlockType(Int3{xOffset, pos.y, zOffset}) == BLOCK_AIR &&
+		if (world->GetBlockType(Int3{xOffset, pos.y, zOffset}) == BLOCK_AIR && 
 			(world->GetBlockType(Int3{xOffset - 1, pos.y - 1, zOffset}) == BLOCK_WATER_STILL ||
 			 world->GetBlockType(Int3{xOffset - 1, pos.y - 1, zOffset}) == BLOCK_WATER_FLOWING ||
 			 world->GetBlockType(Int3{xOffset + 1, pos.y - 1, zOffset}) == BLOCK_WATER_STILL ||

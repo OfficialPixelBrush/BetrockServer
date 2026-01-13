@@ -1,5 +1,6 @@
 #include "client.h"
 
+#include "helper.h"
 #include "server.h"
 #include <cstdint>
 
@@ -475,12 +476,19 @@ bool Client::UpdateInventory(std::vector<uint8_t> &pResponse, Int3 targetBlockPo
 		case INVENTORY_CHEST:
 		{
 			TileEntity* te = world->GetTileEntity(targetBlockPosition);
-			if (!te) return false;
+			if (!te) {
+				std::cerr << "No tile entity! " << BlockToChunkPosition(targetBlockPosition) << "\n";
+				BlockToChunkPosition(targetBlockPosition);
+				return false;
+			}
 			ChestTile* ct = dynamic_cast<ChestTile*>(te);
-			if (!ct) return false;
+			if (!ct) {
+				std::cerr << "No chest tile! " << BlockToChunkPosition(targetBlockPosition) << "\n";
+				return false;
+			}
 			v.Append(ct->inventory);
-			v.Append(player->inventory);
-			v.Append(player->hotbarSlots);
+			//v.Append(player->inventory);
+			//v.Append(player->hotbarSlots);
 			break;
 		}
 		case INVENTORY_NONE:
