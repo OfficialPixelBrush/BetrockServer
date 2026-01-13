@@ -41,16 +41,6 @@ class ChestTile : public TileEntity {
 
         ChestTile(Int3 pPosition, const Inventory& pInv = Inventory(INVENTORY_CHEST))
             : TileEntity(pPosition, TILEENTITY_CHEST), inventory(pInv) {}
-    /*
-        void SetInventory(Inventory pInv) { this->inventory = pInv; }
-        std::array<Item,INVENTORY_CHEST_SIZE> GetInventory() { return inventory; }
-        void SetSlot(int8_t pSlot, Item pItem) {
-            inventory[size_t(pSlot)] = pItem;
-        }
-        Item GetSlot(int8_t pSlot) { 
-            return inventory[size_t(pSlot)];
-        }
-    */
 };
 
 class MobSpawnerTile : public TileEntity {

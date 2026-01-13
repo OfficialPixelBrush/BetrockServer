@@ -66,40 +66,44 @@ void Player::Save() {
 	root->Put(std::make_shared<ShortNbtTag>("HurtTime",0));
 	root->Put(std::make_shared<ShortNbtTag>("AttackTime",0));
 
-    /*
 	auto nbtInventory = std::make_shared<ListNbtTag>("Inventory");
 	root->Put(nbtInventory);
 
-    for (int32_t i = 0; i < INVENTORY_MAIN_SIZE; i++) {
-        Item item = inventory[i];
-        if (item.id == SLOT_EMPTY) {
+    // Player Inventory slots in NBT order
+    Inventory nbtInv = Inventory();
+    nbtInv.Append(hotbarSlots);
+    nbtInv.Append(inventory.GetRow(0));
+    nbtInv.Append(inventory.GetRow(1));
+    nbtInv.Append(inventory.GetRow(2));
+    int slotId = 0;
+
+    for (auto& ivs : nbtInv.GetLinearSlots()) {
+        if (ivs.id == SLOT_EMPTY)
             continue;
-        }
         nbtInventory->Put(
             NbtItem(
-                InventoryMappingLocalToNbt(INVENTORY_SECTION_MAIN, i),
-                item.id,
-                item.amount,
-                item.damage
+                slotId++,
+                ivs.id,
+                ivs.amount,
+                ivs.damage
             )
         );
     }
 
-    for (int32_t i = 0; i < INVENTORY_ARMOR_SIZE; i++) {
-        Item item = armor[i];
-        if (item.id == SLOT_EMPTY) {
+    // Armor slots in NBT order
+    slotId = 100; // Starts at boots, goes up to helmet
+    for (auto& i : armorSlots.GetLinearSlots()) {
+        if (i.id == SLOT_EMPTY)
             continue;
-        }
         nbtInventory->Put(
             NbtItem(
-                InventoryMappingLocalToNbt(INVENTORY_SECTION_ARMOR, i),
-                item.id,
-                item.amount,
-                item.damage
+                slotId++,
+                i.id,
+                i.amount,
+                i.damage
             )
         );
     }
-    */
 
 	// Yeet to file
     std::filesystem::path dirPath = Betrock::GlobalConfig::Instance().Get("level-name");
@@ -161,8 +165,9 @@ bool Player::Load() {
         health = healthTag->GetData();
 
     // Get the players saved inventory
-    /*
     std::shared_ptr<ListNbtTag> inventoryList = std::dynamic_pointer_cast<ListNbtTag>(root->Get("Inventory"));
+    // This approach is a little hacky, but it works
+    InventoryRow nbtInv = InventoryRow(INVENTORY_MAIN_ROWS * INVENTORY_MAIN_COLS);
     for (size_t i = 0; i < inventoryList->GetNumberOfTags(); i++) {
         auto slot = std::dynamic_pointer_cast<CompoundNbtTag>(inventoryList->Get(i));
         [[maybe_unused]] int8_t  slotNumber = 0;
@@ -183,44 +188,20 @@ bool Player::Load() {
         if (itemDamageTag)
             itemDamage = itemDamageTag->GetData();
 
+        Item newItem = Item{
+            itemId,
+            itemCount,
+            itemDamage
+        };
+
         if (slotNumber >= 100) {
-            armor[InventoryMappingNbtToLocal(INVENTORY_SECTION_ARMOR, slotNumber)] = {
-                itemId,
-                itemCount,
-                itemDamage
-            };
+            armorSlots.SetSlot(slotNumber, newItem);
+        } else if (slotNumber <= 8) {
+            hotbarSlots.SetSlot(slotNumber, newItem);
         } else {
-            inventory[InventoryMappingNbtToLocal(INVENTORY_SECTION_MAIN, slotNumber)] = {
-                itemId,
-                itemCount,
-                itemDamage
-            };
+            nbtInv.SetSlot(slotNumber - INVENTORY_MAIN_HOTBAR_COLS, newItem);
         }
     }
-    */
+    inventory.SetLinearSlots(INVENTORY_MAIN_COLS, nbtInv.GetLinearSlots());
     return true;
-}
-
-int8_t Player::InventoryMappingLocalToNbt(INVENTORY_SECTION section, int8_t slotId) {
-    switch(section) {
-        case INVENTORY_SECTION_MAIN:
-            return slotId;
-        case INVENTORY_SECTION_ARMOR:
-            return slotId+100;
-        default:
-        case INVENTORY_SECTION_CRAFTING:
-            return 0;
-    }
-}
-
-int8_t Player::InventoryMappingNbtToLocal(INVENTORY_SECTION section, int8_t slotId) {
-    switch(section) {
-        case INVENTORY_SECTION_MAIN:
-            return slotId;
-        case INVENTORY_SECTION_ARMOR:
-            return slotId-100;
-        default:
-        case INVENTORY_SECTION_CRAFTING:
-            return 0;
-    }
 }

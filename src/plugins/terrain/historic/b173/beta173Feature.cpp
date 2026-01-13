@@ -201,7 +201,7 @@ bool Beta173Feature::GenerateDungeon(World *world, JavaRandom *rand, Int3 pos) {
 		}
 	}
 
-	std::cout << pos << std::endl;
+	//std::cout << pos << std::endl;
 
 	// Try placing up to 2 chests
 	for (int32_t chestAttempt = 0; chestAttempt < 2; ++chestAttempt) {

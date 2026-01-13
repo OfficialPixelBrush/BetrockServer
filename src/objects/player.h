@@ -19,8 +19,6 @@ enum INVENTORY_SECTION {
 
 class Player : public Entity {
     private:
-        int8_t InventoryMappingLocalToNbt(INVENTORY_SECTION section, int8_t slot);
-        int8_t InventoryMappingNbtToLocal(INVENTORY_SECTION section, int8_t slot);
     public:
         std::string username = "";
 
@@ -43,6 +41,7 @@ class Player : public Entity {
         Inventory craftingSlots = Inventory(INVENTORY_MAIN_CRAFTING);
         InventoryRow armorSlots = InventoryRow(INVENTORY_MAIN_ARMOR_COLS);
         Inventory inventory = Inventory(INVENTORY_MAIN);
+        InventoryRow hotbarSlots = InventoryRow(INVENTORY_MAIN_HOTBAR_COLS);
 
         Player(int32_t& pEntityId, Vec3 pPosition, int8_t pDimension, std::string pWorld, Vec3 pSpawnPosition, int8_t pSpawnDimension, std::string pSpawnWorld)
             : Entity(pEntityId, pPosition, pDimension, pWorld),

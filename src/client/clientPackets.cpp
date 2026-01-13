@@ -84,21 +84,16 @@ bool Client::HandleLoginRequest(World* world) {
 
 	if (firstJoin) {
 		// Place the player at spawn
-		// TODO: Search for a block for the player to spawn on
 		player->position = Int3ToVec3(spawnPoint);
-
 		// Give starter items
-		Give(response,ITEM_PICKAXE_DIAMOND);
-		Give(response,ITEM_AXE_DIAMOND);
-		Give(response,ITEM_SHOVEL_DIAMOND);
-		Give(response,BLOCK_STONE);
-		Give(response,BLOCK_COBBLESTONE);
-		Give(response,BLOCK_PLANKS);
-	} else {
-		// TODO: Remove this once player saving is brought back
-		player->position = Int3ToVec3(spawnPoint);
-		UpdateInventory(response);
+		Give(ITEM_PICKAXE_DIAMOND);
+		Give(ITEM_AXE_DIAMOND);
+		Give(ITEM_SHOVEL_DIAMOND);
+		Give(BLOCK_STONE);
+		Give(BLOCK_COBBLESTONE);
+		Give(BLOCK_PLANKS);
 	}
+	UpdateInventory(response);
 
 	SendPlayerEntity(broadcastOthersResponse, this, player.get());
 
@@ -301,7 +296,8 @@ bool Client::HandlePlayerDigging(World* world) {
 			if (!player->creativeMode) {
 				item = GetDrop(item);
 			}
-			Give(response,item.id,item.amount,item.damage);
+			Give(item);
+			UpdateInventory(response);
 		}
 		// Special handling for multi-block blocks
 		if (blockType == BLOCK_DOOR_WOOD ||
@@ -404,10 +400,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	if (!CanDecrementHotbar()) return false;
 
 	// Check if the server-side inventory item is valid
-	Item currentItem = player->inventory.GetSlot(Int2{
-		INVENTORY_HOTBAR_ROW,
-		currentHotbarSlot
-	});
+	Item currentItem = GetHeldItem();
 	
 	// Special handling for Slabs
 	if (

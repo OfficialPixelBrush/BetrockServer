@@ -3,6 +3,8 @@
 #include <string>
 #include <sstream>
 #include "blocks.h"
+#include "items.h"
+#include "labels.h"
 
 #define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH_X 16
@@ -17,12 +19,12 @@
 
 // Item
 struct Item {
-    int16_t id = -1;
+    int16_t id = ITEM_INVALID;
     int8_t  amount = 0;
     int16_t damage = 0; // Also known as metadata
 
     friend std::ostream& operator<<(std::ostream& os, const Item& i) {
-        os << "(" << int32_t(i.id) << ":" << int32_t(i.damage) << "x" << int32_t(i.amount) << ")";
+        os << "(" << IdToLabel(i.id) << ": " << int32_t(i.damage) << " x" << int32_t(i.amount) << ")";
         return os;
     }
     

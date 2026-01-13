@@ -14,13 +14,11 @@ bool NoDrop(Item item) {
 
 // Returns the items that're dropped when a block is destroyed
 Item GetDrop(Item item) {
-	if (NoDrop(item)) {
-		return Item{SLOT_EMPTY, 0, 0};
-	}
+	if (NoDrop(item))
+		return Item{};
 	int16_t damage = item.damage;
-	if (!KeepDamageOnDrop(item.id)) {
+	if (!KeepDamageOnDrop(item.id))
 		item.damage = 0;
-	}
 	// By default, give back one of the same block
 	switch (item.id) {
 	case BLOCK_CROP_WHEAT:

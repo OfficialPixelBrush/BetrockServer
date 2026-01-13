@@ -416,60 +416,26 @@ void Client::Respawn(std::vector<uint8_t> &pResponse) {
 	}
 }
 
-// Attempt to put an item into a slot
-bool Client::TryToPutInSlot([[maybe_unused]] int16_t slot, [[maybe_unused]] int16_t &id, [[maybe_unused]] int8_t &amount, [[maybe_unused]] int16_t &damage) {
-	/*
-    // First, try to stack into existing slots
-    if (player->inventory[slot].id == id && player->inventory[slot].damage == damage) {
-        // Skip the slot if its full
-        if (player->inventory[slot].amount >= MAX_STACK) {
-            return false;
-        }
-        // If we fill the slot, we're done
-        if (player->inventory[slot].amount + amount <= MAX_STACK) {
-            player->inventory[slot].amount += amount;
-            return true;
-        }
-        // If we fill it but items remain, keep going
-        amount -= int8_t(MAX_STACK - player->inventory[slot].amount);
-        player->inventory[slot].amount = MAX_STACK;
-        return false;
-    }
-    // Secondly, try to stack into empty slots
-    if (player->inventory[slot].id == SLOT_EMPTY) {
-        player->inventory[slot] = { id, amount, damage };
-        return true;
-    }
-	*/
-    return false;
-}
-
-#define RANGE_DEFAULT 0
-#define RANGE_HOTBAR 1
-#define RANGE_INVENTORY 2
+enum SpreadRange {
+	RANGE_DEFAULT = 0,
+	RANGE_HOTBAR = 1,
+	RANGE_INVENTORY = 2
+};
 
 // Spread the item to any available slots
-bool Client::SpreadToSlots([[maybe_unused]] int16_t id, [[maybe_unused]] int8_t amount, [[maybe_unused]] int16_t damage, [[maybe_unused]] int8_t preferredRange) {
-	/*
+bool Client::SpreadToSlots(Item& item, [[maybe_unused]] int8_t preferredRange) {
     if ((preferredRange == RANGE_HOTBAR) || (preferredRange == RANGE_DEFAULT)) {
-        for (int8_t i = INVENTORY_HOTBAR; i <= INVENTORY_HOTBAR_LAST; i++) {
-            if (TryToPutInSlot(i, id, amount, damage)) {
-                return true;
-            }
-        }
+		if (player->hotbarSlots.SpreadItem(item))
+			return true;
     }
 
     if ((preferredRange == RANGE_INVENTORY) || (preferredRange == RANGE_DEFAULT)) {
-        for (int8_t i = INVENTORY_ROW_1; i <= INVENTORY_ROW_LAST; i++) {
-            if (TryToPutInSlot(i, id, amount, damage)) {
-                return true;
-            }
-        }
+		if (player->inventory.SpreadItem(item))
+			return true;
     }
-	*/
 
     // If there are still items left, inventory is full
-    return false;
+    return item.amount <= 0;
 }
 
 // Get the Players Orientation along a cardinal direction
@@ -489,29 +455,25 @@ int8_t Client::GetPlayerOrientation() {
 }
 
 // Give the player the passed item
-bool Client::Give(std::vector<uint8_t> &pResponse, int16_t item, int8_t amount, int16_t damage) {
-    // Amount is not specified
-    if (amount == -1) {
-        if (item < BLOCK_MAX) {
-            amount = MAX_STACK;
-        } else {
-            amount = 1;
-        }
-    }
-    // Look for empty slot
-    SpreadToSlots(item,amount,damage);
-    //inventory[slotId] = Item { item,amount,damage };
-    // TODO: This is a horrible solution, please find something better,
-    // like checking if the inventory was changed, and only then sending out an UpdateInventory
-    UpdateInventory(pResponse);
-    return true;
+bool Client::Give(Item item) {
+	// TODO: Figure out a better way for this
+	if (item.amount < 0) {
+		if (item.id < BLOCK_MAX) 
+			item.amount = MAX_STACK;
+		else
+		 	item.amount = 1;
+	}
+    return SpreadToSlots(item);
+}
+
+bool Client::Give(int16_t id, int8_t amount, int16_t damage) {
+	return Give(Item{id,amount,damage});
 }
 
 // Update the clients shown inventory
 bool Client::UpdateInventory(std::vector<uint8_t> &pResponse, Int3 targetBlockPosition) {
 	World* world = Betrock::Server::Instance().GetWorld(player->dimension);
-	std::vector<Item> v;
-	std::vector<Item> otherSlots;
+	Inventory v = Inventory();
 	switch(activeWindowType) {
 		case INVENTORY_CHEST:
 		{
@@ -519,27 +481,24 @@ bool Client::UpdateInventory(std::vector<uint8_t> &pResponse, Int3 targetBlockPo
 			if (!te) return false;
 			ChestTile* ct = dynamic_cast<ChestTile*>(te);
 			if (!ct) return false;
-			otherSlots = ct->inventory.GetLinearSlots();
-			v.insert(v.end(), otherSlots.begin(), otherSlots.end());
-			otherSlots = player->inventory.GetLinearSlots();
-			v.insert(v.end(), otherSlots.begin(), otherSlots.end());
+			v.Append(ct->inventory);
+			v.Append(player->inventory);
+			v.Append(player->hotbarSlots);
 			break;
 		}
 		case INVENTORY_NONE:
 		default:
-			// Crafting slot cannot be controlled by the server-side
+			// The Crafting result slot cannot be controlled by the server-side
 			// however, the client still expects it to be sent
-			v.push_back(Item{-1,0,0});
-			otherSlots = player->craftingSlots.GetLinearSlots();
-			v.insert(v.end(), otherSlots.begin(), otherSlots.end());
-			otherSlots = player->armorSlots.GetLinearSlots();
-			v.insert(v.end(), otherSlots.begin(), otherSlots.end());
-			otherSlots = player->inventory.GetLinearSlots();
-			v.insert(v.end(), otherSlots.begin(), otherSlots.end());
+			v.Append(InventoryRow(1)); // Defaults to 1 empty slot
+			v.Append(player->craftingSlots);
+			v.Append(player->armorSlots);
+			v.Append(player->inventory);
+			v.Append(player->hotbarSlots);
 			break;
 	}
     
-    Respond::WindowItems(pResponse, windowIndex, v);
+    Respond::WindowItems(pResponse, windowIndex, v.GetLinearSlots());
     return true;
 }
 
@@ -557,7 +516,7 @@ int16_t Client::GetHotbarSlot() {
 
 // Get the currently held item of the client
 Item Client::GetHeldItem() {
-    return player->inventory.GetSlot(Int2{INVENTORY_HOTBAR_ROW, currentHotbarSlot});
+    return player->hotbarSlots.GetSlot(currentHotbarSlot);
 }
 
 // TODO: Implement Right-clicking
@@ -687,7 +646,7 @@ bool Client::CanDecrementHotbar() {
 
 // Decrement the held item by 1
 void Client::DecrementHotbar(std::vector<uint8_t> &pResponse) {
-    Item* i = player->inventory.GetSlotRef(Int2{INVENTORY_HOTBAR_ROW, GetHotbarSlot()});
+    Item* i = player->hotbarSlots.GetSlotRef(GetHotbarSlot());
 	// TODO: This is bad. Investigate making items better.
 	if (IsHoe(i->id)) {
 		// Damage Tool
@@ -719,13 +678,13 @@ void Client::OpenWindow(int8_t type) {
             Respond::OpenWindow(response, windowIndex, INVENTORY_CHEST, "Large chest", INVENTORY_CHEST_LARGE_ROWS*INVENTORY_CHEST_COLS);
             break;
         case INVENTORY_CRAFTING_TABLE:
-            Respond::OpenWindow(response, windowIndex, INVENTORY_CRAFTING_TABLE, "", INVENTORY_3x3*INVENTORY_3x3);
+            Respond::OpenWindow(response, windowIndex, INVENTORY_CRAFTING_TABLE, "", INVENTORY_3x3);
             break;
         case INVENTORY_FURNACE:
             Respond::OpenWindow(response, windowIndex, INVENTORY_FURNACE, "", INVENTORY_FURNACE_COLS);
             break;
         case INVENTORY_DISPENSER:
-            Respond::OpenWindow(response, windowIndex, INVENTORY_DISPENSER, "", INVENTORY_3x3*INVENTORY_3x3);
+            Respond::OpenWindow(response, windowIndex, INVENTORY_DISPENSER, "", INVENTORY_3x3);
             break;
         default:
             windowIndex--;
