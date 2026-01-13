@@ -25,7 +25,7 @@ class Respond {
         static void PlayerPosition(std::vector<uint8_t> &response, Player* player);
         static void PlayerPositionLook(std::vector<uint8_t> &response, Player* player);
         static void PlayerDigging(std::vector<uint8_t> &response, int8_t status, Int3 position, int8_t face);
-        static void PlayerBlockPlacement(std::vector<uint8_t> &response, Int3 position, int8_t direction, int16_t id, int8_t amount, int16_t damage);
+        static void PlayerBlockPlacement(std::vector<uint8_t> &response, Int3 position, int8_t direction, Item& item);
         static void Animation(std::vector<uint8_t> &response, int32_t entityId, int8_t animation);
         static void EntityAction(std::vector<uint8_t> &response, int32_t entityId, uint8_t action);
         static void NamedEntitySpawn(std::vector<uint8_t> &response, int32_t& entityId, std::string username, Int3 position, int8_t yaw, int8_t pitch, int16_t currentItem);
@@ -44,7 +44,7 @@ class Respond {
         static void Soundeffect(std::vector<uint8_t> &response, int32_t sound, Int3 position, int32_t extra);
         static void OpenWindow(std::vector<uint8_t> &response, int8_t windowId, uint8_t type, std::string name, int8_t size);
         static void CloseWindow(std::vector<uint8_t> &response, int8_t windowId);
-        static void SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slot, int16_t itemId, int8_t itemCount, int16_t itemUses);
+        static void SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slot, Item& item);
         static void WindowItems(std::vector<uint8_t> &response, int8_t window, std::vector<Item> payload);
         static void UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::array<std::string, 4> lines);
         static void UpdateSign(std::vector<uint8_t> &response, Int3 pos, std::string line1, std::string line2, std::string line3, std::string line4);

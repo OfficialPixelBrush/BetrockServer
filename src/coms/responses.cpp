@@ -91,15 +91,15 @@ void Respond::PlayerDigging(std::vector<uint8_t> &response, int8_t status, Int3 
     response.push_back(face);
 }
 
-void Respond::PlayerBlockPlacement(std::vector<uint8_t> &response, Int3 position, int8_t direction, int16_t id, int8_t amount, int16_t damage) {
+void Respond::PlayerBlockPlacement(std::vector<uint8_t> &response, Int3 position, int8_t direction, Item& item) {
     response.push_back((uint8_t)Packet::PlayerBlockPlacement);
     AppendIntegerToVector(response, position.x);
     response.push_back(int8_t(position.y));
     AppendIntegerToVector(response, position.z);
     response.push_back(direction);
-    AppendShortToVector(response, id);
-    response.push_back(amount);
-    AppendShortToVector(response, damage);
+    AppendShortToVector(response, item.id);
+    response.push_back(item.amount);
+    AppendShortToVector(response, item.damage);
 }
 
 void Respond::Animation(std::vector<uint8_t> &response, int32_t entityId, int8_t animation) {
@@ -262,13 +262,13 @@ void Respond::CloseWindow(std::vector<uint8_t> &response, int8_t windowId) {
     response.push_back((uint8_t)windowId);
 }
 
-void Respond::SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slot, int16_t item, int8_t amount, int16_t damage) {
+void Respond::SetSlot(std::vector<uint8_t> &response, int8_t window, int16_t slot, Item& item) {
     response.push_back((uint8_t)Packet::SetSlot);
     response.push_back(window);
     AppendShortToVector(response,slot);
-    AppendShortToVector(response,item);
-    response.push_back(amount);
-    AppendShortToVector(response,damage);
+    AppendShortToVector(response,item.id);
+    response.push_back(item.amount);
+    AppendShortToVector(response,item.damage);
 }
 
 void Respond::WindowItems(std::vector<uint8_t> &response, int8_t window, std::vector<Item> payload) {

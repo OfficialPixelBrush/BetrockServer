@@ -95,9 +95,10 @@ bool InventoryRow::AddItem(int32_t column, Item& item) {
     // No items to spread, win
     if (item.amount <= 0)
         return true;
+    int32_t maxItemStack = GetMaxStack(item.id);
     // Slot is empty, we can just put the item in, win
     if (slots[column].id == SLOT_EMPTY) {
-        int32_t toAdd = std::min(MAX_STACK, int32_t(item.amount));
+        int32_t toAdd = std::min(maxItemStack, int32_t(item.amount));
         slots[column].id     = item.id;
         slots[column].damage = item.damage;
         slots[column].amount = toAdd;
@@ -108,10 +109,10 @@ bool InventoryRow::AddItem(int32_t column, Item& item) {
     if (slots[column].id != item.id || slots[column].damage != item.damage)
         return false;
     // If the slot is already full, fail
-    if (slots[column].amount >= MAX_STACK)
+    if (slots[column].amount >= maxItemStack)
         return false;
     // Add together, win
-    int32_t canAdd = MAX_STACK - slots[column].amount;
+    int32_t canAdd = maxItemStack - slots[column].amount;
     int32_t toAdd = std::min(canAdd, int32_t(item.amount));
     slots[column].id = item.id;
     slots[column].damage = item.damage;
@@ -129,9 +130,10 @@ bool InventoryRow::AddItem(int32_t column, Item& item) {
 bool InventoryRow::SpreadItem(Item& item) {
     //std::cout << "RowSpreadItem: " <<  item << std::endl;
     // Pass 1: Fill existing stacks
+    int8_t maxItemStack = GetMaxStack(item.id);
     for (int32_t i = 0; i < int32_t(slots.size()); i++) {
         if (slots[i].id == item.id && slots[i].damage == item.damage && 
-            slots[i].amount < MAX_STACK) {
+            slots[i].amount < maxItemStack) {
             AddItem(i, item);
             if (item.amount <= 0)
                 return true;

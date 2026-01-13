@@ -339,17 +339,17 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	// Since we get the players' desired block from
 	// The Server-side inventory anyways
 	int16_t id = EntryToShort(message, offset);
-	
 	//int8_t amount = 0;
 	//int16_t damage = 0;
 	if (id >= 0) {
 		EntryToByte(message, offset);
 		EntryToShort(message, offset);
-		//amount = EntryToByte(message, offset);
-		//damage = EntryToShort(message, offset);
+		//amount = 
+		//damage = 
 	}
 
-	Int3 pos = Int3{x,y,z};
+	Int3 targetPos = Int3{x,y,z};
+	Int3 pos = targetPos;
 	BlockType blockType = world->GetBlockType(pos);
 	int8_t blockMeta = world->GetBlockMeta(pos);
 	if (blockType == BLOCK_AIR) { return false; }
@@ -413,7 +413,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		// Get the block we need to place
 		BlockToFace(pos,face);
 		Block b = GetPlacedBlock(
-			world,pos,face, player->yaw, 
+			world,pos,targetPos,face, player->yaw, 
 			GetPlayerOrientation(), 
 			currentItem.id, 
 			currentItem.damage
@@ -437,10 +437,9 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	// Immediately give back the item if we're in creative mode
 	if (player->creativeMode) {
 		Respond::SetSlot(
-			response,0,GetHotbarSlot()+9,
-			currentItem.id,
-			currentItem.amount,
-			currentItem.damage
+			response,0,
+			INVENTORY_MAIN_HOTBAR_NETWORK + GetHotbarSlot(),
+			currentItem
 		);
 	} else {
 		DecrementHotbar(response);

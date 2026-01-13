@@ -46,7 +46,7 @@ enum Items : int16_t {
 	ITEM_HOE_WOOD,
 	ITEM_HOE_STONE,
 	ITEM_HOE_IRON,
-	ITEM_HOE_DIAMOMD,
+	ITEM_HOE_DIAMOND,
 	ITEM_HOE_GOLD,
 	ITEM_SEEDS_WHEAT,
 	ITEM_WHEAT,
@@ -113,10 +113,23 @@ enum Items : int16_t {
 	ITEM_COOKIE,
 	ITEM_MAP,
 	ITEM_SHEARS,
-	ITEM_MAX,
 	ITEM_RECORD_13 = 2256,
-	ITEM_RECORD_CAT = 2257
+	ITEM_RECORD_CAT = 2257,
+	ITEM_MAX,
 };
 
 bool IsHoe(int16_t id);
 bool CanPlace(int16_t id);
+bool IsHoe(int16_t id);
+bool IsSword(int16_t id);
+bool IsPickaxe(int16_t id);
+bool IsAxe(int16_t id);
+bool IsShovel(int16_t id);
+bool IsWeapon(int16_t id);
+bool IsTool(int16_t id);
+bool CanDamage(int16_t id);
+bool IsThrowable(int16_t id);
+bool IsItem(int16_t id);
+bool IsBlock(int16_t id);
+int16_t GetDamage(int16_t id);
+int32_t GetMaxStack(int16_t id);

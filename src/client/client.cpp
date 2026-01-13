@@ -458,10 +458,7 @@ int8_t Client::GetPlayerOrientation() {
 bool Client::Give(Item item) {
 	// TODO: Figure out a better way for this
 	if (item.amount < 0) {
-		if (item.id < BLOCK_MAX) 
-			item.amount = MAX_STACK;
-		else
-		 	item.amount = 1;
+		item.amount = GetMaxStack(item.id);
 	}
     return SpreadToSlots(item);
 }
@@ -660,7 +657,12 @@ void Client::DecrementHotbar(std::vector<uint8_t> &pResponse) {
 			i->damage = 0;
 		}
 	}
-	Respond::SetSlot(pResponse, 0, GetHotbarSlot()+9, i->id, i->amount, i->damage);
+	Respond::SetSlot(
+		pResponse, 
+		0, 
+		INVENTORY_MAIN_HOTBAR_NETWORK + GetHotbarSlot(), 
+		*i
+	);
 }
 
 // Check if the passed chunk position is visible to the client
