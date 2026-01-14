@@ -250,7 +250,7 @@ bool GeneratorInfdev20100327::PopulateChunk(Int2 chunkPos) {
 	for (oreZ = 0; oreZ < chunkPos.y; ++oreZ) {
 		oreY = chunkZOffset + rand.nextInt(16);
 		oreX = chunkPos.x + rand.nextInt(16);
-		// new WorldGenTrees();
+		// Generate Trees
 		int32_t heightValue = world->GetHeightValue(Int2{oreY, oreX});
 		int32_t var7 = oreY + 2;
 		int32_t blockY = oreX + 2;
