@@ -1,6 +1,11 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
+set(CMAKE_C_FLAGS "-m32 -march=i486 -mno-mmx -mno-sse -O2 -mfpmath=387")
+set(CMAKE_CXX_FLAGS "-m32 -march=i486 -mno-mmx -mno-sse -O2 -mfpmath=387 -std=c++23")
+set(CMAKE_EXE_LINKER_FLAGS "-m32 -static -static-libgcc -static-libstdc++")
+
+
 project(BetrockServer VERSION 0.3.1)
 
 set(CMAKE_CXX_STANDARD 23)
@@ -9,11 +14,11 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-# This could be funny to do in the future :p
-#set(CMAKE_C_FLAGS "-m32 -march=pentium -static")
-#set(CMAKE_CXX_FLAGS "-m32 -march=pentium -static")
-#set(CMAKE_EXE_LINKER_FLAGS "-static")
+set(LUA_LIBRARY /usr/lib/liblua.a)
+set(LUA_INCLUDE_DIR /usr/include/lua5.4)
+set(DEFLATE_LIBRARY /home/torben/libdeflate/build/libdeflate.a)
 
+find_package(Threads REQUIRED)
 find_package(Lua REQUIRED)
 
 file(COPY "${CMAKE_SOURCE_DIR}/src/scripts/"
@@ -166,9 +171,12 @@ target_compile_options(BetrockServer PRIVATE
 
 target_link_libraries(
     BetrockServer
-    deflate
-    ${LUA_LIBRARIES}
+    ${DEFLATE_LIBRARY}
+    ${LUA_LIBRARY}
     Threads::Threads
+    atomic
+    -static-libgcc
+    -static-libstdc++
 )
 
 # Detect CPU architecture
