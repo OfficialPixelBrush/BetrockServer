@@ -17,10 +17,11 @@ class NoiseSimplex : public NoiseGenerator {
 							{1, 0, -1}, {-1, 0, -1}, {0, 1, 1},	 {0, -1, 1},  {0, 1, -1}, {0, -1, -1}};
 	double skewing = 0.5 * (sqrt(3.0) - 1.0);
 	double unskewing = (3.0 - sqrt(3.0)) / 6.0;
+	void InitPermTable(JavaRandom& rand);
 
   public:
 	NoiseSimplex();
-	NoiseSimplex(JavaRandom *rand);
+	NoiseSimplex(JavaRandom& rand);
 	void GenerateNoise(std::vector<double> &noiseField, double xOffset, double yOffset, int32_t width, int32_t height,
 					   double xScale, double yScale, double amplitude);
 };

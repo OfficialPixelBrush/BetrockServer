@@ -1,34 +1,51 @@
 #include "noisePerlin.h"
 
-NoisePerlin::NoisePerlin() : NoisePerlin(new JavaRandom()) {}
+NoisePerlin::NoisePerlin() {
+    JavaRandom rand = JavaRandom();
+    InitPermTable(rand);
+}
 
-NoisePerlin::NoisePerlin(JavaRandom *rand) {
-	this->xCoord = rand->nextDouble() * 256.0;
-	this->yCoord = rand->nextDouble() * 256.0;
-	this->zCoord = rand->nextDouble() * 256.0;
+/**
+ * @brief Construct a new Noise Perlin object
+ * 
+ * @param rand The random number generator that should be used
+ */
+NoisePerlin::NoisePerlin(JavaRandom& rand) {
+    InitPermTable(rand);
+}
+
+void NoisePerlin::InitPermTable(JavaRandom& rand) {
+	this->xCoord = rand.nextDouble() * 256.0;
+	this->yCoord = rand.nextDouble() * 256.0;
+	this->zCoord = rand.nextDouble() * 256.0;
 
 	for (int32_t i = 0; i < 256; ++i) {
 		this->permutations[i] = i;
 	}
 
 	for (int32_t i = 0; i < 256; ++i) {
-		int32_t j = rand->nextInt(256 - i) + i;
+		int32_t j = rand.nextInt(256 - i) + i;
 		std::swap(this->permutations[i], this->permutations[j]);
 		this->permutations[i + 256] = this->permutations[i];
 	}
 }
 
-// This is a rather standard implementation of "Improved Perlin Noise",
-// as described by Ken Perlin in 2002
-// This version is mainly used by the infdev generator but Beta still implements and uses it.
+/**
+ * @brief This is a rather standard implementation of "Improved Perlin Noise",
+ *        as described by Ken Perlin in 2002
+ *        This version is mainly used by the infdev generator
+ *        but Beta still implements and uses it for some things,
+ *        namely the nether
+ * 
+ * @param pos Coordinate at which to sample the noise
+ * @return Noise value
+ */
 double NoisePerlin::GenerateNoiseBase(Vec3 pos) {
 	pos.x += this->xCoord;
 	pos.y += this->yCoord;
 	pos.z += this->zCoord;
 	// The farlands are caused by this getting cast to a 32-Bit Integer.
-	// Change these int32_t to int64_t to fix the farlands,
-	// however, this will change Beta tree generation slightly
-	// due to rounding differences
+	// Change these int32_t to int64_t to fix the farlands in Infdev
 	int32_t xInt = Java::DoubleToInt32(pos.x);
 	int32_t yInt = Java::DoubleToInt32(pos.y);
 	int32_t zInt = Java::DoubleToInt32(pos.z);
@@ -70,9 +87,23 @@ double NoisePerlin::GenerateNoiseBase(Vec3 pos) {
 				  grad(this->permutations[xIndex + 1], pos.x - 1.0, pos.y - 1.0, pos.z - 1.0))));
 }
 
-double NoisePerlin::GenerateNoise(Vec2 coord) { return this->GenerateNoiseBase(Vec3{coord.x, coord.y, 0.0}); }
+double NoisePerlin::GenerateNoise(Vec2 coord) {
+    return this->GenerateNoiseBase(Vec3{coord.x, coord.y, 0.0});
+}
 
-double NoisePerlin::GenerateNoise(Vec3 coord) { return this->GenerateNoiseBase(coord); }
+double NoisePerlin::GenerateNoise(Vec3 coord) {
+    return this->GenerateNoiseBase(coord);
+}
+
+/**
+ * @brief The main noise generator employed by the Beta 1.7.3 world generator
+ * 
+ * @param noiseField the vector the noise will be written to
+ * @param offset The positional offset within the perlin noise that'll be rendered
+ * @param size The size of the volume that'll be saved the noise field
+ * @param scale The scale of the perlin noise equation
+ * @param amplitude The amplitude multiplier of the perlin noise function
+ */
 void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 								Vec3 offset, Int3 size, Vec3 scale,
                                 double amplitude) {

@@ -12,7 +12,7 @@ class Beta173Tree {
   public:
 	Beta173Tree() {};
 	virtual ~Beta173Tree() = default;
-	virtual bool Generate(World *world, JavaRandom *rand, Int3 pos, bool birch = false);
+	virtual bool Generate(World *world, JavaRandom& rand, Int3 pos, bool birch = false);
 	virtual void Configure([[maybe_unused]] double treeHeight, [[maybe_unused]] double branchLength,
 						   [[maybe_unused]] double trunkShape) {};
 };
@@ -43,7 +43,7 @@ class Beta173BigTree : public Beta173Tree {
 		AXIS_Z, // Y to Z
 		AXIS_Y  // Z to Y
 	};
-	std::unique_ptr<JavaRandom> rand;
+	JavaRandom rand = JavaRandom();
 	World *world;
 	Int3 basePos = INT3_ZERO;
 	int32_t totalHeight = 0;
@@ -72,9 +72,9 @@ class Beta173BigTree : public Beta173Tree {
 	bool CanGenerateBranchAtHeight(int32_t y);
 
   public:
-	Beta173BigTree() { this->rand = std::make_unique<JavaRandom>(); };
+	Beta173BigTree() {}
 	~Beta173BigTree() = default;
-	bool Generate(World *world, JavaRandom *rand, Int3 pos, bool birch = false);
+	bool Generate(World *world, JavaRandom& rand, Int3 pos, bool birch = false);
 	void Configure(double treeHeight, double branchLength, double trunkShape);
 };
 
@@ -86,7 +86,7 @@ class Beta173TaigaTree : public Beta173Tree {
   public:
 	Beta173TaigaTree() {};
 	~Beta173TaigaTree() = default;
-	bool Generate(World *world, JavaRandom *rand, Int3 pos, bool birch = false);
+	bool Generate(World *world, JavaRandom& rand, Int3 pos, bool birch = false);
 };
 
 /**
@@ -97,5 +97,5 @@ class Beta173TaigaAltTree : public Beta173Tree {
   public:
 	Beta173TaigaAltTree() {};
 	~Beta173TaigaAltTree() = default;
-	bool Generate(World *world, JavaRandom *rand, Int3 pos, bool birch = false);
+	bool Generate(World *world, JavaRandom& rand, Int3 pos, bool birch = false);
 };

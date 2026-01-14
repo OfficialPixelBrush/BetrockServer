@@ -5,20 +5,20 @@ GeneratorInfdev20100327::GeneratorInfdev20100327(int64_t pSeed, World *pWorld) :
 	this->seed = pSeed;
 	this->world = pWorld;
 
-	rand = std::make_unique<JavaRandom>(this->seed);
-	noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-	noiseGen2 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-	noiseGen3 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
-	noiseGen4 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
-	noiseGen5 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
-	noiseGen6 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 5);
-	mobSpawnerNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 5);
+	rand = JavaRandom(this->seed);
+	noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 16);
+	noiseGen2 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 16);
+	noiseGen3 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 8);
+	noiseGen4 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 4);
+	noiseGen5 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 4);
+	noiseGen6 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 5);
+	mobSpawnerNoise = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 5);
 }
 
 std::shared_ptr<Chunk> GeneratorInfdev20100327::GenerateChunk(Int2 chunkPos) {
 	std::shared_ptr<Chunk> c = std::make_shared<Chunk>(this->world, chunkPos);
 	c->state = ChunkState::Generating;
-	rand->setSeed(int64_t(chunkPos.x) * 341873128712L + int64_t(chunkPos.y) * 132897987541L);
+	rand.setSeed(int64_t(chunkPos.x) * 341873128712L + int64_t(chunkPos.y) * 132897987541L);
 	c->ClearChunk();
 
 	// Terrain shape generation
@@ -173,21 +173,21 @@ double GeneratorInfdev20100327::InitializeNoiseField(double var1, double var3, d
 	return var13;
 }
 
-bool GeneratorInfdev20100327::WorldGenMinableGenerate(BlockType blockType, World *pWorld, JavaRandom *pRand, int32_t var3,
+bool GeneratorInfdev20100327::WorldGenMinableGenerate(BlockType blockType, World *pWorld, JavaRandom& pRand, int32_t var3,
 													  int32_t var4, int32_t macroX) {
-	float macroZ = pRand->nextFloat() * (float)JavaMath::PI;
+	float macroZ = pRand.nextFloat() * (float)JavaMath::PI;
 	double var7 = double(float(var3 + 8) + MathHelper::sin(macroZ) * 2.0F);
 	double blockY = double(float(var3 + 8) - MathHelper::sin(macroZ) * 2.0F);
 	double world1 = double(float(macroX + 8) + MathHelper::cos(macroZ) * 2.0F);
 	double world3 = double(float(macroX + 8) - MathHelper::cos(macroZ) * 2.0F);
-	double world5 = double(var4 + pRand->nextInt(3) + 2);
-	double world7 = double(var4 + pRand->nextInt(3) + 2);
+	double world5 = double(var4 + pRand.nextInt(3) + 2);
+	double world7 = double(var4 + pRand.nextInt(3) + 2);
 
 	for (var3 = 0; var3 <= 16; ++var3) {
 		double rand0 = var7 + (blockY - var7) * (double)var3 / 16.0;
 		double rand2 = world5 + (world7 - world5) * (double)var3 / 16.0;
 		double rand4 = world1 + (world3 - world1) * (double)var3 / 16.0;
-		double rand6 = pRand->nextDouble();
+		double rand6 = pRand.nextDouble();
 		double rand8 = double(MathHelper::sin((float)var3 / 16.0F * (float)JavaMath::PI) + 1.0F) * rand6 + 1.0;
 		double var30 = double(MathHelper::sin((float)var3 / 16.0F * (float)JavaMath::PI) + 1.0F) * rand6 + 1.0;
 
@@ -210,7 +210,7 @@ bool GeneratorInfdev20100327::WorldGenMinableGenerate(BlockType blockType, World
 }
 
 bool GeneratorInfdev20100327::PopulateChunk(Int2 chunkPos) {
-	rand->setSeed(int64_t(chunkPos.x) * 318279123L + int64_t(chunkPos.y) * 919871212L);
+	rand.setSeed(int64_t(chunkPos.x) * 318279123L + int64_t(chunkPos.y) * 919871212L);
 	int32_t chunkZOffset = chunkPos.x << 4;
 	chunkPos.x = chunkPos.y << 4;
 
@@ -218,43 +218,43 @@ bool GeneratorInfdev20100327::PopulateChunk(Int2 chunkPos) {
 	int32_t oreY;
 	int32_t oreX;
 	for (chunkPos.y = 0; chunkPos.y < 20; ++chunkPos.y) {
-		oreZ = chunkZOffset + rand->nextInt(16);
-		oreY = rand->nextInt(128);
-		oreX = chunkPos.x + rand->nextInt(16);
-		WorldGenMinableGenerate(BLOCK_ORE_COAL, this->world, this->rand.get(), oreZ, oreY, oreX);
+		oreZ = chunkZOffset + rand.nextInt(16);
+		oreY = rand.nextInt(128);
+		oreX = chunkPos.x + rand.nextInt(16);
+		WorldGenMinableGenerate(BLOCK_ORE_COAL, this->world, this->rand, oreZ, oreY, oreX);
 	}
 
 	for (chunkPos.y = 0; chunkPos.y < 10; ++chunkPos.y) {
-		oreZ = chunkZOffset + rand->nextInt(16);
-		oreY = rand->nextInt(64);
-		oreX = chunkPos.x + rand->nextInt(16);
-		WorldGenMinableGenerate(BLOCK_ORE_IRON, this->world, this->rand.get(), oreZ, oreY, oreX);
+		oreZ = chunkZOffset + rand.nextInt(16);
+		oreY = rand.nextInt(64);
+		oreX = chunkPos.x + rand.nextInt(16);
+		WorldGenMinableGenerate(BLOCK_ORE_IRON, this->world, this->rand, oreZ, oreY, oreX);
 	}
 
-	if (rand->nextInt(2) == 0) {
-		chunkPos.y = chunkZOffset + rand->nextInt(16);
-		oreZ = rand->nextInt(32);
-		oreY = chunkPos.x + rand->nextInt(16);
-		WorldGenMinableGenerate(BLOCK_ORE_GOLD, this->world, this->rand.get(), chunkPos.y, oreZ, oreY);
+	if (rand.nextInt(2) == 0) {
+		chunkPos.y = chunkZOffset + rand.nextInt(16);
+		oreZ = rand.nextInt(32);
+		oreY = chunkPos.x + rand.nextInt(16);
+		WorldGenMinableGenerate(BLOCK_ORE_GOLD, this->world, this->rand, chunkPos.y, oreZ, oreY);
 	}
 
-	if (rand->nextInt(8) == 0) {
-		chunkPos.y = chunkZOffset + rand->nextInt(16);
-		oreZ = rand->nextInt(16);
-		oreY = chunkPos.x + rand->nextInt(16);
-		WorldGenMinableGenerate(BLOCK_ORE_DIAMOND, this->world, this->rand.get(), chunkPos.y, oreZ, oreY);
+	if (rand.nextInt(8) == 0) {
+		chunkPos.y = chunkZOffset + rand.nextInt(16);
+		oreZ = rand.nextInt(16);
+		oreY = chunkPos.x + rand.nextInt(16);
+		WorldGenMinableGenerate(BLOCK_ORE_DIAMOND, this->world, this->rand, chunkPos.y, oreZ, oreY);
 	}
 
 	chunkPos.y = Java::DoubleToInt32(this->mobSpawnerNoise->GenerateOctaves((double)chunkZOffset * 0.25, (double)chunkPos.x * 0.25)) << 3;
 
 	for (oreZ = 0; oreZ < chunkPos.y; ++oreZ) {
-		oreY = chunkZOffset + rand->nextInt(16);
-		oreX = chunkPos.x + rand->nextInt(16);
+		oreY = chunkZOffset + rand.nextInt(16);
+		oreX = chunkPos.x + rand.nextInt(16);
 		// new WorldGenTrees();
 		int32_t heightValue = world->GetHeightValue(Int2{oreY, oreX});
 		int32_t var7 = oreY + 2;
 		int32_t blockY = oreX + 2;
-		int32_t var10 = rand->nextInt(3) + 4;
+		int32_t var10 = rand.nextInt(3) + 4;
 		bool canPlaceTree = true;
 		if (heightValue > 0 && heightValue + var10 + 1 <= CHUNK_HEIGHT) {
 			int32_t treeY;
@@ -300,7 +300,7 @@ bool GeneratorInfdev20100327::PopulateChunk(Int2 chunkPos) {
 							for (treeY = blockY - var15; treeY <= blockY + var15; ++treeY) {
 								int32_t var17 = treeY - blockY;
 								if (((JavaMath::abs(cX1) != var15) || (JavaMath::abs(var17) != var15) ||
-									 (rand->nextInt(2) != 0 && var14 != 0)) &&
+									 (rand.nextInt(2) != 0 && var14 != 0)) &&
 									!IsOpaque(int16_t(world->GetBlockType(Int3{blockId, cX2, treeY})))) {
 									world->SetBlockTypeAndMeta(BLOCK_LEAVES, 0, Int3{blockId, cX2, treeY});
 								}

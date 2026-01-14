@@ -5,13 +5,13 @@ GeneratorInfdev20100227::GeneratorInfdev20100227(int64_t pSeed, World *pWorld) :
 	this->seed = pSeed;
 	this->world = pWorld;
 
-	rand = std::make_unique<JavaRandom>(this->seed);
-	noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-	noiseGen2 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 16);
-	noiseGen3 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 8);
-	noiseGen4 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
-	noiseGen5 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 4);
-	noiseGen6 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand.get(), 5);
+	rand = JavaRandom(this->seed);
+	noiseGen1 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 16);
+	noiseGen2 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 16);
+	noiseGen3 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 8);
+	noiseGen4 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 4);
+	noiseGen5 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 4);
+	noiseGen6 = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 5);
 }
 
 std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(Int2 chunkPos) {
@@ -45,7 +45,7 @@ std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(Int2 chunkPos) {
 					: float(this->noiseGen4.get()->GenerateOctaves(double((float)blockX * 0.25714284F),
 																	 double((float)blockZ * 0.25714284F)) *
 							  (double)noiseGen6Value);
-			int32_t terrainHeight = Java::DoubleToInt32(noiseGen1Value + 64.0F + noiseGen5Value);
+			int32_t terrainHeight = Java::FloatToInt32(noiseGen1Value + 64.0F + noiseGen5Value);
 			if ((float)this->noiseGen5.get()->GenerateOctaves((double)blockX, (double)blockZ) < 0.0F) {
 				terrainHeight = terrainHeight / 2 << 1;
 				if ((float)this->noiseGen5.get()->GenerateOctaves(double(blockX / 5), double(blockZ / 5)) < 0.0F) {
@@ -75,9 +75,9 @@ std::shared_ptr<Chunk> GeneratorInfdev20100227::GenerateChunk(Int2 chunkPos) {
 				}
 
 				// Generate Brick Pyramids
-				this->rand->setSeed(int64_t(regionX + regionZ * 13871));
-				int32_t pyramidOffsetX = (regionX << 10) + CHUNK_HEIGHT + this->rand->nextInt(512);
-				int32_t pyramidOffsetZ = (regionZ << 10) + CHUNK_HEIGHT + this->rand->nextInt(512);
+				this->rand.setSeed(int64_t(regionX + regionZ * 13871));
+				int32_t pyramidOffsetX = (regionX << 10) + CHUNK_HEIGHT + this->rand.nextInt(512);
+				int32_t pyramidOffsetZ = (regionZ << 10) + CHUNK_HEIGHT + this->rand.nextInt(512);
 				pyramidOffsetX = blockX - pyramidOffsetX;
 				pyramidOffsetZ = blockZ - pyramidOffsetZ;
 				if (pyramidOffsetX < 0)

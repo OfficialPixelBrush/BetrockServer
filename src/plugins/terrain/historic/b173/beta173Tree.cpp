@@ -10,9 +10,9 @@
  * @param birch If the tree should be birch or oak
  * @return If tree successfully generated
  */
-bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch) {
+bool Beta173Tree::Generate(World *world, JavaRandom& rand, Int3 pos, bool birch) {
 	// Decide on the tree height (birches are one block taller)
-	int32_t treeHeight = rand->nextInt(3) + 4;
+	int32_t treeHeight = rand.nextInt(3) + 4;
 	if (birch)
 		treeHeight++;
 	
@@ -67,7 +67,7 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch)
 								(
 								JavaMath::abs(xLeaf) != treeWidth ||
 								JavaMath::abs(zLeaf) != treeWidth ||
-								(rand->nextInt(2) != 0 && widthBase != 0)
+								(rand.nextInt(2) != 0 && widthBase != 0)
 							)) && !IsOpaque(
 								world->GetBlockType(offset))) {
 							world->PlaceBlock(offset, BLOCK_LEAVES, birch ? 2 : 0);
@@ -118,14 +118,14 @@ void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double 
  * @param pBirch If the tree should be birch or oak (not used for big trees)
  * @return If tree successfully generated
  */
-bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom *pRand, [[maybe_unused]] Int3 pPos, [[maybe_unused]] bool pBirch) {
+bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom& pRand, [[maybe_unused]] Int3 pPos, [[maybe_unused]] bool pBirch) {
 	this->world = pWorld;
-	int64_t seed = pRand->nextLong();
-	this->rand->setSeed(seed);
+	int64_t seed = pRand.nextLong();
+	this->rand.setSeed(seed);
 	this->basePos = pPos;
 	// If the height wasn't set, generate a new random height
 	if (this->totalHeight == 0) {
-		this->totalHeight = 5 + this->rand->nextInt(this->maximumTreeHeight);
+		this->totalHeight = 5 + this->rand.nextInt(this->maximumTreeHeight);
 	}
 
 	// Check if tree can be placed
@@ -173,9 +173,9 @@ void Beta173BigTree::GenerateBranchPositions() {
 					double radialDistance =
 						this->branchLength *
 						double(canopyRadius) *
-						(double(this->rand->nextFloat()) + 0.328);
+						(double(this->rand.nextFloat()) + 0.328);
 					// Oh hey, look! An approximation of pi!
-					double angle = double(this->rand->nextFloat()) * 2.0 * 3.14159;
+					double angle = double(this->rand.nextFloat()) * 2.0 * 3.14159;
 					int32_t branchX = MathHelper::floor_double(
 						radialDistance * double(std::sin(angle)) +
 						double(this->basePos.x) + 0.5
@@ -501,11 +501,11 @@ bool Beta173BigTree::ValidPlacement() {
  * @param pBirch If the tree should be birch or oak (not used for taiga trees)
  * @return If tree successfully generated
  */
-bool Beta173TaigaTree::Generate(World *world, JavaRandom *rand, Int3 pos, [[maybe_unused]] bool birch) {
-	int32_t var6 = rand->nextInt(5) + 7;
-	int32_t var7 = var6 - rand->nextInt(2) - 3;
+bool Beta173TaigaTree::Generate(World *world, JavaRandom& rand, Int3 pos, [[maybe_unused]] bool birch) {
+	int32_t var6 = rand.nextInt(5) + 7;
+	int32_t var7 = var6 - rand.nextInt(2) - 3;
 	int32_t var8 = var6 - var7;
-	int32_t var9 = 1 + rand->nextInt(var8 + 1);
+	int32_t var9 = 1 + rand.nextInt(var8 + 1);
 	if (pos.y >= 1 && pos.y + var6 + 1 <= CHUNK_HEIGHT) {
 		int32_t var18;
 		for (int32_t var11 = pos.y; var11 <= pos.y + 1 + var6; ++var11) {
@@ -580,11 +580,11 @@ bool Beta173TaigaTree::Generate(World *world, JavaRandom *rand, Int3 pos, [[mayb
  * @param pBirch If the tree should be birch or oak (not used for alt taiga trees)
  * @return If tree successfully generated
  */
-bool Beta173TaigaAltTree::Generate(World *world, JavaRandom *rand, Int3 pos, [[maybe_unused]] bool birch) {
-	int32_t var6 = rand->nextInt(4) + 6;
-	int32_t var7 = 1 + rand->nextInt(2);
+bool Beta173TaigaAltTree::Generate(World *world, JavaRandom& rand, Int3 pos, [[maybe_unused]] bool birch) {
+	int32_t var6 = rand.nextInt(4) + 6;
+	int32_t var7 = 1 + rand.nextInt(2);
 	int32_t var8 = var6 - var7;
-	int32_t var9 = 2 + rand->nextInt(2);
+	int32_t var9 = 2 + rand.nextInt(2);
 	if (pos.y >= 1 && pos.y + var6 + 1 <= CHUNK_HEIGHT) {
 		int32_t var11;
 		int32_t var13;
@@ -615,7 +615,7 @@ bool Beta173TaigaAltTree::Generate(World *world, JavaRandom *rand, Int3 pos, [[m
 		var11 = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
 		if ((var11 == BLOCK_GRASS || var11 == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - var6 - 1) {
 			world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
-			var21 = rand->nextInt(2);
+			var21 = rand.nextInt(2);
 			var13 = 1;
 			int8_t var22 = 0;
 
@@ -648,7 +648,7 @@ bool Beta173TaigaAltTree::Generate(World *world, JavaRandom *rand, Int3 pos, [[m
 				}
 			}
 
-			var15 = rand->nextInt(3);
+			var15 = rand.nextInt(3);
 
 			for (var16 = 0; var16 < var6 - var15; ++var16) {
 				var17 = world->GetBlockType(Int3{pos.x, pos.y + var16, pos.z});

@@ -7,12 +7,12 @@
  */
 Beta173Biome::Beta173Biome(int64_t seed) {
     // Init Biome Noise
-    auto randTemp = std::make_unique<JavaRandom>(seed * 9871L);
-    auto randHum = std::make_unique<JavaRandom>(seed * 39811L);
-    auto randWeird = std::make_unique<JavaRandom>(seed * 543321L);
-    temperatureNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randTemp.get(), 4);
-    humidityNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randHum.get(), 4);
-    weirdnessNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randWeird.get(), 2);
+    JavaRandom randTemp = JavaRandom(seed * 9871L);
+    JavaRandom randHum = JavaRandom(seed * 39811L);
+    JavaRandom randWeird = JavaRandom(seed * 543321L);
+    temperatureNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randTemp, 4);
+    humidityNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randHum, 4);
+    weirdnessNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randWeird, 2);
 }
 
 /**

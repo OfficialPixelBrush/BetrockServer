@@ -1,5 +1,5 @@
 #include "beta173Caver.h"
-Beta173Caver::Beta173Caver() { rand = std::make_unique<JavaRandom>(); }
+Beta173Caver::Beta173Caver() {}
 
 /**
  * @brief Attempts to generate a cave in the current chunk
@@ -10,14 +10,14 @@ Beta173Caver::Beta173Caver() { rand = std::make_unique<JavaRandom>(); }
  */
 void Beta173Caver::GenerateCavesForChunk(World *world, Int2 chunkPos, std::shared_ptr<Chunk> &c) {
 	int32_t carveExtent = this->carveExtentLimit;
-	this->rand->setSeed(world->seed);
-	int64_t xOffset = this->rand->nextLong() / 2L * 2L + 1L;
-	int64_t zOffset = this->rand->nextLong() / 2L * 2L + 1L;
+	this->rand.setSeed(world->seed);
+	int64_t xOffset = this->rand.nextLong() / 2L * 2L + 1L;
+	int64_t zOffset = this->rand.nextLong() / 2L * 2L + 1L;
 
 	// Iterate beyond the current chunk by 8 chunks in every direction
 	for (int32_t cXoffset = chunkPos.x - carveExtent; cXoffset <= chunkPos.x + carveExtent; ++cXoffset) {
 		for (int32_t cZoffset = chunkPos.y - carveExtent; cZoffset <= chunkPos.y + carveExtent; ++cZoffset) {
-			this->rand->setSeed(((int64_t(cXoffset) * xOffset) + (int64_t(cZoffset) * zOffset)) ^ world->seed);
+			this->rand.setSeed(((int64_t(cXoffset) * xOffset) + (int64_t(cZoffset) * zOffset)) ^ world->seed);
 			this->GenerateCaves(Int2{cXoffset, cZoffset}, chunkPos, c);
 		}
 	}
@@ -26,33 +26,33 @@ void Beta173Caver::GenerateCavesForChunk(World *world, Int2 chunkPos, std::share
 // TODO: This is only the cave generator for the overworld.
 // The one for the nether is different!
 void Beta173Caver::GenerateCaves(Int2 chunkOffset, Int2 chunkPos, std::shared_ptr<Chunk> &c) {
-	int32_t numberOfCaves = this->rand->nextInt(this->rand->nextInt(this->rand->nextInt(40) + 1) + 1);
-	if (this->rand->nextInt(15) != 0) {
+	int32_t numberOfCaves = this->rand.nextInt(this->rand.nextInt(this->rand.nextInt(40) + 1) + 1);
+	if (this->rand.nextInt(15) != 0) {
 		numberOfCaves = 0;
 	}
 
 	for (int32_t caveIndex = 0; caveIndex < numberOfCaves; ++caveIndex) {
 		Vec3 offset = VEC3_ZERO;
-		offset.x = double(chunkOffset.x * CHUNK_WIDTH_X + this->rand->nextInt(CHUNK_WIDTH_X));
-		offset.y = double(this->rand->nextInt(this->rand->nextInt(120) + 8));
-		offset.z = double(chunkOffset.y * CHUNK_WIDTH_Z + this->rand->nextInt(CHUNK_WIDTH_Z));
+		offset.x = double(chunkOffset.x * CHUNK_WIDTH_X + this->rand.nextInt(CHUNK_WIDTH_X));
+		offset.y = double(this->rand.nextInt(this->rand.nextInt(120) + 8));
+		offset.z = double(chunkOffset.y * CHUNK_WIDTH_Z + this->rand.nextInt(CHUNK_WIDTH_Z));
 		int32_t numberOfNodes = 1;
-		if (this->rand->nextInt(4) == 0) {
+		if (this->rand.nextInt(4) == 0) {
 			this->CarveCave(chunkPos, c, offset);
-			numberOfNodes += this->rand->nextInt(4);
+			numberOfNodes += this->rand.nextInt(4);
 		}
 
 		for (int32_t nodeIndex = 0; nodeIndex < numberOfNodes; ++nodeIndex) {
-			float carveYaw = this->rand->nextFloat() * (float)JavaMath::PI * 2.0F;
-			float carvePitch = (this->rand->nextFloat() - 0.5F) * 2.0F / 8.0F;
-			float tunnelRadius = this->rand->nextFloat() * 2.0F + this->rand->nextFloat();
+			float carveYaw = this->rand.nextFloat() * (float)JavaMath::PI * 2.0F;
+			float carvePitch = (this->rand.nextFloat() - 0.5F) * 2.0F / 8.0F;
+			float tunnelRadius = this->rand.nextFloat() * 2.0F + this->rand.nextFloat();
 			this->CarveCave(chunkPos, c, offset, tunnelRadius, carveYaw, carvePitch, 0, 0, 1.0);
 		}
 	}
 }
 
 void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offset) {
-	this->CarveCave(chunkPos, c, offset, 1.0F + this->rand->nextFloat() * 6.0F, 0.0F, 0.0F, -1, -1,
+	this->CarveCave(chunkPos, c, offset, 1.0F + this->rand.nextFloat() * 6.0F, 0.0F, 0.0F, -1, -1,
 					0.5);
 }
 
@@ -63,7 +63,7 @@ void Beta173Caver::CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offs
 	double chunkCenterZ = double(chunkPos.y * CHUNK_WIDTH_Z + 8);
 	float var21 = 0.0F;
 	float var22 = 0.0F;
-	std::unique_ptr<JavaRandom> rand2 = std::make_unique<JavaRandom>(this->rand->nextLong());
+	std::unique_ptr<JavaRandom> rand2 = std::make_unique<JavaRandom>(this->rand.nextLong());
 	if (tunnelLength <= 0) {
 		int32_t var24 = this->carveExtentLimit * 16 - 16;
 		tunnelLength = var24 - rand2->nextInt(var24 / 4);

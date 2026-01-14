@@ -12,7 +12,7 @@
  */
 class GeneratorBeta173 : public Generator {
   private:
-	std::unique_ptr<JavaRandom> rand;
+	JavaRandom rand;
 	// Perlin Noise Generators
 	std::unique_ptr<NoiseOctaves<NoisePerlin>> lowNoiseGen;
 	std::unique_ptr<NoiseOctaves<NoisePerlin>> highNoiseGen;

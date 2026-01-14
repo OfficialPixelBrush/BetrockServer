@@ -6,7 +6,7 @@
  */
 class GeneratorInfdev20100227 : public Generator {
   private:
-	std::unique_ptr<JavaRandom> rand;
+	JavaRandom rand;
 	std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen1;
 	std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen2;
 	std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen3;
