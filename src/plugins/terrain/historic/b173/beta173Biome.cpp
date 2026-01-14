@@ -10,9 +10,9 @@ Beta173Biome::Beta173Biome(int64_t seed) {
     JavaRandom randTemp = JavaRandom(seed * 9871L);
     JavaRandom randHum = JavaRandom(seed * 39811L);
     JavaRandom randWeird = JavaRandom(seed * 543321L);
-    temperatureNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randTemp, 4);
-    humidityNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randHum, 4);
-    weirdnessNoiseGen = std::make_unique<NoiseOctaves<NoiseSimplex>>(randWeird, 2);
+    temperatureNoiseGen = NoiseOctaves<NoiseSimplex>(randTemp, 4);
+    humidityNoiseGen = NoiseOctaves<NoiseSimplex>(randHum, 4);
+    weirdnessNoiseGen = NoiseOctaves<NoiseSimplex>(randWeird, 2);
 }
 
 /**
@@ -34,10 +34,10 @@ void Beta173Biome::GenerateBiomeMap(std::vector<Biome>& biomeMap, std::vector<do
 	// Get noise values
 	// We found an oversight in the original code! max.z is NEVER used for getting the noise range!
 	// Although this is irrelevant for all intents and purposes, as max.x always equals max.z
-	this->temperatureNoiseGen->GenerateOctaves(temperature, double(blockPos.x), double(blockPos.y), max.x, max.x, 0.025, 0.025,
+	this->temperatureNoiseGen.GenerateOctaves(temperature, double(blockPos.x), double(blockPos.y), max.x, max.x, 0.025, 0.025,
 											   0.25);
-	this->humidityNoiseGen->GenerateOctaves(humidity, double(blockPos.x), double(blockPos.y), max.x, max.x, 0.05, 0.05, 1.0 / 3.0);
-	this->weirdnessNoiseGen->GenerateOctaves(weirdness, double(blockPos.x), double(blockPos.y), max.x, max.x, 0.25, 0.25,
+	this->humidityNoiseGen.GenerateOctaves(humidity, double(blockPos.x), double(blockPos.y), max.x, max.x, 0.05, 0.05, 1.0 / 3.0);
+	this->weirdnessNoiseGen.GenerateOctaves(weirdness, double(blockPos.x), double(blockPos.y), max.x, max.x, 0.25, 0.25,
 											 0.5882352941176471);
 	int32_t index = 0;
 
@@ -85,9 +85,9 @@ void Beta173Biome::GenerateTemperature(std::vector<double>& temperature, std::ve
 		temperature.resize(max.x * max.y, 0.0);
 	}
 
-	this->temperatureNoiseGen->GenerateOctaves(temperature, double(blockPos.x), double(blockPos.y), max.x, max.y, double(0.025F),
+	this->temperatureNoiseGen.GenerateOctaves(temperature, double(blockPos.x), double(blockPos.y), max.x, max.y, double(0.025F),
 											   double(0.025F), 0.25);
-	this->weirdnessNoiseGen->GenerateOctaves(weirdness, double(blockPos.x), double(blockPos.y), max.x, max.y, 0.25, 0.25,
+	this->weirdnessNoiseGen.GenerateOctaves(weirdness, double(blockPos.x), double(blockPos.y), max.x, max.y, 0.25, 0.25,
 											 0.5882352941176471);
 	int32_t index = 0;
 

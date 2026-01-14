@@ -14,14 +14,14 @@ GeneratorBeta173::GeneratorBeta173(int64_t pSeed, World *pWorld) : Generator(pSe
 	rand = JavaRandom(this->seed);
 
 	// Init Terrain Noise
-	lowNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 16);
-	highNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 16);
-	selectorNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 8);
-	sandGravelNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 4);
-	stoneNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 4);
-	continentalnessNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 10);
-	depthNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 16);
-	treeDensityNoiseGen = std::make_unique<NoiseOctaves<NoisePerlin>>(rand, 8);
+	lowNoiseGen = NoiseOctaves<NoisePerlin>(rand, 16);
+	highNoiseGen = NoiseOctaves<NoisePerlin>(rand, 16);
+	selectorNoiseGen = NoiseOctaves<NoisePerlin>(rand, 8);
+	sandGravelNoiseGen = NoiseOctaves<NoisePerlin>(rand, 4);
+	stoneNoiseGen = NoiseOctaves<NoisePerlin>(rand, 4);
+	continentalnessNoiseGen = NoiseOctaves<NoisePerlin>(rand, 10);
+	depthNoiseGen = NoiseOctaves<NoisePerlin>(rand, 16);
+	treeDensityNoiseGen = NoiseOctaves<NoisePerlin>(rand, 8);
 
 	// Init Caver
 	caver = std::make_unique<Beta173Caver>();
@@ -79,13 +79,13 @@ void GeneratorBeta173::ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chun
 	this->stoneNoise.resize(256, 0.0);
 
 	// Populate noise maps
-	this->sandGravelNoiseGen->GenerateOctaves(this->sandNoise, double(chunkPos.x * CHUNK_WIDTH_X),
+	this->sandGravelNoiseGen.GenerateOctaves(this->sandNoise, double(chunkPos.x * CHUNK_WIDTH_X),
 											  double(chunkPos.y * CHUNK_WIDTH_Z), 0.0, 16, 16, 1, oneThirtySecond,
 											  oneThirtySecond, 1.0);
-	this->sandGravelNoiseGen->GenerateOctaves(this->gravelNoise, double(chunkPos.x * CHUNK_WIDTH_X), 109.0134,
+	this->sandGravelNoiseGen.GenerateOctaves(this->gravelNoise, double(chunkPos.x * CHUNK_WIDTH_X), 109.0134,
 											  double(chunkPos.y * CHUNK_WIDTH_Z), 16, 1, 16, oneThirtySecond, 1.0,
 											  oneThirtySecond);
-	this->stoneNoiseGen->GenerateOctaves(this->stoneNoise, double(chunkPos.x * CHUNK_WIDTH_X), double(chunkPos.y * CHUNK_WIDTH_Z),
+	this->stoneNoiseGen.GenerateOctaves(this->stoneNoise, double(chunkPos.x * CHUNK_WIDTH_X), double(chunkPos.y * CHUNK_WIDTH_Z),
 										 0.0, 16, 16, 1, oneThirtySecond * 2.0, oneThirtySecond * 2.0,
 										 oneThirtySecond * 2.0);
 
@@ -272,14 +272,14 @@ void GeneratorBeta173::GenerateTerrainNoise(std::vector<double> &terrainMap, Int
 	double vertScale = 684.412;
 
 	// We do this to need to generate noise as often
-	this->continentalnessNoiseGen->GenerateOctaves(this->continentalnessNoiseField, chunkPos.x, chunkPos.z, max.x, max.z, 1.121, 1.121,
+	this->continentalnessNoiseGen.GenerateOctaves(this->continentalnessNoiseField, chunkPos.x, chunkPos.z, max.x, max.z, 1.121, 1.121,
 												   0.5);
-	this->depthNoiseGen->GenerateOctaves(this->depthNoiseField, chunkPos.x, chunkPos.z, max.x, max.z, 200.0, 200.0, 0.5);
-	this->selectorNoiseGen->GenerateOctaves(this->selectorNoiseField, (double)chunkPos.x, (double)chunkPos.y, (double)chunkPos.z, max.x, max.y,
+	this->depthNoiseGen.GenerateOctaves(this->depthNoiseField, chunkPos.x, chunkPos.z, max.x, max.z, 200.0, 200.0, 0.5);
+	this->selectorNoiseGen.GenerateOctaves(this->selectorNoiseField, (double)chunkPos.x, (double)chunkPos.y, (double)chunkPos.z, max.x, max.y,
 											max.z, horiScale / 80.0, vertScale / 160.0, horiScale / 80.0);
-	this->lowNoiseGen->GenerateOctaves(this->lowNoiseField, (double)chunkPos.x, (double)chunkPos.y, (double)chunkPos.z, max.x, max.y, max.z,
+	this->lowNoiseGen.GenerateOctaves(this->lowNoiseField, (double)chunkPos.x, (double)chunkPos.y, (double)chunkPos.z, max.x, max.y, max.z,
 									   horiScale, vertScale, horiScale);
-	this->highNoiseGen->GenerateOctaves(this->highNoiseField, (double)chunkPos.x, (double)chunkPos.y, (double)chunkPos.z, max.x, max.y, max.z,
+	this->highNoiseGen.GenerateOctaves(this->highNoiseField, (double)chunkPos.x, (double)chunkPos.y, (double)chunkPos.z, max.x, max.y, max.z,
 										horiScale, vertScale, horiScale);
 	// Used to iterate 3D noise maps (low, high, selector)
 	int32_t xyzIndex = 0;
@@ -515,7 +515,7 @@ bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
 	// Determine the number of trees that should be generated
 	double fraction = 0.5;
 	int32_t treeDensitySample =
-		Java::DoubleToInt32((this->treeDensityNoiseGen->GenerateOctaves(double(blockPos.x) * fraction, double(blockPos.y) * fraction) / 8.0 +
+		Java::DoubleToInt32((this->treeDensityNoiseGen.GenerateOctaves(double(blockPos.x) * fraction, double(blockPos.y) * fraction) / 8.0 +
 			 this->rand.nextDouble() * 4.0 + 4.0) /
 			3.0);
 

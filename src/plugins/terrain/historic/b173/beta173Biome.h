@@ -10,9 +10,9 @@
 class Beta173Biome {
     private:
         // Simplex Noise Generators
-        std::unique_ptr<NoiseOctaves<NoiseSimplex>> temperatureNoiseGen;
-        std::unique_ptr<NoiseOctaves<NoiseSimplex>> humidityNoiseGen;
-        std::unique_ptr<NoiseOctaves<NoiseSimplex>> weirdnessNoiseGen;
+        NoiseOctaves<NoiseSimplex> temperatureNoiseGen;
+        NoiseOctaves<NoiseSimplex> humidityNoiseGen;
+        NoiseOctaves<NoiseSimplex> weirdnessNoiseGen;
     public:
         Beta173Biome(int64_t seed);
         void GenerateBiomeMap(std::vector<Biome>& biomeMap, std::vector<double>& temperature, std::vector<double>& humidity, std::vector<double>& weirdness, Int2 blockPos, Int2 max);

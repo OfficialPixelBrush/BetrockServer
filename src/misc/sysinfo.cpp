@@ -2,7 +2,7 @@
 
 int32_t parseLine(char *line) {
 	// This assumes that a digit will be found and the line ends in " Kb".
-	int32_t i = int32_t(strlen(line));
+	int64_t i = int64_t(strlen(line));
 	const char *p = line;
 	while (*p < '0' || *p > '9')
 		p++;
@@ -13,7 +13,7 @@ int32_t parseLine(char *line) {
 
 int32_t GetUsedMemory() { // Note: this value is in KB!
 	FILE *file = fopen("/proc/self/status", "r");
-	int32_t result = -1;
+	int64_t result = -1;
 	char line[128];
 
 	while (fgets(line, 128, file) != NULL) {
@@ -29,7 +29,7 @@ int32_t GetUsedMemory() { // Note: this value is in KB!
 // Get the number of Megabytes used by BetrockServer
 double GetUsedMemoryMB(std::string text) {
 	FILE *file = fopen("/proc/self/status", "r");
-	int32_t result = -1;
+	int64_t result = -1;
 	char line[128];
 
 	while (fgets(line, 128, file) != NULL) {

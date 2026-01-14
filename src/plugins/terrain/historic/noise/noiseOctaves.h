@@ -9,6 +9,7 @@
 
 template <typename T> class NoiseOctaves {
   public:
+	NoiseOctaves() {} // This should never be used!
 	NoiseOctaves(int32_t octaves);
 	NoiseOctaves(JavaRandom& rand, int32_t octaves);
 	// Used by infdev
