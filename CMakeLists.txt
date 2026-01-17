@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.3.1)
-
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+project(BetrockServer VERSION 0.3.1)
 
 # This could be funny to do in the future :p
 #set(CMAKE_C_FLAGS "-m32 -march=pentium -static")
