@@ -410,8 +410,8 @@ void Beta173BigTree::GenerateBranches() {
 		Int3 branchPos = this->branchStartEnd[branchIndex].pos;
 		int32_t trunkY = this->branchStartEnd[branchIndex].trunkY;
 		base.y = trunkY;
-		int32_t var6 = base.y - this->basePos.y;
-		if (this->CanGenerateBranchAtHeight(var6)) {
+		int32_t yHeight = base.y - this->basePos.y;
+		if (this->CanGenerateBranchAtHeight(yHeight)) {
 			this->DrawBlockLine(base, branchPos, BLOCK_LOG);
 		}
 	}

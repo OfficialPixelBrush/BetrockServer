@@ -14,21 +14,39 @@
  * @param b End value (t = 1.0)
  * @return Interpolated value between a and b
  */
-inline double lerp(double t, double a, double b) { return a + t * (b - a); }
-
-inline double grad(int32_t var0, double var1, double var3, double var5) {
-	var0 &= 15;
-	double var8 = var0 < 8 ? var1 : var3;
-	double var10 = var0 < 4 ? var3 : (var0 != 12 && var0 != 14 ? var5 : var1);
-	return ((var0 & 1) == 0 ? var8 : -var8) + ((var0 & 2) == 0 ? var10 : -var10);
+inline double lerp(double t, double a, double b) {
+	return a + t * (b - a);
 }
 
-// These may be very similar, dunno if this is some Java quirk
-inline double altGrad(int32_t var1, double var2, double var4) {
-	int32_t var6 = var1 & 15;
-	double var7 = double(1 - ((var6 & 8) >> 3)) * var2;
-	double var9 = var6 < 4 ? 0.0 : (var6 != 12 && var6 != 14 ? var4 : var2);
-	return ((var6 & 1) == 0 ? var7 : -var7) + ((var6 & 2) == 0 ? var9 : -var9);
+/**
+ * @brief 3D Perlin noise gradient function
+ * 
+ * @param hash Hashed lattice value
+ * @param x X of Distance Vector
+ * @param y Y of Distance Vector
+ * @param z Z of Distance Vector
+ * @return double 
+ */
+inline double grad3d(int32_t hash, double x, double y, double z) {
+	hash &= 15;
+	double u = hash < 8 ? x : y;
+	double v = hash < 4 ? y : (hash != 12 && hash != 14 ? z : x);
+	return ((hash & 1) == 0 ? u : -u) + ((hash & 2) == 0 ? v : -v);
+}
+
+/**
+ * @brief 2D Perlin noise gradient function
+ * 
+ * @param hash Hashed lattice value
+ * @param x X of Distance Vector
+ * @param y Y of Distance Vector
+ * @return double 
+ */
+inline double grad2d(int32_t hash, double x, double y) {
+	hash &= 15;
+	double u = double(1 - ((hash & 8) >> 3)) * x;
+	double v = hash < 4 ? 0.0 : (hash != 12 && hash != 14 ? y : x);
+	return ((hash & 1) == 0 ? u : -u) + ((hash & 2) == 0 ? v : -v);
 }
 
 /**

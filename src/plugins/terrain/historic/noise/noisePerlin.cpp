@@ -77,14 +77,14 @@ double NoisePerlin::GenerateNoiseBase(Vec3 pos) {
 	xIndex = this->permutations[xIndex + 1] + zIndex;
 	return lerp(
 		u,
-		lerp(v, lerp(w, grad(this->permutations[permXYZ], pos.x, pos.y, pos.z), grad(this->permutations[yIndex], pos.x - 1.0, pos.y, pos.z)),
-			 lerp(w, grad(this->permutations[permXY], pos.x, pos.y - 1.0, pos.z),
-				  grad(this->permutations[xIndex], pos.x - 1.0, pos.y - 1.0, pos.z))),
+		lerp(v, lerp(w, grad3d(this->permutations[permXYZ], pos.x, pos.y, pos.z), grad3d(this->permutations[yIndex], pos.x - 1.0, pos.y, pos.z)),
+			 lerp(w, grad3d(this->permutations[permXY], pos.x, pos.y - 1.0, pos.z),
+				  grad3d(this->permutations[xIndex], pos.x - 1.0, pos.y - 1.0, pos.z))),
 		lerp(v,
-			 lerp(w, grad(this->permutations[permXYZ + 1], pos.x, pos.y, pos.z - 1.0),
-				  grad(this->permutations[yIndex + 1], pos.x - 1.0, pos.y, pos.z - 1.0)),
-			 lerp(w, grad(this->permutations[permXY + 1], pos.x, pos.y - 1.0, pos.z - 1.0),
-				  grad(this->permutations[xIndex + 1], pos.x - 1.0, pos.y - 1.0, pos.z - 1.0))));
+			 lerp(w, grad3d(this->permutations[permXYZ + 1], pos.x, pos.y, pos.z - 1.0),
+				  grad3d(this->permutations[yIndex + 1], pos.x - 1.0, pos.y, pos.z - 1.0)),
+			 lerp(w, grad3d(this->permutations[permXY + 1], pos.x, pos.y - 1.0, pos.z - 1.0),
+				  grad3d(this->permutations[xIndex + 1], pos.x - 1.0, pos.y - 1.0, pos.z - 1.0))));
 }
 
 double NoisePerlin::GenerateNoise(Vec2 coord) {
@@ -133,12 +133,12 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
                 int32_t ba = this->permutations[b] + pz;
 
                 double x1 = lerp(u,
-                    altGrad(this->permutations[aa], fx, fz),
-                    grad(this->permutations[ba], fx - 1.0, 0.0, fz));
+                    grad2d(this->permutations[aa], fx, fz),
+                    grad3d(this->permutations[ba], fx - 1.0, 0.0, fz));
 
                 double x2 = lerp(u,
-                    grad(this->permutations[aa + 1], fx, 0.0, fz - 1.0),
-                    grad(this->permutations[ba + 1], fx - 1.0, 0.0, fz - 1.0));
+                    grad3d(this->permutations[aa + 1], fx, 0.0, fz - 1.0),
+                    grad3d(this->permutations[ba + 1], fx - 1.0, 0.0, fz - 1.0));
 
                 double result = lerp(w, x1, x2);
                 noiseField[index++] += result * invAmp;
@@ -187,20 +187,20 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
                         int32_t BB = this->permutations[B + 1] + pz;
 
                         lerpAX = lerp(u,
-                            grad(this->permutations[AA], fx, fy, fz),
-                            grad(this->permutations[BA], fx - 1.0, fy, fz));
+                            grad3d(this->permutations[AA], fx, fy, fz),
+                            grad3d(this->permutations[BA], fx - 1.0, fy, fz));
 
                         lerpBX = lerp(u,
-                            grad(this->permutations[AB], fx, fy - 1.0, fz),
-                            grad(this->permutations[BB], fx - 1.0, fy - 1.0, fz));
+                            grad3d(this->permutations[AB], fx, fy - 1.0, fz),
+                            grad3d(this->permutations[BB], fx - 1.0, fy - 1.0, fz));
 
                         lerpAY = lerp(u,
-                            grad(this->permutations[AA + 1], fx, fy, fz - 1.0),
-                            grad(this->permutations[BA + 1], fx - 1.0, fy, fz - 1.0));
+                            grad3d(this->permutations[AA + 1], fx, fy, fz - 1.0),
+                            grad3d(this->permutations[BA + 1], fx - 1.0, fy, fz - 1.0));
 
                         lerpBY = lerp(u,
-                            grad(this->permutations[AB + 1], fx, fy - 1.0, fz - 1.0),
-                            grad(this->permutations[BB + 1], fx - 1.0, fy - 1.0, fz - 1.0));
+                            grad3d(this->permutations[AB + 1], fx, fy - 1.0, fz - 1.0),
+                            grad3d(this->permutations[BB + 1], fx - 1.0, fy - 1.0, fz - 1.0));
                     }
 
                     double i1 = lerp(v, lerpAX, lerpBX);
