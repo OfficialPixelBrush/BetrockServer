@@ -28,7 +28,7 @@ class Chunk {
 	int32_t xPos, zPos;
 	std::vector<std::unique_ptr<TileEntity>> tileEntities;
 
-	void RelightBlock(int32_t var1, int32_t var2, int32_t var3);
+	void RelightBlock(int32_t x, int32_t y, int32_t z);
 	void UpdateSkylight_do(int32_t x, int32_t z);
 	void CheckSkylightNeighborHeight(int32_t x, int32_t z, int32_t height);
 	// Block* GetBlock(Int3 pos);

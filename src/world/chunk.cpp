@@ -108,7 +108,7 @@ void Chunk::RelightBlock(int32_t x, int32_t y, int32_t z) {
 		}
 
 		int32_t light = 15;
-		int32_t stopY = newY; // var10
+		int32_t stopY = newY;
 		int32_t yy = newY;
 
 		// propagate downward

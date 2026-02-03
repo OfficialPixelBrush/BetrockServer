@@ -45,8 +45,8 @@ bool Beta173Tree::Generate(World *world, JavaRandom& rand, Int3 pos, bool birch)
 		}
 
 		// Check if the bock under the source block is grass or dirt
-		BlockType rootBlock = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
-		if ((rootBlock == BLOCK_GRASS || rootBlock == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - treeHeight - 1) {
+		BlockType soilType = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
+		if ((soilType == BLOCK_GRASS || soilType == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - treeHeight - 1) {
 			// Replace the underlying block with dir
 			world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
 
@@ -477,8 +477,8 @@ int32_t Beta173BigTree::CheckIfPathClear(Int3 startPos, Int3 endPos) {
 bool Beta173BigTree::ValidPlacement() {
 	Int3 endPos = Int3{this->basePos.x, this->basePos.y + this->totalHeight - 1, this->basePos.z};
 	// Check if ground block is valid
-	BlockType blockType = this->world->GetBlockType(Int3{this->basePos.x, this->basePos.y - 1, this->basePos.z});
-	if (blockType != BLOCK_GRASS && blockType != BLOCK_DIRT)
+	BlockType soilType = this->world->GetBlockType(Int3{this->basePos.x, this->basePos.y - 1, this->basePos.z});
+	if (soilType != BLOCK_GRASS && soilType != BLOCK_DIRT)
 		return false;
 	int32_t clearLength = this->CheckIfPathClear(this->basePos, endPos);
 	// Path isn't clear
@@ -502,24 +502,24 @@ bool Beta173BigTree::ValidPlacement() {
  * @return If tree successfully generated
  */
 bool Beta173TaigaTree::Generate(World *world, JavaRandom& rand, Int3 pos, [[maybe_unused]] bool birch) {
-	int32_t var6 = rand.nextInt(5) + 7;
-	int32_t var7 = var6 - rand.nextInt(2) - 3;
-	int32_t var8 = var6 - var7;
-	int32_t var9 = 1 + rand.nextInt(var8 + 1);
-	if (pos.y >= 1 && pos.y + var6 + 1 <= CHUNK_HEIGHT) {
-		int32_t var18;
-		for (int32_t var11 = pos.y; var11 <= pos.y + 1 + var6; ++var11) {
-			// bool var12 = true;
-			if (var11 - pos.y < var7) {
-				var18 = 0;
+	int32_t height = rand.nextInt(5) + 7;
+	int32_t trunkHeight  = height - rand.nextInt(2) - 3;
+	int32_t leavesHeight = height - trunkHeight ;
+	int32_t maxLeafRadius = 1 + rand.nextInt(leavesHeight + 1);
+	// Check if tree can be placed
+	if (pos.y >= 1 && pos.y + height + 1 <= CHUNK_HEIGHT) {
+		int32_t currentLeafRadius;
+		for (int32_t y = pos.y; y <= pos.y + 1 + height; ++y) {
+			if (y - pos.y < trunkHeight ) {
+				currentLeafRadius = 0;
 			} else {
-				var18 = var9;
+				currentLeafRadius = maxLeafRadius;
 			}
 
-			for (int32_t var13 = pos.x - var18; var13 <= pos.x + var18; ++var13) {
-				for (int32_t var14 = pos.z - var18; var14 <= pos.z + var18; ++var14) {
-					if (var11 >= 0 && var11 < CHUNK_HEIGHT) {
-						BlockType blockType = world->GetBlockType(Int3{var13, var11, var14});
+			for (int32_t x = pos.x - currentLeafRadius; x <= pos.x + currentLeafRadius; ++x) {
+				for (int32_t z = pos.z - currentLeafRadius; z <= pos.z + currentLeafRadius; ++z) {
+					if (y >= 0 && y < CHUNK_HEIGHT) {
+						BlockType blockType = world->GetBlockType(Int3{x, y, z});
 						if (blockType != BLOCK_AIR && blockType != BLOCK_LEAVES) {
 							return false;
 						}
@@ -530,36 +530,37 @@ bool Beta173TaigaTree::Generate(World *world, JavaRandom& rand, Int3 pos, [[mayb
 			}
 		}
 
-		BlockType blockType = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
-		if ((blockType == BLOCK_GRASS || blockType == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - var6 - 1) {
+		// Check if we're attempting to place it on a valid soil block
+		BlockType soilType = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
+		if ((soilType == BLOCK_GRASS || soilType == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - height - 1) {
 			world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
-			var18 = 0;
+			currentLeafRadius = 0;
+			// Generate the leaves
+			for (int32_t y = pos.y + height; y >= pos.y + trunkHeight ; --y) {
+				for (int32_t x = pos.x - currentLeafRadius; x <= pos.x + currentLeafRadius; ++x) {
+					int32_t xOffset = x - pos.x;
 
-			for (int32_t var13 = pos.y + var6; var13 >= pos.y + var7; --var13) {
-				for (int32_t var14 = pos.x - var18; var14 <= pos.x + var18; ++var14) {
-					int32_t var15 = var14 - pos.x;
-
-					for (int32_t var16 = pos.z - var18; var16 <= pos.z + var18; ++var16) {
-						int32_t var17 = var16 - pos.z;
-						if ((JavaMath::abs(var15) != var18 || JavaMath::abs(var17) != var18 || var18 <= 0) &&
-							!IsOpaque(world->GetBlockType(Int3{var14, var13, var16}))) {
+					for (int32_t z = pos.z - currentLeafRadius; z <= pos.z + currentLeafRadius; ++z) {
+						int32_t zOffset = z - pos.z;
+						if ((JavaMath::abs(xOffset) != currentLeafRadius || JavaMath::abs(zOffset) != currentLeafRadius || currentLeafRadius <= 0) &&
+							!IsOpaque(world->GetBlockType(Int3{x, y, z}))) {
 							// Spruce leaves
-							world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{var14, var13, var16});
+							world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{x, y, z});
 						}
 					}
 				}
 
-				if (var18 >= 1 && var13 == pos.y + var7 + 1) {
-					--var18;
-				} else if (var18 < var9) {
-					++var18;
+				if (currentLeafRadius >= 1 && y == pos.y + trunkHeight  + 1) {
+					--currentLeafRadius;
+				} else if (currentLeafRadius < maxLeafRadius) {
+					++currentLeafRadius;
 				}
 			}
-
-			for (int32_t var13 = 0; var13 < var6 - 1; ++var13) {
-				blockType = world->GetBlockType(Int3{pos.x, pos.y + var13, pos.z});
-				if (blockType == BLOCK_AIR || blockType == BLOCK_LEAVES) {
-					world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{pos.x, pos.y + var13, pos.z});
+			// Place the trunk
+			for (int32_t logY = 0; logY < height - 1; ++logY) {
+				BlockType type = world->GetBlockType(Int3{pos.x, pos.y + logY, pos.z});
+				if (type == BLOCK_AIR || type == BLOCK_LEAVES) {
+					world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{pos.x, pos.y + logY, pos.z});
 				}
 			}
 
@@ -581,28 +582,23 @@ bool Beta173TaigaTree::Generate(World *world, JavaRandom& rand, Int3 pos, [[mayb
  * @return If tree successfully generated
  */
 bool Beta173TaigaAltTree::Generate(World *world, JavaRandom& rand, Int3 pos, [[maybe_unused]] bool birch) {
-	int32_t var6 = rand.nextInt(4) + 6;
-	int32_t var7 = 1 + rand.nextInt(2);
-	int32_t var8 = var6 - var7;
-	int32_t var9 = 2 + rand.nextInt(2);
-	if (pos.y >= 1 && pos.y + var6 + 1 <= CHUNK_HEIGHT) {
-		int32_t var11;
-		int32_t var13;
-		int32_t var15;
-		int32_t var21;
-		for (var11 = pos.y; var11 <= pos.y + 1 + var6; ++var11) {
-			// bool var12 = true;
-			if (var11 - pos.y < var7) {
-				var21 = 0;
-			} else {
-				var21 = var9;
+	int32_t height = rand.nextInt(4) + 6;
+	int32_t trunkHeight = 1 + rand.nextInt(2);
+	int32_t leavesHeight = height - trunkHeight;
+	int32_t maxLeafRadius = 2 + rand.nextInt(2);
+	// Check if tree can be placed
+	if (pos.y >= 1 && pos.y + height + 1 <= CHUNK_HEIGHT) {
+		for (int32_t y = pos.y; y <= pos.y + 1 + height; ++y) {
+			int32_t currentLeafRadius = maxLeafRadius;
+			if (y - pos.y < trunkHeight) {
+				currentLeafRadius = 0;
 			}
 
-			for (var13 = pos.x - var21; var13 <= pos.x + var21; ++var13) {
-				for (int32_t var14 = pos.z - var21; var14 <= pos.z + var21; ++var14) {
-					if (var11 >= 0 && var11 < CHUNK_HEIGHT) {
-						var15 = world->GetBlockType(Int3{var13, var11, var14});
-						if (var15 != 0 && var15 != BLOCK_LEAVES) {
+			for (int32_t xOffset = pos.x - currentLeafRadius; xOffset <= pos.x + currentLeafRadius; ++xOffset) {
+				for (int32_t zOffset = pos.z - currentLeafRadius; zOffset <= pos.z + currentLeafRadius; ++zOffset) {
+					if (y >= 0 && y < CHUNK_HEIGHT) {
+						BlockType type = world->GetBlockType(Int3{xOffset, y, zOffset});
+						if (type != 0 && type != BLOCK_LEAVES) {
 							return false;
 						}
 					} else {
@@ -612,48 +608,46 @@ bool Beta173TaigaAltTree::Generate(World *world, JavaRandom& rand, Int3 pos, [[m
 			}
 		}
 	
-		var11 = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
-		if ((var11 == BLOCK_GRASS || var11 == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - var6 - 1) {
+		// Check if we're attempting to place it on a valid soil block
+		BlockType soilType = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
+		if ((soilType == BLOCK_GRASS || soilType == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - height - 1) {
 			world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
-			var21 = rand.nextInt(2);
-			var13 = 1;
-			int8_t var22 = 0;
+			int32_t currentLeafRadius = rand.nextInt(2);
+			int32_t leafRadiusIncrementThreshold = 1;
+			int32_t leafRadiusSwitch = 0;
 
-			int32_t var16;
-			int32_t var17;
-			for (var15 = 0; var15 <= var8; ++var15) {
-				var16 = pos.y + var6 - var15;
+			for (int32_t leafLayer  = 0; leafLayer  <= leavesHeight; ++leafLayer ) {
+				int32_t yLevel = pos.y + height - leafLayer ;
 
-				for (var17 = pos.x - var21; var17 <= pos.x + var21; ++var17) {
-					int32_t var18 = var17 - pos.x;
+				for (int32_t x = pos.x - currentLeafRadius; x <= pos.x + currentLeafRadius; ++x) {
+					int32_t xOffset = x - pos.x;
 
-					for (int32_t var19 = pos.z - var21; var19 <= pos.z + var21; ++var19) {
-						int32_t var20 = var19 - pos.z;
-						if ((JavaMath::abs(var18) != var21 || JavaMath::abs(var20) != var21 || var21 <= 0) &&
-							!IsOpaque(world->GetBlockType(Int3{var17, var16, var19}))) {
-							world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{var17, var16, var19});
+					for (int32_t z = pos.z - currentLeafRadius; z <= pos.z + currentLeafRadius; ++z) {
+						int32_t zOffset = z - pos.z;
+						if ((JavaMath::abs(xOffset) != currentLeafRadius || JavaMath::abs(zOffset) != currentLeafRadius || currentLeafRadius <= 0) &&
+							!IsOpaque(world->GetBlockType(Int3{x, yLevel, z}))) {
+							world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{x, yLevel, z});
 						}
 					}
 				}
 
-				if (var21 >= var13) {
-					var21 = var22;
-					var22 = 1;
-					++var13;
-					if (var13 > var9) {
-						var13 = var9;
+				if (currentLeafRadius >= leafRadiusIncrementThreshold) {
+					currentLeafRadius = leafRadiusSwitch;
+					leafRadiusSwitch = 1;
+					++leafRadiusIncrementThreshold;
+					if (leafRadiusIncrementThreshold > maxLeafRadius) {
+						leafRadiusIncrementThreshold = maxLeafRadius;
 					}
 				} else {
-					++var21;
+					++currentLeafRadius;
 				}
 			}
 
-			var15 = rand.nextInt(3);
-
-			for (var16 = 0; var16 < var6 - var15; ++var16) {
-				var17 = world->GetBlockType(Int3{pos.x, pos.y + var16, pos.z});
-				if (var17 == BLOCK_AIR || var17 == BLOCK_LEAVES) {
-					world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{pos.x, pos.y + var16, pos.z});
+			int32_t logOffset = rand.nextInt(3);
+			for (int32_t logY = 0; logY < height - logOffset; ++logY) {
+				BlockType type = world->GetBlockType(Int3{pos.x, pos.y + logY, pos.z});
+				if (type == BLOCK_AIR || type == BLOCK_LEAVES) {
+					world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{pos.x, pos.y + logY, pos.z});
 				}
 			}
 
