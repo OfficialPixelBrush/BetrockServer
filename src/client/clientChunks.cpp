@@ -105,6 +105,17 @@ void Client::SendNewChunks() {
 		return;
 	}
 
+    // TODO: Possibly not needed? Test!
+    Int2 center = Int2{int(player->position.x) >> 4, int(player->position.z) >> 4};
+    std::sort(newChunks.begin(), newChunks.end(),
+        [&center](const Int2 &a, const Int2 &b) {
+            int da = std::abs(a.x - center.x) + std::abs(a.y - center.y);
+            int db = std::abs(b.x - center.x) + std::abs(b.y - center.y);
+            return da < db; // smaller distance first
+        }
+    );
+
+
 	for (auto it = newChunks.begin(); it != newChunks.end() && sentThisCycle > 0; ) {
         // Skip chunks that aren't fully populated yet
         if (!wm->world.IsChunkPopulated(Int2{it->x, it->y})) {
