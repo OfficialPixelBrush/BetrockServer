@@ -1,10 +1,10 @@
 #pragma once
 #include <iostream>
 #include <cstdint>
-#include <netinet/in.h>
-#include <unistd.h>
 #include <vector>
 #include <mutex>
+
+#include "platform.h"
 
 #include "client.h"
 #include "debug.h"

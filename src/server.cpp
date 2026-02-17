@@ -135,7 +135,7 @@ void Server::Stop() noexcept {
 		SaveAll();
 
 		shutdown(serverFd, SHUT_RDWR);
-		close(serverFd);
+		close_socket(serverFd);
 		serverFd = -1;
 	}
 }
@@ -302,12 +302,17 @@ bool Server::SocketBootstrap(uint16_t port) {
 
 	// Create socket
 	serverFd = socket(AF_INET, SOCK_STREAM, 0);
+	#ifdef _WIN32
+	if (serverFd == INVALID_SOCKET) {
+	#else
 	if (serverFd < 0) {
+	#endif
 		perror("Socket creation failed");
 		return false;
 	}
 
-	if (int32_t opt = 1; setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, &opt, sizeof(opt)) < 0) {
+	int opt = 1;
+	if (setsockopt(serverFd, SOL_SOCKET, SO_REUSEADDR, (const char*)&opt, sizeof(opt)) < 0) {
 		perror("setsockopt failed");
 		return false;
 	}

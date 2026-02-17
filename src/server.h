@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <vector>
 
+#include "platform.h"
+
 #include "client.h"
 #include "javaMath.h"
 #include "pluginManager.h"
@@ -51,7 +53,7 @@ class Server {
 
 	std::string GetSpawnWorld() const noexcept;
 
-	int32_t GetServerFd() const noexcept;
+	SocketFd GetServerFd() const noexcept;
 
 	std::vector<std::shared_ptr<Client>> &GetConnectedClients() noexcept;
 
@@ -135,13 +137,17 @@ class Server {
 	static void ServerJoin() {
 		auto &server = Server::Instance();
 		struct sockaddr_in address;
-		int32_t addrlen = sizeof(address);
+		int addrlen = sizeof(address);
 
 		while (server.IsAlive()) {
 			// Accept connections
-			int32_t client_fd = accept(server.serverFd, reinterpret_cast<struct sockaddr *>(&address),
+			SocketFd client_fd = accept(server.serverFd, reinterpret_cast<struct sockaddr *>(&address),
 								   reinterpret_cast<socklen_t *>(&addrlen));
+			#ifdef _WIN32
+			if (client_fd == INVALID_SOCKET) {
+			#else
 			if (client_fd < 0) {
+			#endif
 				if (!server.IsAlive())
 					break;
 				perror("Accept failed");
@@ -153,10 +159,10 @@ class Server {
 			if (server.maximumPlayers != NO_LIMIT && int32_t(server.connectedClients.size()) >= server.maximumPlayers) {
 				// Optionally send a rejection message to client
 				unsigned char rejectionCode = 0xFF;
-				send(client_fd, &rejectionCode, 1, 0);
+				send(client_fd, (const char*)&rejectionCode, 1, 0);
 
 				// Reject the client by closing the socket
-				close(client_fd);
+				close_socket(client_fd);
 				continue;
 			}
 
@@ -194,7 +200,7 @@ class Server {
 	// =====================================================
 
 	bool alive = true; // server alive
-	int32_t serverFd = -1;
+	SocketFd serverFd = -1;
 	std::vector<std::shared_ptr<Client>> connectedClients;
 	int32_t latestEntityId = 0;
 	int32_t maximumPlayers = NO_LIMIT;

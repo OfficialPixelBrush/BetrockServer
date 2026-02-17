@@ -3,11 +3,11 @@
 #include <algorithm> // Add this at the top for std::find
 #include <iostream>
 #include <cstdint>
-#include <netinet/in.h>
-#include <unistd.h>
 #include <mutex>
 #include <thread>
 #include <ranges>
+
+#include "platform.h"
 
 #include "player.h"
 #include "commandManager.h"
@@ -53,7 +53,7 @@ class Client : public std::enable_shared_from_this<Client> {
         int8_t windowIndex = 0;
 
         int64_t lastPacketTime = 0;
-        int32_t clientFd;
+        SocketFd clientFd;
         std::atomic<ConnectionStatus> connectionStatus = ConnectionStatus::Disconnected;
         
         std::vector<Int2> visibleChunks;
@@ -67,8 +67,8 @@ class Client : public std::enable_shared_from_this<Client> {
         Item hoveringItem = Item {-1,0,0};
         int8_t currentHotbarSlot = 0;
         
-        ssize_t Setup();
-        void PrintReceived(ssize_t bytes_received, Packet packetType = Packet::KeepAlive);
+        int Setup();
+        void PrintReceived(int bytes_received, Packet packetType = Packet::KeepAlive);
 
         // Packets
         bool HandleKeepAlive();
