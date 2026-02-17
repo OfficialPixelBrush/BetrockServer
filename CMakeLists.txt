@@ -14,7 +14,12 @@ project(BetrockServer VERSION 0.3.1)
 #set(CMAKE_CXX_FLAGS "-m32 -march=pentium -static")
 #set(CMAKE_EXE_LINKER_FLAGS "-static")
 
-find_package(Lua REQUIRED)
+# Use vcpkg's Lua module with fallback to standard findrule
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
+find_package(Lua 5.4 REQUIRED)
+
+# Find libdeflate
+find_package(libdeflate CONFIG REQUIRED)
 
 file(COPY "${CMAKE_SOURCE_DIR}/src/scripts/"
 DESTINATION "${CMAKE_BINARY_DIR}/scripts")
@@ -175,7 +180,7 @@ endif()
 
 target_link_libraries(
     BetrockServer
-    deflate
+    $<IF:$<TARGET_EXISTS:libdeflate::libdeflate_shared>,libdeflate::libdeflate_shared,libdeflate::libdeflate_static>
     ${LUA_LIBRARIES}
     Threads::Threads
 )

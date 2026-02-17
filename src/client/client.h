@@ -113,10 +113,10 @@ class Client : public std::enable_shared_from_this<Client> {
     public:
         void SetConnectionStatus(ConnectionStatus status) { this->connectionStatus = status; }
         ConnectionStatus GetConnectionStatus() { return this->connectionStatus; }
-        void SetClientFd(int32_t pClientFd) { this->clientFd = pClientFd; }
-        int32_t &GetClientFd() { return this->clientFd; }
+        void SetClientFd(SocketFd pClientFd) { this->clientFd = pClientFd; }
+        SocketFd GetClientFd() const { return this->clientFd; }
 
-        Client(int32_t pClientFd) : clientFd(pClientFd) {}
+        Client(SocketFd pClientFd) : clientFd(pClientFd) {}
         void HandleClient();
         void DisconnectClient(std::string disconnectMessage = "", bool tellOthers = false, bool tellPlayer = true);
 

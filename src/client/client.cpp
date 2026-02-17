@@ -35,17 +35,17 @@ bool Client::CheckPosition(Vec3 &newPosition, double &newStance) {
 }
 
 // Set the client up to receive another packet
-ssize_t Client::Setup() {
+int Client::Setup() {
 	// Set stuff up for the next batch of packets
 	offset = 0;
 	previousOffset = 0;
 
 	// Read Data
-	return read(clientFd, message, PACKET_MAX);
+	return read_socket(clientFd, message, PACKET_MAX);
 }
 
 // Print the received data
-void Client::PrintReceived(ssize_t bytes_received, Packet packetType) {
+void Client::PrintReceived(int bytes_received, Packet packetType) {
 	std::string debugMessage = "";
 	if (debugReceivedPacketType) {
 		debugMessage += "Received " + PacketIdToLabel(packetType) + " from " + this->username + "! (" + std::to_string(bytes_received) + " Bytes)";
@@ -64,7 +64,7 @@ void Client::HandlePacket() {
 	//int64_t lastPacketTime = serverTime;
 	bool validPacket = true;
 	// Prep for next packet
-	ssize_t bytes_received = Setup();
+	int bytes_received = Setup();
 
 	// If we receive no Data from the player, such as when they
 	// crash or close the game without quitting
@@ -217,8 +217,8 @@ void Client::HandleClient() {
 		std::this_thread::sleep_for(std::chrono::milliseconds(1000/TICK_SPEED));
 	}
 	
-	close(clientFd);
-	clientFd = -1;
+	close_socket(clientFd);
+	clientFd = INVALID_SOCKET;
 
 	// If the server is dead, it'll take care of all this
 	if (server.IsAlive()) {
@@ -360,8 +360,8 @@ void Client::SendResponse(bool autoclear) {
 		Betrock::Logger::Instance().Debug(debugMessage);
 	}
 	
-	ssize_t bytes_sent = send(clientFd, response.data(), response.size(), 0);
-	if (bytes_sent == -1) {
+	int bytes_sent = write_socket(clientFd, response.data(), response.size());
+	if (bytes_sent < 0) {
 		perror("send");
 		return;
 	}

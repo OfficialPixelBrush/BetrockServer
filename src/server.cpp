@@ -13,7 +13,7 @@ int8_t Server::GetSpawnDimension() const noexcept { return this->spawnDimension;
 
 std::string Server::GetSpawnWorld() const noexcept { return this->spawnWorld; }
 
-int32_t Server::GetServerFd() const noexcept { return this->serverFd; }
+SocketFd Server::GetServerFd() const noexcept { return this->serverFd; }
 
 std::vector<std::shared_ptr<Client>> &Server::GetConnectedClients() noexcept { return this->connectedClients; }
 
@@ -199,7 +199,7 @@ void Server::InitPlugins() {
 	// Load plugin file and let it sit in it's own lua VM
 	// Start Plugin script
 	for (const auto &entry : std::filesystem::directory_iterator("scripts/plugins/")) {
-		pluginManager.AddPlugin(entry.path());
+		pluginManager.AddPlugin(entry.path().string());
 	}
 }
 

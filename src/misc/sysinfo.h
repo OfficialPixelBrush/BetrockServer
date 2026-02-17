@@ -1,6 +1,16 @@
 #pragma once
-#include "sys/sysinfo.h"
-#include "sys/types.h"
+
+#ifdef _WIN32
+    // Windows system information headers
+    #include <windows.h>
+    #include <psapi.h>
+    #pragma comment(lib, "psapi.lib")
+#else
+    // POSIX system information headers
+    #include "sys/sysinfo.h"
+    #include "sys/types.h"
+#endif
+
 #include <cstring>
 #include <fstream>
 #include <iomanip>
