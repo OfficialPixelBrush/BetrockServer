@@ -3,6 +3,8 @@
 #include <string>
 #include <sstream>
 #include "blocks.h"
+#include "items.h"
+#include "labels.h"
 
 #define CHUNK_HEIGHT 128
 #define CHUNK_WIDTH_X 16
@@ -17,12 +19,12 @@
 
 // Item
 struct Item {
-    int16_t id = -1;
+    int16_t id = ITEM_INVALID;
     int8_t  amount = 0;
     int16_t damage = 0; // Also known as metadata
 
     friend std::ostream& operator<<(std::ostream& os, const Item& i) {
-        os << "(" << int32_t(i.id) << ":" << int32_t(i.damage) << "x" << int32_t(i.amount) << ")";
+        os << "(" << IdToLabel(i.id) << ": " << int32_t(i.damage) << " x" << int32_t(i.amount) << ")";
         return os;
     }
     
@@ -71,6 +73,22 @@ struct Vec3 {
         return Vec3{x - other.x, y - other.y, z - other.z};
     }
 
+    Vec3 operator*(const Vec3& other) const {
+        return Vec3{x * other.x, y * other.y, z * other.z};
+    }
+
+    Vec3 operator/(const Vec3& other) const {
+        return Vec3{x / other.x, y / other.y, z / other.z};
+    }
+
+    Vec3 operator*(const double& other) const {
+        return Vec3{x * other, y * other, z * other};
+    }
+
+    Vec3 operator/(const double& other) const {
+        return Vec3{x / other, y / other, z / other};
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const Vec3& vec) {
         os << "(" << vec.x << ", " << vec.y << ", " << vec.z << ")";
         return os;
@@ -91,6 +109,9 @@ struct Vec3 {
     }
 };
 
+#define VEC3_ZERO Vec3{0.0,0.0,0.0}
+#define VEC3_ONE Vec3{1.0,1.0,1.0}
+
 /**
  * @brief A struct that contains 2 doubles (x,y)
  * 
@@ -107,6 +128,22 @@ struct Vec2 {
 
     Vec2 operator-(const Vec2& other) const {
         return Vec2{x - other.x, y - other.y};
+    }
+
+    Vec2 operator*(const Vec2& other) const {
+        return Vec2{x * other.x, y * other.y};
+    }
+
+    Vec2 operator/(const Vec2& other) const {
+        return Vec2{x / other.x, y / other.y};
+    }
+
+    Vec2 operator*(const double& other) const {
+        return Vec2{x * other, y * other};
+    }
+
+    Vec2 operator/(const double& other) const {
+        return Vec2{x / other, y / other};
     }
 
     friend std::ostream& operator<<(std::ostream& os, const Vec2& vec) {
@@ -129,6 +166,9 @@ struct Vec2 {
     }
 };
 
+#define VEC2_ZERO Vec2{0.0,0.0}
+#define VEC2_ONE Vec2{1.0,1.0}
+
 /**
  * @brief A struct that contains 3 integers (x,y,z)
  * 
@@ -145,6 +185,22 @@ struct Int3 {
 
     Int3 operator-(const Int3& other) const {
         return Int3{x - other.x, y - other.y, z - other.z};
+    }
+
+    Int3 operator*(const Int3& other) const {
+        return Int3{x * other.x, y * other.y, z * other.z};
+    }
+
+    Int3 operator/(const Int3& other) const {
+        return Int3{x / other.x, y / other.y, z / other.z};
+    }
+
+    Int3 operator*(const int32_t& other) const {
+        return Int3{x * other, y * other, z * other};
+    }
+
+    Int3 operator/(const int32_t& other) const {
+        return Int3{x / other, y / other, z / other};
     }
     
     friend std::ostream& operator<<(std::ostream& os, const Int3& i) {
@@ -167,6 +223,9 @@ struct Int3 {
     }
 };
 
+#define INT3_ZERO Int3{0,0,0}
+#define INT3_ONE Int3{1,1,1}
+
 
 /**
  * @brief A struct that contains 2 integers (x,y)
@@ -184,6 +243,22 @@ struct Int2 {
 
     Int2 operator-(const Int2& other) const {
         return Int2{x - other.x, y - other.y};
+    }
+
+    Int2 operator*(const Int2& other) const {
+        return Int2{x * other.x, y * other.y};
+    }
+
+    Int2 operator/(const Int2& other) const {
+        return Int2{x / other.x, y / other.y};
+    }
+
+    Int2 operator*(const int32_t& other) const {
+        return Int2{x * other, y * other};
+    }
+
+    Int2 operator/(const int32_t& other) const {
+        return Int2{x / other, y / other};
     }
     
     friend std::ostream& operator<<(std::ostream& os, const Int2& i) {
@@ -205,6 +280,9 @@ struct Int2 {
         return *(&x + i);
     }
 };
+
+#define INT2_ZERO Int2{0,0}
+#define INT2_ONE Int2{1,1}
 
 /**
  * @brief Axis-aligned Bounding Box

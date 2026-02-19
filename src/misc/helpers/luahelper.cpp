@@ -28,6 +28,22 @@ bool CheckNum2(lua_State *L, int32_t startIndex) {
     return true;
 }
 
+Int3 GetInt3(lua_State *L, int32_t startIndex) {
+    return Int3{
+        int32_t(lua_tointeger(L, startIndex+0)),
+        int32_t(lua_tointeger(L, startIndex+1)),
+        int32_t(lua_tointeger(L, startIndex+2)),
+    };
+}
+
+Vec3 GetVec3(lua_State *L, int32_t startIndex) {
+    return Vec3{
+        double(lua_tonumber(L, startIndex+0)),
+        double(lua_tonumber(L, startIndex+1)),
+        double(lua_tonumber(L, startIndex+2)),
+    };
+}
+
 Block DecodeBlock(lua_State *L) {
 	Block b;
 	if (lua_istable(L, -1)) {

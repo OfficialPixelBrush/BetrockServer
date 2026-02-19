@@ -1,8 +1,7 @@
 #pragma once
 #include <condition_variable>
 #include <mutex>
-#include <queue>
-#include <unordered_set>
+#include <map>
 #include <vector>
 
 #include "client.h"
@@ -40,8 +39,7 @@ class WorldManager {
   private:
 	std::string name;
 	std::mutex queueMutex;
-	std::deque<QueueChunk> chunkQueue;
-	std::unordered_set<int64_t> chunkPositions; // Set to track chunk hashes
+	std::map<uint64_t, QueueChunk, std::greater<>> chunkQueue;
 	int64_t seed;
 	std::condition_variable queueCV;
 	std::vector<std::thread> workers;

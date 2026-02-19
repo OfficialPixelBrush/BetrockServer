@@ -10,9 +10,9 @@
  * @param birch If the tree should be birch or oak
  * @return If tree successfully generated
  */
-bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch) {
+bool Beta173Tree::Generate(World *world, JavaRandom& rand, Int3 pos, bool birch) {
 	// Decide on the tree height (birches are one block taller)
-	int32_t treeHeight = rand->nextInt(3) + 4;
+	int32_t treeHeight = rand.nextInt(3) + 4;
 	if (birch)
 		treeHeight++;
 	
@@ -33,7 +33,7 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch)
 				for (check.z = pos.z - width; check.z <= pos.z + width; ++check.z) {
 					// Only test blocks that're within chunk boundaries
 					if (check.y >= 0 && check.y < CHUNK_HEIGHT) {
-						int8_t blockTest = world->GetBlockType(check);
+						BlockType blockTest = world->GetBlockType(check);
 						if (blockTest != BLOCK_AIR && blockTest != BLOCK_LEAVES) {
 							return false;
 						}
@@ -45,8 +45,8 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch)
 		}
 
 		// Check if the bock under the source block is grass or dirt
-		int8_t rootBlock = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
-		if ((rootBlock == BLOCK_GRASS || rootBlock == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - treeHeight - 1) {
+		BlockType soilType = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
+		if ((soilType == BLOCK_GRASS || soilType == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - treeHeight - 1) {
 			// Replace the underlying block with dir
 			world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
 
@@ -67,7 +67,7 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch)
 								(
 								JavaMath::abs(xLeaf) != treeWidth ||
 								JavaMath::abs(zLeaf) != treeWidth ||
-								(rand->nextInt(2) != 0 && widthBase != 0)
+								(rand.nextInt(2) != 0 && widthBase != 0)
 							)) && !IsOpaque(
 								world->GetBlockType(offset))) {
 							world->PlaceBlock(offset, BLOCK_LEAVES, birch ? 2 : 0);
@@ -78,7 +78,7 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch)
 
 			// Replace air and leaves with trunk
 			for (int32_t h = 0; h < treeHeight; ++h) {
-				int8_t futureLog = world->GetBlockType(Int3{pos.x, pos.y + h, pos.z});
+				BlockType futureLog = world->GetBlockType(Int3{pos.x, pos.y + h, pos.z});
 				if (futureLog == BLOCK_AIR || futureLog == BLOCK_LEAVES) {
 					world->PlaceBlock(Int3{pos.x, pos.y + h, pos.z}, BLOCK_LOG, birch ? 2 : 0);
 				}
@@ -99,7 +99,7 @@ bool Beta173Tree::Generate(World *world, JavaRandom *rand, Int3 pos, bool birch)
  * @param pTrunkShape Determines the trunk shape
  */
 void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double pTrunkShape) {
-	this->maximumTreeHeight = int32_t(pTreeHeight * 12.0);
+	this->maximumTreeHeight = Java::DoubleToInt32(pTreeHeight * 12.0);
 	if (pTreeHeight > 0.5) {
 		this->trunkThickness = 5;
 	}
@@ -118,96 +118,104 @@ void Beta173BigTree::Configure(double pTreeHeight, double pBranchLength, double 
  * @param pBirch If the tree should be birch or oak (not used for big trees)
  * @return If tree successfully generated
  */
-bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom *pRand, [[maybe_unused]] Int3 pPos,
-							  [[maybe_unused]] bool pBirch) {
+bool Beta173BigTree::Generate([[maybe_unused]] World *pWorld, JavaRandom& pRand, [[maybe_unused]] Int3 pPos, [[maybe_unused]] bool pBirch) {
 	this->world = pWorld;
-	int64_t seed = pRand->nextLong();
-	this->rand->setSeed(seed);
+	int64_t seed = pRand.nextLong();
+	this->rand.setSeed(seed);
 	this->basePos = pPos;
 	// If the height wasn't set, generate a new random height
 	if (this->totalHeight == 0) {
-		this->totalHeight = 5 + this->rand->nextInt(this->maximumTreeHeight);
+		this->totalHeight = 5 + this->rand.nextInt(this->maximumTreeHeight);
 	}
 
-	if (!this->ValidPlacement()) {
+	// Check if tree can be placed
+	if (!this->ValidPlacement())
 		return false;
-	} else {
-		this->GenerateBranchPositions();
-		this->GenerateLeafClusters();
-		this->GenerateTrunk();
-		this->GenerateBranches();
-		return true;
-	}
+	this->GenerateBranchPositions();
+	this->GenerateLeafClusters();
+	this->GenerateTrunk();
+	this->GenerateBranches();
+	return true;
 }
 
+/**
+ * @brief Determine where branches will go
+ * 
+ */
 void Beta173BigTree::GenerateBranchPositions() {
-	this->height = int32_t((double)this->totalHeight * this->heightFactor);
+	this->height = Java::DoubleToInt32(double(this->totalHeight) * this->heightFactor);
 	if (this->height >= this->totalHeight) {
 		this->height = this->totalHeight - 1;
 	}
 
-	int32_t var1 = int32_t(1.382 + std::pow(this->trunkShape * (double)this->totalHeight / 13.0, 2.0));
-	if (var1 < 1) {
-		var1 = 1;
+	int32_t branchesPerLayer = Java::DoubleToInt32(1.382 + std::pow(this->trunkShape * double(this->totalHeight) / 13.0, 2.0));
+	if (branchesPerLayer < 1) {
+		branchesPerLayer = 1;
 	}
 
-	std::vector<std::array<int32_t, 4>> var2(var1 * this->totalHeight);
-	int32_t var3 = this->basePos.y + this->totalHeight - this->trunkThickness;
-	int32_t var4 = 1;
-	int32_t var5 = this->basePos.y + this->height;
-	int32_t var6 = var3 - this->basePos.y;
-	var2[0][0] = this->basePos.x;
-	var2[0][1] = var3;
-	var2[0][2] = this->basePos.z;
-	var2[0][3] = var5;
-	--var3;
+	std::vector<BranchPos> candidateBranches(branchesPerLayer * this->totalHeight);
+	int32_t currentY = this->basePos.y + this->totalHeight - this->trunkThickness;
+	int32_t branchCount = 1;
+	int32_t targetY = this->basePos.y + this->height;
+	int32_t canpoyLayer = currentY - this->basePos.y;
+	candidateBranches[0].pos.x = this->basePos.x;
+	candidateBranches[0].pos.y = currentY;
+	candidateBranches[0].pos.z = this->basePos.z;
+	candidateBranches[0].trunkY = targetY;
+	--currentY;
 
 	while (true) {
-		while (var6 >= 0) {
-			int32_t var7 = 0;
-			float var8 = this->func_431_a(var6);
-			if (var8 < 0.0F) {
-				--var3;
-				--var6;
-			} else {
-				for (double var9 = 0.5; var7 < var1; ++var7) {
-					double var11 = this->branchLength * (double)var8 * ((double)this->rand->nextFloat() + 0.328);
+		for (; canpoyLayer >= 0; --canpoyLayer) {
+			float canopyRadius = this->GetCanopyRadius(canpoyLayer);
+			if (canopyRadius >= 0.0F) {
+				// Attempt to generate Branch
+				for (int32_t attempts = 0; attempts < branchesPerLayer; ++attempts) {
+					double radialDistance =
+						this->branchLength *
+						double(canopyRadius) *
+						(double(this->rand.nextFloat()) + 0.328);
 					// Oh hey, look! An approximation of pi!
-					double var13 = (double)this->rand->nextFloat() * 2.0 * 3.14159;
-					int32_t var15 = MathHelper::floor_double(var11 * double(std::sin(var13)) +
-														 (double)this->basePos.x + var9);
-					int32_t var16 = MathHelper::floor_double(var11 * double(std::cos(var13)) +
-														 (double)this->basePos.z + var9);
-					Int3 var17 = Int3{var15, var3, var16};
-					Int3 var18 = Int3{var15, var3 + this->trunkThickness, var16};
-					if (this->CheckIfPathClear(var17, var18) == -1) {
-						Int3 var19 = Int3{this->basePos.x, this->basePos.y, this->basePos.z};
-						double var20 = std::sqrt(std::pow((double)JavaMath::abs(this->basePos.x - var17.x), 2.0) +
-												 std::pow((double)JavaMath::abs(this->basePos.z - var17.z), 2.0));
-						double var22 = var20 * this->field_752_i;
-						if ((double)var17.y - var22 > (double)var5) {
-							var19.y = var5;
+					double angle = double(this->rand.nextFloat()) * 2.0 * 3.14159;
+					int32_t branchX = MathHelper::floor_double(
+						radialDistance * double(std::sin(angle)) +
+						double(this->basePos.x) + 0.5
+					);
+					int32_t branchZ = MathHelper::floor_double(
+						radialDistance * double(std::cos(angle)) +
+						double(this->basePos.z) + 0.5
+					);
+					Int3 branchBase = Int3{branchX, currentY, branchZ};
+					Int3 branchTop = Int3{branchX, currentY + this->trunkThickness, branchZ};
+					if (this->CheckIfPathClear(branchBase, branchTop) == -1) {
+						Int3 trunkConnection = this->basePos;
+						double horizontalDistance = std::sqrt(
+								std::pow(double(JavaMath::abs(this->basePos.x - branchBase.x)), 2.0) +
+								std::pow(double(JavaMath::abs(this->basePos.z - branchBase.z)), 2.0)
+							);
+						double verticalDrop = horizontalDistance * this->field_752_i;
+						if ((double)branchBase.y - verticalDrop > (double)targetY) {
+							trunkConnection.y = targetY;
 						} else {
-							var19.y = int32_t((double)var17.y - var22);
+							trunkConnection.y = Java::DoubleToInt32(double(branchBase.y) - verticalDrop);
 						}
 
-						if (this->CheckIfPathClear(var19, var17) == -1) {
-							var2[var4][0] = var15;
-							var2[var4][1] = var3;
-							var2[var4][2] = var16;
-							var2[var4][3] = var19.y;
-							++var4;
+						if (this->CheckIfPathClear(trunkConnection, branchBase) == -1) {
+							candidateBranches[branchCount].pos.x = branchX;
+							candidateBranches[branchCount].pos.y = currentY;
+							candidateBranches[branchCount].pos.z = branchZ;
+							candidateBranches[branchCount].trunkY = trunkConnection.y;
+							++branchCount;
 						}
 					}
 				}
-
-				--var3;
-				--var6;
 			}
+			--currentY;
 		}
 
-		this->branchStartEnd = std::vector<std::array<int32_t, 4>>(var4);
-		std::copy(var2.begin(), var2.begin() + var4, this->branchStartEnd.begin());
+		this->branchStartEnd = std::vector<BranchPos>(branchCount);
+		std::copy(candidateBranches.begin(), candidateBranches.begin() + branchCount, this->branchStartEnd.begin());
+		// Not present in OG Code, but probably good to do
+		this->branchStartEnd.shrink_to_fit();
 		return;
 	}
 }
@@ -220,10 +228,10 @@ void Beta173BigTree::GenerateBranchPositions() {
  * @param axis Axis along which the circle will grow
  * @param blockType Blocktype of the circle
  */
-void Beta173BigTree::PlaceCircularLayer(Int3 centerPos, float radius, int8_t axis, BlockType blockType) {
-	int32_t intRadius = int32_t(double(radius) + 0.618);
-	int8_t axisU = branchOrientation[axis];
-	int8_t axisV = branchOrientation[axis + 3];
+void Beta173BigTree::PlaceCircularLayer(Int3 centerPos, float radius, BranchAxis axis, BlockType blockType) {
+	int32_t intRadius = Java::DoubleToInt32(double(radius) + 0.618);
+	BranchAxis axisU = branchOrientation[axis];
+	BranchAxis axisV = branchOrientation[axis + AXIS_OFFSET];
 	Int3 currentPos{0, 0, 0};
 
 	for (int32_t du = -intRadius; du <= intRadius; ++du) {
@@ -237,7 +245,7 @@ void Beta173BigTree::PlaceCircularLayer(Int3 centerPos, float radius, int8_t axi
 				std::pow(JavaMath::abs(dv) + 0.5, 2.0)
 			);
 
-			if (distance > (double)(radius))
+			if (distance > double(radius))
 				continue;
 
 			currentPos[axisV] = centerPos[axisV] + dv;
@@ -251,23 +259,31 @@ void Beta173BigTree::PlaceCircularLayer(Int3 centerPos, float radius, int8_t axi
 	}
 }
 
-float Beta173BigTree::func_431_a(int32_t var1) {
-	if ((double)var1 < (double)((float)this->totalHeight) * 0.3) {
+/**
+ * @brief Get the radius of the leaf canopy at the desired height
+ * 
+ * @param y Height to check
+ * @return Radius in blocks
+ */
+float Beta173BigTree::GetCanopyRadius(int32_t y) {
+	if ((double)y < double((float)this->totalHeight) * 0.3) {
 		return -1.618F;
 	} else {
-		float var2 = (float)this->totalHeight / 2.0F;
-		float var3 = (float)this->totalHeight / 2.0F - (float)var1;
-		float var4;
-		if (var3 == 0.0F) {
-			var4 = var2;
-		} else if (JavaMath::abs(var3) >= var2) {
-			var4 = 0.0F;
+		float halfHeight = (float)this->totalHeight / 2.0F;
+		float distanceFromCenter = (float)this->totalHeight / 2.0F - (float)y;
+		float radius;
+		if (distanceFromCenter == 0.0F) {
+			radius = halfHeight;
+		} else if (JavaMath::abs(distanceFromCenter) >= halfHeight) {
+			radius = 0.0F;
 		} else {
-			var4 = (float)std::sqrt(std::pow((double)JavaMath::abs(var2), 2.0) - std::pow((double)JavaMath::abs(var3), 2.0));
+			radius = (float)std::sqrt(
+				std::pow((double)JavaMath::abs(halfHeight), 2.0) -
+				std::pow((double)JavaMath::abs(distanceFromCenter), 2.0));
 		}
 
-		var4 *= 0.5F;
-		return var4;
+		radius *= 0.5F;
+		return radius;
 	}
 }
 
@@ -287,104 +303,116 @@ float Beta173BigTree::GetTrunkLayerRadius(int32_t layerIndex) {
     return 3.0f;
 }
 
-void Beta173BigTree::func_423_a(int32_t var1, int32_t var2, int32_t var3) {
-	int32_t var4 = var2;
-
-	for (int32_t var5 = var2 + this->trunkThickness; var4 < var5; ++var4) {
-		float var6 = this->GetTrunkLayerRadius(var4 - var2);
-		this->PlaceCircularLayer(Int3{var1, var4, var3}, var6, (int8_t)1, BLOCK_LEAVES);
+/**
+ * @brief Iterate over the height 
+ * 
+ * @param base 
+ */
+void Beta173BigTree::PlaceLeavesAroundPoint(Int3 base) {
+	int32_t baseHeight = base.y + this->trunkThickness;
+	
+	for (int32_t y = base.y; y < baseHeight; ++y) {
+		float trunkRadius = this->GetTrunkLayerRadius(y - base.y);
+		this->PlaceCircularLayer(
+			Int3{base.x, y, base.z},
+			trunkRadius,
+			AXIS_Y, 
+			BLOCK_LEAVES
+		);
 	}
 }
 
 /**
  * @brief Draws a line of blockType between two coordinates
  * 
- * @param posA The start position
- * @param posB The end position
+ * @param startPos The start position
+ * @param endPos The end position
  * @param blockType The block that should be drawn along this line
  */
-void Beta173BigTree::DrawBlockLine(Int3 posA, Int3 posB, BlockType blockType) {
-	Int3 diff = Int3{0, 0, 0};
-	int8_t var5 = 0;
-
-	int8_t var6;
-	for (var6 = 0; var5 < 3; ++var5) {
-		diff[var5] = posB[var5] - posA[var5];
-		if (JavaMath::abs(diff[var5]) > JavaMath::abs(diff[var6])) {
-			var6 = var5;
+void Beta173BigTree::DrawBlockLine(Int3 startPos, Int3 endPos, BlockType blockType) {
+	Int3 delta = INT3_ZERO;
+	BranchAxis dominantAxis = AXIS_X;
+	delta = endPos - startPos;
+	// Determine which axis was the largest magnitude
+	for (int8_t axis = 0; axis < 3; axis++) {
+		if (JavaMath::abs(delta[axis]) > JavaMath::abs(delta[dominantAxis])) {
+			dominantAxis = BranchAxis(axis);
 		}
 	}
+	// If an axis was chosen, we can continue
+	if (delta[dominantAxis] == 0)
+		return;
+	// Determine secondary axes
+	// X -> Y/Z
+	// Y -> X/Z
+	// Z -> X/Y
+	BranchAxis secondaryA = branchOrientation[dominantAxis];
+	BranchAxis secondaryB = branchOrientation[dominantAxis + AXIS_OFFSET];
+	int8_t step = -1;
+	if (delta[dominantAxis] > 0)
+		step = 1;
 
-	if (diff[var6] != 0) {
-		int8_t var7 = branchOrientation[var6];
-		int8_t var8 = branchOrientation[var6 + 3];
-		int8_t var9;
-		if (diff[var6] > 0) {
-			var9 = 1;
-		} else {
-			var9 = -1;
-		}
+	double secondaryRatioA = (double)delta[secondaryA] / (double)delta[dominantAxis];
+	double secondaryRatioB = (double)delta[secondaryB] / (double)delta[dominantAxis];
+	Int3 blockPos = INT3_ZERO;
+	int32_t distanceAlongAxis = 0;
 
-		double var10 = (double)diff[var7] / (double)diff[var6];
-		double var12 = (double)diff[var8] / (double)diff[var6];
-		Int3 blockPos = Int3{0, 0, 0};
-		int32_t var15 = 0;
-
-		for (int32_t var16 = diff[var6] + var9; var15 != var16; var15 += var9) {
-			blockPos[var6] = MathHelper::floor_double((double)(posA[var6] + var15) + 0.5);
-			blockPos[var7] = MathHelper::floor_double((double)posA[var7] + (double)var15 * var10 + 0.5);
-			blockPos[var8] = MathHelper::floor_double((double)posA[var8] + (double)var15 * var12 + 0.5);
-			this->world->PlaceBlock(blockPos, blockType);
-		}
+	for (int32_t totalSteps = delta[dominantAxis] + step; distanceAlongAxis != totalSteps; distanceAlongAxis += step) {
+		blockPos[dominantAxis] = MathHelper::floor_double(
+			double(startPos[dominantAxis] + distanceAlongAxis) + 0.5
+		);
+		blockPos[secondaryA] = MathHelper::floor_double(
+			double(startPos[secondaryA]) + double(distanceAlongAxis) * secondaryRatioA + 0.5
+		);
+		blockPos[secondaryB] = MathHelper::floor_double(
+			double(startPos[secondaryB]) + double(distanceAlongAxis) * secondaryRatioB + 0.5
+		);
+		this->world->PlaceBlock(blockPos, blockType);
 	}
 }
 
+/**
+ * @brief Iterate through the branches and generate the leaves
+ * 
+ */
 void Beta173BigTree::GenerateLeafClusters() {
-	size_t var1 = 0;
-
-	for (size_t var2 = this->branchStartEnd.size(); var1 < var2; ++var1) {
-		int32_t var3 = this->branchStartEnd[var1][0];
-		int32_t var4 = this->branchStartEnd[var1][1];
-		int32_t var5 = this->branchStartEnd[var1][2];
-		this->func_423_a(var3, var4, var5);
+	size_t maxBranchNodes = this->branchStartEnd.size();
+	for (size_t i = 0; i < maxBranchNodes; ++i) {
+		Int3 pos = this->branchStartEnd[i].pos;
+		this->PlaceLeavesAroundPoint(pos);
 	}
 }
 
-bool Beta173BigTree::CanGenerateBranchAtHeight(int32_t var1) { return (double)var1 >= (double)this->totalHeight * 0.2; }
+bool Beta173BigTree::CanGenerateBranchAtHeight(int32_t y) {
+	return double(y) >= (double(this->totalHeight) * 0.2);
+}
 
 void Beta173BigTree::GenerateTrunk() {
-	int32_t var1 = this->basePos.x;
-	int32_t var2 = this->basePos.y;
-	int32_t var3 = this->basePos.y + this->height;
-	int32_t var4 = this->basePos.z;
-	Int3 var5 = Int3{var1, var2, var4};
-	Int3 var6 = Int3{var1, var3, var4};
-	this->DrawBlockLine(var5, var6, BLOCK_LOG);
+	Int3 startPos = this->basePos;
+	Int3 endPos = this->basePos + Int3{0,this->height,0};
+	this->DrawBlockLine(startPos, endPos, BLOCK_LOG);
 	if (this->branchDensity == 2) {
-		++var5[0];
-		++var6[0];
-		this->DrawBlockLine(var5, var6, BLOCK_LOG);
-		++var5[2];
-		++var6[2];
-		this->DrawBlockLine(var5, var6, BLOCK_LOG);
-		var5[0] += -1;
-		var6[0] += -1;
-		this->DrawBlockLine(var5, var6, BLOCK_LOG);
+		startPos.x++;
+		endPos.x++;
+		this->DrawBlockLine(startPos, endPos, BLOCK_LOG);
+		startPos.z++;
+		endPos.z++;
+		this->DrawBlockLine(startPos, endPos, BLOCK_LOG);
+		startPos.x--;
+		endPos.x--;
+		this->DrawBlockLine(startPos, endPos, BLOCK_LOG);
 	}
 }
 
 void Beta173BigTree::GenerateBranches() {
-	size_t var1 = 0;
-	size_t var2 = this->branchStartEnd.size();
-
-	for (Int3 var3 = Int3{this->basePos.x, this->basePos.y, this->basePos.z}; var1 < var2; ++var1) {
-		Int3 var4 = Int3{this->branchStartEnd[var1][0], this->branchStartEnd[var1][1], this->branchStartEnd[var1][2]};
-		int32_t varBaseY = this->branchStartEnd[var1][3];
-		Int3 var5 = Int3{var4[0], var4[1], var4[2]};
-		var3[1] = varBaseY;
-		int32_t var6 = var3[1] - this->basePos.y;
-		if (this->CanGenerateBranchAtHeight(var6)) {
-			this->DrawBlockLine(var3, var5, BLOCK_LOG);
+	Int3 base = this->basePos;
+	for (size_t branchIndex = 0; branchIndex < this->branchStartEnd.size(); ++branchIndex) {
+		Int3 branchPos = this->branchStartEnd[branchIndex].pos;
+		int32_t trunkY = this->branchStartEnd[branchIndex].trunkY;
+		base.y = trunkY;
+		int32_t yHeight = base.y - this->basePos.y;
+		if (this->CanGenerateBranchAtHeight(yHeight)) {
+			this->DrawBlockLine(base, branchPos, BLOCK_LOG);
 		}
 	}
 }
@@ -392,238 +420,240 @@ void Beta173BigTree::GenerateBranches() {
 /**
  * @brief Check if the path is unobstructed between start and end in a straight line
  * 
- * @param posA The start position
- * @param posB The end position
+ * @param startPos The start position
+ * @param endPos The end position
  * @return int32_t 
  */
-int32_t Beta173BigTree::CheckIfPathClear(Int3 posA, Int3 posB) {
-	Int3 diff = Int3{0, 0, 0};
-	int8_t var4 = 0;
+int32_t Beta173BigTree::CheckIfPathClear(Int3 startPos, Int3 endPos) {
+	Int3 delta = INT3_ZERO;
 
-	int8_t var5;
-	for (var5 = 0; var4 < 3; ++var4) {
-		diff[var4] = posB[var4] - posA[var4];
-		if (JavaMath::abs(diff[var4]) > JavaMath::abs(diff[var5])) {
-			var5 = var4;
+	BranchAxis dominantAxis = AXIS_X;
+	delta = endPos - startPos;
+	for (int8_t axis = 0; axis < 3; ++axis) {
+		if (JavaMath::abs(delta[axis]) > JavaMath::abs(delta[dominantAxis])) {
+			dominantAxis = BranchAxis(axis);
 		}
 	}
 
-	if (diff[var5] == 0) {
+	if (delta[dominantAxis] == 0)
 		return -1;
-	} else {
-		int8_t var6 = branchOrientation[var5];
-		int8_t var7 = branchOrientation[var5 + 3];
-		int8_t var8;
-		if (diff[var5] > 0) {
-			var8 = 1;
-		} else {
-			var8 = -1;
+	// Determine secondary axes
+	BranchAxis secondaryA = branchOrientation[dominantAxis];
+	BranchAxis secondaryB = branchOrientation[dominantAxis + AXIS_OFFSET];
+	int8_t step = -1;
+	if (delta[dominantAxis] > 0)
+		step = 1;
+
+	double secondaryRatioA = double(delta[secondaryA]) / double(delta[dominantAxis]);
+	double secondaryRatioB = double(delta[secondaryB]) / double(delta[dominantAxis]);
+	Int3 currentPos = INT3_ZERO;
+	int32_t distanceAlongAxis = 0;
+
+	int32_t totalSteps = delta[dominantAxis] + step;
+	for (; distanceAlongAxis != totalSteps; distanceAlongAxis += step) {
+		currentPos[dominantAxis] = startPos[dominantAxis] + distanceAlongAxis;
+		currentPos[secondaryA] = MathHelper::floor_double(
+			double(startPos[secondaryA]) + double(distanceAlongAxis) * secondaryRatioA
+		);
+		currentPos[secondaryB] = MathHelper::floor_double(
+			double(startPos[secondaryB]) + double(distanceAlongAxis) * secondaryRatioB
+		);
+		BlockType blockType = this->world->GetBlockType(currentPos);
+		if (blockType != BLOCK_AIR && blockType != BLOCK_LEAVES) {
+			break;
 		}
-
-		double var9 = (double)diff[var6] / (double)diff[var5];
-		double var11 = (double)diff[var7] / (double)diff[var5];
-		Int3 var13 = Int3{0, 0, 0};
-		int32_t var14 = 0;
-
-		int32_t var15;
-		for (var15 = diff[var5] + var8; var14 != var15; var14 += var8) {
-			var13[var5] = posA[var5] + var14;
-			var13[var6] = MathHelper::floor_double((double)posA[var6] + (double)var14 * var9);
-			var13[var7] = MathHelper::floor_double((double)posA[var7] + (double)var14 * var11);
-			int32_t var16 = this->world->GetBlockType(var13);
-			if (var16 != 0 && var16 != 18) {
-				break;
-			}
-		}
-
-		return var14 == var15 ? -1 : JavaMath::abs(var14);
 	}
+
+	if (distanceAlongAxis == totalSteps)
+		return -1;
+	return JavaMath::abs(distanceAlongAxis);
 }
 
+/**
+ * @brief Test if the desired tree placement is valid along the vertical axis
+ * 
+ * @return If the placement is valid
+ */
 bool Beta173BigTree::ValidPlacement() {
-	Int3 var1 = Int3{this->basePos.x, this->basePos.y, this->basePos.z};
-	Int3 var2 = Int3{this->basePos.x, this->basePos.y + this->totalHeight - 1, this->basePos.z};
-	int32_t var3 = this->world->GetBlockType(Int3{this->basePos.x, this->basePos.y - 1, this->basePos.z});
-	if (var3 != 2 && var3 != 3) {
+	Int3 endPos = Int3{this->basePos.x, this->basePos.y + this->totalHeight - 1, this->basePos.z};
+	// Check if ground block is valid
+	BlockType soilType = this->world->GetBlockType(Int3{this->basePos.x, this->basePos.y - 1, this->basePos.z});
+	if (soilType != BLOCK_GRASS && soilType != BLOCK_DIRT)
 		return false;
-	} else {
-		int32_t var4 = this->CheckIfPathClear(var1, var2);
-		if (var4 == -1) {
-			return true;
-		} else if (var4 < 6) {
-			return false;
-		} else {
-			this->totalHeight = var4;
-			return true;
-		}
-	}
+	int32_t clearLength = this->CheckIfPathClear(this->basePos, endPos);
+	// Path isn't clear
+	if (clearLength == -1)
+		return true;
+	// Path is too short
+	if (clearLength < 6)
+		return false;
+	// Path is valid
+	this->totalHeight = clearLength;
+	return true;
 }
 
-bool Beta173TaigaTree::Generate(World *world, JavaRandom *rand, Int3 pos,
-								[[maybe_unused]] bool birch) {
-	int32_t var6 = rand->nextInt(5) + 7;
-	int32_t var7 = var6 - rand->nextInt(2) - 3;
-	int32_t var8 = var6 - var7;
-	int32_t var9 = 1 + rand->nextInt(var8 + 1);
-	bool var10 = true;
-	if (pos.y >= 1 && pos.y + var6 + 1 <= CHUNK_HEIGHT) {
-		int32_t var18;
-		for (int32_t var11 = pos.y; var11 <= pos.y + 1 + var6 && var10; ++var11) {
-			// bool var12 = true;
-			if (var11 - pos.y < var7) {
-				var18 = 0;
+/**
+ * @brief Attempts to generate a taiga tree
+ * 
+ * @param pWorld Pointer to the world where it'll generate
+ * @param pRand Pointer to the JavaRandom that'll be utilized
+ * @param pPos Position of the lowest trunk-block
+ * @param pBirch If the tree should be birch or oak (not used for taiga trees)
+ * @return If tree successfully generated
+ */
+bool Beta173TaigaTree::Generate(World *world, JavaRandom& rand, Int3 pos, [[maybe_unused]] bool birch) {
+	int32_t height = rand.nextInt(5) + 7;
+	int32_t trunkHeight  = height - rand.nextInt(2) - 3;
+	int32_t leavesHeight = height - trunkHeight ;
+	int32_t maxLeafRadius = 1 + rand.nextInt(leavesHeight + 1);
+	// Check if tree can be placed
+	if (pos.y >= 1 && pos.y + height + 1 <= CHUNK_HEIGHT) {
+		int32_t currentLeafRadius;
+		for (int32_t y = pos.y; y <= pos.y + 1 + height; ++y) {
+			if (y - pos.y < trunkHeight ) {
+				currentLeafRadius = 0;
 			} else {
-				var18 = var9;
+				currentLeafRadius = maxLeafRadius;
 			}
 
-			for (int32_t var13 = pos.x - var18; var13 <= pos.x + var18 && var10; ++var13) {
-				for (int32_t var14 = pos.z - var18; var14 <= pos.z + var18 && var10; ++var14) {
-					if (var11 >= 0 && var11 < CHUNK_HEIGHT) {
-						int8_t blockType = world->GetBlockType(Int3{var13, var11, var14});
+			for (int32_t x = pos.x - currentLeafRadius; x <= pos.x + currentLeafRadius; ++x) {
+				for (int32_t z = pos.z - currentLeafRadius; z <= pos.z + currentLeafRadius; ++z) {
+					if (y >= 0 && y < CHUNK_HEIGHT) {
+						BlockType blockType = world->GetBlockType(Int3{x, y, z});
 						if (blockType != BLOCK_AIR && blockType != BLOCK_LEAVES) {
-							var10 = false;
+							return false;
 						}
 					} else {
-						var10 = false;
+						return false;
 					}
 				}
 			}
 		}
 
-		if (!var10) {
-			return false;
-		} else {
-			int8_t blockType = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
-			if ((blockType == BLOCK_GRASS || blockType == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - var6 - 1) {
-				world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
-				var18 = 0;
+		// Check if we're attempting to place it on a valid soil block
+		BlockType soilType = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
+		if ((soilType == BLOCK_GRASS || soilType == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - height - 1) {
+			world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
+			currentLeafRadius = 0;
+			// Generate the leaves
+			for (int32_t y = pos.y + height; y >= pos.y + trunkHeight ; --y) {
+				for (int32_t x = pos.x - currentLeafRadius; x <= pos.x + currentLeafRadius; ++x) {
+					int32_t xOffset = x - pos.x;
 
-				for (int32_t var13 = pos.y + var6; var13 >= pos.y + var7; --var13) {
-					for (int32_t var14 = pos.x - var18; var14 <= pos.x + var18; ++var14) {
-						int32_t var15 = var14 - pos.x;
-
-						for (int32_t var16 = pos.z - var18; var16 <= pos.z + var18; ++var16) {
-							int32_t var17 = var16 - pos.z;
-							if ((JavaMath::abs(var15) != var18 || JavaMath::abs(var17) != var18 || var18 <= 0) &&
-								!IsOpaque(world->GetBlockType(Int3{var14, var13, var16}))) {
-								// Spruce leaves
-								world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{var14, var13, var16});
-							}
+					for (int32_t z = pos.z - currentLeafRadius; z <= pos.z + currentLeafRadius; ++z) {
+						int32_t zOffset = z - pos.z;
+						if ((JavaMath::abs(xOffset) != currentLeafRadius || JavaMath::abs(zOffset) != currentLeafRadius || currentLeafRadius <= 0) &&
+							!IsOpaque(world->GetBlockType(Int3{x, y, z}))) {
+							// Spruce leaves
+							world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{x, y, z});
 						}
 					}
-
-					if (var18 >= 1 && var13 == pos.y + var7 + 1) {
-						--var18;
-					} else if (var18 < var9) {
-						++var18;
-					}
 				}
 
-				for (int32_t var13 = 0; var13 < var6 - 1; ++var13) {
-					blockType = world->GetBlockType(Int3{pos.x, pos.y + var13, pos.z});
-					if (blockType == BLOCK_AIR || blockType == BLOCK_LEAVES) {
-						world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{pos.x, pos.y + var13, pos.z});
-					}
+				if (currentLeafRadius >= 1 && y == pos.y + trunkHeight  + 1) {
+					--currentLeafRadius;
+				} else if (currentLeafRadius < maxLeafRadius) {
+					++currentLeafRadius;
 				}
-
-				return true;
-			} else {
-				return false;
 			}
+			// Place the trunk
+			for (int32_t logY = 0; logY < height - 1; ++logY) {
+				BlockType type = world->GetBlockType(Int3{pos.x, pos.y + logY, pos.z});
+				if (type == BLOCK_AIR || type == BLOCK_LEAVES) {
+					world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{pos.x, pos.y + logY, pos.z});
+				}
+			}
+
+			return true;
 		}
-	} else {
 		return false;
 	}
+	return false;
 }
 
-bool Beta173TaigaAltTree::Generate(World *world, JavaRandom *rand, Int3 pos,
-								   [[maybe_unused]] bool birch) {
-	int32_t var6 = rand->nextInt(4) + 6;
-	int32_t var7 = 1 + rand->nextInt(2);
-	int32_t var8 = var6 - var7;
-	int32_t var9 = 2 + rand->nextInt(2);
-	bool var10 = true;
-	if (pos.y >= 1 && pos.y + var6 + 1 <= CHUNK_HEIGHT) {
-		int32_t var11;
-		int32_t var13;
-		int32_t var15;
-		int32_t var21;
-		for (var11 = pos.y; var11 <= pos.y + 1 + var6 && var10; ++var11) {
-			// bool var12 = true;
-			if (var11 - pos.y < var7) {
-				var21 = 0;
-			} else {
-				var21 = var9;
+
+/**
+ * @brief Attempts to generate an alt taiga tree
+ * 
+ * @param pWorld Pointer to the world where it'll generate
+ * @param pRand Pointer to the JavaRandom that'll be utilized
+ * @param pPos Position of the lowest trunk-block
+ * @param pBirch If the tree should be birch or oak (not used for alt taiga trees)
+ * @return If tree successfully generated
+ */
+bool Beta173TaigaAltTree::Generate(World *world, JavaRandom& rand, Int3 pos, [[maybe_unused]] bool birch) {
+	int32_t height = rand.nextInt(4) + 6;
+	int32_t trunkHeight = 1 + rand.nextInt(2);
+	int32_t leavesHeight = height - trunkHeight;
+	int32_t maxLeafRadius = 2 + rand.nextInt(2);
+	// Check if tree can be placed
+	if (pos.y >= 1 && pos.y + height + 1 <= CHUNK_HEIGHT) {
+		for (int32_t y = pos.y; y <= pos.y + 1 + height; ++y) {
+			int32_t currentLeafRadius = maxLeafRadius;
+			if (y - pos.y < trunkHeight) {
+				currentLeafRadius = 0;
 			}
 
-			for (var13 = pos.x - var21; var13 <= pos.x + var21 && var10; ++var13) {
-				for (int32_t var14 = pos.z - var21; var14 <= pos.z + var21 && var10; ++var14) {
-					if (var11 >= 0 && var11 < CHUNK_HEIGHT) {
-						var15 = world->GetBlockType(Int3{var13, var11, var14});
-						if (var15 != 0 && var15 != BLOCK_LEAVES) {
-							var10 = false;
+			for (int32_t xOffset = pos.x - currentLeafRadius; xOffset <= pos.x + currentLeafRadius; ++xOffset) {
+				for (int32_t zOffset = pos.z - currentLeafRadius; zOffset <= pos.z + currentLeafRadius; ++zOffset) {
+					if (y >= 0 && y < CHUNK_HEIGHT) {
+						BlockType type = world->GetBlockType(Int3{xOffset, y, zOffset});
+						if (type != 0 && type != BLOCK_LEAVES) {
+							return false;
 						}
 					} else {
-						var10 = false;
+						return false;
 					}
 				}
 			}
 		}
+	
+		// Check if we're attempting to place it on a valid soil block
+		BlockType soilType = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
+		if ((soilType == BLOCK_GRASS || soilType == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - height - 1) {
+			world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
+			int32_t currentLeafRadius = rand.nextInt(2);
+			int32_t leafRadiusIncrementThreshold = 1;
+			int32_t leafRadiusSwitch = 0;
 
-		if (!var10) {
-			return false;
-		} else {
-			var11 = world->GetBlockType(Int3{pos.x, pos.y - 1, pos.z});
-			if ((var11 == BLOCK_GRASS || var11 == BLOCK_DIRT) && pos.y < CHUNK_HEIGHT - var6 - 1) {
-				world->SetBlockType(BLOCK_DIRT, Int3{pos.x, pos.y - 1, pos.z});
-				var21 = rand->nextInt(2);
-				var13 = 1;
-				int8_t var22 = 0;
+			for (int32_t leafLayer  = 0; leafLayer  <= leavesHeight; ++leafLayer ) {
+				int32_t yLevel = pos.y + height - leafLayer ;
 
-				int32_t var16;
-				int32_t var17;
-				for (var15 = 0; var15 <= var8; ++var15) {
-					var16 = pos.y + var6 - var15;
+				for (int32_t x = pos.x - currentLeafRadius; x <= pos.x + currentLeafRadius; ++x) {
+					int32_t xOffset = x - pos.x;
 
-					for (var17 = pos.x - var21; var17 <= pos.x + var21; ++var17) {
-						int32_t var18 = var17 - pos.x;
-
-						for (int32_t var19 = pos.z - var21; var19 <= pos.z + var21; ++var19) {
-							int32_t var20 = var19 - pos.z;
-							if ((JavaMath::abs(var18) != var21 || JavaMath::abs(var20) != var21 || var21 <= 0) &&
-								!IsOpaque(world->GetBlockType(Int3{var17, var16, var19}))) {
-								world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{var17, var16, var19});
-							}
+					for (int32_t z = pos.z - currentLeafRadius; z <= pos.z + currentLeafRadius; ++z) {
+						int32_t zOffset = z - pos.z;
+						if ((JavaMath::abs(xOffset) != currentLeafRadius || JavaMath::abs(zOffset) != currentLeafRadius || currentLeafRadius <= 0) &&
+							!IsOpaque(world->GetBlockType(Int3{x, yLevel, z}))) {
+							world->SetBlockTypeAndMeta(BLOCK_LEAVES, 1, Int3{x, yLevel, z});
 						}
-					}
-
-					if (var21 >= var13) {
-						var21 = var22;
-						var22 = 1;
-						++var13;
-						if (var13 > var9) {
-							var13 = var9;
-						}
-					} else {
-						++var21;
 					}
 				}
 
-				var15 = rand->nextInt(3);
-
-				for (var16 = 0; var16 < var6 - var15; ++var16) {
-					var17 = world->GetBlockType(Int3{pos.x, pos.y + var16, pos.z});
-					if (var17 == 0 || var17 == BLOCK_LEAVES) {
-						world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{pos.x, pos.y + var16, pos.z});
+				if (currentLeafRadius >= leafRadiusIncrementThreshold) {
+					currentLeafRadius = leafRadiusSwitch;
+					leafRadiusSwitch = 1;
+					++leafRadiusIncrementThreshold;
+					if (leafRadiusIncrementThreshold > maxLeafRadius) {
+						leafRadiusIncrementThreshold = maxLeafRadius;
 					}
+				} else {
+					++currentLeafRadius;
 				}
-
-				return true;
-			} else {
-				return false;
 			}
+
+			int32_t logOffset = rand.nextInt(3);
+			for (int32_t logY = 0; logY < height - logOffset; ++logY) {
+				BlockType type = world->GetBlockType(Int3{pos.x, pos.y + logY, pos.z});
+				if (type == BLOCK_AIR || type == BLOCK_LEAVES) {
+					world->SetBlockTypeAndMeta(BLOCK_LOG, 1, Int3{pos.x, pos.y + logY, pos.z});
+				}
+			}
+
+			return true;
 		}
-	} else {
 		return false;
 	}
+	return false;
 }

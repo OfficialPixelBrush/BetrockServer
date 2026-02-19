@@ -84,21 +84,16 @@ bool Client::HandleLoginRequest(World* world) {
 
 	if (firstJoin) {
 		// Place the player at spawn
-		// TODO: Search for a block for the player to spawn on
 		player->position = Int3ToVec3(spawnPoint);
-
 		// Give starter items
-		Give(response,ITEM_PICKAXE_DIAMOND);
-		Give(response,ITEM_AXE_DIAMOND);
-		Give(response,ITEM_SHOVEL_DIAMOND);
-		Give(response,BLOCK_STONE);
-		Give(response,BLOCK_COBBLESTONE);
-		Give(response,BLOCK_PLANKS);
-	} else {
-		// TODO: Remove this once player saving is brought back
-		player->position = Int3ToVec3(spawnPoint);
-		UpdateInventory(response);
+		Give(ITEM_PICKAXE_DIAMOND);
+		Give(ITEM_AXE_DIAMOND);
+		Give(ITEM_SHOVEL_DIAMOND);
+		Give(BLOCK_STONE);
+		Give(BLOCK_COBBLESTONE);
+		Give(BLOCK_PLANKS);
 	}
+	UpdateInventory(response);
 
 	SendPlayerEntity(broadcastOthersResponse, this, player.get());
 
@@ -266,7 +261,7 @@ bool Client::HandlePlayerDigging(World* world) {
 	EntryToByte(message, offset);
 
 	Int3 pos = Int3(x,y,z);
-	int8_t blockType = world->GetBlockType(pos);
+	BlockType blockType = world->GetBlockType(pos);
 	int8_t blockMeta = world->GetBlockMeta(pos);
 	
 	if (debugPunchBlockInfo) {
@@ -301,7 +296,8 @@ bool Client::HandlePlayerDigging(World* world) {
 			if (!player->creativeMode) {
 				item = GetDrop(item);
 			}
-			Give(response,item.id,item.amount,item.damage);
+			Give(item);
+			UpdateInventory(response);
 		}
 		// Special handling for multi-block blocks
 		if (blockType == BLOCK_DOOR_WOOD ||
@@ -343,18 +339,18 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	// Since we get the players' desired block from
 	// The Server-side inventory anyways
 	int16_t id = EntryToShort(message, offset);
-	
 	//int8_t amount = 0;
 	//int16_t damage = 0;
 	if (id >= 0) {
 		EntryToByte(message, offset);
 		EntryToShort(message, offset);
-		//amount = EntryToByte(message, offset);
-		//damage = EntryToShort(message, offset);
+		//amount = 
+		//damage = 
 	}
 
-	Int3 pos = Int3{x,y,z};
-	int8_t blockType = world->GetBlockType(pos);
+	Int3 targetPos = Int3{x,y,z};
+	Int3 pos = targetPos;
+	BlockType blockType = world->GetBlockType(pos);
 	int8_t blockMeta = world->GetBlockMeta(pos);
 	if (blockType == BLOCK_AIR) { return false; }
 
@@ -384,6 +380,8 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 			case BLOCK_DISPENSER:
 				OpenWindow(INVENTORY_DISPENSER);
 				break;
+			default:
+				break;
 		}
 		return true;
 	}
@@ -402,7 +400,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	if (!CanDecrementHotbar()) return false;
 
 	// Check if the server-side inventory item is valid
-	Item currentItem = player->inventory[INVENTORY_HOTBAR+currentHotbarSlot];
+	Item currentItem = GetHeldItem();
 	
 	// Special handling for Slabs
 	if (
@@ -415,7 +413,7 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 		// Get the block we need to place
 		BlockToFace(pos,face);
 		Block b = GetPlacedBlock(
-			world,pos,face, player->yaw, 
+			world,pos,targetPos,face, player->yaw, 
 			GetPlayerOrientation(), 
 			currentItem.id, 
 			currentItem.damage
@@ -439,10 +437,9 @@ bool Client::HandlePlayerBlockPlacement(World* world) {
 	// Immediately give back the item if we're in creative mode
 	if (player->creativeMode) {
 		Respond::SetSlot(
-			response,0,GetHotbarSlot()+9,
-			currentItem.id,
-			currentItem.amount,
-			currentItem.damage
+			response,0,
+			INVENTORY_MAIN_HOTBAR_NETWORK + GetHotbarSlot(),
+			currentItem
 		);
 	} else {
 		DecrementHotbar(response);

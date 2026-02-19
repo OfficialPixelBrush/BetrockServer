@@ -10,6 +10,7 @@
 #include <cmath>
 #include <memory>
 #include <array>
+#include <bit>
 
 #include "packets.h"
 #include "logger.h"
@@ -44,7 +45,7 @@ Int3 GetBlockPosition(int32_t index);
 std::unique_ptr<char[]> CompressChunk(uint8_t* chunk, size_t &compressed_size);
 std::unique_ptr<char[]> DecompressChunk(const char* compressed_data, size_t compressed_size, size_t& decompressed_size);
 
-int64_t GetChunkHash(Int2 position);
+uint64_t GetChunkHash(Int2 position);
 Int2 DecodeChunkHash(int64_t hash);
 
 int32_t SafeStringToInt32(std::string in);

@@ -249,7 +249,7 @@ void World::PlaceSponge(Int3 position) {
 	for (int32_t x = -2; x <= 2; x++) {
 		for (int32_t z = -2; z <= 2; z++) {
 			for (int32_t y = -2; y <= 2; y++) {
-				int8_t blockType = GetBlockType(position + Int3{x, y, z});
+				BlockType blockType = GetBlockType(position + Int3{x, y, z});
 				if (blockType == BLOCK_WATER_STILL || blockType == BLOCK_WATER_FLOWING) {
 					PlaceBlockUpdate(position + Int3{x, y, z}, BLOCK_AIR);
 				}
@@ -902,7 +902,7 @@ int32_t World::GetHighestSolidOrLiquidBlock(Int2 pos) {
 	if (!c)
 		return -1;
 	for (int32_t y = CHUNK_HEIGHT - 1; y > 0; --y) {
-		int8_t blockType = this->GetBlockType(Int3{pos.x, y, pos.y});
+		BlockType blockType = this->GetBlockType(Int3{pos.x, y, pos.y});
 		if (blockType == BLOCK_AIR)
 			continue;
 		if (IsSolid(blockType) || IsLiquid(blockType)) {

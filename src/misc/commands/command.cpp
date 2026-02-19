@@ -267,9 +267,10 @@ std::string CommandGive::Execute(std::vector<std::string> pCommand, std::vector<
 		}
 		int16_t itemId = SafeStringToInt32(pCommand[1].c_str());
 		if ((itemId > BLOCK_AIR && itemId < BLOCK_MAX) || (itemId >= ITEM_SHOVEL_IRON && itemId < ITEM_MAX)) {
-			if (!client->Give(pResponse, itemId, amount, metadata)) {
+			if (!client->Give(Item{itemId, amount, metadata})) {
 				return "Unable to give " + IdToLabel(itemId);
 			}
+			client->UpdateInventory(pResponse);
 			Respond::ChatMessage(pResponse, "§7Gave " + IdToLabel(itemId));
 			return "";
 		} else {
@@ -567,7 +568,7 @@ std::string CommandRegion::Execute(std::vector<std::string> pCommand, [[maybe_un
 	// Read in region data
 	if (pCommand[1] == "load") {
 		std::unique_ptr<RegionFile> rf = std::make_unique<RegionFile>(std::filesystem::current_path() / "r.0.0.mcr");
-		auto root = rf->GetChunkNbt(Int2{0, 0});
+		auto root = rf->GetChunkNbt(INT2_ZERO);
 		if (root) {
 			std::cout << *root;
 		}

@@ -1,37 +1,54 @@
 #include "noisePerlin.h"
 
-NoisePerlin::NoisePerlin() : NoisePerlin(new JavaRandom()) {}
+NoisePerlin::NoisePerlin() {
+    JavaRandom rand = JavaRandom();
+    InitPermTable(rand);
+}
 
-NoisePerlin::NoisePerlin(JavaRandom *rand) {
-	this->xCoord = rand->nextDouble() * 256.0;
-	this->yCoord = rand->nextDouble() * 256.0;
-	this->zCoord = rand->nextDouble() * 256.0;
+/**
+ * @brief Construct a new Noise Perlin object
+ * 
+ * @param rand The random number generator that should be used
+ */
+NoisePerlin::NoisePerlin(JavaRandom& rand) {
+    InitPermTable(rand);
+}
+
+void NoisePerlin::InitPermTable(JavaRandom& rand) {
+	this->xCoord = rand.nextDouble() * 256.0;
+	this->yCoord = rand.nextDouble() * 256.0;
+	this->zCoord = rand.nextDouble() * 256.0;
 
 	for (int32_t i = 0; i < 256; ++i) {
 		this->permutations[i] = i;
 	}
 
 	for (int32_t i = 0; i < 256; ++i) {
-		int32_t j = rand->nextInt(256 - i) + i;
+		int32_t j = rand.nextInt(256 - i) + i;
 		std::swap(this->permutations[i], this->permutations[j]);
 		this->permutations[i + 256] = this->permutations[i];
 	}
 }
 
-// This is a rather standard implementation of "Improved Perlin Noise",
-// as described by Ken Perlin in 2002
-// This version is mainly used by the infdev generator but Beta still implements and uses it.
+/**
+ * @brief This is a rather standard implementation of "Improved Perlin Noise",
+ *        as described by Ken Perlin in 2002
+ *        This version is mainly used by the infdev generator
+ *        but Beta still implements and uses it for some things,
+ *        namely the nether
+ * 
+ * @param pos Coordinate at which to sample the noise
+ * @return Noise value
+ */
 double NoisePerlin::GenerateNoiseBase(Vec3 pos) {
 	pos.x += this->xCoord;
 	pos.y += this->yCoord;
 	pos.z += this->zCoord;
 	// The farlands are caused by this getting cast to a 32-Bit Integer.
-	// Change these int32_ts to int64_ts to fix the farlands,
-	// however, this will change Beta tree generation slightly
-	// due to rounding differences
-	int32_t xInt = int32_t(pos.x);
-	int32_t yInt = int32_t(pos.y);
-	int32_t zInt = int32_t(pos.z);
+	// Change these int32_t to int64_t to fix the farlands in Infdev
+	int32_t xInt = Java::DoubleToInt32(pos.x);
+	int32_t yInt = Java::DoubleToInt32(pos.y);
+	int32_t zInt = Java::DoubleToInt32(pos.z);
 	if (pos.x < double(xInt))
 		--xInt;
 	if (pos.y < double(yInt))
@@ -60,19 +77,33 @@ double NoisePerlin::GenerateNoiseBase(Vec3 pos) {
 	xIndex = this->permutations[xIndex + 1] + zIndex;
 	return lerp(
 		u,
-		lerp(v, lerp(w, grad(this->permutations[permXYZ], pos.x, pos.y, pos.z), grad(this->permutations[yIndex], pos.x - 1.0, pos.y, pos.z)),
-			 lerp(w, grad(this->permutations[permXY], pos.x, pos.y - 1.0, pos.z),
-				  grad(this->permutations[xIndex], pos.x - 1.0, pos.y - 1.0, pos.z))),
+		lerp(v, lerp(w, grad3d(this->permutations[permXYZ], pos.x, pos.y, pos.z), grad3d(this->permutations[yIndex], pos.x - 1.0, pos.y, pos.z)),
+			 lerp(w, grad3d(this->permutations[permXY], pos.x, pos.y - 1.0, pos.z),
+				  grad3d(this->permutations[xIndex], pos.x - 1.0, pos.y - 1.0, pos.z))),
 		lerp(v,
-			 lerp(w, grad(this->permutations[permXYZ + 1], pos.x, pos.y, pos.z - 1.0),
-				  grad(this->permutations[yIndex + 1], pos.x - 1.0, pos.y, pos.z - 1.0)),
-			 lerp(w, grad(this->permutations[permXY + 1], pos.x, pos.y - 1.0, pos.z - 1.0),
-				  grad(this->permutations[xIndex + 1], pos.x - 1.0, pos.y - 1.0, pos.z - 1.0))));
+			 lerp(w, grad3d(this->permutations[permXYZ + 1], pos.x, pos.y, pos.z - 1.0),
+				  grad3d(this->permutations[yIndex + 1], pos.x - 1.0, pos.y, pos.z - 1.0)),
+			 lerp(w, grad3d(this->permutations[permXY + 1], pos.x, pos.y - 1.0, pos.z - 1.0),
+				  grad3d(this->permutations[xIndex + 1], pos.x - 1.0, pos.y - 1.0, pos.z - 1.0))));
 }
 
-double NoisePerlin::GenerateNoise(Vec2 coord) { return this->GenerateNoiseBase(Vec3{coord.x, coord.y, 0.0}); }
+double NoisePerlin::GenerateNoise(Vec2 coord) {
+    return this->GenerateNoiseBase(Vec3{coord.x, coord.y, 0.0});
+}
 
-double NoisePerlin::GenerateNoise(Vec3 coord) { return this->GenerateNoiseBase(coord); }
+double NoisePerlin::GenerateNoise(Vec3 coord) {
+    return this->GenerateNoiseBase(coord);
+}
+
+/**
+ * @brief The main noise generator employed by the Beta 1.7.3 world generator
+ * 
+ * @param noiseField the vector the noise will be written to
+ * @param offset The positional offset within the perlin noise that'll be rendered
+ * @param size The size of the volume that'll be saved the noise field
+ * @param scale The scale of the perlin noise equation
+ * @param amplitude The amplitude multiplier of the perlin noise function
+ */
 void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 								Vec3 offset, Int3 size, Vec3 scale,
                                 double amplitude) {
@@ -82,7 +113,7 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
         for (int32_t x = 0; x < size.x; ++x) {
             double fx = (offset.x + x) * scale.x + this->xCoord;
-            int32_t ix = int32_t(fx);
+            int32_t ix = Java::DoubleToInt32(fx);
             if (fx < ix) --ix;
             int32_t px = ix & 255;
             fx -= ix;
@@ -90,7 +121,7 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
             for (int32_t z = 0; z < size.z; ++z) {
                 double fz = (offset.z + z) * scale.z + this->zCoord;
-                int32_t iz = int32_t(fz);
+                int32_t iz = Java::DoubleToInt32(fz);
                 if (fz < iz) --iz;
                 int32_t pz = iz & 255;
                 fz -= iz;
@@ -102,12 +133,12 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
                 int32_t ba = this->permutations[b] + pz;
 
                 double x1 = lerp(u,
-                    altGrad(this->permutations[aa], fx, fz),
-                    grad(this->permutations[ba], fx - 1.0, 0.0, fz));
+                    grad2d(this->permutations[aa], fx, fz),
+                    grad3d(this->permutations[ba], fx - 1.0, 0.0, fz));
 
                 double x2 = lerp(u,
-                    grad(this->permutations[aa + 1], fx, 0.0, fz - 1.0),
-                    grad(this->permutations[ba + 1], fx - 1.0, 0.0, fz - 1.0));
+                    grad3d(this->permutations[aa + 1], fx, 0.0, fz - 1.0),
+                    grad3d(this->permutations[ba + 1], fx - 1.0, 0.0, fz - 1.0));
 
                 double result = lerp(w, x1, x2);
                 noiseField[index++] += result * invAmp;
@@ -123,7 +154,7 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
         for (int32_t x = 0; x < size.x; ++x) {
             double fx = (offset.x + x) * scale.x + this->xCoord;
-            int32_t ix = int32_t(fx);
+            int32_t ix = Java::DoubleToInt32(fx);
             if (fx < ix) --ix;
             int32_t px = ix & 255;
             fx -= ix;
@@ -131,7 +162,7 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
             for (int32_t z = 0; z < size.z; ++z) {
                 double fz = (offset.z + z) * scale.z + this->zCoord;
-                int32_t iz = int32_t(fz);
+                int32_t iz = Java::DoubleToInt32(fz);
                 if (fz < iz) --iz;
                 int32_t pz = iz & 255;
                 fz -= iz;
@@ -139,7 +170,7 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
                 for (int32_t y = 0; y < size.y; ++y) {
                     double fy = (offset.y + y) * scale.y + this->yCoord;
-                    int32_t iy = int32_t(fy);
+                    int32_t iy = Java::DoubleToInt32(fy);
                     if (fy < iy) --iy;
                     int32_t py = iy & 255;
                     fy -= iy;
@@ -156,20 +187,20 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
                         int32_t BB = this->permutations[B + 1] + pz;
 
                         lerpAX = lerp(u,
-                            grad(this->permutations[AA], fx, fy, fz),
-                            grad(this->permutations[BA], fx - 1.0, fy, fz));
+                            grad3d(this->permutations[AA], fx, fy, fz),
+                            grad3d(this->permutations[BA], fx - 1.0, fy, fz));
 
                         lerpBX = lerp(u,
-                            grad(this->permutations[AB], fx, fy - 1.0, fz),
-                            grad(this->permutations[BB], fx - 1.0, fy - 1.0, fz));
+                            grad3d(this->permutations[AB], fx, fy - 1.0, fz),
+                            grad3d(this->permutations[BB], fx - 1.0, fy - 1.0, fz));
 
                         lerpAY = lerp(u,
-                            grad(this->permutations[AA + 1], fx, fy, fz - 1.0),
-                            grad(this->permutations[BA + 1], fx - 1.0, fy, fz - 1.0));
+                            grad3d(this->permutations[AA + 1], fx, fy, fz - 1.0),
+                            grad3d(this->permutations[BA + 1], fx - 1.0, fy, fz - 1.0));
 
                         lerpBY = lerp(u,
-                            grad(this->permutations[AB + 1], fx, fy - 1.0, fz - 1.0),
-                            grad(this->permutations[BB + 1], fx - 1.0, fy - 1.0, fz - 1.0));
+                            grad3d(this->permutations[AB + 1], fx, fy - 1.0, fz - 1.0),
+                            grad3d(this->permutations[BB + 1], fx - 1.0, fy - 1.0, fz - 1.0));
                     }
 
                     double i1 = lerp(v, lerpAX, lerpBX);

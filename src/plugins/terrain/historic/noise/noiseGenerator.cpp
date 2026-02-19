@@ -2,7 +2,7 @@
 
 NoiseGenerator::NoiseGenerator() {}
 
-NoiseGenerator::NoiseGenerator([[maybe_unused]] JavaRandom *rand) { xCoord = yCoord = zCoord = 0.0; }
+NoiseGenerator::NoiseGenerator([[maybe_unused]]JavaRandom& rand) { xCoord = yCoord = zCoord = 0.0; }
 
 double NoiseGenerator::GenerateNoise([[maybe_unused]] double x, [[maybe_unused]] double y) { return 0; }
 

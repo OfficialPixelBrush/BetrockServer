@@ -23,25 +23,20 @@ WorldManager::WorldManager(uint32_t maxThreads) {
 }
 
 // This adds a Chunk to the ChunkQueue
-void WorldManager::AddChunkToQueue(Int2 position, const std::shared_ptr<Client> &pRequestClient) {
-	auto hash = GetChunkHash(position); // Compute hash
+void WorldManager::AddChunkToQueue(Int2 position, const std::shared_ptr<Client>& pRequestClient ) {
+    auto hash = GetChunkHash(position);
 
-	std::lock_guard<std::mutex> lock(queueMutex); // Ensure thread safety
-	if (chunkPositions.find(hash) != chunkPositions.end()) {
-		// Chunk is already in the queue, no need to add it again
-		for (QueueChunk &qc : chunkQueue) {
-			if (qc.position.x == position.x && qc.position.y == position.y) {
-				qc.requestedClients.push_back(pRequestClient);
-				break;
-			}
-		}
-		return;
-	}
-
-	// Add to queue and track position
-	chunkQueue.emplace_back(position, pRequestClient);
-	chunkPositions.insert(hash);
-	queueCV.notify_one();
+    std::lock_guard<std::mutex> lock(queueMutex);
+    auto it = chunkQueue.find(hash);
+    if (it != chunkQueue.end()) {
+        it->second.requestedClients.push_back(pRequestClient);
+        return;
+    }
+    chunkQueue.emplace(
+        hash,
+        QueueChunk{ position, { pRequestClient } }
+    );
+    queueCV.notify_one();
 }
 
 // Returns if the ChunkQueue is empty
@@ -96,7 +91,9 @@ void WorldManager::GenerateQueuedChunks() {
 
 // Forces the generation of the passed Chunk Position,
 // independent of any Worker Thread
-void WorldManager::ForceGenerateChunk(Int2 position) { AddChunkToQueue(position, nullptr); }
+void WorldManager::ForceGenerateChunk(Int2 position) {
+	AddChunkToQueue(position, nullptr);
+}
 
 // This is run by all the available Worker Threads
 // To generate a chunk, if some are queued
@@ -118,6 +115,7 @@ void WorldManager::WorkerThread() {
 	}
 
 	while (Betrock::Server::Instance().IsAlive()) {
+		[[maybe_unused]] uint64_t hash = 0;
 		QueueChunk cq;
 		{
 			std::unique_lock<std::mutex> lock(queueMutex);
@@ -125,10 +123,11 @@ void WorldManager::WorkerThread() {
 
 			if (!Betrock::Server::Instance().IsAlive())
 				return; // Exit thread when stopping
-
-			cq = chunkQueue.front();
-			chunkQueue.pop_front();
-			chunkPositions.erase(GetChunkHash(cq.position));
+			
+			auto it = chunkQueue.begin();
+			hash = it->first;
+			cq = std::move(it->second);
+			chunkQueue.erase(it);
 		}
 
 		busyWorkers.fetch_add(1, std::memory_order_relaxed);
@@ -143,12 +142,13 @@ void WorldManager::WorkerThread() {
 		if (c->state != ChunkState::Populated) {
 			std::scoped_lock lock(queueMutex);
 			cq.generationAttempt++;
-			// Only put a chunk back in if its not been retried too often
 			if (cq.generationAttempt < MAX_GENERATION_ATTEMPTS) {
-				chunkQueue.push_back(cq);
+				chunkQueue.emplace(
+					GetChunkHash(cq.position),
+					std::move(cq)
+				);
+				queueCV.notify_one();
 			}
-			chunkPositions.insert(GetChunkHash(cq.position));
-			queueCV.notify_one();
 			busyWorkers.fetch_sub(1, std::memory_order_relaxed);
 			continue;
 		}

@@ -1,13 +1,13 @@
 cmake_minimum_required(VERSION 3.16.0)
 cmake_policy(SET CMP0072 NEW)
 
-project(BetrockServer VERSION 0.3.1)
-
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+
+project(BetrockServer VERSION 0.3.2)
 
 # This could be funny to do in the future :p
 #set(CMAKE_C_FLAGS "-m32 -march=pentium -static")
@@ -90,11 +90,13 @@ add_executable(
     src/misc/commands/command.cpp
     src/misc/commands/commandManager.cpp
     src/misc/gamerules.cpp
+    src/misc/inventory.cpp
     #src/misc/lighting.cpp
     src/misc/sysinfo.cpp
 
     src/objects/entity.cpp
     src/objects/player.cpp
+    src/objects/tileEntity.cpp
 
     src/world/chunk.cpp
     src/world/region.cpp

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "javaRandom.h"
 #include "noiseGenerator.h"
 #include "noisePerlin.h"
 #include "noiseSimplex.h"
@@ -8,8 +9,9 @@
 
 template <typename T> class NoiseOctaves {
   public:
+	NoiseOctaves() {} // This should never be used!
 	NoiseOctaves(int32_t octaves);
-	NoiseOctaves(JavaRandom *rand, int32_t octaves);
+	NoiseOctaves(JavaRandom& rand, int32_t octaves);
 	// Used by infdev
 	double GenerateOctaves(double xOffset, double yOffset, double zOffset);
 	// Used by Perlin
@@ -31,13 +33,12 @@ template <typename T> class NoiseOctaves {
 
 template <typename T> NoiseOctaves<T>::NoiseOctaves(int32_t poctaves) : octaves(poctaves) {
 	this->octaves = poctaves;
-	JavaRandom *rand = new JavaRandom();
 	for (int32_t i = 0; i < this->octaves; ++i) {
-		generatorCollection.push_back(std::make_unique<T>(rand));
+		generatorCollection.push_back(std::make_unique<T>(JavaRandom()));
 	}
 }
 
-template <typename T> NoiseOctaves<T>::NoiseOctaves(JavaRandom *rand, int32_t poctaves) {
+template <typename T> NoiseOctaves<T>::NoiseOctaves(JavaRandom& rand, int32_t poctaves) {
 	this->octaves = poctaves;
 	for (int32_t i = 0; i < this->octaves; ++i) {
 		generatorCollection.push_back(std::make_unique<T>(rand));

@@ -104,8 +104,7 @@ class Client : public std::enable_shared_from_this<Client> {
         void ProcessChunk(const Int2& position, WorldManager* wm);
         void DetermineVisibleChunks(bool forcePlayerAsCenter = false);
         bool CheckIfNewChunksRequired();
-        bool TryToPutInSlot(int16_t slot, int16_t &id, int8_t &amount, int16_t &damage);
-        bool SpreadToSlots(int16_t item, int8_t amount, int16_t damage, int8_t preferredRange = 0);
+        bool SpreadToSlots(Item& item, int8_t preferredRange = 0);
         void ClickedSlot(std::vector<uint8_t> &pResponse, int8_t windowId, int16_t slotId, bool rightClick, int16_t actionNumber, bool shift, int16_t id, int8_t amount, int16_t damage);
         void ChangeHeldItem(std::vector<uint8_t> &pResponse, int16_t slotId);
         void ClearInventory();
@@ -121,7 +120,8 @@ class Client : public std::enable_shared_from_this<Client> {
         void HandleClient();
         void DisconnectClient(std::string disconnectMessage = "", bool tellOthers = false, bool tellPlayer = true);
 
-        bool Give(std::vector<uint8_t> &pResponse, int16_t item, int8_t amount = -1, int16_t damage = 0);
+        bool Give(int16_t id = SLOT_EMPTY, int8_t amount = -1, int16_t damage = 0);
+        bool Give(Item item = Item{});
         bool UpdateInventory(std::vector<uint8_t> &pResponse, Int3 targetBlockPosition = Int3{0,0,0});
         int16_t GetHotbarSlot();
         Item GetHeldItem();

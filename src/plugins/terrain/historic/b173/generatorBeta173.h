@@ -12,16 +12,16 @@
  */
 class GeneratorBeta173 : public Generator {
   private:
-	std::unique_ptr<JavaRandom> rand;
+	JavaRandom rand;
 	// Perlin Noise Generators
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> lowNoiseGen;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> highNoiseGen;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> selectorNoiseGen;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> sandGravelNoiseGen;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> stoneNoiseGen;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> continentalnessNoiseGen;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> depthNoiseGen;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> treeDensityNoiseGen;
+	NoiseOctaves<NoisePerlin> lowNoiseGen;
+	NoiseOctaves<NoisePerlin> highNoiseGen;
+	NoiseOctaves<NoisePerlin> selectorNoiseGen;
+	NoiseOctaves<NoisePerlin> sandGravelNoiseGen;
+	NoiseOctaves<NoisePerlin> stoneNoiseGen;
+	NoiseOctaves<NoisePerlin> continentalnessNoiseGen;
+	NoiseOctaves<NoisePerlin> depthNoiseGen;
+	NoiseOctaves<NoisePerlin> treeDensityNoiseGen;
 
 	// Stored noise Fields
 	std::vector<double> terrainNoiseField;

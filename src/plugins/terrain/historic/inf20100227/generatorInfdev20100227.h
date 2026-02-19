@@ -6,13 +6,13 @@
  */
 class GeneratorInfdev20100227 : public Generator {
   private:
-	std::unique_ptr<JavaRandom> rand;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen1;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen2;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen3;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen4;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen5;
-	std::unique_ptr<NoiseOctaves<NoisePerlin>> noiseGen6;
+	JavaRandom rand;
+	NoiseOctaves<NoisePerlin> noiseGen1;
+	NoiseOctaves<NoisePerlin> noiseGen2;
+	NoiseOctaves<NoisePerlin> noiseGen3;
+	NoiseOctaves<NoisePerlin> noiseGen4;
+	NoiseOctaves<NoisePerlin> noiseGen5;
+	NoiseOctaves<NoisePerlin> noiseGen6;
 
   public:
 	GeneratorInfdev20100227(int64_t seed, World *world);

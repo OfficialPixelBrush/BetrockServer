@@ -1,18 +1,25 @@
 #include "noiseSimplex.h"
 
-NoiseSimplex::NoiseSimplex() : NoiseSimplex(new JavaRandom()) {}
+NoiseSimplex::NoiseSimplex() {
+	JavaRandom rand;
+	InitPermTable(rand);
+}
 
-NoiseSimplex::NoiseSimplex(JavaRandom *rand) {
-	this->xCoord = rand->nextDouble() * 256.0;
-	this->yCoord = rand->nextDouble() * 256.0;
-	this->zCoord = rand->nextDouble() * 256.0;
+NoiseSimplex::NoiseSimplex(JavaRandom& rand) {
+	InitPermTable(rand);
+}
+
+void NoiseSimplex::InitPermTable(JavaRandom& rand) {
+	this->xCoord = rand.nextDouble() * 256.0;
+	this->yCoord = rand.nextDouble() * 256.0;
+	this->zCoord = rand.nextDouble() * 256.0;
 
 	for (int32_t i = 0; i < 256; ++i) {
 		this->permutations[i] = i;
 	}
 
 	for (int32_t i = 0; i < 256; ++i) {
-		int32_t j = rand->nextInt(256 - i) + i;
+		int32_t j = rand.nextInt(256 - i) + i;
 		std::swap(this->permutations[i], this->permutations[j]);
 		this->permutations[i + 256] = this->permutations[i];
 	}
@@ -30,7 +37,7 @@ void NoiseSimplex::GenerateNoise(std::vector<double> &noiseField, double xOffset
 			double skew = (xPos + yPos) * skewing;
 			int32_t x0 = wrap(xPos + skew);
 			int32_t y0 = wrap(yPos + skew);
-			double unskewed = (double)(x0 + y0) * unskewing;
+			double unskewed = double(x0 + y0) * unskewing;
 			double x0a = (double)x0 - unskewed;
 			double y0a = (double)y0 - unskewed;
 			double x0b = xPos - x0a;

@@ -156,17 +156,18 @@ uint8_t GetSignOrientation(float playerYaw) {
 }
 
 // Figure out which block should be placed based on the passed parameters
-Block GetPlacedBlock(World *world, Int3 pos, int8_t face, float playerYaw, int8_t playerDirection, int16_t id,
+Block GetPlacedBlock(World *world, Int3 pos, Int3 targetPos, int8_t face, float playerYaw, int8_t playerDirection, int16_t id,
 					 int16_t damage) {
 	Block b = Block{BlockType(id), int8_t(damage), 0,0};
 
 	// Handle items that place as blocks
-	if (id == ITEM_HOE_DIAMOMD || id == ITEM_HOE_GOLD || id == ITEM_HOE_IRON || id == ITEM_HOE_STONE ||
-		id == ITEM_HOE_WOOD) {
-		if (world->GetBlockType(pos - Int3{0, 1, 0}) == BLOCK_GRASS) {
-			world->PlaceBlockUpdate(pos - Int3{0, 1, 0}, BLOCK_FARMLAND);
+	if (IsHoe(id)) {
+		// Turn grass/dirt into farmland
+		BlockType bt = world->GetBlockType(targetPos);
+		if (bt == BLOCK_GRASS || bt == BLOCK_DIRT) {
+			world->PlaceBlockUpdate(targetPos, BLOCK_FARMLAND);
 		}
-		id = SLOT_EMPTY;
+		b.type = BLOCK_INVALID;
 		return b;
 	}
 	if (id == ITEM_SEEDS_WHEAT) {
@@ -440,11 +441,11 @@ bool CanStay(int8_t type, World *world, Int3 pos) {
 			IsSolid(world->GetBlockType(pos + Int3{0, 0, -1})) || IsSolid(world->GetBlockType(pos + Int3{0, 0, 1}))) {
 			return false;
 		}
-		int8_t blockType = world->GetBlockType(pos + Int3{0, -1, 0});
+		BlockType blockType = world->GetBlockType(pos + Int3{0, -1, 0});
 		return (blockType == BLOCK_CACTUS || blockType == BLOCK_SAND);
 	}
 	case BLOCK_SUGARCANE: {
-		int8_t blockType = world->GetBlockType(pos + Int3{0, -1, 0});
+		BlockType blockType = world->GetBlockType(pos + Int3{0, -1, 0});
 		if (blockType == type)
 			return true;
 		if (blockType != BLOCK_GRASS && blockType != BLOCK_DIRT)

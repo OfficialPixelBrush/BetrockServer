@@ -11,7 +11,7 @@
 class Beta173Caver {
   private:
 	const int32_t carveExtentLimit = 8;
-	std::unique_ptr<JavaRandom> rand;
+	JavaRandom rand = JavaRandom();
 
   public:
 	Beta173Caver();
