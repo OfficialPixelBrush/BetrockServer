@@ -7,7 +7,7 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
-project(BetrockServer VERSION 0.3.1)
+project(BetrockServer VERSION 0.3.2)
 
 # This could be funny to do in the future :p
 #set(CMAKE_C_FLAGS "-m32 -march=pentium -static")
