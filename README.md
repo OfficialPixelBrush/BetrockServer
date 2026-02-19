@@ -1,6 +1,9 @@
-# BetrockServer
-A Server-Engine written in C++, made to work with Minecraft Beta 1.7.3. The goal being to have a semi-modern Server Engine that people can muck about with however they like, and to not have to deal with plugins that're over a decade old.
-![BetrockServer Logo](media/betrock_server_logo.png)
+![BetrockServer Logo](media/betrock_server_logo.png)[![Discord](https://img.shields.io/badge/Join%20the-Discord-7289DA)](https://discord.gg/JHTz2HSKrf)
+![C#](https://img.shields.io/badge/Language-C%2B%2B23-5E96CF)
+![Issues](https://img.shields.io/github/issues/OfficialPixelBrush/BetrockServer)
+![Pull requests](https://img.shields.io/github/issues-pr/OfficialPixelBrush/BetrockServer)
+
+A Minecraft Beta 1.7.3 Server written in C++23. The goal being to have a semi-modern Beta 1.7.3 server that people can muck about with however they like, and to not have to deal with plugins that're over a decade old.
 
 ## Features
 (as of 0.3.0)
