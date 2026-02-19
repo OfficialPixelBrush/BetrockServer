@@ -173,34 +173,34 @@ void GeneratorBeta173::ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chun
  */
 void GeneratorBeta173::GenerateTerrain(Int2 chunkPos, std::shared_ptr<Chunk> &c) {
 	const int32_t xMax = CHUNK_WIDTH_X / 4 + 1;	   // 3
-	const uint8_t yMax = CHUNK_HEIGHT / 8 + 1; // 14
+	const uint8_t yMax = CHUNK_HEIGHT / 8 + 1; // 17
 	const int32_t zMax = CHUNK_WIDTH_Z / 4 + 1;	   // 3
 
 	// Generate 4x16x4 low resolution noise map
 	this->GenerateTerrainNoise(this->terrainNoiseField, Int3{chunkPos.x * 4, 0, chunkPos.y * 4}, Int3{xMax,yMax,zMax});
 
 	// Terrain noise is interpolated and only sampled every 4 blocks
-	for (int32_t macroX = 0; macroX < 4; ++macroX) {
-		for (int32_t macroZ = 0; macroZ < 4; ++macroZ) {
-			for (int32_t macroY = 0; macroY < 16; ++macroY) {
+	for (int32_t sampleX = 0; sampleX < 4; ++sampleX) {
+		for (int32_t sampleZ = 0; sampleZ < 4; ++sampleZ) {
+			for (int32_t sampleY = 0; sampleY < 16; ++sampleY) {
 				double verticalLerpStep = 0.125;
 
 				// Get noise cube corners
-				double corner000 = this->terrainNoiseField[((macroX + 0) * zMax + macroZ + 0) * yMax + macroY + 0];
-				double corner010 = this->terrainNoiseField[((macroX + 0) * zMax + macroZ + 1) * yMax + macroY + 0];
-				double corner100 = this->terrainNoiseField[((macroX + 1) * zMax + macroZ + 0) * yMax + macroY + 0];
-				double corner110 = this->terrainNoiseField[((macroX + 1) * zMax + macroZ + 1) * yMax + macroY + 0];
+				double corner000 = this->terrainNoiseField[((sampleX + 0) * zMax + sampleZ + 0) * yMax + sampleY + 0];
+				double corner010 = this->terrainNoiseField[((sampleX + 0) * zMax + sampleZ + 1) * yMax + sampleY + 0];
+				double corner100 = this->terrainNoiseField[((sampleX + 1) * zMax + sampleZ + 0) * yMax + sampleY + 0];
+				double corner110 = this->terrainNoiseField[((sampleX + 1) * zMax + sampleZ + 1) * yMax + sampleY + 0];
 				double corner001 =
-					(this->terrainNoiseField[((macroX + 0) * zMax + macroZ + 0) * yMax + macroY + 1] - corner000) *
+					(this->terrainNoiseField[((sampleX + 0) * zMax + sampleZ + 0) * yMax + sampleY + 1] - corner000) *
 					verticalLerpStep;
 				double corner011 =
-					(this->terrainNoiseField[((macroX + 0) * zMax + macroZ + 1) * yMax + macroY + 1] - corner010) *
+					(this->terrainNoiseField[((sampleX + 0) * zMax + sampleZ + 1) * yMax + sampleY + 1] - corner010) *
 					verticalLerpStep;
 				double corner101 =
-					(this->terrainNoiseField[((macroX + 1) * zMax + macroZ + 0) * yMax + macroY + 1] - corner100) *
+					(this->terrainNoiseField[((sampleX + 1) * zMax + sampleZ + 0) * yMax + sampleY + 1] - corner100) *
 					verticalLerpStep;
 				double corner111 =
-					(this->terrainNoiseField[((macroX + 1) * zMax + macroZ + 1) * yMax + macroY + 1] - corner110) *
+					(this->terrainNoiseField[((sampleX + 1) * zMax + sampleZ + 1) * yMax + sampleY + 1] - corner110) *
 					verticalLerpStep;
 
 				// Interpolate the 1/4th scale noise
@@ -212,7 +212,7 @@ void GeneratorBeta173::GenerateTerrain(Int2 chunkPos, std::shared_ptr<Chunk> &c)
 					double terrainStepX1 = (corner110 - corner010) * horizontalLerpStep;
 
 					for (int32_t subX = 0; subX < 4; ++subX) {
-						int32_t blockIndex = ((subX + macroX * 4) << 11) | ((macroZ * 4) << 7) | ((macroY * 8) + subY);
+						int32_t blockIndex = ((subX + sampleX * 4) << 11) | ((sampleZ * 4) << 7) | ((sampleY * 8) + subY);
 						double terrainDensity = terrainX0;
 						double densityStepZ = (terrainX1 - terrainX0) * horizontalLerpStep;
 
@@ -222,8 +222,8 @@ void GeneratorBeta173::GenerateTerrain(Int2 chunkPos, std::shared_ptr<Chunk> &c)
 							BlockType blockType = BLOCK_AIR;
 
 							// If water is too cold, turn into ice
-							double temp = this->temperature[(macroX * 4 + subX) * 16 + macroZ * 4 + subZ];
-							int32_t yLevel = macroY * 8 + subY;
+							double temp = this->temperature[(sampleX * 4 + subX) * 16 + sampleZ * 4 + subZ];
+							int32_t yLevel = sampleY * 8 + subY;
 							if (yLevel < WATER_LEVEL) {
 								if (temp < 0.5 && yLevel >= WATER_LEVEL - 1) {
 									blockType = BLOCK_ICE;
