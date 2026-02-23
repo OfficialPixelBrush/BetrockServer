@@ -15,8 +15,8 @@ class Beta173Caver {
 
   public:
 	Beta173Caver();
-	void GenerateCavesForChunk(World *world, Int2 chunkPos, std::shared_ptr<Chunk> &c);
-	void GenerateCaves(Int2 chunkOffset, Int2 chunkPos, std::shared_ptr<Chunk> &c);
+	void CarveCavesForChunk(World *world, Int2 chunkPos, std::shared_ptr<Chunk> &c);
+	void CarveCaves(Int2 chunkOffset, Int2 chunkPos, std::shared_ptr<Chunk> &c);
 	void CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offset);
 	void CarveCave(Int2 chunkPos, std::shared_ptr<Chunk> &c, Vec3 offset,
 				   float tunnelRadius, float carveYaw, float carvePitch, int32_t tunnelStep, int32_t tunnelLength,

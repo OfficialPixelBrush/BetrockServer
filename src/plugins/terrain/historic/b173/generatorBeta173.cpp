@@ -50,7 +50,7 @@ std::shared_ptr<Chunk> GeneratorBeta173::GenerateChunk(Int2 chunkPos) {
 	// Replace some of the stone with Biome-appropriate blocks
 	ReplaceBlocksForBiome(chunkPos, c);
 	// Carve caves
-	this->caver->GenerateCavesForChunk(this->world, chunkPos, c);
+	this->caver->CarveCavesForChunk(this->world, chunkPos, c);
 	// Generate heightmap
 	c->GenerateHeightMap();
 
@@ -721,12 +721,12 @@ bool GeneratorBeta173::PopulateChunk(Int2 chunkPos) {
 			.GeneratePumpkins(this->world, this->rand, coord);
 	}
 
+	// Generate Cacti
 	int8_t numberOfCacti = 0;
 	if (biome == BIOME_DESERT) {
 		numberOfCacti += 10;
 	}
-
-	// Generate Cacti
+	
 	for (int32_t i = 0; i < numberOfCacti; ++i) {
 		coord.x = blockPos.x + this->rand.nextInt(CHUNK_WIDTH_X) + 8;
 		coord.y = this->rand.nextInt(CHUNK_HEIGHT);
