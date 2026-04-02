@@ -105,6 +105,7 @@ add_executable(
 
     src/plugins/terrain/historic/inf20100227/generatorInfdev20100227.cpp
     src/plugins/terrain/historic/inf20100327/generatorInfdev20100327.cpp
+    src/plugins/terrain/historic/a112_01/generatorAlpha112_01.cpp
     src/plugins/terrain/historic/b173/beta173Biome.cpp
     src/plugins/terrain/historic/b173/beta173Caver.cpp
     src/plugins/terrain/historic/b173/beta173Feature.cpp

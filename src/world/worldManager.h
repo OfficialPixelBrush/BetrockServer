@@ -11,6 +11,7 @@
 #include "historic/b173/generatorBeta173.h"
 #include "historic/inf20100227/generatorInfdev20100227.h"
 #include "historic/inf20100327/generatorInfdev20100327.h"
+#include "historic/a112_01/generatorAlpha112_01.h"
 #include "world.h"
 
 class Client; // Forward declaration
