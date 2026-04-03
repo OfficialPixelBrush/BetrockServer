@@ -31,28 +31,20 @@ template <typename T> class NoiseOctaves {
 	std::vector<std::unique_ptr<T>> generatorCollection;
 };
 
-template <typename T>
-NoiseOctaves<T>::NoiseOctaves(int32_t poctaves)
-    : octaves(poctaves)
-{
-    JavaRandom rand;
-    generatorCollection.reserve(octaves);
-
-    for (int32_t i = 0; i < octaves; ++i) {
-        generatorCollection.push_back(std::make_unique<T>(rand));
-    }
+template <typename T> NoiseOctaves<T>::NoiseOctaves(int32_t poctaves) : octaves(poctaves) {
+	this->octaves = poctaves;
+	for (int32_t i = 0; i < this->octaves; ++i) {
+		generatorCollection.push_back(std::make_unique<T>(JavaRandom()));
+	}
 }
 
-template <typename T>
-NoiseOctaves<T>::NoiseOctaves(JavaRandom& rand, int32_t poctaves)
-    : octaves(poctaves)
-{
-    generatorCollection.reserve(octaves);
-
-    for (int32_t i = 0; i < octaves; ++i) {
-        generatorCollection.push_back(std::make_unique<T>(rand));
-    }
+template <typename T> NoiseOctaves<T>::NoiseOctaves(JavaRandom& rand, int32_t poctaves) {
+	this->octaves = poctaves;
+	for (int32_t i = 0; i < this->octaves; ++i) {
+		generatorCollection.push_back(std::make_unique<T>(rand));
+	}
 }
+
 // Only used by infdev
 template <typename T> double NoiseOctaves<T>::GenerateOctaves(double xOffset, double yOffset, double zOffset) {
 	double value = 0.0;
