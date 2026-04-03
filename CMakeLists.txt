@@ -114,6 +114,7 @@ add_executable(
     src/plugins/terrain/historic/noise/noiseGenerator.cpp
     src/plugins/terrain/historic/noise/noisePerlin.cpp
     src/plugins/terrain/historic/noise/noiseSimplex.cpp
+    src/plugins/terrain/generatorBetrockServer.cpp
     src/plugins/terrain/generatorLua.cpp
     src/plugins/terrain/generator.cpp
     src/plugins/pluginManager.cpp

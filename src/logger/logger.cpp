@@ -5,11 +5,22 @@
 // Reference for Escape Codes
 // https://gist.github.com/fnky/458719343aabd01cfb17a3a4f7296797
 
+namespace fs = std::filesystem;
+
 namespace Betrock {
 
 Logger::Logger() {
     if (logLevelText != LOG_NONE) {
-        logFile.open(GetRealTimeFileFormat() + ".log", std::ios::out | std::ios::app);
+        fs::path logDir = "logs";
+
+        // Create directory if it doesn't exist
+        if (!fs::exists(logDir)) {
+            fs::create_directories(logDir);
+        }
+
+        fs::path logFilePath = logDir / (GetRealTimeFileFormat() + ".log");
+
+        logFile.open(logFilePath, std::ios::out | std::ios::app);
         if (!logFile.is_open()) {
             throw std::runtime_error("Failed to open log file");
         }

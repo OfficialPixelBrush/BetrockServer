@@ -1,6 +1,7 @@
 #pragma once
 
-enum LogLevel {
+#include <cstdint>
+enum LogLevel : int8_t {
     LOG_NONE    =  0,
     LOG_CHAT    =  1,
     LOG_MESSAGE =  2,
