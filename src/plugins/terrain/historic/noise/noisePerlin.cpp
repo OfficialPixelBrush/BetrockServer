@@ -134,11 +134,11 @@ void NoisePerlin::GenerateNoise(std::vector<double> &noiseField,
 
                 double x1 = lerp(u,
                     grad2d(this->permutations[aa], fx, fz),
-                    grad3d(this->permutations[ba], fx - 1.0, 0.0, fz));
+                    grad2d(this->permutations[ba], fx - 1.0, fz));
 
                 double x2 = lerp(u,
-                    grad3d(this->permutations[aa + 1], fx, 0.0, fz - 1.0),
-                    grad3d(this->permutations[ba + 1], fx - 1.0, 0.0, fz - 1.0));
+                    grad2d(this->permutations[aa + 1], fx, fz - 1.0),
+                    grad2d(this->permutations[ba + 1], fx - 1.0, fz - 1.0));
 
                 double result = lerp(w, x1, x2);
                 noiseField[index++] += result * invAmp;

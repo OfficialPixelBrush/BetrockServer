@@ -1,5 +1,6 @@
 #pragma once
 #include <fstream>
+#include <filesystem>
 #include <iostream>
 #include <cstdint>
 #include <string>
@@ -14,11 +15,11 @@ class Logger {
     private:
         std::ofstream logFile;
         #ifndef NDEBUG
-        int8_t logLevelText = LOG_ALL;
+        LogLevel logLevelText = LOG_NONE;
         #else
-        int8_t logLevelText = LOG_ALL;
+        LogLevel logLevelText = LOG_ALL;
         #endif
-        int8_t logLevelTerminal = LOG_ALL;
+        LogLevel logLevelTerminal = LOG_ALL;
 
         Logger();
         
@@ -46,9 +47,9 @@ class Logger {
         void Warning(std::string message);
         void Error(std::string message);
         void Debug(std::string message);
-        void SetLogLevelTerminal(int8_t logLevel = LOG_ALL) { this->logLevelTerminal = logLevel; }
-        void SetLogLevelText(int8_t logLevel = LOG_ALL) { this->logLevelText = logLevel; }
-        void SetLogLevel(int8_t logLevel = LOG_ALL) {
+        void SetLogLevelTerminal(LogLevel logLevel = LOG_ALL) { this->logLevelTerminal = logLevel; }
+        void SetLogLevelText(LogLevel logLevel = LOG_ALL) { this->logLevelText = logLevel; }
+        void SetLogLevel(LogLevel logLevel = LOG_ALL) {
             SetLogLevelText(logLevel);
             SetLogLevelTerminal(logLevel);
         }

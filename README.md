@@ -1,3 +1,18 @@
+> [!NOTE]
+> BetrockServer development is being halted/slowed, as I've shifted my
+> focus towards [Betrock++](https://github.com/OfficialPixelBrush/BetrockPlusPlus).
+>
+> [Betrock++](https://github.com/OfficialPixelBrush/BetrockPlusPlus)
+> reuses a lot of the work that was done for BetrockServer,
+> just reworked to be more performant, readable and modular.
+>
+> It intends to be a more complete and actually thought out package.
+> There're even plans to use the code to make a client too!
+>
+> I may archive this repository at a later date,
+> but for the time being it'll remain editable,
+> as I'm cross-referencing and dual-updating both codebases for now.
+
 ![BetrockServer Logo](media/betrock_server_logo.png)[![Discord](https://img.shields.io/badge/Join%20the-Discord-7289DA)](https://discord.gg/JHTz2HSKrf)
 ![C#](https://img.shields.io/badge/Language-C%2B%2B23-5E96CF)
 ![Issues](https://img.shields.io/github/issues/OfficialPixelBrush/BetrockServer)
