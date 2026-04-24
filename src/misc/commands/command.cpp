@@ -538,6 +538,37 @@ std::string CommandPopulated::Execute([[maybe_unused]] std::vector<std::string> 
 	return ERROR_REASON_ERROR;
 }
 
+
+// Check the biomes of the current chunk
+std::string CommandBiome::Execute([[maybe_unused]] std::vector<std::string> pCommand,
+									  [[maybe_unused]] std::vector<uint8_t> &pResponse, Client *client) {
+	DEFINE_PERMSCHECK(client);
+	auto player = client->GetPlayer();
+
+	// TODO: Add support for non-zero worlds
+	World *w = Betrock::Server::Instance().GetWorld(0);
+	if (!w)
+		return "World does not exist!";
+	Int2 blockPos = Int2{
+		(int32_t(player->position.x) / CHUNK_WIDTH_X) * CHUNK_WIDTH_X,
+		(int32_t(player->position.z) / CHUNK_WIDTH_Z) * CHUNK_WIDTH_Z
+	}
+	std::vector<Biome> biomeMap;
+	std::vector<double> temperature;
+	std::vector<double> humidity;
+	std::vector<double> weirdness;
+	
+	Beta173Biome(w->seed)
+		.GenerateBiomeMap(biomeMap, temperature, humidity, weirdness, blockPos, Int2{CHUNK_WIDTH_X, CHUNK_WIDTH_Z});
+	
+	for (auto h : humidity) {
+		std::cout << h << ", ";
+	}
+	std::cout << "\n";
+
+	return ERROR_REASON_ERROR;
+}
+
 // Teleport to Spawn
 std::string CommandSpawn::Execute([[maybe_unused]] std::vector<std::string> pCommand, std::vector<uint8_t> &pResponse,
 								  Client *client) {
