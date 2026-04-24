@@ -33,12 +33,14 @@ class GeneratorAlpha112_01 : public Generator {
 	std::vector<double> gravelNoise;
 	std::vector<double> stoneNoise;
 
+	bool snowCovered = false;
+
 	// Cave Gen
 	std::unique_ptr<Beta173Caver> caver;
 
 	void GenerateTerrain(Int2 chunkPos, std::shared_ptr<Chunk> &c);
 	void GenerateTerrainNoise(std::vector<double> &terrainMap, Int3 chunkPos, Int3 max);
-	void ReplaceSurfaceBlocks(Int2 chunkPos, std::shared_ptr<Chunk> &c);
+	void ReplaceBlocksForBiome(Int2 chunkPos, std::shared_ptr<Chunk> &c);
 
   public:
 	GeneratorAlpha112_01(int64_t seed, World *world);
