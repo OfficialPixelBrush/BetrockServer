@@ -552,7 +552,7 @@ std::string CommandBiome::Execute([[maybe_unused]] std::vector<std::string> pCom
 	Int2 blockPos = Int2{
 		(int32_t(player->position.x) / CHUNK_WIDTH_X) * CHUNK_WIDTH_X,
 		(int32_t(player->position.z) / CHUNK_WIDTH_Z) * CHUNK_WIDTH_Z
-	}
+	};
 	std::vector<Biome> biomeMap;
 	std::vector<double> temperature;
 	std::vector<double> humidity;
@@ -561,8 +561,12 @@ std::string CommandBiome::Execute([[maybe_unused]] std::vector<std::string> pCom
 	Beta173Biome(w->seed)
 		.GenerateBiomeMap(biomeMap, temperature, humidity, weirdness, blockPos, Int2{CHUNK_WIDTH_X, CHUNK_WIDTH_Z});
 	
-	for (auto h : humidity) {
+	std::cout << std::setprecision(2);
+	int index = 0;
+	for (auto h : temperature) {
 		std::cout << h << ", ";
+		if (index % CHUNK_WIDTH_X == CHUNK_WIDTH_X-1) std::cout << "\n";
+		++index;
 	}
 	std::cout << "\n";
 
